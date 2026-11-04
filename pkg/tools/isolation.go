@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/ianclemence/kaya/pkg/egress"
+	"github.com/kayahq/kaya/pkg/egress"
 )
 
 // IsolationMode controls OS-level isolation for model-initiated subprocesses.

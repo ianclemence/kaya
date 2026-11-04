@@ -1,6 +1,6 @@
 package agent
 
-import "github.com/ianclemence/kaya/pkg/modes"
+import "github.com/kayahq/kaya/pkg/modes"
 
 // offlineCapabilityNote returns a compact per-turn capability signal for the
 // model when the runtime is degraded to local mode. It is empty when cloud is

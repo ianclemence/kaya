@@ -8,7 +8,7 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/ianclemence/kaya/pkg/logger"
+	"github.com/kayahq/kaya/pkg/logger"
 )
 
 // VideoFramesTool extracts frames or short clips from videos using ffmpeg.

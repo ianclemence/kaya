@@ -5,9 +5,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ianclemence/kaya/pkg/artifacts"
-	"github.com/ianclemence/kaya/pkg/permissions"
-	"github.com/ianclemence/kaya/pkg/scheduled"
+	"github.com/kayahq/kaya/pkg/artifacts"
+	"github.com/kayahq/kaya/pkg/permissions"
+	"github.com/kayahq/kaya/pkg/scheduled"
 )
 
 const footerStateMarker = "[Session state @"

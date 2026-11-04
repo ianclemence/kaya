@@ -8,8 +8,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/ianclemence/kaya/pkg/capability"
-	"github.com/ianclemence/kaya/pkg/connector"
+	"github.com/kayahq/kaya/pkg/capability"
+	"github.com/kayahq/kaya/pkg/connector"
 )
 
 func TestRegisterConnectorTools(t *testing.T) {

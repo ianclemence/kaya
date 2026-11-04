@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/ianclemence/kaya/pkg/computer"
-	"github.com/ianclemence/kaya/pkg/permissions"
+	"github.com/kayahq/kaya/pkg/computer"
+	"github.com/kayahq/kaya/pkg/permissions"
 )
 
 // ComputerCall is the server-resolved binding for one computer operation.

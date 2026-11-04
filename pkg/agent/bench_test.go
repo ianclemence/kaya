@@ -4,9 +4,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ianclemence/kaya/pkg/contexts"
-	"github.com/ianclemence/kaya/pkg/kayastate"
-	"github.com/ianclemence/kaya/pkg/personalcontext"
+	"github.com/kayahq/kaya/pkg/contexts"
+	"github.com/kayahq/kaya/pkg/kayastate"
+	"github.com/kayahq/kaya/pkg/personalcontext"
 )
 
 // BenchmarkContextFilteredMemoryAssembly measures building the model-visible

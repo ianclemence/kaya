@@ -1,5 +1,5 @@
 // Kaya - Ultra-lightweight personal AI agent
-// Inspired by and based on KAYA: https://github.com/ianclemence/kaya
+// Inspired by and based on KAYA: https://github.com/kayahq/kaya
 // License: MIT
 //
 // Copyright (c) 2026 Kaya contributors
@@ -18,8 +18,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ianclemence/kaya/pkg/auth"
-	"github.com/ianclemence/kaya/pkg/config"
+	"github.com/kayahq/kaya/pkg/auth"
+	"github.com/kayahq/kaya/pkg/config"
 )
 
 type HTTPProvider struct {

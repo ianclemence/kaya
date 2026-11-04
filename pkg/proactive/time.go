@@ -4,8 +4,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ianclemence/kaya/pkg/personalcontext"
-	"github.com/ianclemence/kaya/pkg/tools"
+	"github.com/kayahq/kaya/pkg/personalcontext"
+	"github.com/kayahq/kaya/pkg/tools"
 )
 
 // UserLocation resolves the user's timezone for quiet-hours evaluation:

@@ -28,7 +28,7 @@ VERSION="${1:-}"
 PUBLISH=0
 [ "${2:-}" = "--publish" ] && PUBLISH=1
 KEY="${KAYA_RELEASE_KEY:-$HOME/.config/kaya-release/release.key}"
-REPO_SLUG="${KAYA_RELEASE_REPO:-ianclemence/kaya}"
+REPO_SLUG="${KAYA_RELEASE_REPO:-kayahq/kaya}"
 ARCHES="${KAYA_RELEASE_ARCHES:-arm64 amd64}"
 
 die() { echo "release: $*" >&2; exit 1; }

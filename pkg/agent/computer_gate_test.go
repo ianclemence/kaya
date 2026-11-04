@@ -6,9 +6,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ianclemence/kaya/pkg/computer"
-	"github.com/ianclemence/kaya/pkg/db"
-	"github.com/ianclemence/kaya/pkg/live"
+	"github.com/kayahq/kaya/pkg/computer"
+	"github.com/kayahq/kaya/pkg/db"
+	"github.com/kayahq/kaya/pkg/live"
 )
 
 // Screenshot (observation) is a broker read; control ops (click, type,

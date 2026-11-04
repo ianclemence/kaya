@@ -9,8 +9,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ianclemence/kaya/pkg/config"
-	"github.com/ianclemence/kaya/pkg/hardware"
+	"github.com/kayahq/kaya/pkg/config"
+	"github.com/kayahq/kaya/pkg/hardware"
 )
 
 // ExportMinFreeBytes is the pre-flight floor for writing an archive:

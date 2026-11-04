@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/ianclemence/kaya/pkg/product"
+	"github.com/kayahq/kaya/pkg/product"
 )
 
 // Secret-shaped values injected into event payloads, credentials, browser

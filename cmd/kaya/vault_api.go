@@ -10,9 +10,9 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/ianclemence/kaya/pkg/cards"
-	"github.com/ianclemence/kaya/pkg/credentials"
-	"github.com/ianclemence/kaya/pkg/siteicon"
+	"github.com/kayahq/kaya/pkg/cards"
+	"github.com/kayahq/kaya/pkg/credentials"
+	"github.com/kayahq/kaya/pkg/siteicon"
 )
 
 // The Vault's owner-facing API. The phone saves what the owner types here and

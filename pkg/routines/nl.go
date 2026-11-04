@@ -18,7 +18,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ianclemence/kaya/pkg/scheduled"
+	"github.com/kayahq/kaya/pkg/scheduled"
 )
 
 // Intent is a parsed routine request.

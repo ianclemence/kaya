@@ -8,8 +8,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ianclemence/kaya/pkg/tools"
-	"github.com/ianclemence/kaya/pkg/uploads"
+	"github.com/kayahq/kaya/pkg/tools"
+	"github.com/kayahq/kaya/pkg/uploads"
 )
 
 // An attachment must be openable by the tool the model is told to use. Before

@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ianclemence/kaya/pkg/personalcontext"
+	"github.com/kayahq/kaya/pkg/personalcontext"
 )
 
 func tripStore(t *testing.T) (*personalcontext.Store, personalcontext.Entry) {

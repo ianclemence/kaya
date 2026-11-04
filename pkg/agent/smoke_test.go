@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ianclemence/kaya/pkg/personalcontext"
+	"github.com/kayahq/kaya/pkg/personalcontext"
 )
 
 // This file is the operational smoke test for Personal Context v1: it drives

@@ -17,9 +17,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ianclemence/kaya/pkg/provider"
-	gmailprov "github.com/ianclemence/kaya/pkg/providers/gmail"
-	"github.com/ianclemence/kaya/pkg/skills"
+	"github.com/kayahq/kaya/pkg/provider"
+	gmailprov "github.com/kayahq/kaya/pkg/providers/gmail"
+	"github.com/kayahq/kaya/pkg/skills"
 )
 
 // Config mirrors the Gmail provider: injectable client + base for tests.

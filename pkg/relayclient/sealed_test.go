@@ -17,9 +17,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ianclemence/kaya/pkg/entitlement"
-	"github.com/ianclemence/kaya/pkg/relay/server"
-	"github.com/ianclemence/kaya/pkg/relaycrypto"
+	"github.com/kayahq/kaya/pkg/entitlement"
+	"github.com/kayahq/kaya/pkg/relay/server"
+	"github.com/kayahq/kaya/pkg/relaycrypto"
 )
 
 // tap sits in front of the relay and keeps everything that crosses it, which

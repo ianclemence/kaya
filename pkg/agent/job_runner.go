@@ -6,10 +6,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ianclemence/kaya/pkg/bus"
-	"github.com/ianclemence/kaya/pkg/logger"
-	"github.com/ianclemence/kaya/pkg/tasks"
-	"github.com/ianclemence/kaya/pkg/tools"
+	"github.com/kayahq/kaya/pkg/bus"
+	"github.com/kayahq/kaya/pkg/logger"
+	"github.com/kayahq/kaya/pkg/tasks"
+	"github.com/kayahq/kaya/pkg/tools"
 )
 
 // subagentJobKind is the one job kind this runtime knows how to execute.

@@ -9,7 +9,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/ianclemence/kaya/pkg/provider"
+	"github.com/kayahq/kaya/pkg/provider"
 )
 
 // MaxForecastDays is how far ahead Open-Meteo's free forecast reaches.

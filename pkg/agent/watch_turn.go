@@ -6,9 +6,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ianclemence/kaya/pkg/cevents"
-	"github.com/ianclemence/kaya/pkg/logger"
-	"github.com/ianclemence/kaya/pkg/watch"
+	"github.com/kayahq/kaya/pkg/cevents"
+	"github.com/kayahq/kaya/pkg/logger"
+	"github.com/kayahq/kaya/pkg/watch"
 )
 
 // Deterministic watch control.

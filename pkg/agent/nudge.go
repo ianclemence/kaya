@@ -5,8 +5,8 @@ import (
 	"strings"
 	"sync/atomic"
 
-	"github.com/ianclemence/kaya/pkg/providers"
-	"github.com/ianclemence/kaya/pkg/session"
+	"github.com/kayahq/kaya/pkg/providers"
+	"github.com/kayahq/kaya/pkg/session"
 )
 
 type NudgeConfig struct {

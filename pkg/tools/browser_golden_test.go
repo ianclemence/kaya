@@ -13,8 +13,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ianclemence/kaya/pkg/browser"
-	"github.com/ianclemence/kaya/pkg/browser/native"
+	"github.com/kayahq/kaya/pkg/browser"
+	"github.com/kayahq/kaya/pkg/browser/native"
 )
 
 // The golden set.

@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ianclemence/kaya/pkg/credentials"
+	"github.com/kayahq/kaya/pkg/credentials"
 )
 
 // TestAConnectedPostgres runs against a real database when one is given

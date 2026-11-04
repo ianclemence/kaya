@@ -17,8 +17,8 @@ import (
 
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 
-	"github.com/ianclemence/kaya/pkg/config"
-	"github.com/ianclemence/kaya/pkg/logger"
+	"github.com/kayahq/kaya/pkg/config"
+	"github.com/kayahq/kaya/pkg/logger"
 )
 
 type headerTransport struct {

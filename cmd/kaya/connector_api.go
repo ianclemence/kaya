@@ -8,9 +8,9 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/ianclemence/kaya/pkg/agent"
-	"github.com/ianclemence/kaya/pkg/connectedapp"
-	"github.com/ianclemence/kaya/pkg/connector"
+	"github.com/kayahq/kaya/pkg/agent"
+	"github.com/kayahq/kaya/pkg/connectedapp"
+	"github.com/kayahq/kaya/pkg/connector"
 )
 
 // connectorWorkspace resolves the workspace that holds installed connectors.

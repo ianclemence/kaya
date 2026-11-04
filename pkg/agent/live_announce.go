@@ -1,8 +1,8 @@
 package agent
 
 import (
-	"github.com/ianclemence/kaya/pkg/bus"
-	"github.com/ianclemence/kaya/pkg/live"
+	"github.com/kayahq/kaya/pkg/bus"
+	"github.com/kayahq/kaya/pkg/live"
 )
 
 // SettleSessionSurfaces retires the live surfaces of one finished turn.

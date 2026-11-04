@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/ianclemence/kaya/pkg/skills"
+	"github.com/kayahq/kaya/pkg/skills"
 )
 
 // Narration guard (audit P1/P2, change C3): the deterministic routine layer

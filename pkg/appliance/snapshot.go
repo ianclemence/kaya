@@ -5,7 +5,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/ianclemence/kaya/pkg/kayastate"
+	"github.com/kayahq/kaya/pkg/kayastate"
 )
 
 // PreUpdateSnapshot takes a recovery snapshot of the personal AI

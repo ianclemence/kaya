@@ -22,13 +22,13 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/ianclemence/kaya/pkg/appliance"
-	"github.com/ianclemence/kaya/pkg/config"
-	"github.com/ianclemence/kaya/pkg/kayastate"
-	"github.com/ianclemence/kaya/pkg/localtrust"
-	"github.com/ianclemence/kaya/pkg/personalcontext"
-	"github.com/ianclemence/kaya/pkg/providers"
-	"github.com/ianclemence/kaya/pkg/skills"
+	"github.com/kayahq/kaya/pkg/appliance"
+	"github.com/kayahq/kaya/pkg/config"
+	"github.com/kayahq/kaya/pkg/kayastate"
+	"github.com/kayahq/kaya/pkg/localtrust"
+	"github.com/kayahq/kaya/pkg/personalcontext"
+	"github.com/kayahq/kaya/pkg/providers"
+	"github.com/kayahq/kaya/pkg/skills"
 )
 
 //go:embed all:web

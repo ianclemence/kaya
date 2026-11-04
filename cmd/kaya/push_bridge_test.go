@@ -3,8 +3,8 @@ package main
 import (
 	"testing"
 
-	"github.com/ianclemence/kaya/pkg/bus"
-	"github.com/ianclemence/kaya/pkg/push"
+	"github.com/kayahq/kaya/pkg/bus"
+	"github.com/kayahq/kaya/pkg/push"
 )
 
 func TestPushCategoryFor(t *testing.T) {

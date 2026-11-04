@@ -13,11 +13,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ianclemence/kaya/pkg/artifacts"
-	"github.com/ianclemence/kaya/pkg/dashboards"
-	"github.com/ianclemence/kaya/pkg/documents"
-	"github.com/ianclemence/kaya/pkg/motion"
-	"github.com/ianclemence/kaya/pkg/tools"
+	"github.com/kayahq/kaya/pkg/artifacts"
+	"github.com/kayahq/kaya/pkg/dashboards"
+	"github.com/kayahq/kaya/pkg/documents"
+	"github.com/kayahq/kaya/pkg/motion"
+	"github.com/kayahq/kaya/pkg/tools"
 )
 
 // registerArtifactRoutes exposes runtime-validated handoffs ("things Kaya

@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ianclemence/kaya/pkg/scheduled"
+	"github.com/kayahq/kaya/pkg/scheduled"
 )
 
 func mustCreate(t *testing.T, fake *fakeScheduleService, item *scheduled.ScheduledItem) {

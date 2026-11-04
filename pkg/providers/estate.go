@@ -3,8 +3,8 @@ package providers
 import (
 	"strings"
 
-	"github.com/ianclemence/kaya/pkg/config"
-	"github.com/ianclemence/kaya/pkg/modes"
+	"github.com/kayahq/kaya/pkg/config"
+	"github.com/kayahq/kaya/pkg/modes"
 )
 
 // ProviderInfo is one entry in the device's model estate: which models

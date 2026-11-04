@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ianclemence/kaya/pkg/turnlog"
+	"github.com/kayahq/kaya/pkg/turnlog"
 )
 
 // recordTurn puts a turn into the state a reply is in while it streams.

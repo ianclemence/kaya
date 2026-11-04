@@ -6,9 +6,9 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/ianclemence/kaya/pkg/config"
-	"github.com/ianclemence/kaya/pkg/db"
-	"github.com/ianclemence/kaya/pkg/providers"
+	"github.com/kayahq/kaya/pkg/config"
+	"github.com/kayahq/kaya/pkg/db"
+	"github.com/kayahq/kaya/pkg/providers"
 )
 
 // countingEmbedder records how many times the embedding provider was hit.

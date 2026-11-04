@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ianclemence/kaya/pkg/scheduled"
+	"github.com/kayahq/kaya/pkg/scheduled"
 )
 
 var intervalRegex = regexp.MustCompile(`^(\d+h)?(\d+m)?(\d+s)?$`)

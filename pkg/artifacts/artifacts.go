@@ -25,7 +25,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ianclemence/kaya/pkg/redact"
+	"github.com/kayahq/kaya/pkg/redact"
 )
 
 // Kinds are deliberately coarse. Semantic rendering (email looks like

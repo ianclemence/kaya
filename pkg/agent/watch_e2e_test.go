@@ -10,8 +10,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ianclemence/kaya/pkg/proactive"
-	"github.com/ianclemence/kaya/pkg/watch"
+	"github.com/kayahq/kaya/pkg/proactive"
+	"github.com/kayahq/kaya/pkg/watch"
 )
 
 // End-to-end watch tests at the agent layer: the real loop (governance,

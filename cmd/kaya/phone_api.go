@@ -7,8 +7,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ianclemence/kaya/pkg/agent"
-	"github.com/ianclemence/kaya/pkg/life"
+	"github.com/kayahq/kaya/pkg/agent"
+	"github.com/kayahq/kaya/pkg/life"
 )
 
 // registerPhoneRoutes is how the owner's phone shares what they switched on

@@ -9,7 +9,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/ianclemence/kaya/pkg/appliance"
+	"github.com/kayahq/kaya/pkg/appliance"
 )
 
 //go:embed CHANGELOG.md

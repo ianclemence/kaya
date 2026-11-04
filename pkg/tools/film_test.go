@@ -8,8 +8,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/ianclemence/kaya/pkg/artifacts"
-	"github.com/ianclemence/kaya/pkg/film"
+	"github.com/kayahq/kaya/pkg/artifacts"
+	"github.com/kayahq/kaya/pkg/film"
 )
 
 func filmWorkspace(t *testing.T) string {

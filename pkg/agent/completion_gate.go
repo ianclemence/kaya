@@ -22,7 +22,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/ianclemence/kaya/pkg/capability"
+	"github.com/kayahq/kaya/pkg/capability"
 )
 
 // completionClaimRE matches prose that asserts Kaya completed an action:

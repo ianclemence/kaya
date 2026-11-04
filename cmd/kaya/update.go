@@ -13,8 +13,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ianclemence/kaya/pkg/appliance"
-	"github.com/ianclemence/kaya/pkg/changelog"
+	"github.com/kayahq/kaya/pkg/appliance"
+	"github.com/kayahq/kaya/pkg/changelog"
 )
 
 // updateCmd deploys a Kaya release. It runs as the invoking user and only
@@ -123,7 +123,7 @@ func updateReleaseChannel(scope appliance.ScopePaths, dryRun, force bool) error 
 }
 
 // kayaRepo is the release repository.
-const kayaRepo = "ianclemence/kaya"
+const kayaRepo = "kayahq/kaya"
 
 func offline() bool {
 	return os.Getenv("KAYA_OFFLINE") != ""

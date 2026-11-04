@@ -21,8 +21,8 @@ import (
 	"os"
 	"strings"
 
-	"github.com/ianclemence/kaya/pkg/entitlement"
-	"github.com/ianclemence/kaya/pkg/relay/server"
+	"github.com/kayahq/kaya/pkg/entitlement"
+	"github.com/kayahq/kaya/pkg/relay/server"
 )
 
 func main() {

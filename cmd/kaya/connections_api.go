@@ -7,10 +7,10 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/ianclemence/kaya/pkg/config"
-	"github.com/ianclemence/kaya/pkg/connectedapp"
-	"github.com/ianclemence/kaya/pkg/credentials"
-	"github.com/ianclemence/kaya/pkg/skills"
+	"github.com/kayahq/kaya/pkg/config"
+	"github.com/kayahq/kaya/pkg/connectedapp"
+	"github.com/kayahq/kaya/pkg/credentials"
+	"github.com/kayahq/kaya/pkg/skills"
 )
 
 // registerConnectionsRoutes wires the device-facing connected-apps API.

@@ -5,7 +5,7 @@ import (
 	"strings"
 	"unicode"
 
-	"github.com/ianclemence/kaya/pkg/personalcontext"
+	"github.com/kayahq/kaya/pkg/personalcontext"
 )
 
 // Effort classifies how much work a turn deserves. Kaya should be fast for

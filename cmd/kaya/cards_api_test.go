@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/ianclemence/kaya/pkg/cards"
+	"github.com/kayahq/kaya/pkg/cards"
 )
 
 func cardsMux(t *testing.T) *http.ServeMux {

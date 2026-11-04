@@ -4,7 +4,7 @@ import (
 	"os"
 	"os/signal"
 
-	"github.com/ianclemence/kaya/pkg/hardware"
+	"github.com/kayahq/kaya/pkg/hardware"
 )
 
 func markCleanStopOnSignal(marker string) {

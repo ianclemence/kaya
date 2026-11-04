@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ianclemence/kaya/pkg/providers"
+	"github.com/kayahq/kaya/pkg/providers"
 )
 
 // The phrases that historically depended on the LLM classifier (and were

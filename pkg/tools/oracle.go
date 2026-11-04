@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/ianclemence/kaya/pkg/logger"
+	"github.com/kayahq/kaya/pkg/logger"
 )
 
 // OracleTool bundles multiple files and a prompt into a single "context package" for the LLM.

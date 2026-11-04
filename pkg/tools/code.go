@@ -6,9 +6,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ianclemence/kaya/pkg/credentials"
-	"github.com/ianclemence/kaya/pkg/product"
-	githubprov "github.com/ianclemence/kaya/pkg/providers/github"
+	"github.com/kayahq/kaya/pkg/credentials"
+	"github.com/kayahq/kaya/pkg/product"
+	githubprov "github.com/kayahq/kaya/pkg/providers/github"
 )
 
 // CodeSearchTool searches code across repositories the connected GitHub

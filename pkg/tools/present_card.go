@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/ianclemence/kaya/pkg/cards"
+	"github.com/kayahq/kaya/pkg/cards"
 )
 
 // PresentCardTool lets Kaya show an answer as a card instead of writing it:

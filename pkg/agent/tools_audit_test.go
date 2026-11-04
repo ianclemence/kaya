@@ -3,8 +3,8 @@ package agent
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/ianclemence/kaya/pkg/capability"
-	"github.com/ianclemence/kaya/pkg/tools"
+	"github.com/kayahq/kaya/pkg/capability"
+	"github.com/kayahq/kaya/pkg/tools"
 	"os"
 	"sort"
 	"strings"

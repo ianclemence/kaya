@@ -5,8 +5,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/ianclemence/kaya/pkg/bus"
-	"github.com/ianclemence/kaya/pkg/providers"
+	"github.com/kayahq/kaya/pkg/bus"
+	"github.com/kayahq/kaya/pkg/providers"
 )
 
 // MockLLMProvider is a test implementation of LLMProvider

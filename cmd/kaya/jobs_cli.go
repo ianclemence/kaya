@@ -7,8 +7,8 @@ import (
 	"os"
 	"strings"
 
-	"github.com/ianclemence/kaya/pkg/jobs"
-	"github.com/ianclemence/kaya/pkg/tools"
+	"github.com/kayahq/kaya/pkg/jobs"
+	"github.com/kayahq/kaya/pkg/tools"
 )
 
 // jobsCmd is `kaya jobs`: what Kaya takes on, from the terminal, through

@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ianclemence/kaya/pkg/providers"
+	"github.com/kayahq/kaya/pkg/providers"
 )
 
 // The summary outlives the day it was written: it must pin the clock and

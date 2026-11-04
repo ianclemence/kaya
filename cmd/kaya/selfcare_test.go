@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/ianclemence/kaya/pkg/awareness"
+	"github.com/kayahq/kaya/pkg/awareness"
 )
 
 // Repeated failed access from another machine on the network reaches the

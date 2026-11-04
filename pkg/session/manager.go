@@ -7,10 +7,10 @@ import (
 	"sync"
 	"time"
 
-	"github.com/ianclemence/kaya/pkg/providers"
-	"github.com/ianclemence/kaya/pkg/rag"
-	"github.com/ianclemence/kaya/pkg/retrieval"
-	"github.com/ianclemence/kaya/pkg/utils"
+	"github.com/kayahq/kaya/pkg/providers"
+	"github.com/kayahq/kaya/pkg/rag"
+	"github.com/kayahq/kaya/pkg/retrieval"
+	"github.com/kayahq/kaya/pkg/utils"
 )
 
 type Session struct {

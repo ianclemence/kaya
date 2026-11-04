@@ -20,8 +20,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ianclemence/kaya/pkg/routines"
-	"github.com/ianclemence/kaya/pkg/scheduled"
+	"github.com/kayahq/kaya/pkg/routines"
+	"github.com/kayahq/kaya/pkg/scheduled"
 )
 
 // Kind is the user-facing shape of a Item. Owners never choose it; Kaya

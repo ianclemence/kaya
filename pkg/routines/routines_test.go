@@ -6,8 +6,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ianclemence/kaya/pkg/product"
-	"github.com/ianclemence/kaya/pkg/scheduled"
+	"github.com/kayahq/kaya/pkg/product"
+	"github.com/kayahq/kaya/pkg/scheduled"
 	_ "modernc.org/sqlite"
 )
 

@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/ianclemence/kaya/pkg/tasks"
+	"github.com/kayahq/kaya/pkg/tasks"
 )
 
 // The task summary carries goal, authoritative status, progress and current

@@ -9,10 +9,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ianclemence/kaya/pkg/agent"
-	"github.com/ianclemence/kaya/pkg/cards"
-	"github.com/ianclemence/kaya/pkg/cevents"
-	"github.com/ianclemence/kaya/pkg/scheduled"
+	"github.com/kayahq/kaya/pkg/agent"
+	"github.com/kayahq/kaya/pkg/cards"
+	"github.com/kayahq/kaya/pkg/cevents"
+	"github.com/kayahq/kaya/pkg/scheduled"
 )
 
 // Reminders as promises, not messages. When one goes off the owner gets the

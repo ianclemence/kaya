@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/ianclemence/kaya/pkg/config"
+	"github.com/kayahq/kaya/pkg/config"
 )
 
 // DefaultWorkspaceDir is where a personal AI keeps its runtime workspace.

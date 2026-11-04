@@ -13,7 +13,7 @@ import (
 	"errors"
 	"os"
 
-	"github.com/ianclemence/kaya/pkg/bus"
+	"github.com/kayahq/kaya/pkg/bus"
 )
 
 // Transcript is a recognition result. Partial transcripts support

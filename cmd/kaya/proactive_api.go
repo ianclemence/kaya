@@ -3,7 +3,7 @@ package main
 import (
 	"net/http"
 
-	"github.com/ianclemence/kaya/pkg/agent"
+	"github.com/kayahq/kaya/pkg/agent"
 )
 
 // registerProactiveRoutes exposes the owner-facing view of Kaya's quiet work.

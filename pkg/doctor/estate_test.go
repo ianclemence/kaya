@@ -4,7 +4,7 @@ import (
 	"context"
 	"testing"
 
-	"github.com/ianclemence/kaya/pkg/providers"
+	"github.com/kayahq/kaya/pkg/providers"
 )
 
 func estateRunner(e []providers.ProviderInfo) *Doctor {

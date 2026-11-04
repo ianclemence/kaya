@@ -10,7 +10,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/ianclemence/kaya/pkg/skills"
+	"github.com/kayahq/kaya/pkg/skills"
 )
 
 // StandingGrant is one validated grant line.

@@ -7,9 +7,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/ianclemence/kaya/pkg/config"
-	"github.com/ianclemence/kaya/pkg/db"
-	"github.com/ianclemence/kaya/pkg/schema"
+	"github.com/kayahq/kaya/pkg/config"
+	"github.com/kayahq/kaya/pkg/db"
+	"github.com/kayahq/kaya/pkg/schema"
 )
 
 const testPassphrase = "correct horse battery staple"

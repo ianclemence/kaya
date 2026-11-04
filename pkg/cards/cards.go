@@ -17,7 +17,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/ianclemence/kaya/pkg/bus"
+	"github.com/kayahq/kaya/pkg/bus"
 )
 
 // Kind is the card family. Only listed kinds validate; new kinds ship

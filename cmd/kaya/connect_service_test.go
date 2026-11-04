@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/ianclemence/kaya/pkg/config"
+	"github.com/kayahq/kaya/pkg/config"
 )
 
 // The phone's remote-pairing link is a contract with the app (lib/pairing.ts):

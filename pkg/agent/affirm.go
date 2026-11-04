@@ -3,7 +3,7 @@ package agent
 import (
 	"strings"
 
-	"github.com/ianclemence/kaya/pkg/permissions"
+	"github.com/kayahq/kaya/pkg/permissions"
 )
 
 // Saying yes and no in other languages. An owner who talks to Kaya in Spanish,

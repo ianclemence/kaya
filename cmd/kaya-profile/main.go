@@ -5,7 +5,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/ianclemence/kaya/pkg/profiles"
+	"github.com/kayahq/kaya/pkg/profiles"
 )
 
 func main() {

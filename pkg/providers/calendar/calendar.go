@@ -14,8 +14,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ianclemence/kaya/pkg/provider"
-	"github.com/ianclemence/kaya/pkg/skills"
+	"github.com/kayahq/kaya/pkg/provider"
+	"github.com/kayahq/kaya/pkg/skills"
 )
 
 // Config mirrors the other data providers: injectable HTTP client + base

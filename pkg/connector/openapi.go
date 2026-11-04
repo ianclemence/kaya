@@ -6,8 +6,8 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/ianclemence/kaya/pkg/capability"
-	"github.com/ianclemence/kaya/pkg/connectedapp"
+	"github.com/kayahq/kaya/pkg/capability"
+	"github.com/kayahq/kaya/pkg/connectedapp"
 )
 
 // openAPIDoc is the subset of an OpenAPI 3 document the generator reads. It is

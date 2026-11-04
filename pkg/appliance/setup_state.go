@@ -10,7 +10,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/ianclemence/kaya/pkg/config"
+	"github.com/kayahq/kaya/pkg/config"
 )
 
 const (

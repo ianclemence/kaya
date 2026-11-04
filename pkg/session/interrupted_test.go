@@ -7,8 +7,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ianclemence/kaya/pkg/db"
-	"github.com/ianclemence/kaya/pkg/providers"
+	"github.com/kayahq/kaya/pkg/db"
+	"github.com/kayahq/kaya/pkg/providers"
 )
 
 // A reply a restart cut off carries a marker, and that marker has to survive

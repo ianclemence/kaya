@@ -12,8 +12,8 @@ import (
 	"github.com/openai/openai-go/v3/responses"
 	"github.com/openai/openai-go/v3/shared"
 
-	"github.com/ianclemence/kaya/pkg/auth"
-	"github.com/ianclemence/kaya/pkg/logger"
+	"github.com/kayahq/kaya/pkg/auth"
+	"github.com/kayahq/kaya/pkg/logger"
 )
 
 const (

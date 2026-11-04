@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ianclemence/kaya/pkg/cards"
+	"github.com/kayahq/kaya/pkg/cards"
 )
 
 // A wedged browser must tell the owner it was reset. The card is emitted

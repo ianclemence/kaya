@@ -8,7 +8,7 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/ianclemence/kaya/pkg/logger"
+	"github.com/kayahq/kaya/pkg/logger"
 )
 
 // MediaMeta holds metadata about a stored media file.

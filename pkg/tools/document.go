@@ -7,8 +7,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ianclemence/kaya/pkg/artifacts"
-	"github.com/ianclemence/kaya/pkg/documents"
+	"github.com/kayahq/kaya/pkg/artifacts"
+	"github.com/kayahq/kaya/pkg/documents"
 )
 
 // DocumentTool makes a document the owner can keep, print, send or sign: a CV,

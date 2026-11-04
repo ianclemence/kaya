@@ -3,8 +3,8 @@ package session
 import (
 	"testing"
 
-	"github.com/ianclemence/kaya/pkg/db"
-	"github.com/ianclemence/kaya/pkg/providers"
+	"github.com/kayahq/kaya/pkg/db"
+	"github.com/kayahq/kaya/pkg/providers"
 )
 
 // The source channel is provenance, not conversation identity: it must

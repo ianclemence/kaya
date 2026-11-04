@@ -10,7 +10,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ianclemence/kaya/pkg/config"
+	"github.com/kayahq/kaya/pkg/config"
 )
 
 func withFetchHook(t *testing.T, hook func(ctx context.Context, cfg *config.Config, name string) ([]string, error)) {

@@ -4,9 +4,9 @@ import (
 	"context"
 	"time"
 
-	"github.com/ianclemence/kaya/pkg/logger"
-	"github.com/ianclemence/kaya/pkg/provider"
-	"github.com/ianclemence/kaya/pkg/providers"
+	"github.com/kayahq/kaya/pkg/logger"
+	"github.com/kayahq/kaya/pkg/provider"
+	"github.com/kayahq/kaya/pkg/providers"
 )
 
 // llmRetryDelays bounds turn-level retries: one slow or blipped provider

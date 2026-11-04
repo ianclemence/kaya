@@ -6,8 +6,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ianclemence/kaya/pkg/cards"
-	"github.com/ianclemence/kaya/pkg/personalcontext"
+	"github.com/kayahq/kaya/pkg/cards"
+	"github.com/kayahq/kaya/pkg/personalcontext"
 )
 
 // MemoryExplainTool answers "why do you believe that?" with the receipt: the

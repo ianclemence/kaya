@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ianclemence/kaya/pkg/appliance"
+	"github.com/kayahq/kaya/pkg/appliance"
 )
 
 // checkBinaries warns when a stale `kaya` binary earlier in PATH shadows the

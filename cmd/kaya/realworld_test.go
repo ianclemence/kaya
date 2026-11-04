@@ -8,9 +8,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ianclemence/kaya/pkg/personalcontext"
-	"github.com/ianclemence/kaya/pkg/scheduled"
-	"github.com/ianclemence/kaya/pkg/session"
+	"github.com/kayahq/kaya/pkg/personalcontext"
+	"github.com/kayahq/kaya/pkg/scheduled"
+	"github.com/kayahq/kaya/pkg/session"
 )
 
 // TestMemoryExtraction tests real-world memory extraction scenarios.

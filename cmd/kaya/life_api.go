@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ianclemence/kaya/pkg/life"
+	"github.com/kayahq/kaya/pkg/life"
 )
 
 // registerLifeRoutes serves the owner's own records to their devices: the

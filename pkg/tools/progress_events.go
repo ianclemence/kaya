@@ -5,7 +5,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/ianclemence/kaya/pkg/bus"
+	"github.com/kayahq/kaya/pkg/bus"
 )
 
 type ProgressEvent struct {

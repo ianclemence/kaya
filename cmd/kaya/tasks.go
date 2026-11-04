@@ -7,10 +7,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ianclemence/kaya/pkg/db"
-	"github.com/ianclemence/kaya/pkg/kayastate"
-	"github.com/ianclemence/kaya/pkg/routines"
-	"github.com/ianclemence/kaya/pkg/scheduled"
+	"github.com/kayahq/kaya/pkg/db"
+	"github.com/kayahq/kaya/pkg/kayastate"
+	"github.com/kayahq/kaya/pkg/routines"
+	"github.com/kayahq/kaya/pkg/scheduled"
 )
 
 // tasksCmd implements `kaya tasks`, the terminal surface for durable work:

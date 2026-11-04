@@ -5,9 +5,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ianclemence/kaya/pkg/capability"
-	"github.com/ianclemence/kaya/pkg/cevents"
-	"github.com/ianclemence/kaya/pkg/product"
+	"github.com/kayahq/kaya/pkg/capability"
+	"github.com/kayahq/kaya/pkg/cevents"
+	"github.com/kayahq/kaya/pkg/product"
 )
 
 func ev(t cevents.Type, payload map[string]interface{}) *cevents.Event {

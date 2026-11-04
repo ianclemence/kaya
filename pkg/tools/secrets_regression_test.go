@@ -6,8 +6,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/ianclemence/kaya/pkg/logger"
-	"github.com/ianclemence/kaya/pkg/redact"
+	"github.com/kayahq/kaya/pkg/logger"
+	"github.com/kayahq/kaya/pkg/redact"
 )
 
 // Registry execution logs must never carry secret-shaped model args: the

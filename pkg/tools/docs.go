@@ -6,9 +6,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ianclemence/kaya/pkg/credentials"
-	"github.com/ianclemence/kaya/pkg/product"
-	notionprov "github.com/ianclemence/kaya/pkg/providers/notion"
+	"github.com/kayahq/kaya/pkg/credentials"
+	"github.com/kayahq/kaya/pkg/product"
+	notionprov "github.com/kayahq/kaya/pkg/providers/notion"
 )
 
 // DocsSearchTool searches Notion pages shared with the connected

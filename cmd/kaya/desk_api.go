@@ -3,9 +3,9 @@ package main
 import (
 	"net/http"
 
-	"github.com/ianclemence/kaya/pkg/agent"
-	"github.com/ianclemence/kaya/pkg/artifacts"
-	"github.com/ianclemence/kaya/pkg/desk"
+	"github.com/kayahq/kaya/pkg/agent"
+	"github.com/kayahq/kaya/pkg/artifacts"
+	"github.com/kayahq/kaya/pkg/desk"
 )
 
 // registerDeskRoutes wires the Desk: a read-only feed of the things Kaya has

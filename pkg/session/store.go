@@ -1,6 +1,6 @@
 package session
 
-import "github.com/ianclemence/kaya/pkg/providers"
+import "github.com/kayahq/kaya/pkg/providers"
 
 type Store interface {
 	EnsureSession(key string)

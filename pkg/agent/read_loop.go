@@ -5,8 +5,8 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/ianclemence/kaya/pkg/effort"
-	"github.com/ianclemence/kaya/pkg/providers"
+	"github.com/kayahq/kaya/pkg/effort"
+	"github.com/kayahq/kaya/pkg/providers"
 )
 
 var rereadable = map[string]bool{

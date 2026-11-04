@@ -10,11 +10,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ianclemence/kaya/pkg/attention"
-	"github.com/ianclemence/kaya/pkg/cevents"
-	"github.com/ianclemence/kaya/pkg/commitments"
-	"github.com/ianclemence/kaya/pkg/logger"
-	"github.com/ianclemence/kaya/pkg/personalcontext"
+	"github.com/kayahq/kaya/pkg/attention"
+	"github.com/kayahq/kaya/pkg/cevents"
+	"github.com/kayahq/kaya/pkg/commitments"
+	"github.com/kayahq/kaya/pkg/logger"
+	"github.com/kayahq/kaya/pkg/personalcontext"
 )
 
 // Deferred extraction.

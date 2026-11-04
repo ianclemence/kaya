@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ianclemence/kaya/pkg/product"
+	"github.com/kayahq/kaya/pkg/product"
 	_ "modernc.org/sqlite"
 )
 

@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/ianclemence/kaya/pkg/capability"
-	"github.com/ianclemence/kaya/pkg/cevents"
+	"github.com/kayahq/kaya/pkg/capability"
+	"github.com/kayahq/kaya/pkg/cevents"
 )
 
 // TaskOutcome is the runtime's authoritative count of the consequential work a

@@ -18,10 +18,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ianclemence/kaya/pkg/browser"
-	"github.com/ianclemence/kaya/pkg/providers"
-	"github.com/ianclemence/kaya/pkg/tools"
-	"github.com/ianclemence/kaya/pkg/uploads"
+	"github.com/kayahq/kaya/pkg/browser"
+	"github.com/kayahq/kaya/pkg/providers"
+	"github.com/kayahq/kaya/pkg/tools"
+	"github.com/kayahq/kaya/pkg/uploads"
 )
 
 // registryHasBrowserTool reports whether the active tool set exposes

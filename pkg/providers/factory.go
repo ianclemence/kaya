@@ -3,7 +3,7 @@ package providers
 import (
 	"strings"
 
-	"github.com/ianclemence/kaya/pkg/config"
+	"github.com/kayahq/kaya/pkg/config"
 )
 
 // splitModelSpec splits a "provider:model" or "provider/model" spec, preferring

@@ -4,7 +4,7 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/ianclemence/kaya/pkg/tools"
+	"github.com/kayahq/kaya/pkg/tools"
 )
 
 func TestBrowserStepSummary(t *testing.T) {

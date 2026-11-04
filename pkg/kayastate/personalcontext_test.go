@@ -9,7 +9,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ianclemence/kaya/pkg/personalcontext"
+	"github.com/kayahq/kaya/pkg/personalcontext"
 )
 
 // pcSource builds a realistic provenance source. Refs use the store's

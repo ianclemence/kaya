@@ -8,10 +8,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ianclemence/kaya/pkg/contexts"
-	"github.com/ianclemence/kaya/pkg/kayastate"
-	"github.com/ianclemence/kaya/pkg/personalcontext"
-	"github.com/ianclemence/kaya/pkg/tools"
+	"github.com/kayahq/kaya/pkg/contexts"
+	"github.com/kayahq/kaya/pkg/kayastate"
+	"github.com/kayahq/kaya/pkg/personalcontext"
+	"github.com/kayahq/kaya/pkg/tools"
 )
 
 // TestPrivacyNoCrossContextPromptAssembly is the deterministic, model-free

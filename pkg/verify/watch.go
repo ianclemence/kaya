@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/ianclemence/kaya/pkg/watch"
+	"github.com/kayahq/kaya/pkg/watch"
 )
 
 // Selective proactive watch lifecycle: the deterministic guarantees that keep

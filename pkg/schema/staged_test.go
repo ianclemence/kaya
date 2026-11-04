@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/ianclemence/kaya/pkg/migrations"
+	"github.com/kayahq/kaya/pkg/migrations"
 	_ "modernc.org/sqlite"
 )
 

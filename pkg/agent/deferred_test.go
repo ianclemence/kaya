@@ -6,8 +6,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ianclemence/kaya/pkg/personalcontext"
-	"github.com/ianclemence/kaya/pkg/providers"
+	"github.com/kayahq/kaya/pkg/personalcontext"
+	"github.com/kayahq/kaya/pkg/providers"
 )
 
 // memProvider answers the personal-context classifier with one durable fact.

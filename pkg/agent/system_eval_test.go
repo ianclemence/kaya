@@ -13,11 +13,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ianclemence/kaya/pkg/ideas"
-	"github.com/ianclemence/kaya/pkg/permissions"
-	"github.com/ianclemence/kaya/pkg/personalcontext"
-	"github.com/ianclemence/kaya/pkg/providers"
-	"github.com/ianclemence/kaya/pkg/tools"
+	"github.com/kayahq/kaya/pkg/ideas"
+	"github.com/kayahq/kaya/pkg/permissions"
+	"github.com/kayahq/kaya/pkg/personalcontext"
+	"github.com/kayahq/kaya/pkg/providers"
+	"github.com/kayahq/kaya/pkg/tools"
 )
 
 // The system evaluation: one table of deterministic checks, grouped by the

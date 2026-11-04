@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"github.com/ianclemence/kaya/pkg/credentials"
+	"github.com/kayahq/kaya/pkg/credentials"
 	"os"
 	"os/exec"
 	"regexp"

@@ -10,10 +10,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ianclemence/kaya/pkg/agent"
-	"github.com/ianclemence/kaya/pkg/artifacts"
-	"github.com/ianclemence/kaya/pkg/meetings"
-	"github.com/ianclemence/kaya/pkg/voice"
+	"github.com/kayahq/kaya/pkg/agent"
+	"github.com/kayahq/kaya/pkg/artifacts"
+	"github.com/kayahq/kaya/pkg/meetings"
+	"github.com/kayahq/kaya/pkg/voice"
 )
 
 // registerMeetingRoutes receives recordings from the phone and transcribes

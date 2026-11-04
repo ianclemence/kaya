@@ -3,8 +3,8 @@ package main
 import (
 	"testing"
 
-	"github.com/ianclemence/kaya/pkg/config"
-	"github.com/ianclemence/kaya/pkg/providers"
+	"github.com/kayahq/kaya/pkg/config"
+	"github.com/kayahq/kaya/pkg/providers"
 )
 
 func TestMaskDeviceKey(t *testing.T) {

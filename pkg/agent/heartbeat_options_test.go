@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/ianclemence/kaya/pkg/tools"
+	"github.com/kayahq/kaya/pkg/tools"
 )
 
 // The broker refuses empty request ids, so a heartbeat that touches a

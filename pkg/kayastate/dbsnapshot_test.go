@@ -7,12 +7,12 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/ianclemence/kaya/pkg/cevents"
-	"github.com/ianclemence/kaya/pkg/db"
-	"github.com/ianclemence/kaya/pkg/permissions"
-	"github.com/ianclemence/kaya/pkg/routines"
-	"github.com/ianclemence/kaya/pkg/scheduled"
-	"github.com/ianclemence/kaya/pkg/schema"
+	"github.com/kayahq/kaya/pkg/cevents"
+	"github.com/kayahq/kaya/pkg/db"
+	"github.com/kayahq/kaya/pkg/permissions"
+	"github.com/kayahq/kaya/pkg/routines"
+	"github.com/kayahq/kaya/pkg/scheduled"
+	"github.com/kayahq/kaya/pkg/schema"
 	_ "modernc.org/sqlite"
 )
 

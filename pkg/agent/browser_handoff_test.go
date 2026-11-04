@@ -4,8 +4,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/ianclemence/kaya/pkg/live"
-	"github.com/ianclemence/kaya/pkg/tools"
+	"github.com/kayahq/kaya/pkg/live"
+	"github.com/kayahq/kaya/pkg/tools"
 )
 
 // A site that asks for a human is the one browser failure Kaya cannot

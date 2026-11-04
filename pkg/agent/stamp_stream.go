@@ -3,8 +3,8 @@ package agent
 import (
 	"strings"
 
-	"github.com/ianclemence/kaya/pkg/product"
-	"github.com/ianclemence/kaya/pkg/utils"
+	"github.com/kayahq/kaya/pkg/product"
+	"github.com/kayahq/kaya/pkg/utils"
 )
 
 // closingOfferHoldMax bounds the trailing text held back while the runtime

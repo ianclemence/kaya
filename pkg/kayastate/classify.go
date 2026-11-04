@@ -5,7 +5,7 @@ import (
 	"path"
 	"strings"
 
-	"github.com/ianclemence/kaya/pkg/personalcontext"
+	"github.com/kayahq/kaya/pkg/personalcontext"
 )
 
 // classifyWorkspaceFile returns the category for a workspace-relative artifact.

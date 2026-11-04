@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ianclemence/kaya/pkg/scheduled"
+	"github.com/kayahq/kaya/pkg/scheduled"
 )
 
 func TestReminderSentenceIgnoresADiscardedDate(t *testing.T) {

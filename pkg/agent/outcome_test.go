@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/ianclemence/kaya/pkg/cevents"
+	"github.com/kayahq/kaya/pkg/cevents"
 )
 
 func consequential(capability, typ, status string) *cevents.Event {

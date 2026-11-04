@@ -16,13 +16,13 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ianclemence/kaya/pkg/bus"
-	"github.com/ianclemence/kaya/pkg/cevents"
-	"github.com/ianclemence/kaya/pkg/kayastate"
-	"github.com/ianclemence/kaya/pkg/routines"
-	"github.com/ianclemence/kaya/pkg/scheduled"
-	"github.com/ianclemence/kaya/pkg/skills"
-	"github.com/ianclemence/kaya/pkg/tools"
+	"github.com/kayahq/kaya/pkg/bus"
+	"github.com/kayahq/kaya/pkg/cevents"
+	"github.com/kayahq/kaya/pkg/kayastate"
+	"github.com/kayahq/kaya/pkg/routines"
+	"github.com/kayahq/kaya/pkg/scheduled"
+	"github.com/kayahq/kaya/pkg/skills"
+	"github.com/kayahq/kaya/pkg/tools"
 )
 
 const routinePendingCapability = "routine.create"

@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/ianclemence/kaya/pkg/browser"
+	"github.com/kayahq/kaya/pkg/browser"
 )
 
 // The persistent profile reaches the browser launch: without it, cookies and

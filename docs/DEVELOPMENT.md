@@ -35,7 +35,7 @@ On a platform with no prebuilt binary the updater fetches the release tag into a
 throwaway checkout and builds that.
 
 The Kaya app is a separate repository:
-[kaya-app](https://github.com/ianclemence/kaya-app).
+[kaya-app](https://github.com/kayahq/kaya-app).
 
 Before you change how Kaya decides what it may do, read
 [the Permission Broker](PERMISSION-BROKER.md) and [How Kaya works](README.md).

@@ -36,7 +36,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/ianclemence/kaya/pkg/credentials"
+	"github.com/kayahq/kaya/pkg/credentials"
 )
 
 const (

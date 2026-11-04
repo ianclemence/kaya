@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ianclemence/kaya/pkg/film"
+	"github.com/kayahq/kaya/pkg/film"
 )
 
 // A follow-up after a drawing ("where is it?", "make the sky darker") must

@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/ianclemence/kaya/pkg/permissions"
+	"github.com/kayahq/kaya/pkg/permissions"
 )
 
 // classRisk is the gate's risk for a tool class. upload is the one

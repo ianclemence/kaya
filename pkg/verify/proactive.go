@@ -4,8 +4,8 @@ import (
 	"errors"
 	"time"
 
-	"github.com/ianclemence/kaya/pkg/commitments"
-	"github.com/ianclemence/kaya/pkg/ideas"
+	"github.com/kayahq/kaya/pkg/commitments"
+	"github.com/kayahq/kaya/pkg/ideas"
 )
 
 // Proactive opportunity lifecycle: the deterministic guarantees that keep

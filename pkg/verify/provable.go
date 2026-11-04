@@ -6,11 +6,11 @@ package verify
 import (
 	"time"
 
-	"github.com/ianclemence/kaya/pkg/browser"
-	"github.com/ianclemence/kaya/pkg/capability"
-	"github.com/ianclemence/kaya/pkg/cards"
-	"github.com/ianclemence/kaya/pkg/goals"
-	"github.com/ianclemence/kaya/pkg/tools"
+	"github.com/kayahq/kaya/pkg/browser"
+	"github.com/kayahq/kaya/pkg/capability"
+	"github.com/kayahq/kaya/pkg/cards"
+	"github.com/kayahq/kaya/pkg/goals"
+	"github.com/kayahq/kaya/pkg/tools"
 )
 
 // checkBrowserSubmitEvidence proves the purchase-class path is bound:

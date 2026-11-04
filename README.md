@@ -69,7 +69,7 @@ needs](docs/HARDWARE.md).
 
 ```bash
 sudo apt install -y git make golang-go
-git clone https://github.com/ianclemence/kaya.git
+git clone https://github.com/kayahq/kaya.git
 cd kaya
 sudo make install-kaya
 sudo reboot
@@ -79,7 +79,7 @@ Then open `http://<the machine's address>` and follow setup. (`ffmpeg` is for
 voice notes and spoken replies. On Windows, run `setup.bat`.)
 
 **On your phone.** Run `kaya pair` on the Pod for a QR code, and scan it in the
-[Kaya app](https://github.com/ianclemence/kaya-app).
+[Kaya app](https://github.com/kayahq/kaya-app).
 
 ---
 
@@ -96,7 +96,7 @@ voice notes and spoken replies. On Windows, run `setup.bat`.)
 | Work on Kaya | [Developing Kaya](docs/DEVELOPMENT.md) |
 
 The phone app lives in its own repository:
-[kaya-app](https://github.com/ianclemence/kaya-app).
+[kaya-app](https://github.com/kayahq/kaya-app).
 
 ## License
 

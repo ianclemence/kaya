@@ -56,7 +56,7 @@ app is closed: reminders, questions, and anything it thinks you should know.
 
 ```bash
 sudo apt install -y git make golang-go
-git clone https://github.com/ianclemence/kaya.git
+git clone https://github.com/kayahq/kaya.git
 cd kaya
 sudo make install-kaya
 sudo reboot

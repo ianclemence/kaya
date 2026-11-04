@@ -5,7 +5,7 @@ import (
 	"errors"
 	"net/http"
 
-	"github.com/ianclemence/kaya/pkg/skills"
+	"github.com/kayahq/kaya/pkg/skills"
 )
 
 // The console's side of signing in to Google, Microsoft and Spotify. The steps

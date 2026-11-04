@@ -21,7 +21,7 @@ set -euo pipefail
 TAG="${1:-}"; OLD_KAYA="${2:-}"; OLD_WEB="${3:-}"
 [ -n "$TAG" ] && [ -x "$OLD_KAYA" ] && [ -x "$OLD_WEB" ] || { sed -n '2,/^set -e/p' "$0" | sed 's/^# \{0,1\}//;$d'; exit 2; }
 command -v bwrap >/dev/null || { echo "bubblewrap (bwrap) is required"; exit 1; }
-REPO="${KAYA_RELEASE_REPO:-ianclemence/kaya}"
+REPO="${KAYA_RELEASE_REPO:-kayahq/kaya}"
 ARCH="$(go env GOARCH)"
 W="${E2E_DIR:-$HOME/.cache/kaya-e2e-release}"
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"

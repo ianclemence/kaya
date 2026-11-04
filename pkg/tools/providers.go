@@ -22,16 +22,16 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ianclemence/kaya/pkg/credentials"
-	"github.com/ianclemence/kaya/pkg/product"
-	"github.com/ianclemence/kaya/pkg/provider"
-	"github.com/ianclemence/kaya/pkg/providers/aqi"
-	"github.com/ianclemence/kaya/pkg/providers/crypto"
-	"github.com/ianclemence/kaya/pkg/providers/currency"
-	"github.com/ianclemence/kaya/pkg/providers/flight"
-	"github.com/ianclemence/kaya/pkg/providers/hass"
-	"github.com/ianclemence/kaya/pkg/providers/nearby"
-	"github.com/ianclemence/kaya/pkg/providers/weather"
+	"github.com/kayahq/kaya/pkg/credentials"
+	"github.com/kayahq/kaya/pkg/product"
+	"github.com/kayahq/kaya/pkg/provider"
+	"github.com/kayahq/kaya/pkg/providers/aqi"
+	"github.com/kayahq/kaya/pkg/providers/crypto"
+	"github.com/kayahq/kaya/pkg/providers/currency"
+	"github.com/kayahq/kaya/pkg/providers/flight"
+	"github.com/kayahq/kaya/pkg/providers/hass"
+	"github.com/kayahq/kaya/pkg/providers/nearby"
+	"github.com/kayahq/kaya/pkg/providers/weather"
 )
 
 const providerToolTimeout = 30 * time.Second

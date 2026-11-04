@@ -6,8 +6,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ianclemence/kaya/pkg/cards"
-	"github.com/ianclemence/kaya/pkg/personalcontext"
+	"github.com/kayahq/kaya/pkg/cards"
+	"github.com/kayahq/kaya/pkg/personalcontext"
 )
 
 func seedBelief(t *testing.T, ws string) string {

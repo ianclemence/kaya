@@ -4,7 +4,7 @@ import (
 	"context"
 	"testing"
 
-	"github.com/ianclemence/kaya/pkg/tools"
+	"github.com/kayahq/kaya/pkg/tools"
 )
 
 // —— Evaluation harness: encodes the representative behaviours Kaya must meet —

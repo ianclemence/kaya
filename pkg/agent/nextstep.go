@@ -6,7 +6,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/ianclemence/kaya/pkg/scheduled"
+	"github.com/kayahq/kaya/pkg/scheduled"
 )
 
 // Next-step offers for instant answers.

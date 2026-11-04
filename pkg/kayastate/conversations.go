@@ -12,7 +12,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/ianclemence/kaya/pkg/db"
+	"github.com/kayahq/kaya/pkg/db"
 	_ "modernc.org/sqlite"
 )
 

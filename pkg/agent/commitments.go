@@ -6,13 +6,13 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ianclemence/kaya/pkg/capability"
-	"github.com/ianclemence/kaya/pkg/cevents"
-	"github.com/ianclemence/kaya/pkg/commitments"
-	"github.com/ianclemence/kaya/pkg/ideas"
-	"github.com/ianclemence/kaya/pkg/logger"
-	"github.com/ianclemence/kaya/pkg/proactive"
-	"github.com/ianclemence/kaya/pkg/scheduled"
+	"github.com/kayahq/kaya/pkg/capability"
+	"github.com/kayahq/kaya/pkg/cevents"
+	"github.com/kayahq/kaya/pkg/commitments"
+	"github.com/kayahq/kaya/pkg/ideas"
+	"github.com/kayahq/kaya/pkg/logger"
+	"github.com/kayahq/kaya/pkg/proactive"
+	"github.com/kayahq/kaya/pkg/scheduled"
 )
 
 // Commitments: the bridge from conversation to proactive action.

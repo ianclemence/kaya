@@ -1,5 +1,5 @@
 // Kaya - Ultra-lightweight personal AI agent
-// Inspired by and based on KAYA: https://github.com/ianclemence/kaya
+// Inspired by and based on KAYA: https://github.com/kayahq/kaya
 // License: MIT
 //
 // Copyright (c) 2026 Kaya contributors
@@ -13,12 +13,12 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ianclemence/kaya/pkg/capability"
-	"github.com/ianclemence/kaya/pkg/logger"
-	"github.com/ianclemence/kaya/pkg/permissions"
-	"github.com/ianclemence/kaya/pkg/provider"
-	"github.com/ianclemence/kaya/pkg/providers"
-	"github.com/ianclemence/kaya/pkg/utils"
+	"github.com/kayahq/kaya/pkg/capability"
+	"github.com/kayahq/kaya/pkg/logger"
+	"github.com/kayahq/kaya/pkg/permissions"
+	"github.com/kayahq/kaya/pkg/provider"
+	"github.com/kayahq/kaya/pkg/providers"
+	"github.com/kayahq/kaya/pkg/utils"
 )
 
 // ToolLoopConfig configures the tool execution loop.

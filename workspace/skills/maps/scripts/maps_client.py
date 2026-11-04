@@ -28,7 +28,7 @@ import urllib.request
 # Constants
 # ---------------------------------------------------------------------------
 
-USER_AGENT = "Kaya/1.0 (+https://github.com/ianclemence/kaya)"
+USER_AGENT = "Kaya/1.0 (+https://github.com/kayahq/kaya)"
 DATA_SOURCE = "OpenStreetMap/Nominatim"
 
 NOMINATIM_SEARCH  = "https://nominatim.openstreetmap.org/search"

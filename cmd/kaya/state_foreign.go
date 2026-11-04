@@ -5,9 +5,9 @@ import (
 	"os"
 	"strings"
 
-	"github.com/ianclemence/kaya/pkg/channels"
-	"github.com/ianclemence/kaya/pkg/config"
-	"github.com/ianclemence/kaya/pkg/personalcontext"
+	"github.com/kayahq/kaya/pkg/channels"
+	"github.com/kayahq/kaya/pkg/config"
+	"github.com/kayahq/kaya/pkg/personalcontext"
 )
 
 // foreignForgetReason says why, honestly: this is housekeeping, not the owner

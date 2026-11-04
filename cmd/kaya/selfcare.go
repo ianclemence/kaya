@@ -7,12 +7,12 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ianclemence/kaya/pkg/agent"
-	"github.com/ianclemence/kaya/pkg/appliance"
-	"github.com/ianclemence/kaya/pkg/awareness"
-	"github.com/ianclemence/kaya/pkg/channels"
-	"github.com/ianclemence/kaya/pkg/config"
-	"github.com/ianclemence/kaya/pkg/hardware"
+	"github.com/kayahq/kaya/pkg/agent"
+	"github.com/kayahq/kaya/pkg/appliance"
+	"github.com/kayahq/kaya/pkg/awareness"
+	"github.com/kayahq/kaya/pkg/channels"
+	"github.com/kayahq/kaya/pkg/config"
+	"github.com/kayahq/kaya/pkg/hardware"
 )
 
 // securityGuard notices repeated failed access to the gateway and tells the

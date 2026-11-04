@@ -11,7 +11,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/ianclemence/kaya/pkg/providers"
+	"github.com/kayahq/kaya/pkg/providers"
 )
 
 // Follow-ups are things the owner said that a good assistant would come back

@@ -8,8 +8,8 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/ianclemence/kaya/pkg/relay/proto"
-	"github.com/ianclemence/kaya/pkg/relaycrypto"
+	"github.com/kayahq/kaya/pkg/relay/proto"
+	"github.com/kayahq/kaya/pkg/relaycrypto"
 )
 
 // sealedChunk is how much of a sealed request is forwarded at a time. It stays

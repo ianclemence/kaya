@@ -11,9 +11,9 @@ import (
 	"time"
 
 	"github.com/gorilla/websocket"
-	"github.com/ianclemence/kaya/pkg/agent"
-	"github.com/ianclemence/kaya/pkg/browser"
-	"github.com/ianclemence/kaya/pkg/live"
+	"github.com/kayahq/kaya/pkg/agent"
+	"github.com/kayahq/kaya/pkg/browser"
+	"github.com/kayahq/kaya/pkg/live"
 )
 
 // registerBrowserStreamRoutes exposes live browser automation viewing

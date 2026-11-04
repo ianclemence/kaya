@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/adhocore/gronx"
-	"github.com/ianclemence/kaya/pkg/clock"
+	"github.com/kayahq/kaya/pkg/clock"
 )
 
 // Executor is the function signature for executing a scheduled item.

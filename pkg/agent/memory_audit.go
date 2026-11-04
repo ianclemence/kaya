@@ -3,8 +3,8 @@ package agent
 import (
 	"strings"
 
-	"github.com/ianclemence/kaya/pkg/cevents"
-	"github.com/ianclemence/kaya/pkg/personalcontext"
+	"github.com/kayahq/kaya/pkg/cevents"
+	"github.com/kayahq/kaya/pkg/personalcontext"
 )
 
 // wireMemoryAudit makes every forgetting visible. Until this existed the

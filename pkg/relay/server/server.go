@@ -29,8 +29,8 @@ import (
 	"time"
 
 	"github.com/gorilla/websocket"
-	"github.com/ianclemence/kaya/pkg/entitlement"
-	"github.com/ianclemence/kaya/pkg/relay/proto"
+	"github.com/kayahq/kaya/pkg/entitlement"
+	"github.com/kayahq/kaya/pkg/relay/proto"
 )
 
 // RegistryEntry is a single device in the registry file.

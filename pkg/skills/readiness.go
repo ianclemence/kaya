@@ -2,7 +2,7 @@ package skills
 
 import (
 	"fmt"
-	"github.com/ianclemence/kaya/pkg/credentials"
+	"github.com/kayahq/kaya/pkg/credentials"
 	"os"
 	"path/filepath"
 	"strings"

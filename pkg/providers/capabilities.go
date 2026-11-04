@@ -3,7 +3,7 @@ package providers
 import (
 	"strings"
 
-	"github.com/ianclemence/kaya/pkg/modes"
+	"github.com/kayahq/kaya/pkg/modes"
 )
 
 // Capability describes what a model can do, so routing can decide by ability

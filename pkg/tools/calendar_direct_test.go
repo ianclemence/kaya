@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	calprov "github.com/ianclemence/kaya/pkg/providers/calendar"
+	calprov "github.com/kayahq/kaya/pkg/providers/calendar"
 )
 
 func testCalendarSvc(handler http.HandlerFunc) (*calprov.Service, *httptest.Server) {

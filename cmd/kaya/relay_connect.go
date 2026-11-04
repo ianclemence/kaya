@@ -12,11 +12,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ianclemence/kaya/pkg/config"
-	"github.com/ianclemence/kaya/pkg/connect"
-	"github.com/ianclemence/kaya/pkg/kayastate"
-	"github.com/ianclemence/kaya/pkg/relayclient"
-	"github.com/ianclemence/kaya/pkg/relaycrypto"
+	"github.com/kayahq/kaya/pkg/config"
+	"github.com/kayahq/kaya/pkg/connect"
+	"github.com/kayahq/kaya/pkg/kayastate"
+	"github.com/kayahq/kaya/pkg/relayclient"
+	"github.com/kayahq/kaya/pkg/relaycrypto"
 	"github.com/mdp/qrterminal/v3"
 )
 

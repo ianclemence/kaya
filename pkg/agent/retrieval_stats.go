@@ -3,7 +3,7 @@ package agent
 import (
 	"sync"
 
-	"github.com/ianclemence/kaya/pkg/doctor"
+	"github.com/kayahq/kaya/pkg/doctor"
 )
 
 // retrievalStat aggregates observed retrieval latencies for one retrieval

@@ -5,7 +5,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/ianclemence/kaya/pkg/providers/flight"
+	"github.com/kayahq/kaya/pkg/providers/flight"
 )
 
 // FlightProbe adapts the real flight capability to the Probe interface. It

@@ -10,7 +10,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/ianclemence/kaya/pkg/logger"
+	"github.com/kayahq/kaya/pkg/logger"
 )
 
 // MemoryCurateTool provides bounded, curated memory that persists across sessions.

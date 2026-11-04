@@ -10,9 +10,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/ianclemence/kaya/pkg/providers"
-	"github.com/ianclemence/kaya/pkg/suggest"
-	"github.com/ianclemence/kaya/pkg/utils"
+	"github.com/kayahq/kaya/pkg/providers"
+	"github.com/kayahq/kaya/pkg/suggest"
+	"github.com/kayahq/kaya/pkg/utils"
 )
 
 // What the owner is most likely to type next, offered in the empty message box.

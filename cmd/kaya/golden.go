@@ -11,9 +11,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ianclemence/kaya/pkg/config"
-	"github.com/ianclemence/kaya/pkg/failurecorpus"
-	"github.com/ianclemence/kaya/pkg/golden"
+	"github.com/kayahq/kaya/pkg/config"
+	"github.com/kayahq/kaya/pkg/failurecorpus"
+	"github.com/kayahq/kaya/pkg/golden"
 )
 
 // goldenCmd runs the Kaya Golden Conversation Suite against a supported

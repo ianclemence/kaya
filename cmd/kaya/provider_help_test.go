@@ -3,7 +3,7 @@ package main
 import (
 	"testing"
 
-	"github.com/ianclemence/kaya/pkg/config"
+	"github.com/kayahq/kaya/pkg/config"
 )
 
 // The setup-help mapping must match what pkg/config actually reads, or the

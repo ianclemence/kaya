@@ -3,7 +3,7 @@ package agent
 import (
 	"testing"
 
-	"github.com/ianclemence/kaya/pkg/permissions"
+	"github.com/kayahq/kaya/pkg/permissions"
 )
 
 func TestOutwardActAsksAfterUntrustedRead(t *testing.T) {

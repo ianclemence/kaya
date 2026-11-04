@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/ianclemence/kaya/pkg/commitments"
+	"github.com/kayahq/kaya/pkg/commitments"
 )
 
 // The promise ledger surface: what Kaya is holding on the owner's behalf, and

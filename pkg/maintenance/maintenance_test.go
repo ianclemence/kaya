@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ianclemence/kaya/pkg/cevents"
+	"github.com/kayahq/kaya/pkg/cevents"
 	_ "modernc.org/sqlite"
 )
 

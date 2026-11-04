@@ -9,7 +9,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/ianclemence/kaya/pkg/config"
+	"github.com/kayahq/kaya/pkg/config"
 )
 
 // resetHandler implements /reset — factory reset for Kaya.

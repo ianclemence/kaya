@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/ianclemence/kaya/pkg/watch"
+	"github.com/kayahq/kaya/pkg/watch"
 )
 
 // The watch surface: what Kaya is quietly polling in the background, and

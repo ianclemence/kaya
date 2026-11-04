@@ -11,8 +11,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/ianclemence/kaya/pkg/artifacts"
-	"github.com/ianclemence/kaya/pkg/film"
+	"github.com/kayahq/kaya/pkg/artifacts"
+	"github.com/kayahq/kaya/pkg/film"
 )
 
 // FilmTool is Kaya's animation studio for hand-drawn films and drawings. A

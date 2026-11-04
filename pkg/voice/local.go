@@ -21,7 +21,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ianclemence/kaya/pkg/logger"
+	"github.com/kayahq/kaya/pkg/logger"
 )
 
 // DefaultLocalSTTPort is the loopback port the whisper-server sidecar

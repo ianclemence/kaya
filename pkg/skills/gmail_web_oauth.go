@@ -27,7 +27,7 @@ import (
 
 	"golang.org/x/oauth2"
 
-	"github.com/ianclemence/kaya/pkg/config"
+	"github.com/kayahq/kaya/pkg/config"
 )
 
 // Gmail OAuth scopes (narrowest-first).

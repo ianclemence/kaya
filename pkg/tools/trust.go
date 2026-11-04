@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/ianclemence/kaya/pkg/permissions"
+	"github.com/kayahq/kaya/pkg/permissions"
 )
 
 // Trust boundary for tool execution.

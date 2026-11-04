@@ -6,8 +6,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ianclemence/kaya/pkg/product"
-	spotifyprov "github.com/ianclemence/kaya/pkg/providers/spotify"
+	"github.com/kayahq/kaya/pkg/product"
+	spotifyprov "github.com/kayahq/kaya/pkg/providers/spotify"
 )
 
 // MediaPlayTool reports Spotify now-playing status and controls playback

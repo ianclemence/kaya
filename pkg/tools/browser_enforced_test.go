@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ianclemence/kaya/pkg/browser"
+	"github.com/kayahq/kaya/pkg/browser"
 )
 
 // newEnforcedTool builds a REAL BrowserTool on the enforced path: gate

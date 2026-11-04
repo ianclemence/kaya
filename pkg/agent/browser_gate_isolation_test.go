@@ -3,8 +3,8 @@ package agent
 import (
 	"testing"
 
-	"github.com/ianclemence/kaya/pkg/contexts"
-	"github.com/ianclemence/kaya/pkg/permissions"
+	"github.com/kayahq/kaya/pkg/contexts"
+	"github.com/kayahq/kaya/pkg/permissions"
 )
 
 // personalContextID resolves the device's default personal context.

@@ -24,7 +24,7 @@ import (
 
 	"golang.org/x/oauth2"
 
-	"github.com/ianclemence/kaya/pkg/config"
+	"github.com/kayahq/kaya/pkg/config"
 )
 
 // Spotify OAuth scopes (narrowest-first).

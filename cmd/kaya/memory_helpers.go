@@ -1,6 +1,6 @@
 package main
 
-import "github.com/ianclemence/kaya/pkg/personalcontext"
+import "github.com/kayahq/kaya/pkg/personalcontext"
 
 // firstSourceRef returns the first provenance ref ("session:message") for a
 // belief, or "" when none was recorded. Used by the owner-facing memory view

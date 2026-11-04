@@ -9,7 +9,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ianclemence/kaya/pkg/agent"
+	"github.com/kayahq/kaya/pkg/agent"
 )
 
 var liveVoiceList = []string{

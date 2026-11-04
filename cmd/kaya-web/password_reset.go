@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/ianclemence/kaya/pkg/appliance"
+	"github.com/kayahq/kaya/pkg/appliance"
 )
 
 // handlePasswordReset sets a new console password for someone who forgot the

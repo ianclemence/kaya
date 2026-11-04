@@ -1,4 +1,4 @@
-module github.com/ianclemence/kaya
+module github.com/kayahq/kaya
 
 go 1.26.0
 

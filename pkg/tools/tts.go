@@ -10,7 +10,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ianclemence/kaya/pkg/voice"
+	"github.com/kayahq/kaya/pkg/voice"
 )
 
 type TTSConfig struct {

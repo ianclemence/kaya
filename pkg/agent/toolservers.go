@@ -4,9 +4,9 @@ import (
 	"context"
 	"sync"
 
-	"github.com/ianclemence/kaya/pkg/config"
-	"github.com/ianclemence/kaya/pkg/mcp"
-	"github.com/ianclemence/kaya/pkg/tools"
+	"github.com/kayahq/kaya/pkg/config"
+	"github.com/kayahq/kaya/pkg/mcp"
+	"github.com/kayahq/kaya/pkg/tools"
 )
 
 // Tool servers are outside services (MCP) that give Kaya more tools. They can

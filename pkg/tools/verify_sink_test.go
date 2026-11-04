@@ -5,7 +5,7 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/ianclemence/kaya/pkg/turnlog"
+	"github.com/kayahq/kaya/pkg/turnlog"
 )
 
 // verifiableStub is a tool whose world-state check the test controls.

@@ -10,9 +10,9 @@ import (
 	"encoding/json"
 	"strings"
 
-	"github.com/ianclemence/kaya/pkg/bus"
-	"github.com/ianclemence/kaya/pkg/permissions"
-	"github.com/ianclemence/kaya/pkg/skills"
+	"github.com/kayahq/kaya/pkg/bus"
+	"github.com/kayahq/kaya/pkg/permissions"
+	"github.com/kayahq/kaya/pkg/skills"
 )
 
 // standingBroker opens the loop-local broker handle (same SQLite file

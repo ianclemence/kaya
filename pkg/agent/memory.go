@@ -1,5 +1,5 @@
 // Kaya - Ultra-lightweight personal AI agent
-// Inspired by and based on KAYA: https://github.com/ianclemence/kaya
+// Inspired by and based on KAYA: https://github.com/kayahq/kaya
 // License: MIT
 //
 // Copyright (c) 2026 Kaya contributors
@@ -17,7 +17,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ianclemence/kaya/pkg/personalcontext"
+	"github.com/kayahq/kaya/pkg/personalcontext"
 )
 
 // MemoryStore manages persistent memory for the agent.

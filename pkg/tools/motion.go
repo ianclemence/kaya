@@ -8,8 +8,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/ianclemence/kaya/pkg/artifacts"
-	"github.com/ianclemence/kaya/pkg/motion"
+	"github.com/kayahq/kaya/pkg/artifacts"
+	"github.com/kayahq/kaya/pkg/motion"
 )
 
 // MotionTool lets Kaya turn a report, numbers or a walkthrough into a short

@@ -6,9 +6,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ianclemence/kaya/pkg/product"
-	gmailprov "github.com/ianclemence/kaya/pkg/providers/gmail"
-	outlookprov "github.com/ianclemence/kaya/pkg/providers/outlook"
+	"github.com/kayahq/kaya/pkg/product"
+	gmailprov "github.com/kayahq/kaya/pkg/providers/gmail"
+	outlookprov "github.com/kayahq/kaya/pkg/providers/outlook"
 )
 
 // EmailSearchTool lists recent messages matching a query. Read-only:

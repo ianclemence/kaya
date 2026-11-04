@@ -3,9 +3,9 @@ package main
 import (
 	"testing"
 
-	"github.com/ianclemence/kaya/pkg/capability"
-	"github.com/ianclemence/kaya/pkg/connectedapp"
-	"github.com/ianclemence/kaya/pkg/connector"
+	"github.com/kayahq/kaya/pkg/capability"
+	"github.com/kayahq/kaya/pkg/connectedapp"
+	"github.com/kayahq/kaya/pkg/connector"
 )
 
 func TestConnectorView(t *testing.T) {

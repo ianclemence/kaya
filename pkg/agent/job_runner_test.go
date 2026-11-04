@@ -8,8 +8,8 @@ import (
 
 	_ "modernc.org/sqlite"
 
-	"github.com/ianclemence/kaya/pkg/tasks"
-	"github.com/ianclemence/kaya/pkg/tools"
+	"github.com/kayahq/kaya/pkg/tasks"
+	"github.com/kayahq/kaya/pkg/tools"
 )
 
 func newJobTestStore(t *testing.T) *tasks.Store {

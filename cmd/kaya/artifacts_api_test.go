@@ -10,10 +10,10 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/ianclemence/kaya/pkg/artifacts"
-	"github.com/ianclemence/kaya/pkg/credentials"
-	"github.com/ianclemence/kaya/pkg/dashboards"
-	"github.com/ianclemence/kaya/pkg/motion"
+	"github.com/kayahq/kaya/pkg/artifacts"
+	"github.com/kayahq/kaya/pkg/credentials"
+	"github.com/kayahq/kaya/pkg/dashboards"
+	"github.com/kayahq/kaya/pkg/motion"
 
 	_ "modernc.org/sqlite"
 )

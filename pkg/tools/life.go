@@ -9,7 +9,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ianclemence/kaya/pkg/life"
+	"github.com/kayahq/kaya/pkg/life"
 )
 
 // The owner's life beyond the conversation, as tools: the people in it, their

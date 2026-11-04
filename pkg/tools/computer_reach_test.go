@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/ianclemence/kaya/pkg/computer"
+	"github.com/kayahq/kaya/pkg/computer"
 )
 
 // New reach ops plumb model args to executor args through the same

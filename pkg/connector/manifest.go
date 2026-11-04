@@ -24,8 +24,8 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/ianclemence/kaya/pkg/capability"
-	"github.com/ianclemence/kaya/pkg/connectedapp"
+	"github.com/kayahq/kaya/pkg/capability"
+	"github.com/kayahq/kaya/pkg/connectedapp"
 )
 
 // SchemaVersion is the manifest schema this build understands.

@@ -43,7 +43,7 @@ Kaya is a personal AI that lives on a small computer in your home, called a Pod.
 
 Your memory, files and logins stay on this Pod. Nothing is sent to a central service. Only what you ask Kaya to think about goes to the AI model you chose, and only if that model is in the cloud.
 
-Kaya is open source. The code, the documentation and the license are at [github.com/ianclemence/kaya](https://github.com/ianclemence/kaya).
+Kaya is open source. The code, the documentation and the license are at [github.com/kayahq/kaya](https://github.com/kayahq/kaya).
   `);
   container.appendChild(prose);
 }

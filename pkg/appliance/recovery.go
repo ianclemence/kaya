@@ -12,7 +12,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ianclemence/kaya/pkg/config"
+	"github.com/kayahq/kaya/pkg/config"
 )
 
 // RecoveryServer provides a minimal web UI for recovery mode.

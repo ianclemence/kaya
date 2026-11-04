@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ianclemence/kaya/pkg/bus"
+	"github.com/kayahq/kaya/pkg/bus"
 )
 
 // One conversation, many surfaces: an allowlisted sender's message enters the

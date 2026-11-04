@@ -10,7 +10,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ianclemence/kaya/pkg/provider"
+	"github.com/kayahq/kaya/pkg/provider"
 )
 
 func testServer(body string, status int) *httptest.Server {

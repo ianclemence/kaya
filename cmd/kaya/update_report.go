@@ -4,10 +4,10 @@ import (
 	"context"
 	"time"
 
-	"github.com/ianclemence/kaya/pkg/agent"
-	"github.com/ianclemence/kaya/pkg/logger"
-	"github.com/ianclemence/kaya/pkg/tools"
-	"github.com/ianclemence/kaya/pkg/updaterun"
+	"github.com/kayahq/kaya/pkg/agent"
+	"github.com/kayahq/kaya/pkg/logger"
+	"github.com/kayahq/kaya/pkg/tools"
+	"github.com/kayahq/kaya/pkg/updaterun"
 )
 
 // How long Kaya waits after starting before it checks itself: long enough

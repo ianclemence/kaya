@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/ianclemence/kaya/pkg/localtrust"
+	"github.com/kayahq/kaya/pkg/localtrust"
 	"net/http"
 	"net/http/httptest"
 	"strings"

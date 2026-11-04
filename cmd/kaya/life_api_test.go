@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ianclemence/kaya/pkg/life"
+	"github.com/kayahq/kaya/pkg/life"
 )
 
 func TestLifeRoutesEditAndForget(t *testing.T) {

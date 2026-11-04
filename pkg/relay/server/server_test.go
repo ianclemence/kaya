@@ -14,7 +14,7 @@ import (
 	"time"
 
 	"github.com/gorilla/websocket"
-	"github.com/ianclemence/kaya/pkg/relay/proto"
+	"github.com/kayahq/kaya/pkg/relay/proto"
 )
 
 func tempRegistry(t *testing.T) string {

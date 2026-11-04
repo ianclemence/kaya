@@ -31,7 +31,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/ianclemence/kaya/pkg/capability"
+	"github.com/kayahq/kaya/pkg/capability"
 )
 
 // ClaimState is the semantic type of one analyzed span.

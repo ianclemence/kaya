@@ -8,8 +8,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/ianclemence/kaya/pkg/agent"
-	"github.com/ianclemence/kaya/pkg/turnlog"
+	"github.com/kayahq/kaya/pkg/agent"
+	"github.com/kayahq/kaya/pkg/turnlog"
 )
 
 // chatTurns is the durable turn log for /v1/chat idempotency. Reconnect is

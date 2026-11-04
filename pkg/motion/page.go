@@ -6,7 +6,7 @@ import (
 	"html"
 	"strings"
 
-	"github.com/ianclemence/kaya/pkg/documents"
+	"github.com/kayahq/kaya/pkg/documents"
 )
 
 //go:embed player.js

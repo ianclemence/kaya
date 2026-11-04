@@ -4,7 +4,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ianclemence/kaya/pkg/capability"
+	"github.com/kayahq/kaya/pkg/capability"
 )
 
 // Capability declares the generic execution contract for a skill.

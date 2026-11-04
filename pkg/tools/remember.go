@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/ianclemence/kaya/pkg/rag"
+	"github.com/kayahq/kaya/pkg/rag"
 )
 
 type RememberTool struct {

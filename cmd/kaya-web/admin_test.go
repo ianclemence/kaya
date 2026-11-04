@@ -3,8 +3,8 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/ianclemence/kaya/pkg/config"
-	"github.com/ianclemence/kaya/pkg/providers"
+	"github.com/kayahq/kaya/pkg/config"
+	"github.com/kayahq/kaya/pkg/providers"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -14,7 +14,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ianclemence/kaya/pkg/appliance"
+	"github.com/kayahq/kaya/pkg/appliance"
 )
 
 func TestLoginThrottleLockout(t *testing.T) {

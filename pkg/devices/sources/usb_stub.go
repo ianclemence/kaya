@@ -5,7 +5,7 @@ package sources
 import (
 	"context"
 
-	"github.com/ianclemence/kaya/pkg/devices/events"
+	"github.com/kayahq/kaya/pkg/devices/events"
 )
 
 type USBMonitor struct{}

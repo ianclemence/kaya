@@ -7,9 +7,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ianclemence/kaya/pkg/goals"
-	"github.com/ianclemence/kaya/pkg/personalcontext"
-	"github.com/ianclemence/kaya/pkg/proactive"
+	"github.com/kayahq/kaya/pkg/goals"
+	"github.com/kayahq/kaya/pkg/personalcontext"
+	"github.com/kayahq/kaya/pkg/proactive"
 )
 
 // Mentioned once → persisted → digest surfaces it: the compounding loop

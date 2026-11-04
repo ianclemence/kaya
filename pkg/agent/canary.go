@@ -8,7 +8,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/ianclemence/kaya/pkg/logger"
+	"github.com/kayahq/kaya/pkg/logger"
 )
 
 // A canary is a private marker that lives only in Kaya's own instructions.

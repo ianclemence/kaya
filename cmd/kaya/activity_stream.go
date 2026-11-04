@@ -8,8 +8,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ianclemence/kaya/pkg/activity"
-	"github.com/ianclemence/kaya/pkg/cevents"
+	"github.com/kayahq/kaya/pkg/activity"
+	"github.com/kayahq/kaya/pkg/cevents"
 )
 
 // registerActivityStream exposes a live, read-only activity stream over SSE.

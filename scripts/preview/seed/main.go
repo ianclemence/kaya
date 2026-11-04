@@ -8,8 +8,8 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/ianclemence/kaya/pkg/appliance"
-	"github.com/ianclemence/kaya/pkg/config"
+	"github.com/kayahq/kaya/pkg/appliance"
+	"github.com/kayahq/kaya/pkg/config"
 )
 
 func main() {

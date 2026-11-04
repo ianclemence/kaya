@@ -27,7 +27,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ianclemence/kaya/pkg/provider"
+	"github.com/kayahq/kaya/pkg/provider"
 )
 
 // Current is the validated capability result (vendor-neutral).

@@ -15,7 +15,7 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/ianclemence/kaya/pkg/voice"
+	"github.com/kayahq/kaya/pkg/voice"
 )
 
 func ttsCmd() {

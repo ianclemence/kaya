@@ -4,7 +4,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/ianclemence/kaya/pkg/credentials"
+	"github.com/kayahq/kaya/pkg/credentials"
 )
 
 // Secret guard: the last line between the vault and the model.

@@ -9,7 +9,7 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/ianclemence/kaya/pkg/provider"
+	"github.com/kayahq/kaya/pkg/provider"
 )
 
 // GetJSON performs a GET and returns the body with per-attempt metadata.

@@ -3,7 +3,7 @@ package agent
 import (
 	"testing"
 
-	"github.com/ianclemence/kaya/pkg/skills"
+	"github.com/kayahq/kaya/pkg/skills"
 )
 
 // Answering the location question teaches Kaya where "here" is, so the next

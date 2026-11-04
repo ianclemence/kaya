@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ianclemence/kaya/pkg/providers"
+	"github.com/kayahq/kaya/pkg/providers"
 )
 
 // Phase B: model-drafted ideas with verified citations. The model proposes

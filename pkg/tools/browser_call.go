@@ -3,7 +3,7 @@ package tools
 import (
 	"context"
 
-	"github.com/ianclemence/kaya/pkg/browser"
+	"github.com/kayahq/kaya/pkg/browser"
 )
 
 // BrowserCall is the server-resolved binding for one browser operation.

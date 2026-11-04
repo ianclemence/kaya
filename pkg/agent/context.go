@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
-	"github.com/ianclemence/kaya/pkg/uploads"
+	"github.com/kayahq/kaya/pkg/uploads"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -12,15 +12,15 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ianclemence/kaya/pkg/browser"
-	"github.com/ianclemence/kaya/pkg/contextcache"
-	"github.com/ianclemence/kaya/pkg/logger"
-	"github.com/ianclemence/kaya/pkg/personalcontext"
-	"github.com/ianclemence/kaya/pkg/personality"
-	"github.com/ianclemence/kaya/pkg/providers"
-	"github.com/ianclemence/kaya/pkg/skills"
-	"github.com/ianclemence/kaya/pkg/tools"
-	"github.com/ianclemence/kaya/pkg/utils"
+	"github.com/kayahq/kaya/pkg/browser"
+	"github.com/kayahq/kaya/pkg/contextcache"
+	"github.com/kayahq/kaya/pkg/logger"
+	"github.com/kayahq/kaya/pkg/personalcontext"
+	"github.com/kayahq/kaya/pkg/personality"
+	"github.com/kayahq/kaya/pkg/providers"
+	"github.com/kayahq/kaya/pkg/skills"
+	"github.com/kayahq/kaya/pkg/tools"
+	"github.com/kayahq/kaya/pkg/utils"
 )
 
 type ContextBuilder struct {

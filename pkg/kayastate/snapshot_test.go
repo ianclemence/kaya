@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ianclemence/kaya/pkg/db"
+	"github.com/kayahq/kaya/pkg/db"
 )
 
 // Snapshots reuse the vault master key: no ambient key may leak in, and

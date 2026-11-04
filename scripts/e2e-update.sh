@@ -73,7 +73,7 @@ release "$W/rel/nosig"     v0.0.2 -
 
 # The release host: /repos/<repo>/releases/latest returns whichever scenario is
 # current (the inner script copies the scenario's latest.json into place).
-mkdir -p "$W/host/repos/ianclemence/kaya/releases"
+mkdir -p "$W/host/repos/kayahq/kaya/releases"
 ln -s "$W/rel"/* "$W/host/" 2>/dev/null || true
 
 echo "== a clean machine: v0.0.1 installed, no go, no git"
@@ -100,7 +100,7 @@ W="$1"; PORT="$2"
 H="$W/host"
 run_update() { KAYA_RELEASE_API="http://127.0.0.1:$PORT" KAYA_RELEASE_PUBKEY="$(cat "$W/signer.pub")" KAYA_UPDATE_SANDBOX=1 /usr/local/bin/kaya update "$@"; }
 installed() { /usr/local/bin/kaya version | grep -o 'Kaya [^ ]*' | head -1 | cut -d' ' -f2; }
-scenario() { cp "$W/rel/$1/latest.json" "$H/repos/ianclemence/kaya/releases/latest"; }
+scenario() { cp "$W/rel/$1/latest.json" "$H/repos/kayahq/kaya/releases/latest"; }
 ok=0; bad=0
 check() { if eval "$2"; then echo "  PASS  $1"; ok=$((ok+1)); else echo "  FAIL  $1"; bad=$((bad+1)); fi; }
 

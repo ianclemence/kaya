@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/ianclemence/kaya/pkg/browser"
+	"github.com/kayahq/kaya/pkg/browser"
 )
 
 // A page that re-renders between one step and the next is the normal

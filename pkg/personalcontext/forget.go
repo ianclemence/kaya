@@ -1,7 +1,7 @@
 package personalcontext
 
 import (
-	"github.com/ianclemence/kaya/pkg/utils"
+	"github.com/kayahq/kaya/pkg/utils"
 	"os"
 	"path/filepath"
 	"strings"

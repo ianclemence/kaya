@@ -4,9 +4,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/ianclemence/kaya/pkg/permissions"
-	"github.com/ianclemence/kaya/pkg/skills"
-	"github.com/ianclemence/kaya/pkg/tools"
+	"github.com/kayahq/kaya/pkg/permissions"
+	"github.com/kayahq/kaya/pkg/skills"
+	"github.com/kayahq/kaya/pkg/tools"
 )
 
 func TestASkillWithNoDeclaredPathKeepsTheModelsTools(t *testing.T) {

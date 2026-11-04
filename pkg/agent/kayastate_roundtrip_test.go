@@ -8,9 +8,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/ianclemence/kaya/pkg/kayastate"
-	"github.com/ianclemence/kaya/pkg/personalcontext"
-	"github.com/ianclemence/kaya/pkg/schema"
+	"github.com/kayahq/kaya/pkg/kayastate"
+	"github.com/kayahq/kaya/pkg/personalcontext"
+	"github.com/kayahq/kaya/pkg/schema"
 )
 
 // migrateWorkspaceDB brings a test workspace database to the schema head,

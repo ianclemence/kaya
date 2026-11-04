@@ -7,7 +7,7 @@ package product
 // NOTE: this file imports pkg/provider. The dependency direction is
 // product -> provider (provider never imports product), so no cycle.
 import (
-	"github.com/ianclemence/kaya/pkg/provider"
+	"github.com/kayahq/kaya/pkg/provider"
 )
 
 // ClassForProviderFailure maps a provider failure to a product error class.

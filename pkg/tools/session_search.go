@@ -1,7 +1,7 @@
 package tools
 
 import (
-	"github.com/ianclemence/kaya/pkg/personalcontext"
+	"github.com/kayahq/kaya/pkg/personalcontext"
 
 	"context"
 	"database/sql"

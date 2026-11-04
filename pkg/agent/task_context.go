@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/ianclemence/kaya/pkg/tasks"
+	"github.com/kayahq/kaya/pkg/tasks"
 )
 
 // renderTaskSummary renders a compact, runtime-authoritative summary of a

@@ -12,7 +12,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/ianclemence/kaya/pkg/artifacts"
+	"github.com/kayahq/kaya/pkg/artifacts"
 )
 
 // CanvasPublisher records a canvas as a handoff in the conversation, so it is

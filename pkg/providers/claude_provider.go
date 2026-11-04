@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/ianclemence/kaya/pkg/auth"
+	"github.com/kayahq/kaya/pkg/auth"
 )
 
 type ClaudeProvider struct {

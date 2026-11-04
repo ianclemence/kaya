@@ -7,11 +7,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ianclemence/kaya/pkg/channels"
-	"github.com/ianclemence/kaya/pkg/logger"
-	"github.com/ianclemence/kaya/pkg/providers"
-	"github.com/ianclemence/kaya/pkg/session"
-	"github.com/ianclemence/kaya/pkg/turnlog"
+	"github.com/kayahq/kaya/pkg/channels"
+	"github.com/kayahq/kaya/pkg/logger"
+	"github.com/kayahq/kaya/pkg/providers"
+	"github.com/kayahq/kaya/pkg/session"
+	"github.com/kayahq/kaya/pkg/turnlog"
 )
 
 // Restart continuity.

@@ -4,8 +4,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/ianclemence/kaya/pkg/bus"
-	ghodb "github.com/ianclemence/kaya/pkg/db"
+	"github.com/kayahq/kaya/pkg/bus"
+	ghodb "github.com/kayahq/kaya/pkg/db"
 )
 
 func testStandingLoop(t *testing.T) *AgentLoop {

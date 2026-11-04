@@ -8,8 +8,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/ianclemence/kaya/pkg/artifacts"
-	"github.com/ianclemence/kaya/pkg/dashboards"
+	"github.com/kayahq/kaya/pkg/artifacts"
+	"github.com/kayahq/kaya/pkg/dashboards"
 )
 
 // DashboardTool answers questions about the owner's data with SQL and keeps

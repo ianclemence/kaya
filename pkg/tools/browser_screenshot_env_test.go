@@ -4,7 +4,7 @@ import (
 	"context"
 	"testing"
 
-	"github.com/ianclemence/kaya/pkg/browser"
+	"github.com/kayahq/kaya/pkg/browser"
 )
 
 // A cold screenshot must steer agent-browser to a working browser engine, the

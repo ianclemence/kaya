@@ -5,9 +5,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ianclemence/kaya/pkg/providers"
-	"github.com/ianclemence/kaya/pkg/session"
-	"github.com/ianclemence/kaya/pkg/turnlog"
+	"github.com/kayahq/kaya/pkg/providers"
+	"github.com/kayahq/kaya/pkg/session"
+	"github.com/kayahq/kaya/pkg/turnlog"
 )
 
 // The model is handed its own cut-off reply and must come back with one

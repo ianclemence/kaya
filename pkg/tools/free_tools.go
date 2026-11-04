@@ -3,7 +3,7 @@ package tools
 import (
 	"strings"
 
-	"github.com/ianclemence/kaya/pkg/capability"
+	"github.com/kayahq/kaya/pkg/capability"
 )
 
 // Free consequential tools are model-invokable without a committed

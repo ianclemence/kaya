@@ -3,7 +3,7 @@ package agent
 import (
 	"testing"
 
-	"github.com/ianclemence/kaya/pkg/connector"
+	"github.com/kayahq/kaya/pkg/connector"
 )
 
 func TestConnectorMCPConfig(t *testing.T) {

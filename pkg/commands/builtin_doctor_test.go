@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/ianclemence/kaya/pkg/doctor"
+	"github.com/kayahq/kaya/pkg/doctor"
 )
 
 func TestDoctorHandler(t *testing.T) {

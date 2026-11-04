@@ -7,8 +7,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/ianclemence/kaya/pkg/appliance"
-	"github.com/ianclemence/kaya/pkg/updaterun"
+	"github.com/kayahq/kaya/pkg/appliance"
+	"github.com/kayahq/kaya/pkg/updaterun"
 )
 
 // A paired phone can check for, and start, an update of its own Pod.

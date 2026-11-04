@@ -28,7 +28,7 @@ import (
 	"time"
 	"unicode"
 
-	"github.com/ianclemence/kaya/pkg/skills"
+	"github.com/kayahq/kaya/pkg/skills"
 )
 
 // RiskOf returns the declared risk for a capability ID (e.g.

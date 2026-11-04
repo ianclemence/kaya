@@ -9,13 +9,13 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ianclemence/kaya/pkg/providers/aqi"
-	"github.com/ianclemence/kaya/pkg/providers/crypto"
-	"github.com/ianclemence/kaya/pkg/providers/currency"
-	"github.com/ianclemence/kaya/pkg/providers/flight"
-	"github.com/ianclemence/kaya/pkg/providers/hass"
-	"github.com/ianclemence/kaya/pkg/providers/nearby"
-	"github.com/ianclemence/kaya/pkg/providers/weather"
+	"github.com/kayahq/kaya/pkg/providers/aqi"
+	"github.com/kayahq/kaya/pkg/providers/crypto"
+	"github.com/kayahq/kaya/pkg/providers/currency"
+	"github.com/kayahq/kaya/pkg/providers/flight"
+	"github.com/kayahq/kaya/pkg/providers/hass"
+	"github.com/kayahq/kaya/pkg/providers/nearby"
+	"github.com/kayahq/kaya/pkg/providers/weather"
 )
 
 func fakeServer(body string, status int) *httptest.Server {

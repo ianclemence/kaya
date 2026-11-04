@@ -10,9 +10,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/ianclemence/kaya/pkg/agent"
-	"github.com/ianclemence/kaya/pkg/bus"
-	"github.com/ianclemence/kaya/pkg/live"
+	"github.com/kayahq/kaya/pkg/agent"
+	"github.com/kayahq/kaya/pkg/bus"
+	"github.com/kayahq/kaya/pkg/live"
 )
 
 // registerLiveSurfaceRoutes exposes the Live Surface plane to authenticated

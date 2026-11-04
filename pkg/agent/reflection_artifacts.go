@@ -1,7 +1,7 @@
 package agent
 
 import (
-	"github.com/ianclemence/kaya/pkg/personalcontext"
+	"github.com/kayahq/kaya/pkg/personalcontext"
 
 	"fmt"
 	"os"

@@ -7,8 +7,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/ianclemence/kaya/pkg/artifacts"
-	"github.com/ianclemence/kaya/pkg/db"
+	"github.com/kayahq/kaya/pkg/artifacts"
+	"github.com/kayahq/kaya/pkg/db"
 )
 
 func canvasWith(t *testing.T) (*CanvasTool, *artifacts.Store, string, *[]string) {

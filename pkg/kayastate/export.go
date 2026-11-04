@@ -7,7 +7,7 @@ import (
 	"sort"
 	"time"
 
-	"github.com/ianclemence/kaya/pkg/config"
+	"github.com/kayahq/kaya/pkg/config"
 )
 
 // ExportOptions controls an export. Passphrase must be non-empty; the CLI

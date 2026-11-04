@@ -7,7 +7,7 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/ianclemence/kaya/pkg/hardware"
+	"github.com/kayahq/kaya/pkg/hardware"
 )
 
 // markCleanStopOnSignal removes the run marker when the daemon is asked to stop,

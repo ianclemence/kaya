@@ -3,7 +3,7 @@ package main
 import (
 	"testing"
 
-	"github.com/ianclemence/kaya/pkg/personalcontext"
+	"github.com/kayahq/kaya/pkg/personalcontext"
 )
 
 func TestDropKeptSparesWhatTheOwnerNames(t *testing.T) {

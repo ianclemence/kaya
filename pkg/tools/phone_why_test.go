@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ianclemence/kaya/pkg/life"
+	"github.com/kayahq/kaya/pkg/life"
 )
 
 // When no notification is found, Kaya says why as precisely as the phone

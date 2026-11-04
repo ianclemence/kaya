@@ -21,9 +21,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ianclemence/kaya/pkg/credentials"
-	"github.com/ianclemence/kaya/pkg/life"
-	"github.com/ianclemence/kaya/pkg/uploads"
+	"github.com/kayahq/kaya/pkg/credentials"
+	"github.com/kayahq/kaya/pkg/life"
+	"github.com/kayahq/kaya/pkg/uploads"
 
 	_ "modernc.org/sqlite"
 )

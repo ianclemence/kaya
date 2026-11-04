@@ -8,13 +8,13 @@ import (
 	"sync"
 	"time"
 
-	"github.com/ianclemence/kaya/pkg/cevents"
-	"github.com/ianclemence/kaya/pkg/credentials"
-	"github.com/ianclemence/kaya/pkg/logger"
-	"github.com/ianclemence/kaya/pkg/proactive"
-	"github.com/ianclemence/kaya/pkg/providers/flight"
-	"github.com/ianclemence/kaya/pkg/tools"
-	"github.com/ianclemence/kaya/pkg/watch"
+	"github.com/kayahq/kaya/pkg/cevents"
+	"github.com/kayahq/kaya/pkg/credentials"
+	"github.com/kayahq/kaya/pkg/logger"
+	"github.com/kayahq/kaya/pkg/proactive"
+	"github.com/kayahq/kaya/pkg/providers/flight"
+	"github.com/kayahq/kaya/pkg/tools"
+	"github.com/kayahq/kaya/pkg/watch"
 )
 
 // Watches: the bridge from conversation to background observation of the

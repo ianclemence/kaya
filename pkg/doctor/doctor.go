@@ -8,12 +8,12 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ianclemence/kaya/pkg/clock"
-	"github.com/ianclemence/kaya/pkg/hardware"
-	"github.com/ianclemence/kaya/pkg/providers"
-	"github.com/ianclemence/kaya/pkg/schema"
-	"github.com/ianclemence/kaya/pkg/skills"
-	"github.com/ianclemence/kaya/pkg/tools"
+	"github.com/kayahq/kaya/pkg/clock"
+	"github.com/kayahq/kaya/pkg/hardware"
+	"github.com/kayahq/kaya/pkg/providers"
+	"github.com/kayahq/kaya/pkg/schema"
+	"github.com/kayahq/kaya/pkg/skills"
+	"github.com/kayahq/kaya/pkg/tools"
 )
 
 type CheckResult struct {

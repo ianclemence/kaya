@@ -1,8 +1,8 @@
 package agent
 
 import (
-	"github.com/ianclemence/kaya/pkg/cevents"
-	"github.com/ianclemence/kaya/pkg/providers"
+	"github.com/kayahq/kaya/pkg/cevents"
+	"github.com/kayahq/kaya/pkg/providers"
 )
 
 // usageMeasured reports whether a provider usage block carries a real

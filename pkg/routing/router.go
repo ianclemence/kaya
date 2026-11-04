@@ -4,7 +4,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/ianclemence/kaya/pkg/providers"
+	"github.com/kayahq/kaya/pkg/providers"
 )
 
 // defaultThreshold is used when the config threshold is zero or negative.

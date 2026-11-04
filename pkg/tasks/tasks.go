@@ -10,7 +10,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/ianclemence/kaya/pkg/cevents"
+	"github.com/kayahq/kaya/pkg/cevents"
 )
 
 // Status is a job's lifecycle state.

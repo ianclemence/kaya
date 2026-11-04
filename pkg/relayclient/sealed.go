@@ -13,8 +13,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ianclemence/kaya/pkg/relay/proto"
-	"github.com/ianclemence/kaya/pkg/relaycrypto"
+	"github.com/kayahq/kaya/pkg/relay/proto"
+	"github.com/kayahq/kaya/pkg/relaycrypto"
 )
 
 // sealedWindow is how far a sealed request's timestamp may be from the Pod's

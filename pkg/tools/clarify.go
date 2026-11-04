@@ -7,8 +7,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/ianclemence/kaya/pkg/bus"
-	"github.com/ianclemence/kaya/pkg/cards"
+	"github.com/kayahq/kaya/pkg/bus"
+	"github.com/kayahq/kaya/pkg/cards"
 )
 
 // ClarifyTool asks the owner something Kaya needs to go on. On a surface that

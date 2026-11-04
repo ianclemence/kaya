@@ -6,12 +6,12 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/ianclemence/kaya/pkg/cevents"
-	"github.com/ianclemence/kaya/pkg/computer"
-	"github.com/ianclemence/kaya/pkg/live"
-	"github.com/ianclemence/kaya/pkg/permissions"
-	"github.com/ianclemence/kaya/pkg/providers"
-	"github.com/ianclemence/kaya/pkg/tools"
+	"github.com/kayahq/kaya/pkg/cevents"
+	"github.com/kayahq/kaya/pkg/computer"
+	"github.com/kayahq/kaya/pkg/live"
+	"github.com/kayahq/kaya/pkg/permissions"
+	"github.com/kayahq/kaya/pkg/providers"
+	"github.com/kayahq/kaya/pkg/tools"
 )
 
 // Computer governance: the model proposes, the runtime decides.

@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/ianclemence/kaya/pkg/personalcontext"
+	"github.com/kayahq/kaya/pkg/personalcontext"
 )
 
 // ContextGetTool is the on-demand, structured lookup tool for Personal

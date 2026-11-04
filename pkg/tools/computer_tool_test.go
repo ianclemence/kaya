@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ianclemence/kaya/pkg/computer"
+	"github.com/kayahq/kaya/pkg/computer"
 )
 
 type stubComputer struct{}

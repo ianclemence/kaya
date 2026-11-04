@@ -4,7 +4,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/ianclemence/kaya/pkg/config"
+	"github.com/kayahq/kaya/pkg/config"
 )
 
 // Provider-key accessors.

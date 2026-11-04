@@ -3,7 +3,7 @@ package providers
 import (
 	"testing"
 
-	"github.com/ianclemence/kaya/pkg/config"
+	"github.com/kayahq/kaya/pkg/config"
 )
 
 // AllModelOptions is the full catalog (unusable entries included, marked

@@ -11,7 +11,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ianclemence/kaya/pkg/relaycrypto"
+	"github.com/kayahq/kaya/pkg/relaycrypto"
 )
 
 // SealedResponse is a response that crossed the relay sealed.

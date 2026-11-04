@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/ianclemence/kaya/pkg/agent"
+	"github.com/kayahq/kaya/pkg/agent"
 	"io"
 	"net/http"
 	"net/http/httptest"

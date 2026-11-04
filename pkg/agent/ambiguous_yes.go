@@ -3,7 +3,7 @@ package agent
 import (
 	"strings"
 
-	"github.com/ianclemence/kaya/pkg/skills"
+	"github.com/kayahq/kaya/pkg/skills"
 )
 
 func (al *AgentLoop) waitingOnOwner(session string) []string {

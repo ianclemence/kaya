@@ -12,7 +12,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ianclemence/kaya/pkg/localtrust"
+	"github.com/kayahq/kaya/pkg/localtrust"
 	"github.com/mdp/qrterminal/v3"
 )
 

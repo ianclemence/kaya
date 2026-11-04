@@ -16,7 +16,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/ianclemence/kaya/pkg/appliance"
+	"github.com/kayahq/kaya/pkg/appliance"
 )
 
 // fakeBinary is a script that behaves like `kaya version` for the updater.

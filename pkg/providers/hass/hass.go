@@ -25,8 +25,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ianclemence/kaya/pkg/provider"
-	"github.com/ianclemence/kaya/pkg/providers/httpx"
+	"github.com/kayahq/kaya/pkg/provider"
+	"github.com/kayahq/kaya/pkg/providers/httpx"
 )
 
 // Entity is one validated HA state object.

@@ -1,5 +1,5 @@
 // Kaya - Ultra-lightweight personal AI agent
-// Inspired by and based on KAYA: https://github.com/ianclemence/kaya
+// Inspired by and based on KAYA: https://github.com/kayahq/kaya
 // License: MIT
 //
 // Copyright (c) 2026 Kaya contributors
@@ -16,12 +16,12 @@ import (
 	"sync"
 	"time"
 
-	"github.com/ianclemence/kaya/pkg/bus"
-	"github.com/ianclemence/kaya/pkg/constants"
-	"github.com/ianclemence/kaya/pkg/logger"
-	"github.com/ianclemence/kaya/pkg/scheduled"
-	"github.com/ianclemence/kaya/pkg/state"
-	"github.com/ianclemence/kaya/pkg/tools"
+	"github.com/kayahq/kaya/pkg/bus"
+	"github.com/kayahq/kaya/pkg/constants"
+	"github.com/kayahq/kaya/pkg/logger"
+	"github.com/kayahq/kaya/pkg/scheduled"
+	"github.com/kayahq/kaya/pkg/state"
+	"github.com/kayahq/kaya/pkg/tools"
 )
 
 const (

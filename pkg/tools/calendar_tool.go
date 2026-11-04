@@ -8,11 +8,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ianclemence/kaya/pkg/logger"
-	"github.com/ianclemence/kaya/pkg/product"
-	"github.com/ianclemence/kaya/pkg/provider"
-	calprov "github.com/ianclemence/kaya/pkg/providers/calendar"
-	"github.com/ianclemence/kaya/pkg/skills"
+	"github.com/kayahq/kaya/pkg/logger"
+	"github.com/kayahq/kaya/pkg/product"
+	"github.com/kayahq/kaya/pkg/provider"
+	calprov "github.com/kayahq/kaya/pkg/providers/calendar"
+	"github.com/kayahq/kaya/pkg/skills"
 )
 
 // CalendarTool is the semantic calendar surface: the model asks for a

@@ -3,7 +3,7 @@ package main
 import (
 	"testing"
 
-	"github.com/ianclemence/kaya/pkg/tools"
+	"github.com/kayahq/kaya/pkg/tools"
 )
 
 func TestResolveRequestChannel(t *testing.T) {

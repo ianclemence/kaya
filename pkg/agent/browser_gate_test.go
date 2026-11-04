@@ -6,14 +6,14 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/ianclemence/kaya/pkg/cevents"
-	"github.com/ianclemence/kaya/pkg/contexts"
-	"github.com/ianclemence/kaya/pkg/db"
-	"github.com/ianclemence/kaya/pkg/permissions"
-	"github.com/ianclemence/kaya/pkg/providers"
-	"github.com/ianclemence/kaya/pkg/schema"
-	"github.com/ianclemence/kaya/pkg/tasks"
-	"github.com/ianclemence/kaya/pkg/tools"
+	"github.com/kayahq/kaya/pkg/cevents"
+	"github.com/kayahq/kaya/pkg/contexts"
+	"github.com/kayahq/kaya/pkg/db"
+	"github.com/kayahq/kaya/pkg/permissions"
+	"github.com/kayahq/kaya/pkg/providers"
+	"github.com/kayahq/kaya/pkg/schema"
+	"github.com/kayahq/kaya/pkg/tasks"
+	"github.com/kayahq/kaya/pkg/tools"
 )
 
 // stubBrowserTool stands in for the real BrowserTool (whose CLI runner

@@ -5,9 +5,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ianclemence/kaya/pkg/attention"
-	"github.com/ianclemence/kaya/pkg/jobs"
-	"github.com/ianclemence/kaya/pkg/life"
+	"github.com/kayahq/kaya/pkg/attention"
+	"github.com/kayahq/kaya/pkg/jobs"
+	"github.com/kayahq/kaya/pkg/life"
 )
 
 func TestLifeItemsComeAtTheRightTimes(t *testing.T) {

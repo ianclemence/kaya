@@ -11,9 +11,9 @@ import (
 	"strings"
 	"time"
 
-	kayaroot "github.com/ianclemence/kaya"
-	"github.com/ianclemence/kaya/pkg/appliance"
-	"github.com/ianclemence/kaya/pkg/changelog"
+	kayaroot "github.com/kayahq/kaya"
+	"github.com/kayahq/kaya/pkg/appliance"
+	"github.com/kayahq/kaya/pkg/changelog"
 )
 
 // The release channel.

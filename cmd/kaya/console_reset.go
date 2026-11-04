@@ -6,8 +6,8 @@ import (
 	"os"
 	"time"
 
-	"github.com/ianclemence/kaya/pkg/agent"
-	"github.com/ianclemence/kaya/pkg/appliance"
+	"github.com/kayahq/kaya/pkg/agent"
+	"github.com/kayahq/kaya/pkg/appliance"
 )
 
 // registerConsoleResetRoute lets a paired phone ask for a one-time code that

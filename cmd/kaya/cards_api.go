@@ -11,12 +11,12 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ianclemence/kaya/pkg/agent"
-	"github.com/ianclemence/kaya/pkg/cards"
-	"github.com/ianclemence/kaya/pkg/product"
-	calprov "github.com/ianclemence/kaya/pkg/providers/calendar"
-	gmailprov "github.com/ianclemence/kaya/pkg/providers/gmail"
-	outlookprov "github.com/ianclemence/kaya/pkg/providers/outlook"
+	"github.com/kayahq/kaya/pkg/agent"
+	"github.com/kayahq/kaya/pkg/cards"
+	"github.com/kayahq/kaya/pkg/product"
+	calprov "github.com/kayahq/kaya/pkg/providers/calendar"
+	gmailprov "github.com/kayahq/kaya/pkg/providers/gmail"
+	outlookprov "github.com/kayahq/kaya/pkg/providers/outlook"
 )
 
 // ownerConversation is the conversation the owner shares across devices.

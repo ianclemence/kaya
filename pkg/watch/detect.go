@@ -5,7 +5,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ianclemence/kaya/pkg/commitments"
+	"github.com/kayahq/kaya/pkg/commitments"
 )
 
 // Detection turns one owner message into zero or more watch candidates.

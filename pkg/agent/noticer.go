@@ -7,7 +7,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/ianclemence/kaya/pkg/cards"
+	"github.com/kayahq/kaya/pkg/cards"
 )
 
 // Decision is the outcome of a proactive gating check.

@@ -1,6 +1,6 @@
 package skills
 
-import "github.com/ianclemence/kaya/pkg/credentials"
+import "github.com/kayahq/kaya/pkg/credentials"
 
 // Wire the calendar + Gmail credential hooks into the credential
 // boundary. The integrations live here; the Vault owns credential

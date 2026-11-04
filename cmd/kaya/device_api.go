@@ -9,7 +9,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ianclemence/kaya/pkg/deviceops"
+	"github.com/kayahq/kaya/pkg/deviceops"
 )
 
 // Device runners perform the actual restart/update. They are package-level

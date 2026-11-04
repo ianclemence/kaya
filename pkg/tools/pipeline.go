@@ -8,7 +8,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/ianclemence/kaya/pkg/capability"
+	"github.com/kayahq/kaya/pkg/capability"
 )
 
 const (

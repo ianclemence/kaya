@@ -1,8 +1,8 @@
 package agent
 
 import (
-	"github.com/ianclemence/kaya/pkg/infer"
-	ollamaruntime "github.com/ianclemence/kaya/pkg/ollamaruntime"
+	"github.com/kayahq/kaya/pkg/infer"
+	ollamaruntime "github.com/kayahq/kaya/pkg/ollamaruntime"
 )
 
 // InferenceRuntime exposes the loop's current provider/model behind the

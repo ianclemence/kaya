@@ -3,8 +3,8 @@ package agent
 import (
 	"time"
 
-	"github.com/ianclemence/kaya/pkg/cevents"
-	"github.com/ianclemence/kaya/pkg/logger"
+	"github.com/kayahq/kaya/pkg/cevents"
+	"github.com/kayahq/kaya/pkg/logger"
 )
 
 // Event-driven awareness.

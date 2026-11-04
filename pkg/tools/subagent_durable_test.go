@@ -6,7 +6,7 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/ianclemence/kaya/pkg/providers"
+	"github.com/kayahq/kaya/pkg/providers"
 )
 
 // scriptedProvider answers each Chat call from a fixed script, recording

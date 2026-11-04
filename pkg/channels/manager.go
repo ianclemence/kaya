@@ -1,5 +1,5 @@
 // Kaya - Ultra-lightweight personal AI agent
-// Inspired by and based on KAYA: https://github.com/ianclemence/kaya
+// Inspired by and based on KAYA: https://github.com/kayahq/kaya
 // License: MIT
 //
 // Copyright (c) 2026 Kaya contributors
@@ -13,13 +13,13 @@ import (
 	"sync"
 	"time"
 
-	"github.com/ianclemence/kaya/pkg/bus"
-	"github.com/ianclemence/kaya/pkg/commands"
-	"github.com/ianclemence/kaya/pkg/config"
-	"github.com/ianclemence/kaya/pkg/constants"
-	"github.com/ianclemence/kaya/pkg/logger"
-	"github.com/ianclemence/kaya/pkg/telemetry"
-	"github.com/ianclemence/kaya/pkg/tools"
+	"github.com/kayahq/kaya/pkg/bus"
+	"github.com/kayahq/kaya/pkg/commands"
+	"github.com/kayahq/kaya/pkg/config"
+	"github.com/kayahq/kaya/pkg/constants"
+	"github.com/kayahq/kaya/pkg/logger"
+	"github.com/kayahq/kaya/pkg/telemetry"
+	"github.com/kayahq/kaya/pkg/tools"
 )
 
 type Manager struct {

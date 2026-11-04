@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/ianclemence/kaya/pkg/connector"
+	"github.com/kayahq/kaya/pkg/connector"
 )
 
 // RegisterConnectorTools loads installed connectors and registers their

@@ -10,7 +10,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ianclemence/kaya/pkg/browser/native"
+	"github.com/kayahq/kaya/pkg/browser/native"
 )
 
 const (

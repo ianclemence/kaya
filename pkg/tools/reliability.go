@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/ianclemence/kaya/pkg/logger"
+	"github.com/kayahq/kaya/pkg/logger"
 )
 
 // TimeoutTool lets a tool declare its own time budget. Tools that can hang

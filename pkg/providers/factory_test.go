@@ -3,7 +3,7 @@ package providers
 import (
 	"testing"
 
-	"github.com/ianclemence/kaya/pkg/config"
+	"github.com/kayahq/kaya/pkg/config"
 )
 
 // Resolving a provider for a fallback or light model must not rewrite the
