@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ianclemence/ghost/pkg/goals"
+	"github.com/ianclemence/kaya/pkg/goals"
 )
 
 // GoalTool manages standing goals: durable owner intents the heartbeat

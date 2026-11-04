@@ -89,7 +89,7 @@ func (r *DependencyReport) Summary() string {
 		return "All skill dependencies are satisfied."
 	}
 
-	buf.WriteString("\nRun `ghost doctor` for detailed installation instructions.")
+	buf.WriteString("\nRun `kaya doctor` for detailed installation instructions.")
 	return buf.String()
 }
 

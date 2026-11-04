@@ -88,7 +88,7 @@ func sortStrings(a []string) {
 	}
 }
 
-// preferencePredicates lists the additive preference predicates that Ghost
+// preferencePredicates lists the additive preference predicates that Kaya
 // treats as "a belief that can accumulate" (multiple distinct values are valid).
 // Used to keep Compact and any consumer aware of which predicates are additive.
 func preferencePredicates() []string {
@@ -128,8 +128,8 @@ var curatedKnownKinds = map[Kind]bool{
 
 // MaterializeCuratedProfile writes the current durable Personal Context facts
 // into the curated user-profile.md (the always-injected profile layer) so the
-// curated profile is actually populated and stays in sync with Ghost's
-// structured memory. It never invents facts — it only mirrors what Ghost
+// curated profile is actually populated and stays in sync with Kaya's
+// structured memory. It never invents facts — it only mirrors what Kaya
 // already believes, and it degrades to a no-op if there is nothing durable or
 // the workspace is unavailable. It returns the number of facts written.
 //

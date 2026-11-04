@@ -7,7 +7,7 @@ import (
 )
 
 // PendingContinuation tracks a clarification that expects a short follow-up.
-// It enables natural resume: Ghost asks "Which flight number?", user replies
+// It enables natural resume: Kaya asks "Which flight number?", user replies
 // "TG123", and the original task continues without repeating the request.
 //
 // This is intentionally separate from the blocking clarify tool: natural

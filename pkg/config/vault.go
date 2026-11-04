@@ -17,7 +17,7 @@ import (
 // plaintext JSON and upgrade them on load.
 //
 // Key hierarchy (first hit wins, read-only unless stated):
-//  1. GHOST_MASTER_KEY env — passphrase or base64/hex key. The raw value
+//  1. KAYA_MASTER_KEY env — passphrase or base64/hex key. The raw value
 //     is hashed with SHA-256, so any string works (containers, tests).
 //  2. <dir>/.master-env — KEY=VALUE env-file format written by
 //     vault-rotate as a root-only EnvironmentFile. This is the personal AI
@@ -39,7 +39,7 @@ var vaultMagic = []byte("GVS1")
 const MasterKeyFileName = ".master-key"
 
 // ApplianceKeyFileName is the rotation-installed key store next to the
-// secrets file: a KEY=VALUE env file holding GHOST_MASTER_KEY.
+// secrets file: a KEY=VALUE env file holding KAYA_MASTER_KEY.
 const ApplianceKeyFileName = ".master-env"
 
 // masterKeyFileName is the on-disk name (kept as an alias for brevity).
@@ -94,7 +94,7 @@ func Unseal(key, blob []byte) ([]byte, error) {
 	ct := blob[len(vaultMagic)+gcm.NonceSize():]
 	plain, err := gcm.Open(nil, nonce, ct, nil)
 	if err != nil {
-		return nil, fmt.Errorf("vault: authentication failed — wrong master key or tampered file (set GHOST_MASTER_KEY to the backup key)")
+		return nil, fmt.Errorf("vault: authentication failed — wrong master key or tampered file (set KAYA_MASTER_KEY to the backup key)")
 	}
 	return plain, nil
 }
@@ -106,17 +106,17 @@ func Unseal(key, blob []byte) ([]byte, error) {
 // migrator that mints keys as a side effect strands vaults under keys
 // nobody holds.
 func ResolveMasterKey(secretsPath string) ([]byte, error) {
-	if v := strings.TrimSpace(os.Getenv("GHOST_MASTER_KEY")); v != "" {
+	if v := strings.TrimSpace(os.Getenv("KAYA_MASTER_KEY")); v != "" {
 		return deriveKey(v), nil
 	}
 	dir := filepath.Dir(secretsPath)
 	if raw, err := os.ReadFile(filepath.Join(dir, ApplianceKeyFileName)); err == nil {
-		if v := envFileValue(raw, "GHOST_MASTER_KEY"); v != "" {
+		if v := envFileValue(raw, "KAYA_MASTER_KEY"); v != "" {
 			return deriveKey(v), nil
 		}
 		// Present but unusable: say so instead of falling through to an
 		// older key that would fail auth with a misleading error.
-		return nil, fmt.Errorf("vault: %s holds no GHOST_MASTER_KEY entry", filepath.Join(dir, ApplianceKeyFileName))
+		return nil, fmt.Errorf("vault: %s holds no KAYA_MASTER_KEY entry", filepath.Join(dir, ApplianceKeyFileName))
 	} else if !os.IsNotExist(err) {
 		return nil, fmt.Errorf("vault: read key file: %w", err)
 	}
@@ -124,7 +124,7 @@ func ResolveMasterKey(secretsPath string) ([]byte, error) {
 	raw, err := os.ReadFile(keyPath)
 	if err != nil {
 		if os.IsNotExist(err) {
-			return nil, fmt.Errorf("vault: no master key for %s (set GHOST_MASTER_KEY to the backup key)", secretsPath)
+			return nil, fmt.Errorf("vault: no master key for %s (set KAYA_MASTER_KEY to the backup key)", secretsPath)
 		}
 		return nil, fmt.Errorf("vault: read master key: %w", err)
 	}

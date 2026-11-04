@@ -1,9 +1,9 @@
 // Package activity projects canonical events into the human-facing
-// activity narrative: "What is Ghost doing for me?"
+// activity narrative: "What is Kaya doing for me?"
 //
 // Borrowed pattern (OpenMausBot): streaming replies with tool-run
 // activity chips — compact cards (◌ running / ✓ done / ! waiting /
-// × failed) that expand for detail. Ghost derives chips from SAFE
+// × failed) that expand for detail. Kaya derives chips from SAFE
 // canonical events only: raw tool names, manifests, schemas, prompts,
 // and secrets can never reach a chip (structural, not prompt-based).
 //
@@ -17,9 +17,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ianclemence/ghost/pkg/capability"
-	"github.com/ianclemence/ghost/pkg/cevents"
-	"github.com/ianclemence/ghost/pkg/utils"
+	"github.com/ianclemence/kaya/pkg/capability"
+	"github.com/ianclemence/kaya/pkg/cevents"
+	"github.com/ianclemence/kaya/pkg/utils"
 )
 
 // State is the chip lifecycle.
@@ -49,12 +49,12 @@ type Chip struct {
 	// used to be shown as the summary. It stays available behind a
 	// "Details" disclosure for people who want it; Summary never carries it.
 	Diagnostic string `json:"diagnostic,omitempty"`
-	// Why explains, in owner language, why Ghost acted or asked. It is the
+	// Why explains, in owner language, why Kaya acted or asked. It is the
 	// revelation layer: the owner should never have to wonder why a
 	// consequential action happened. Empty for events that need no
 	// justification (routine housekeeping, reads).
 	Why string `json:"why,omitempty"`
-	// ArtifactID names the thing Ghost made that this chip is about: the
+	// ArtifactID names the thing Kaya made that this chip is about: the
 	// artifact a publish chip created, or the one a removal chip retracted.
 	// Clients use it to drop publish chips whose artifact was later deleted.
 	ArtifactID string `json:"artifact_id,omitempty"`
@@ -69,7 +69,7 @@ var humanTitles = map[cevents.Type]string{
 	cevents.AgentProgress:   "Working on it",
 	cevents.AgentWaiting:    "Waiting for you",
 	// AgentCompleted is deliberately absent: a turn ending is a fact about
-	// the runtime, never about what Ghost did for the owner. It carries no
+	// the runtime, never about what Kaya did for the owner. It carries no
 	// payload, so it can only ever render as a bare "Done" — and one of
 	// those per turn drowned every real row in the feed.
 	cevents.AgentFailed:         "Couldn't finish that",
@@ -97,10 +97,10 @@ var humanTitles = map[cevents.Type]string{
 	cevents.RoutineWaiting:          "Routine waiting",
 	cevents.RoutineCompleted:        "Routine done",
 	cevents.RoutineFailed:           "Routine failed",
-	cevents.GhostReady:              "Ghost is ready",
-	cevents.GhostDegraded:           "Running with limits",
-	cevents.GhostOffline:            "Ghost is offline",
-	cevents.GhostRecovering:         "Ghost is recovering",
+	cevents.KayaReady:              "Kaya is ready",
+	cevents.KayaDegraded:           "Running with limits",
+	cevents.KayaOffline:            "Kaya is offline",
+	cevents.KayaRecovering:         "Kaya is recovering",
 	cevents.OperationFailed:         "Couldn't complete that",
 	cevents.SkillInstalled:          "Installed skill",
 	cevents.SkillEnabled:            "Enabled skill",
@@ -108,7 +108,7 @@ var humanTitles = map[cevents.Type]string{
 	cevents.SkillUpdated:            "Updated skill",
 	cevents.SkillRemoved:            "Removed skill",
 	cevents.ArtifactDeleted:         "Removed",
-	cevents.ProactivePresented:      "Ghost noticed something",
+	cevents.ProactivePresented:      "Kaya noticed something",
 	cevents.ProactiveApproved:       "You approved it",
 	cevents.ProactiveDenied:         "You declined it",
 	cevents.ProactiveDismissed:      "You dismissed it",
@@ -186,11 +186,11 @@ var capabilityPhrases = []struct {
 	{"weather", activityPhrase{"Checking the weather", "Weather checked", "Weather unavailable"}},
 	// calendar.modify is deliberately ahead of the generic calendar row: it
 	// CHANGES the owner's calendar, and "Calendar checked" would be a factual
-	// misstatement of what Ghost did to their day.
+	// misstatement of what Kaya did to their day.
 	{"calendar.modify", activityPhrase{"Changing your calendar", "Calendar updated", "Couldn't update your calendar"}},
 	{"calendar", activityPhrase{"Checking your calendar", "Calendar checked", "Calendar unavailable"}},
 	// memory.remember and memory.forget come before the generic memory row:
-	// they write, they do not search, and "Memory searched" for a fact Ghost
+	// they write, they do not search, and "Memory searched" for a fact Kaya
 	// just stored would name the wrong action.
 	{"memory.remember", activityPhrase{"Remembering that", "Remembered it", "Couldn't remember that"}},
 	{"memory.forget", activityPhrase{"Forgetting that", "Forgot it", "Couldn't forget that"}},
@@ -220,7 +220,7 @@ var capabilityPhrases = []struct {
 	{"mcp.execute", activityPhrase{"Using an outside tool", "Used an outside tool", "Outside tool didn't finish"}},
 	{"exec", activityPhrase{"Running a command", "Ran a command", "Command didn't finish"}},
 	{"sandbox", activityPhrase{"Running some code", "Ran some code", "Code didn't finish"}},
-	{"system.update", activityPhrase{"Updating your Ghost", "Ghost updated", "Update didn't finish"}},
+	{"system.update", activityPhrase{"Updating your Kaya", "Kaya updated", "Update didn't finish"}},
 
 	// Scheduling and routines.
 	{"schedule.cancel", activityPhrase{"Cancelling it", "Cancelled it", "Couldn't cancel that"}},
@@ -336,7 +336,7 @@ func permissionSubject(e *cevents.Event) string {
 //
 // An activity row is a claim about the present as much as the past: "Waiting
 // for approval" is only true while the request is open. The canonical event
-// records that Ghost asked — the answer is a separate event — so replaying the
+// records that Kaya asked — the answer is a separate event — so replaying the
 // ask afterwards as a live status tells the owner eight things need them when
 // none do. The answer event carries the decision instead.
 //
@@ -382,7 +382,7 @@ func stateFor(t cevents.Type, status string) State {
 	case cevents.AgentCompleted, cevents.MessageCreated, cevents.CapabilityCompleted,
 		cevents.ToolCompleted, cevents.PermissionApproved, cevents.MemoryCreated,
 		cevents.MemoryUpdated, cevents.IntegrationConnected, cevents.RoutineCreated,
-		cevents.RoutineCompleted, cevents.GhostReady,
+		cevents.RoutineCompleted, cevents.KayaReady,
 		cevents.SkillInstalled, cevents.SkillUpdated, cevents.SkillEnabled,
 		cevents.SkillDisabled, cevents.SkillRemoved,
 		cevents.ProactiveApproved, cevents.ProactiveCompleted,
@@ -391,13 +391,13 @@ func stateFor(t cevents.Type, status string) State {
 		return StateSuccess
 	case cevents.AgentFailed, cevents.CapabilityFailed, cevents.ToolFailed,
 		cevents.IntegrationFailed, cevents.RoutineFailed,
-		cevents.OperationFailed, cevents.GhostOffline, cevents.ProactiveFailed,
+		cevents.OperationFailed, cevents.KayaOffline, cevents.ProactiveFailed,
 		cevents.ReminderMissed, cevents.ReminderFailed:
 		return StateFailed
 	case cevents.IntegrationExpired:
 		return StateWaiting
 	case cevents.MessageReceived, cevents.AgentStarted, cevents.CapabilityStarted,
-		cevents.RoutineStarted, cevents.GhostRecovering, cevents.GhostStarted:
+		cevents.RoutineStarted, cevents.KayaRecovering, cevents.KayaStarted:
 		return StateRunning
 	default:
 		return StateRunning
@@ -421,7 +421,7 @@ func Project(e *cevents.Event) (*Chip, bool) {
 	switch e.Type {
 	case cevents.CapabilityStarted, cevents.CapabilityCompleted, cevents.CapabilityFailed,
 		cevents.ToolCompleted, cevents.ToolFailed:
-		// These rows exist to say WHAT Ghost did. With no subject there is
+		// These rows exist to say WHAT Kaya did. With no subject there is
 		// nothing to say, and an empty row is worse for the owner than no
 		// row at all — which is how the feed used to fill with "Done".
 		if capabilityIDOf(e) == "" {
@@ -487,7 +487,7 @@ func Project(e *cevents.Event) (*Chip, bool) {
 	return chip, true
 }
 
-// whyFor renders the revelation line: why Ghost asked or acted. It uses only
+// whyFor renders the revelation line: why Kaya asked or acted. It uses only
 // runtime-owned facts (capability, risk, status) and never model prose. It is
 // deliberately quiet: a reason only appears when there IS a reason the owner
 // would want (a consequential action, an approval, a denial). Routine reads
@@ -498,14 +498,14 @@ func whyFor(e *cevents.Event) string {
 
 	switch e.Type {
 	case cevents.PermissionRequested:
-		return "This changes something, so Ghost asked first."
+		return "This changes something, so Kaya asked first."
 	case cevents.PermissionApproved:
 		if risk == "high_impact" {
 			return "You approved this high-impact action; it may be hard to undo."
 		}
-		return "You said yes, so Ghost went ahead."
+		return "You said yes, so Kaya went ahead."
 	case cevents.PermissionDenied:
-		return "You declined this action, so Ghost did not do it."
+		return "You declined this action, so Kaya did not do it."
 	case cevents.PermissionExpired:
 		return "The approval expired before it was used, so nothing ran."
 	case cevents.CapabilityCompleted, cevents.ToolCompleted:
@@ -667,19 +667,19 @@ func humanizeFailure(raw string) string {
 	case has("forecast") && has("out of reach", "out of range", "covers", "only goes"):
 		return "The forecast doesn't reach that date yet."
 	case has("429", "rate limit", "too many requests", "quota"):
-		return "The service is busy right now. Ghost can try again in a moment."
+		return "The service is busy right now. Kaya can try again in a moment."
 	case has("401", "403", "unauthorized", "forbidden", "api key", "invalid key", "authentication"):
 		return "The service refused access. Its key may be missing or expired."
 	case has("permission denied", "not permitted", "not allowed"):
-		return "Ghost wasn't allowed to do that."
+		return "Kaya wasn't allowed to do that."
 	case has("timeout", "timed out", "deadline exceeded"):
 		return "It took too long to answer."
 	case has("connection refused", "no such host", "dial tcp", "network", "unreachable", "eof", "connection reset"):
-		return "Ghost couldn't reach the service."
+		return "Kaya couldn't reach the service."
 	case has("404", "not found", "no such file", "does not exist"):
-		return "Ghost couldn't find what it was looking for."
+		return "Kaya couldn't find what it was looking for."
 	case has("required", "missing", "invalid", "must be", "cannot be empty", "unknown field"):
-		return "Ghost didn't give the tool everything it needed."
+		return "Kaya didn't give the tool everything it needed."
 	}
 	return "Something went wrong. Open Details for the technical reason."
 }

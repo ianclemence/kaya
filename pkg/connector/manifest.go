@@ -1,20 +1,20 @@
-// Package connector is Ghost's unified, portable connector model.
+// Package connector is Kaya's unified, portable connector model.
 //
-// A connector is a capability-scoped package that teaches Ghost how to reach
+// A connector is a capability-scoped package that teaches Kaya how to reach
 // an external system. It is deliberately not an "app": it declares what it can
 // do (capabilities + risk), how the user authenticates, and where it came from
 // — never a UI, a secret, or an authority. The model sees capabilities; the
 // runtime resolves a capability to a connector and its vault credential; the
 // permission broker decides; runtime evidence proves.
 //
-// One manifest subsumes every integration mechanism Ghost supports:
+// One manifest subsumes every integration mechanism Kaya supports:
 //
 //	native   an in-process Go capability (first-party)
 //	skill    markdown instructions + bounded scripts
 //	mcp      any Model Context Protocol server (the universal adapter)
 //	openapi  generated from an OpenAPI document
 //
-// The connector is portable on purpose: a manifest authored for one Ghost
+// The connector is portable on purpose: a manifest authored for one Kaya
 // installs on any other, because nothing in it names a platform, a price, or a
 // ranking. Distribution is a directory, never a landlord.
 package connector
@@ -24,8 +24,8 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/ianclemence/ghost/pkg/capability"
-	"github.com/ianclemence/ghost/pkg/connectedapp"
+	"github.com/ianclemence/kaya/pkg/capability"
+	"github.com/ianclemence/kaya/pkg/connectedapp"
 )
 
 // SchemaVersion is the manifest schema this build understands.

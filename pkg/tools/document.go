@@ -7,13 +7,13 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ianclemence/ghost/pkg/artifacts"
-	"github.com/ianclemence/ghost/pkg/documents"
+	"github.com/ianclemence/kaya/pkg/artifacts"
+	"github.com/ianclemence/kaya/pkg/documents"
 )
 
 // DocumentTool makes a document the owner can keep, print, send or sign: a CV,
-// a cover letter, an invoice, an itinerary, a one-pager, a letter. Ghost
-// writes Markdown; the Pod lays it out as a printed page (PDF) in Ghost's own
+// a cover letter, an invoice, an itinerary, a one-pager, a letter. Kaya
+// writes Markdown; the Pod lays it out as a printed page (PDF) in Kaya's own
 // type, keeps the source so it can also be had as Word, and puts it in the
 // conversation with its pages to look through. Each call with the same title
 // is the next version.

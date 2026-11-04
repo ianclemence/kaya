@@ -9,7 +9,7 @@ import (
 
 func reg(t *testing.T) *Registry {
 	t.Helper()
-	r := NewRegistry("ghost-local")
+	r := NewRegistry("kaya-local")
 	r.Register("b1", KindBrowser)
 	r.Register("c1", KindComputer)
 	return r
@@ -23,35 +23,35 @@ func TestObservationDoesNotGrantControl(t *testing.T) {
 	if s.Control != OwnerNone {
 		t.Fatalf("observation must not grant control: %s", s.Control)
 	}
-	if ok, _ := r.GhostMayAct("c1"); !ok {
-		t.Fatal("observation must not pause Ghost")
+	if ok, _ := r.KayaMayAct("c1"); !ok {
+		t.Fatal("observation must not pause Kaya")
 	}
 }
 
-// Ghost acts; a user takeover pauses Ghost.
-func TestTakeoverPausesGhostAndExpiryRestores(t *testing.T) {
+// Kaya acts; a user takeover pauses Kaya.
+func TestTakeoverPausesKayaAndExpiryRestores(t *testing.T) {
 	r := reg(t)
-	r.SetControlOwner("c1", OwnerGhost)
-	if ok, reason := r.GhostMayAct("c1"); !ok {
-		t.Fatalf("ghost may act before takeover: %s", reason)
+	r.SetControlOwner("c1", OwnerKaya)
+	if ok, reason := r.KayaMayAct("c1"); !ok {
+		t.Fatalf("kaya may act before takeover: %s", reason)
 	}
 	lease, err := r.Takeover("c1", "device-a", time.Minute)
 	if err != nil || lease == nil {
 		t.Fatalf("takeover failed: %v", err)
 	}
-	if ok, reason := r.GhostMayAct("c1"); ok {
-		t.Fatalf("ghost must be paused during user control: %s", reason)
+	if ok, reason := r.KayaMayAct("c1"); ok {
+		t.Fatalf("kaya must be paused during user control: %s", reason)
 	}
 	s, _ := r.Get("c1")
 	if s.Control != OwnerUser || s.State != StateUserControl {
 		t.Fatalf("surface must be user_control: %+v", s)
 	}
-	// Expire the lease: safe fallback is no owner, Ghost stays paused until
+	// Expire the lease: safe fallback is no owner, Kaya stays paused until
 	// revalidated resume.
 	time.Sleep(5 * time.Millisecond)
 	r.Reconcile(time.Now().Add(2 * time.Minute))
-	if ok, _ := r.GhostMayAct("c1"); ok {
-		t.Fatal("ghost must not auto-resume after expiry; revalidation required")
+	if ok, _ := r.KayaMayAct("c1"); ok {
+		t.Fatal("kaya must not auto-resume after expiry; revalidation required")
 	}
 	s, _ = r.Get("c1")
 	if s.Control != OwnerNone || s.State != StatePaused {
@@ -59,7 +59,7 @@ func TestTakeoverPausesGhostAndExpiryRestores(t *testing.T) {
 	}
 }
 
-// Release does not blindly resume Ghost; Resume is required.
+// Release does not blindly resume Kaya; Resume is required.
 func TestReleaseRequiresRevalidationBeforeResume(t *testing.T) {
 	r := reg(t)
 	if _, err := r.Takeover("b1", "device-a", time.Minute); err != nil {
@@ -75,8 +75,8 @@ func TestReleaseRequiresRevalidationBeforeResume(t *testing.T) {
 	if err := r.Resume("b1"); err != nil {
 		t.Fatal(err)
 	}
-	if ok, _ := r.GhostMayAct("b1"); !ok {
-		t.Fatal("after revalidated resume ghost may act")
+	if ok, _ := r.KayaMayAct("b1"); !ok {
+		t.Fatal("after revalidated resume kaya may act")
 	}
 }
 
@@ -176,7 +176,7 @@ func TestConcurrentTakeoverDeterministic(t *testing.T) {
 // the JSON view) and malformed control claims in observations are ignored.
 func TestObservationClaimsIgnored(t *testing.T) {
 	r := reg(t)
-	r.Observe("b1", Observation{Title: "Ghost", URL: "https://example.com", Control: OwnerUser, State: StateUserControl})
+	r.Observe("b1", Observation{Title: "Kaya", URL: "https://example.com", Control: OwnerUser, State: StateUserControl})
 	s, _ := r.Get("b1")
 	if s.Control != OwnerNone {
 		t.Fatal("an observation must never claim control")
@@ -196,7 +196,7 @@ func TestRegistryBoundsGrowth(t *testing.T) {
 	}
 }
 
-func TestCompleteTaskSettlesOnlyGhostOwned(t *testing.T) {
+func TestCompleteTaskSettlesOnlyKayaOwned(t *testing.T) {
 	r := NewRegistry("owner-1")
 	r.Register("a", KindBrowser)
 	r.SetTask("a", "task-1")
@@ -239,7 +239,7 @@ func TestCompleteTaskSettlesOnlyGhostOwned(t *testing.T) {
 
 // Resume must fail closed from any state other than paused: reviving a
 // completed/failed/active surface would fabricate liveness. Only paused
-// (post-release) surfaces return to Ghost, after the caller's revalidation.
+// (post-release) surfaces return to Kaya, after the caller's revalidation.
 func TestResumeOnlyFromPaused(t *testing.T) {
 	r := NewRegistry("owner-1")
 	r.Register("s1", KindBrowser)
@@ -254,7 +254,7 @@ func TestResumeOnlyFromPaused(t *testing.T) {
 		t.Fatalf("resume from paused must succeed: %v", err)
 	}
 	s, _ := r.Get("s1")
-	if s.Control != OwnerGhost || s.State != StateActive {
-		t.Fatalf("resumed surface must be ghost/active, got %+v", s)
+	if s.Control != OwnerKaya || s.State != StateActive {
+		t.Fatalf("resumed surface must be kaya/active, got %+v", s)
 	}
 }

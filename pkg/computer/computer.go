@@ -1,5 +1,5 @@
 // Package computer makes computers a capability of the personal AI
-// runtime — not a separate product. One Ghost drives any number of
+// runtime — not a separate product. One Kaya drives any number of
 // computers (its own personal AI, a paired laptop, a future sandbox)
 // through one interface, one lease discipline, one permission broker,
 // and one evidence trail.
@@ -41,7 +41,7 @@ const (
 	OpExecute      Op = "execute"       // bounded shell execution, separately permissioned
 )
 
-// Risk maps an operation to Ghost's broker risk vocabulary
+// Risk maps an operation to Kaya's broker risk vocabulary
 // (read_only, low_risk, consequential, high_impact). Financial,
 // destructive, and account actions are classified by the broker on top
 // of this via capability+action detail — this mapping is the floor, not
@@ -65,9 +65,9 @@ func OpRisk(op Op) string {
 type Placement string
 
 const (
-	// PlacementLocal is the Ghost device itself.
+	// PlacementLocal is the Kaya device itself.
 	PlacementLocal Placement = "local"
-	// PlacementPaired is a user computer paired with this Ghost.
+	// PlacementPaired is a user computer paired with this Kaya.
 	PlacementPaired Placement = "paired"
 	// PlacementRemote is a remote execution host (future).
 	PlacementRemote Placement = "remote"
@@ -98,7 +98,7 @@ type Computer interface {
 	ID() string
 	// Placement reports where this computer executes.
 	Placement() Placement
-	// DisplayName is the human-facing label ("Ghost", "MacBook").
+	// DisplayName is the human-facing label ("Kaya", "MacBook").
 	DisplayName() string
 	// Do executes one operation. Unimplemented ops return an explicit
 	// error naming the op — never silent success.

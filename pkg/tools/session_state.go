@@ -25,7 +25,7 @@ func (t *SessionStateTool) SetSources(pending, artifacts func(session string) []
 func (t *SessionStateTool) Name() string { return "session_state" }
 
 func (t *SessionStateTool) Description() string {
-	return "What is true right now, read from Ghost's own records and not from the conversation: approvals waiting for the owner, pages and files built in this conversation, and open reminders and routines. " +
+	return "What is true right now, read from Kaya's own records and not from the conversation: approvals waiting for the owner, pages and files built in this conversation, and open reminders and routines. " +
 		"Call it before you say that something was or was not built, is or is not waiting, was or was not scheduled, or before you describe where things stand. Never answer those from memory of the chat."
 }
 

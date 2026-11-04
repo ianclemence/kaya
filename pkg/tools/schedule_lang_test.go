@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ianclemence/ghost/pkg/scheduled"
+	"github.com/ianclemence/kaya/pkg/scheduled"
 )
 
 func TestLooksEnglish(t *testing.T) {

@@ -1,0 +1,135 @@
+/* Kaya — design tokens
+   Pure black with one aurora of light, and quiet glass. No light theme.
+   The same identity as the phone app and the terminal. Token names keep their
+   original vocabulary (paper, ink, ember) so every sheet that uses them
+   follows; the values are what changed. */
+
+:root {
+  /* ── Canvas ── */
+  --paper:           #000000;   /* page */
+  --paper-raised:    #0e0e13;   /* solid surfaces: menus, modals, toasts */
+  --paper-sunken:    #07070a;   /* wells, inputs */
+  --paper-hover:     #17171e;
+  --paper-overlay:   rgba(0,0,0,.74);
+
+  /* ── Glass: faint white over the light, hairline edge ── */
+  --glass:           rgba(0,0,0,.36);
+  --glass-strong:    rgba(255,255,255,.11);
+  --glass-edge:      rgba(255,255,255,.13);
+  --glass-blur:      18px;
+
+  /* ── Ink ── */
+  --ink:             #ffffff;
+  --ink-soft:        #cfcdd8;
+  --ink-faint:       #a09eae;
+  --ink-ghost:       #4b4a56;
+  --ink-muted:       var(--ink-soft);
+
+  /* ── Lines ── */
+  --line:            rgba(255,255,255,.09);
+  --line-strong:     rgba(255,255,255,.18);
+  --line-focus:      var(--accent);
+
+  /* ── Accent: electric indigo. The primary action glows; links and focus read lighter ── */
+  --accent:          #9c95ff;
+  --accent-hover:    #b8b3ff;
+  --accent-soft:     rgba(86,72,255,.20);
+  --accent-line:     rgba(140,128,255,.42);
+  --accent-glow:     rgba(58,46,240,.55);
+  --accent-bright:   #9c95ff;
+  --accent-fill:     rgba(58,46,240,.38);   /* the glowing action button */
+  --on-accent:       #ffffff;
+
+  /* ── Amber: Kaya's presence light. Only when Kaya is working or needs you ── */
+  --ember:           #ffa928;
+  --ember-deep:      #ffa928;
+  --ember-soft:      rgba(255,169,40,.12);
+  --ember-line:      rgba(255,169,40,.34);
+  --ember-glow:      rgba(255,169,40,.32);
+
+  /* ── Status ── */
+  --ok:              #6fe3a0;  --ok-soft:   rgba(111,227,160,.12);  --ok-line:   rgba(111,227,160,.32);
+  --warn:            #ffc24d;  --warn-soft: rgba(255,194,77,.12);   --warn-line: rgba(255,194,77,.32);
+  --bad:             #ff7a7a;  --bad-soft:  rgba(255,122,122,.12);  --bad-line:  rgba(255,122,122,.32);
+  --off:             #7c7a88;  --off-soft:  rgba(255,255,255,.07);
+  --info:            #8fb8ff;  --info-soft: rgba(143,184,255,.12);  --info-line: rgba(143,184,255,.32);
+
+  /* ── Aurora: the only colour on the page ── */
+  --au-amber:        #ff9a1a;
+  --au-magenta:      #c23deb;
+  --au-violet:       #7a3cf0;
+  --au-blue:         #3a2ef0;
+
+  /* ── Type ── */
+  --font-sans:       "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-display:    "Instrument Serif", "Iowan Old Style", "Palatino Linotype", Georgia, serif;
+  --font-mono:       "JetBrains Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+
+  --t-display:       56px;
+  --t-title:         36px;
+  --t-head:          20px;
+  --t-body:          15px;
+  --t-callout:       14px;
+  --t-foot:          12.5px;
+  --t-micro:         11px;
+  --t-caption:       12px;
+
+  --lh-tight:        1.02;
+  --lh-snug:         1.28;
+  --lh-body:         1.55;
+
+  --ls-tight:        -0.02em;
+  --ls-snug:         -0.012em;
+  --ls-normal:       -0.003em;
+
+  /* ── Space (an 8pt rhythm with a 4pt assist) ── */
+  --s-0:   2px;
+  --s-1:  4px;
+  --s-2:  8px;
+  --s-3:  12px;
+  --s-4:  16px;
+  --s-5:  24px;
+  --s-6:  32px;
+  --s-7:  48px;
+  --s-8:  64px;
+  --s-9:  96px;
+
+  /* ── Radius ── */
+  --r-xs:  6px;
+  --r-sm:  10px;
+  --r-md:  14px;
+  --r-lg:  22px;
+  --r-xl:  28px;
+  --r-pill: 999px;
+
+  /* ── Elevation: black on black, so mostly edge and light ── */
+  --shadow-xs:  0 1px 2px rgba(0,0,0,.5);
+  --shadow-sm:  0 1px 3px rgba(0,0,0,.55);
+  --shadow-md:  0 4px 16px rgba(0,0,0,.55);
+  --shadow-lg:  0 12px 36px rgba(0,0,0,.65);
+  --shadow-xl:  0 20px 56px rgba(0,0,0,.75);
+  --inset-hi:   inset 0 1px 0 rgba(255,255,255,.07);
+
+  /* ── Motion: strong ease-out, under 300ms, no bounce, no ease-in ── */
+  --ease-out:       cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out:    cubic-bezier(0.77, 0, 0.175, 1);
+  --ease-drawer:    cubic-bezier(0.32, 0.72, 0, 1);
+  --ease-spring:    cubic-bezier(0.23, 1, 0.32, 1);
+
+  --d-instant:      0ms;
+  --d-press:        120ms;
+  --d-fast:         140ms;
+  --d-base:         180ms;
+  --d-moderate:     240ms;
+  --d-slow:         420ms;
+  --d-drawer:       300ms;
+
+  --grain-opacity:  .55;
+
+  /* ── Layout ── */
+  --nav-w:          256px;
+  --topbar-h:       56px;
+  --maxw:           1000px;
+
+  color-scheme: dark;
+}

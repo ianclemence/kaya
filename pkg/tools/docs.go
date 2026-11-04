@@ -6,9 +6,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ianclemence/ghost/pkg/credentials"
-	"github.com/ianclemence/ghost/pkg/product"
-	notionprov "github.com/ianclemence/ghost/pkg/providers/notion"
+	"github.com/ianclemence/kaya/pkg/credentials"
+	"github.com/ianclemence/kaya/pkg/product"
+	notionprov "github.com/ianclemence/kaya/pkg/providers/notion"
 )
 
 // DocsSearchTool searches Notion pages shared with the connected
@@ -23,7 +23,7 @@ func NewDocsSearchTool() *DocsSearchTool { return &DocsSearchTool{} }
 func (t *DocsSearchTool) Name() string { return "docs_search" }
 
 func (t *DocsSearchTool) Description() string {
-	return "Search the user's connected Notion workspace. Use for \"find the doc about X\", \"search my notes for Y\". Only pages shared with the Ghost integration are visible."
+	return "Search the user's connected Notion workspace. Use for \"find the doc about X\", \"search my notes for Y\". Only pages shared with the Kaya integration are visible."
 }
 
 func (t *DocsSearchTool) Parameters() map[string]interface{} {

@@ -2,10 +2,10 @@
 name: spotify
 description: Control Spotify playback, search tracks, manage playlists, and view what's playing. Invoke when user mentions "Spotify", "play music", "pause", "next track", "what's playing on Spotify", "search for a song", or "Spotify queue". Prefers the connected Spotify account (OAuth) when available; falls back to CLI wrapper or dbus.
 version: 1.2.0
-author: Ghost
+author: Kaya
 license: MIT
 metadata:
-  ghost:
+  kaya:
     tags: [spotify, music, playback, audio, playlist]
     connector: true
 prerequisites:

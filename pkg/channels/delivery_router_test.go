@@ -3,7 +3,7 @@ package channels
 import (
 	"testing"
 
-	"github.com/ianclemence/ghost/pkg/bus"
+	"github.com/ianclemence/kaya/pkg/bus"
 )
 
 type mockSessionProvider struct{}

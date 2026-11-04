@@ -90,7 +90,7 @@ func RenderScorecard(rows []ScoreRow) string {
 		return "No golden runs recorded yet.\n"
 	}
 	var b strings.Builder
-	b.WriteString("\nGHOST MODEL SCORECARD\n\n")
+	b.WriteString("\nKAYA MODEL SCORECARD\n\n")
 	for _, r := range rows {
 		fmt.Fprintf(&b, "%s (%s)  %d/%d  %.0f%%", r.Model, r.Provider, r.Passed, r.Total, 100*r.Latest)
 		if r.Runs > 1 {

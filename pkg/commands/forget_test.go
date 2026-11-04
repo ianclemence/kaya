@@ -8,8 +8,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ianclemence/ghost/pkg/personalcontext"
-	"github.com/ianclemence/ghost/pkg/session"
+	"github.com/ianclemence/kaya/pkg/personalcontext"
+	"github.com/ianclemence/kaya/pkg/session"
 )
 
 func newForgetStore(t *testing.T) *personalcontext.Store {
@@ -101,8 +101,8 @@ func TestForgetKeepsHistory(t *testing.T) {
 	}
 }
 
-// /forget now scrubs Ghost's own derived notes, not just the structured
-// belief. The daily journal is what Ghost searched when it recited a
+// /forget now scrubs Kaya's own derived notes, not just the structured
+// belief. The daily journal is what Kaya searched when it recited a
 // "forgotten" fact back, so a forget that leaves it there is not complete.
 func TestForgetCommandScrubsDerivedNotes(t *testing.T) {
 	ws := t.TempDir()

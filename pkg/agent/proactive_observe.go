@@ -5,11 +5,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ianclemence/ghost/pkg/goals"
-	"github.com/ianclemence/ghost/pkg/ideas"
-	"github.com/ianclemence/ghost/pkg/routines"
-	"github.com/ianclemence/ghost/pkg/scheduled"
-	"github.com/ianclemence/ghost/pkg/tasks"
+	"github.com/ianclemence/kaya/pkg/goals"
+	"github.com/ianclemence/kaya/pkg/ideas"
+	"github.com/ianclemence/kaya/pkg/routines"
+	"github.com/ianclemence/kaya/pkg/scheduled"
+	"github.com/ianclemence/kaya/pkg/tasks"
 )
 
 // Proactive observation: the grounding half of the proactive engine. Every
@@ -30,10 +30,10 @@ const (
 	// the scheduler is legitimately mid-tick.
 	overdueGrace = 15 * time.Minute
 	// stalledGoalAfter is how long a usable goal may go without a progress
-	// note before Ghost offers to do something about it.
+	// note before Kaya offers to do something about it.
 	stalledGoalAfter = 48 * time.Hour
 	// staleRoutineAfter is how long an active routine may go unrrun before
-	// Ghost offers to pause it (mirrors the existing idea rule).
+	// Kaya offers to pause it (mirrors the existing idea rule).
 	staleRoutineAfter = 30 * 24 * time.Hour
 )
 
@@ -59,7 +59,7 @@ func (al *AgentLoop) CollectObservations(now time.Time) []ideas.Observation {
 
 // observeReminders finds scheduled reminders and tasks that did not reach the
 // owner: still pending well past their time, or recorded as failed. These are
-// exactly the cases where Ghost's promise ("I'll remind you") was broken, so
+// exactly the cases where Kaya's promise ("I'll remind you") was broken, so
 // noticing them is the product working, not noise.
 func (al *AgentLoop) observeReminders(now time.Time) []ideas.Observation {
 	if al.schedSvc == nil {
@@ -134,7 +134,7 @@ func (al *AgentLoop) observeRoutines(now time.Time) []ideas.Observation {
 	if al.routineSvc == nil {
 		return nil
 	}
-	list := al.routineSvc.List(al.ghostID(), observationLimit)
+	list := al.routineSvc.List(al.kayaID(), observationLimit)
 	var out []ideas.Observation
 	for _, r := range list {
 		if r == nil {
@@ -180,7 +180,7 @@ func (al *AgentLoop) observeRoutines(now time.Time) []ideas.Observation {
 				continue
 			}
 			// "Keeps failing" must mean the latest run failed. A routine that
-			// failed yesterday and succeeded since has recovered, and Ghost
+			// failed yesterday and succeeded since has recovered, and Kaya
 			// must not keep offering to fix it.
 			if n := routineRecentErrors(al.schedSvc, r.ID); n > 0 && al.routineLastRunFailed(r.ID) {
 				out = append(out, al.failedRoutineObservation(r, now))
@@ -294,7 +294,7 @@ func (al *AgentLoop) observeGoals(now time.Time) []ideas.Observation {
 
 // observeTasks notices durable jobs parked waiting on the owner. These are the
 // runtime's own long-running pieces of work; when one stops because it needs a
-// human, that is precisely what "Ghost needs you" means.
+// human, that is precisely what "Kaya needs you" means.
 func (al *AgentLoop) observeTasks(now time.Time) []ideas.Observation {
 	if al.jobs == nil {
 		return nil

@@ -8,12 +8,12 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ianclemence/ghost/pkg/bus"
-	"github.com/ianclemence/ghost/pkg/cevents"
-	"github.com/ianclemence/ghost/pkg/config"
-	"github.com/ianclemence/ghost/pkg/permissions"
-	"github.com/ianclemence/ghost/pkg/schema"
-	"github.com/ianclemence/ghost/pkg/tools"
+	"github.com/ianclemence/kaya/pkg/bus"
+	"github.com/ianclemence/kaya/pkg/cevents"
+	"github.com/ianclemence/kaya/pkg/config"
+	"github.com/ianclemence/kaya/pkg/permissions"
+	"github.com/ianclemence/kaya/pkg/schema"
+	"github.com/ianclemence/kaya/pkg/tools"
 	_ "modernc.org/sqlite"
 )
 
@@ -75,7 +75,7 @@ func TestExecuteApprovedRequestRunsThePausedCallOnce(t *testing.T) {
 	}
 	t.Cleanup(func() { al.Stop() })
 
-	raw, err := sql.Open("sqlite", "file:"+ws+"/ghost.db?_pragma=busy_timeout(5000)")
+	raw, err := sql.Open("sqlite", "file:"+ws+"/kaya.db?_pragma=busy_timeout(5000)")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -131,10 +131,10 @@ func TestExecuteApprovedRequestRunsThePausedCallOnce(t *testing.T) {
 	}
 }
 
-// An approved execution's output is evidence for the model, never Ghost's
+// An approved execution's output is evidence for the model, never Kaya's
 // reply. The resume path used to return the tool's raw bytes as the turn,
 // so an owner who approved a read of a web page got a wall of HTML and
-// JSON-LD streamed and stored as something Ghost said — and the rundown
+// JSON-LD streamed and stored as something Kaya said — and the rundown
 // the model had promised never arrived.
 func TestApprovalResumePayloadIsNotTheReply(t *testing.T) {
 	ws := t.TempDir()
@@ -147,7 +147,7 @@ func TestApprovalResumePayloadIsNotTheReply(t *testing.T) {
 	}
 	t.Cleanup(func() { al.Stop() })
 
-	raw, err := sql.Open("sqlite", "file:"+ws+"/ghost.db?_pragma=busy_timeout(5000)")
+	raw, err := sql.Open("sqlite", "file:"+ws+"/kaya.db?_pragma=busy_timeout(5000)")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -191,7 +191,7 @@ func TestApprovalResumePayloadIsNotTheReply(t *testing.T) {
 		t.Fatal("the owner must see a reply")
 	}
 	if strings.Contains(streamed, "schema.org") {
-		t.Errorf("raw payload streamed to the owner as Ghost's reply: %q", short(streamed))
+		t.Errorf("raw payload streamed to the owner as Kaya's reply: %q", short(streamed))
 	}
 	if strings.Contains(resp, "schema.org") {
 		t.Errorf("raw payload returned as the reply: %q", short(resp))

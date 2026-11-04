@@ -8,11 +8,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ianclemence/ghost/pkg/personalcontext"
+	"github.com/ianclemence/kaya/pkg/personalcontext"
 )
 
 // This file is the operational smoke test for Personal Context v1: it drives
-// the real agent + command + tool + session + Ghost State interfaces against a
+// the real agent + command + tool + session + Kaya State interfaces against a
 // temporary isolated workspace (a mock provider stands in for the LLM, so no
 // model service is required — Personal Context lifecycle operations must never
 // need one). It intentionally mirrors how a live installation behaves rather
@@ -257,8 +257,8 @@ func TestSmokeScenario4Forget(t *testing.T) {
 	}
 }
 
-// SCENARIO 5 — GHOST STATE ROUND TRIP.
-func TestSmokeScenario5GhostStateRoundTrip(t *testing.T) {
+// SCENARIO 5 — KAYA STATE ROUND TRIP.
+func TestSmokeScenario5KayaStateRoundTrip(t *testing.T) {
 	ws := newDigestWorkspace(t)
 	al := newTestAgentLoopWithProvider(t, ws, &countingProvider{})
 	runTurn(t, al, "my favorite color is blue", "s1")

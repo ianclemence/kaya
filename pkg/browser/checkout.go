@@ -1,6 +1,6 @@
 package browser
 
-// Checkout detection: before any transactional submit, Ghost must know
+// Checkout detection: before any transactional submit, Kaya must know
 // whether the page is a checkout and what it would charge. Detection is
 // heuristic and conservative: checkout-like signals require a declared
 // merchant + amount match from the caller (the approval), never model

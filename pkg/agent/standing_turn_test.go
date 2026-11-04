@@ -4,8 +4,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/ianclemence/ghost/pkg/bus"
-	ghodb "github.com/ianclemence/ghost/pkg/db"
+	"github.com/ianclemence/kaya/pkg/bus"
+	ghodb "github.com/ianclemence/kaya/pkg/db"
 )
 
 func testStandingLoop(t *testing.T) *AgentLoop {
@@ -26,7 +26,7 @@ func standingMsg(session, content string) bus.InboundMessage {
 
 func TestStandingProposeConfirm(t *testing.T) {
 	al := testStandingLoop(t)
-	ans, ok := al.tryStandingTurn(standingMsg("sess-s", "Always let Ghost add calendar events"))
+	ans, ok := al.tryStandingTurn(standingMsg("sess-s", "Always let Kaya add calendar events"))
 	if !ok || !strings.Contains(ans, "Say yes to confirm") {
 		t.Fatalf("must propose: %q", ans)
 	}
@@ -50,7 +50,7 @@ func TestStandingProposeConfirm(t *testing.T) {
 
 func TestStandingBroadRejected(t *testing.T) {
 	al := testStandingLoop(t)
-	ans, ok := al.tryStandingTurn(standingMsg("sess-b", "Always let Ghost access my entire Google account"))
+	ans, ok := al.tryStandingTurn(standingMsg("sess-b", "Always let Kaya access my entire Google account"))
 	if !ok {
 		t.Fatal("broad request must still match standing intent")
 	}
@@ -66,7 +66,7 @@ func TestStandingBroadRejected(t *testing.T) {
 
 func TestStandingDenyFlow(t *testing.T) {
 	al := testStandingLoop(t)
-	ans, ok := al.tryStandingTurn(standingMsg("sess-d", "Never let Ghost control my lights"))
+	ans, ok := al.tryStandingTurn(standingMsg("sess-d", "Never let Kaya control my lights"))
 	if !ok || !strings.Contains(ans, "Say yes to confirm") {
 		t.Fatalf("must propose deny: %q", ans)
 	}

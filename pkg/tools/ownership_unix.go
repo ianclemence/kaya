@@ -9,7 +9,7 @@ import (
 )
 
 // inheritOwner gives a folder the service just created the owner of the folder
-// it sits in. Ghost's service runs as root, so without this everything it makes
+// it sits in. Kaya's service runs as root, so without this everything it makes
 // inside the owner's workspace (a project folder, say) belongs to root and the
 // owner cannot edit their own project. It does nothing when not root.
 func inheritOwner(path string) {

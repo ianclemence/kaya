@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	calprov "github.com/ianclemence/ghost/pkg/providers/calendar"
+	calprov "github.com/ianclemence/kaya/pkg/providers/calendar"
 )
 
 func testCalendarSvc(handler http.HandlerFunc) (*calprov.Service, *httptest.Server) {
@@ -78,7 +78,7 @@ func TestCalendarToolLegacyFallback(t *testing.T) {
 }
 
 func TestCalendarToolFallbackDisabled(t *testing.T) {
-	t.Setenv("GHOST_CALENDAR_GCALCLI", "0")
+	t.Setenv("KAYA_CALENDAR_GCALCLI", "0")
 	tool := NewCalendarTool(t.TempDir())
 	tool.run = func(ctx context.Context, args []string) (string, error) {
 		return "ok-output", nil

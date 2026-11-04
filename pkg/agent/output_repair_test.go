@@ -8,7 +8,7 @@ import (
 func TestRepairTimeSpacing(t *testing.T) {
 	cases := []struct{ in, want string }{
 		// The reported defect, verbatim shapes.
-		{"your last item is the2:00 PM Ghost logs check.", "your last item is the 2:00 PM Ghost logs check."},
+		{"your last item is the2:00 PM Kaya logs check.", "your last item is the 2:00 PM Kaya logs check."},
 		{"first thing is7:00 AM tomorrow.", "first thing is 7:00 AM tomorrow."},
 		{"meet at 7:00AM sharp.", "meet at 7:00 AM sharp."},
 		{"back by 3pm then.", "back by 3 pm then."},

@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ianclemence/ghost/pkg/tools"
+	"github.com/ianclemence/kaya/pkg/tools"
 )
 
 type promoteTestTool struct{ name string }
@@ -96,7 +96,7 @@ func TestOwnerRequestsCommand(t *testing.T) {
 		"can you run df -h?",
 		"please execute /var/tmp/report.sh",
 		"df -h",
-		"ls -la /var/lib/ghost",
+		"ls -la /var/lib/kaya",
 		"now run ps aux | head",
 	}
 	no := []string{

@@ -16,13 +16,13 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ianclemence/ghost/pkg/bus"
-	"github.com/ianclemence/ghost/pkg/cevents"
-	"github.com/ianclemence/ghost/pkg/ghoststate"
-	"github.com/ianclemence/ghost/pkg/routines"
-	"github.com/ianclemence/ghost/pkg/scheduled"
-	"github.com/ianclemence/ghost/pkg/skills"
-	"github.com/ianclemence/ghost/pkg/tools"
+	"github.com/ianclemence/kaya/pkg/bus"
+	"github.com/ianclemence/kaya/pkg/cevents"
+	"github.com/ianclemence/kaya/pkg/kayastate"
+	"github.com/ianclemence/kaya/pkg/routines"
+	"github.com/ianclemence/kaya/pkg/scheduled"
+	"github.com/ianclemence/kaya/pkg/skills"
+	"github.com/ianclemence/kaya/pkg/tools"
 )
 
 const routinePendingCapability = "routine.create"
@@ -62,7 +62,7 @@ func isStateQuestion(text string) bool {
 	return false
 }
 
-// hasSchedulingAsk reports whether the text explicitly asks Ghost to set
+// hasSchedulingAsk reports whether the text explicitly asks Kaya to set
 // up recurrence. The routine fast-path runs pre-LLM with no semantic
 // understanding, so a bare recurring pattern ("every morning I feel
 // groggy", "daily standup is painful") must NOT propose: describing a
@@ -78,8 +78,8 @@ func hasSchedulingAsk(text string) bool {
 	lower := strings.ToLower(text)
 	for _, ask := range []string{"remind", "notify", "alert", "wake", "nudge",
 		"schedul", "recur", "set up", "don't forget", "don't let me forget", "make sure",
-		// Asks aimed at Ghost as much as "remind me" is: "every Monday give me
-		// a brief". "me" makes them a request to Ghost, not a description of
+		// Asks aimed at Kaya as much as "remind me" is: "every Monday give me
+		// a brief". "me" makes them a request to Kaya, not a description of
 		// the owner's own habits.
 		"give me", "send me", "tell me", "brief me", "update me", "email me", "message me",
 		"text me", "ping me", "let me know", "show me", "read me", "summarize"} {
@@ -196,7 +196,7 @@ func (al *AgentLoop) proposeRoutine(store *skills.PendingStore, old *skills.Pend
 	delegated := isDelegation(intent.Task)
 	instruction := "remind me to " + intent.Task
 	if delegated {
-		instruction = intent.Task // already an instruction for Ghost
+		instruction = intent.Task // already an instruction for Kaya
 	}
 	cont := map[string]string{
 		"name":          truncateRoutine(intent.Task, 60),
@@ -263,17 +263,17 @@ func (al *AgentLoop) confirmRoutineProposal(store *skills.PendingStore, pending 
 	if err != nil {
 		return "", false
 	}
-	ghostID, ownerID := routineIDs(al.workspace)
+	kayaID, ownerID := routineIDs(al.workspace)
 	name := ifEmpty(c["name"], "Routine")
 	instruction := ifEmpty(c["instruction"], pending.Intent)
 	// Duplicate prevention: an identical active routine (same instruction,
 	// same schedule) must not stack. The user repeating the request gets an
 	// honest "already scheduled" instead of a second identical routine.
-	if existing := findMatchingRoutine(svc, ghostID, instruction, sched); existing != nil {
+	if existing := findMatchingRoutine(svc, kayaID, instruction, sched); existing != nil {
 		store.Complete(pending.ID)
 		return "You already have that routine (" + existing.Name + "). I didn't create a duplicate.", true
 	}
-	r, err := svc.Create(ghostID, ownerID, name, instruction, tz, sched, nil)
+	r, err := svc.Create(kayaID, ownerID, name, instruction, tz, sched, nil)
 	if err != nil {
 		store.Cancel(pending.ID)
 		return "I couldn't create that routine. Nothing was scheduled.", true
@@ -298,7 +298,7 @@ func (al *AgentLoop) confirmRoutineProposal(store *skills.PendingStore, pending 
 	if al.governance != nil && al.governance.Events != nil {
 		al.governance.Events.Publish(&cevents.Event{
 			Type: cevents.RoutineCreated, RequestID: msg.Metadata["request_id"],
-			SessionID: msg.SessionKey, GhostID: al.governance.GhostID,
+			SessionID: msg.SessionKey, KayaID: al.governance.KayaID,
 			AgentID: al.governance.AgentID, RoutineID: r.ID,
 			Payload: map[string]interface{}{"summary": name + " scheduled"},
 		})
@@ -367,18 +367,18 @@ func routineTimezone(msg bus.InboundMessage) string {
 	return tools.DeviceTimezone()
 }
 
-func routineIDs(workspace string) (ghostID, ownerID string) {
-	if id, err := ghoststate.LoadIdentity(workspace); err == nil && id != nil {
-		return id.GhostID, id.OwnerName
+func routineIDs(workspace string) (kayaID, ownerID string) {
+	if id, err := kayastate.LoadIdentity(workspace); err == nil && id != nil {
+		return id.KayaID, id.OwnerName
 	}
-	return "ghost-local", "owner"
+	return "kaya-local", "owner"
 }
 
 // findMatchingRoutine returns an active routine with the same instruction
 // AND the same effective schedule, or nil. Prevents duplicate stacking when
 // the user repeats an identical routine request.
-func findMatchingRoutine(svc *routines.Service, ghostID, instruction string, sched scheduled.Schedule) *routines.Routine {
-	for _, r := range svc.List(ghostID, 100) {
+func findMatchingRoutine(svc *routines.Service, kayaID, instruction string, sched scheduled.Schedule) *routines.Routine {
+	for _, r := range svc.List(kayaID, 100) {
 		if r.Status != routines.StatusActive && r.Status != routines.StatusPaused {
 			continue
 		}
@@ -403,7 +403,7 @@ func findMatchingRoutine(svc *routines.Service, ghostID, instruction string, sch
 	return nil
 }
 
-// delegationVerbs start a task that is an instruction to Ghost itself rather
+// delegationVerbs start a task that is an instruction to Kaya itself rather
 // than something for the owner to do.
 var delegationVerbs = []string{
 	"give me", "send me", "tell me", "brief me", "update me", "email me", "message me",
@@ -411,7 +411,7 @@ var delegationVerbs = []string{
 	"check ", "prepare ", "find ", "look up ", "pull up ", "compile ", "draft ",
 }
 
-// isDelegation reports whether a task is a job for Ghost ("give me a brief of
+// isDelegation reports whether a task is a job for Kaya ("give me a brief of
 // my week") rather than a nudge for the owner ("take my vitamins").
 func isDelegation(task string) bool {
 	lower := strings.ToLower(strings.TrimSpace(task))
@@ -438,7 +438,7 @@ var secondPersonSwaps = []struct {
 }
 
 // toSecondPerson says the owner's words back to them: "take my vitamins"
-// becomes "take your vitamins". Ghost used to echo the owner's own "my" in a
+// becomes "take your vitamins". Kaya used to echo the owner's own "my" in a
 // sentence addressed to them.
 func toSecondPerson(s string) string {
 	for _, sw := range secondPersonSwaps {

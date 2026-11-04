@@ -41,7 +41,7 @@ func googleSteps(api string) []string {
 		"Open Google Cloud and create a project, or choose one you already have.",
 		"Turn on the " + api + " for it (APIs and services, then Library).",
 		"Set up the consent screen: choose External, and add your own Google address as a test user.",
-		"Then choose Publish app. Without this Google disconnects Ghost every 7 days. Google will warn that the app is unverified; that is fine for an app only you use.",
+		"Then choose Publish app. Without this Google disconnects Kaya every 7 days. Google will warn that the app is unverified; that is fine for an app only you use.",
 		"Under Credentials make an OAuth client ID and choose Desktop app as the type.",
 		"Copy the Client ID and the Client secret. Paste them below.",
 	}
@@ -58,7 +58,7 @@ func OAuthServiceForApp(appID string) (string, bool) {
 }
 
 // OAuthBegin starts a sign-in and returns the address to open, or needsSetup
-// when the owner has not yet given Ghost an app to sign in through.
+// when the owner has not yet given Kaya an app to sign in through.
 func OAuthBegin(service, sessionID string) (authURL string, needsSetup bool, err error) {
 	svc, ok := OAuthServices[service]
 	if !ok {
@@ -171,12 +171,12 @@ var signInProblems = map[string]string{
 	"state_expired":      "That sign-in took too long. Press Connect and try again.",
 	"revoked_or_expired": "That code was already used or has expired. Press Connect and try again.",
 	"misconfigured":      "The provider didn't accept the app's ID or secret. Check what you pasted in the setup, and that a Desktop app (Google) or Web redirect (Microsoft) was chosen.",
-	"unauthorized":       "You signed in, but the account didn't give Ghost access. Try again and approve everything it asks for.",
+	"unauthorized":       "You signed in, but the account didn't give Kaya access. Try again and approve everything it asks for.",
 	"timeout":            "The provider took too long to answer. Try again.",
 	"invalid_callback":   "That address doesn't have a sign-in code in it. Copy the whole address from the page that failed to load.",
-	"validation_failed":  "You signed in, but Ghost couldn't reach the service to check it. Try again in a moment.",
+	"validation_failed":  "You signed in, but Kaya couldn't reach the service to check it. Try again in a moment.",
 	"exchange_failed":    "The provider refused the sign-in. Press Connect and try again.",
-	"store_failed":       "Signed in, but Ghost couldn't save the connection. Check the Pod's storage.",
+	"store_failed":       "Signed in, but Kaya couldn't save the connection. Check the Pod's storage.",
 }
 
 // FriendlySignInError turns a sign-in failure into plain words.

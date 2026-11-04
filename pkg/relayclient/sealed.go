@@ -13,8 +13,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ianclemence/ghost/pkg/relay/proto"
-	"github.com/ianclemence/ghost/pkg/relaycrypto"
+	"github.com/ianclemence/kaya/pkg/relay/proto"
+	"github.com/ianclemence/kaya/pkg/relaycrypto"
 )
 
 // sealedWindow is how far a sealed request's timestamp may be from the Pod's
@@ -47,8 +47,8 @@ var sealedBlocked = map[string]bool{
 	"host": true, "connection": true, "keep-alive": true, "transfer-encoding": true,
 	"te": true, "trailer": true, "upgrade": true, "proxy-authorization": true,
 	"proxy-authenticate": true, "proxy-connection": true, "content-length": true,
-	"x-ghost-via": true, "x-ghost-client-id": true, "x-ghost-client-token": true,
-	"x-ghost-secret": true, "x-forwarded-for": true,
+	"x-kaya-via": true, "x-kaya-client-id": true, "x-kaya-client-token": true,
+	"x-kaya-secret": true, "x-forwarded-for": true,
 }
 
 // handleSealed answers one sealed exchange. Anything wrong with the envelope is
@@ -154,7 +154,7 @@ loop:
 	}
 	// Set after the copy so the request cannot clear it: relayed requests must
 	// present device credentials like any other remote peer.
-	hreq.Header.Set("X-Ghost-Via", "relay")
+	hreq.Header.Set("X-Kaya-Via", "relay")
 
 	resp, err := (&http.Client{Timeout: 5 * time.Minute}).Do(hreq)
 	if err != nil {

@@ -61,7 +61,7 @@ func OnDemandCatalogue(reg, offered *ToolRegistry, profile ToolProfile) string {
 	if len(lines) == 0 {
 		return ""
 	}
-	return "More of what Ghost can do. If one of these is already in your function list this turn, just call it. If it is not, call find_tools with what you need, in a few English words, before you say Ghost cannot: " +
+	return "More of what Kaya can do. If one of these is already in your function list this turn, just call it. If it is not, call find_tools with what you need, in a few English words, before you say Kaya cannot: " +
 		strings.Join(lines, "; ") + "."
 }
 

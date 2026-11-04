@@ -5,7 +5,7 @@ import (
 )
 
 // TrajectorySummary is a replayable description of one execution trace. It is
-// what `ghost replay <trajectory-id>` prints: the model/effort/tools/
+// what `kaya replay <trajectory-id>` prints: the model/effort/tools/
 // verification/fallback sequence and the terminal outcome, reconstructed from
 // durable events. Replay describes; it never re-executes.
 type TrajectorySummary struct {
@@ -125,7 +125,7 @@ func str(v interface{}) string {
 }
 
 // RecentTrajectories returns the distinct trajectory IDs with events, newest
-// first (bounded), for a `ghost replay --list` style view.
+// first (bounded), for a `kaya replay --list` style view.
 func (s *Stream) RecentTrajectories(limit int) []string {
 	if limit <= 0 || limit > 200 {
 		limit = 50

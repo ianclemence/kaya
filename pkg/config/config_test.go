@@ -185,7 +185,7 @@ func TestRAGAlwaysEnabledOnLoad(t *testing.T) {
 	if err := os.WriteFile(path, []byte(minimal), 0600); err != nil {
 		t.Fatal(err)
 	}
-	t.Setenv("GHOST_RAG_ENABLED", "")
+	t.Setenv("KAYA_RAG_ENABLED", "")
 	cfg, err := LoadConfig(path)
 	if err != nil {
 		t.Fatal(err)
@@ -205,15 +205,15 @@ func TestRAGAlwaysEnabledOnLoad(t *testing.T) {
 		t.Fatal(err)
 	}
 	if !cfg2.RAG.Enabled {
-		t.Fatal("RAG must remain enabled unless GHOST_RAG_ENABLED=false")
+		t.Fatal("RAG must remain enabled unless KAYA_RAG_ENABLED=false")
 	}
 	// Advanced escape hatch.
-	t.Setenv("GHOST_RAG_ENABLED", "false")
+	t.Setenv("KAYA_RAG_ENABLED", "false")
 	cfg3, err := LoadConfig(path2)
 	if err != nil {
 		t.Fatal(err)
 	}
 	if cfg3.RAG.Enabled {
-		t.Fatal("GHOST_RAG_ENABLED=false must be honored as the advanced opt-out")
+		t.Fatal("KAYA_RAG_ENABLED=false must be honored as the advanced opt-out")
 	}
 }

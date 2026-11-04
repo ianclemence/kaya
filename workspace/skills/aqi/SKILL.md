@@ -2,10 +2,10 @@
 name: aqi
 description: Check current Air Quality Index (AQI), PM2.5, PM10, and pollen levels for any city. Invoke when user asks "air quality", "AQI", "pollution level", "is the air safe to breathe", or "pollen count" for a specific location.
 version: 1.1.0
-author: Ghost
+author: Kaya
 license: MIT
 metadata:
-  ghost:
+  kaya:
     tags: [air-quality, AQI, pollution, weather, environment, health]
 prerequisites:
   commands: [python]

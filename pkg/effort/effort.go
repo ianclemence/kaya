@@ -1,5 +1,5 @@
 // Package effort turns a request into an explicit execution budget. It is the
-// controller that keeps Ghost cheap for simple work and expensive only when
+// controller that keeps Kaya cheap for simple work and expensive only when
 // justified: Quick, Normal, and Deep each map to bounded output tokens, tool
 // calls, execution time, retries, verification strength, and retrieval depth.
 //

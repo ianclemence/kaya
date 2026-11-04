@@ -9,10 +9,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ianclemence/ghost/pkg/bus"
-	"github.com/ianclemence/ghost/pkg/config"
-	"github.com/ianclemence/ghost/pkg/personalcontext"
-	"github.com/ianclemence/ghost/pkg/providers"
+	"github.com/ianclemence/kaya/pkg/bus"
+	"github.com/ianclemence/kaya/pkg/config"
+	"github.com/ianclemence/kaya/pkg/personalcontext"
+	"github.com/ianclemence/kaya/pkg/providers"
 )
 
 func mustPCValue(t *testing.T, v interface{}) json.RawMessage {
@@ -90,7 +90,7 @@ func newTestAgentLoopWithProvider(t *testing.T, workspace string, provider provi
 }
 
 // TestContextGetToolRegistered verifies context_get is exposed through the
-// real Ghost tool mechanism: registered on the agent registry and present in
+// real Kaya tool mechanism: registered on the agent registry and present in
 // the provider tool definitions the model receives.
 func TestContextGetToolRegistered(t *testing.T) {
 	ws := t.TempDir()

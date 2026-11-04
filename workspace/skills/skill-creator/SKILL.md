@@ -1,11 +1,11 @@
 ---
 name: skill-creator
-description: Bootstrap a new Ghost skill from scratch. Use when user asks to "create a skill", "make a new skill for X", "add a skill", or "build a skill that does Y". Produces a complete SKILL.md with frontmatter, workflow, examples, and references.
+description: Bootstrap a new Kaya skill from scratch. Use when user asks to "create a skill", "make a new skill for X", "add a skill", or "build a skill that does Y". Produces a complete SKILL.md with frontmatter, workflow, examples, and references.
 version: 1.1.0
-author: Ghost
+author: Kaya
 license: MIT
 metadata:
-  ghost:
+  kaya:
     tags: [skill-creation, bootstrapping, development, authoring]
 prerequisites:
   commands: []
@@ -275,7 +275,7 @@ At this point, it is time to actually create the skill.
 Skip this step only if the skill being developed already exists, and iteration or packaging is needed. In this case, continue to the next step.
 
 When creating a new skill from scratch, scaffold it by hand — no generator
-script ships with Ghost. Create a directory named for the skill containing
+script ships with Kaya. Create a directory named for the skill containing
 `SKILL.md` with frontmatter (`name`, `description` with trigger phrases,
 `version`, `author`, `license`) plus optional `scripts/` and `references/`
 subdirectories, using `write_file` directly.
@@ -338,7 +338,7 @@ Write instructions for using the skill and its bundled resources.
 ### Step 5: Validate the Skill
 
 Once development of the skill is complete, validate it by hand against
-this checklist (no packaging script ships with Ghost):
+this checklist (no packaging script ships with Kaya):
 
 - YAML frontmatter format and required fields (`name`, `description` with triggers)
 - Skill naming conventions and directory structure
@@ -346,7 +346,7 @@ this checklist (no packaging script ships with Ghost):
 - File organization and resource references
 - No authority claims, no credential handling, no cron references, no invented tool names
 
-Ghost installs skills as directories (skill installer / `ghost skills install`); there is no `.skill` bundle step in this runtime.
+Kaya installs skills as directories (skill installer / `kaya skills install`); there is no `.skill` bundle step in this runtime.
 
 ### Step 6: Iterate
 

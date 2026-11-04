@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-// The live failure: Ghost asked to delete projects/scout with recursive true.
+// The live failure: Kaya asked to delete projects/scout with recursive true.
 // The owner approved. The tool ran with only the path, "needs recursive", and
 // nothing was deleted: the pause record kept only short strings.
 func TestAnApprovedActionRunsWithTheParametersItWasAskedWith(t *testing.T) {

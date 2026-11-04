@@ -6,7 +6,7 @@ import (
 	"unicode/utf8"
 )
 
-func TestRulesAnswerTheOfferGhostMade(t *testing.T) {
+func TestRulesAnswerTheOfferKayaMade(t *testing.T) {
 	for last, want := range map[string]string{
 		`"Check the prices for the Shenzhen trip flights" is the next one up. Want me to move it, or add a nudge before it?`: "Yes, move it",
 		"Want me to keep watching BA123 and tell you if its gate, time or status changes?":                                   "Yes, go ahead",

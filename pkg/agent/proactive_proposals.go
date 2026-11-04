@@ -6,21 +6,21 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ianclemence/ghost/pkg/bus"
-	"github.com/ianclemence/ghost/pkg/cards"
-	"github.com/ianclemence/ghost/pkg/cevents"
-	"github.com/ianclemence/ghost/pkg/ideas"
-	"github.com/ianclemence/ghost/pkg/logger"
-	"github.com/ianclemence/ghost/pkg/permissions"
-	"github.com/ianclemence/ghost/pkg/proactive"
-	"github.com/ianclemence/ghost/pkg/providers"
-	"github.com/ianclemence/ghost/pkg/routines"
-	"github.com/ianclemence/ghost/pkg/scheduled"
-	"github.com/ianclemence/ghost/pkg/tools"
+	"github.com/ianclemence/kaya/pkg/bus"
+	"github.com/ianclemence/kaya/pkg/cards"
+	"github.com/ianclemence/kaya/pkg/cevents"
+	"github.com/ianclemence/kaya/pkg/ideas"
+	"github.com/ianclemence/kaya/pkg/logger"
+	"github.com/ianclemence/kaya/pkg/permissions"
+	"github.com/ianclemence/kaya/pkg/proactive"
+	"github.com/ianclemence/kaya/pkg/providers"
+	"github.com/ianclemence/kaya/pkg/routines"
+	"github.com/ianclemence/kaya/pkg/scheduled"
+	"github.com/ianclemence/kaya/pkg/tools"
 )
 
 // The proactive proposal runtime: NOTICE → REASON → PROPOSE → APPROVE → ACT →
-// VERIFY → REMEMBER, built from primitives Ghost already has.
+// VERIFY → REMEMBER, built from primitives Kaya already has.
 //
 //   - NOTICE   pkg/ideas observations (proactive_observe.go), collected from
 //              the scheduler, routine sidecar, goal store and job store.
@@ -52,7 +52,7 @@ const (
 	opTaskTurn      = "task_turn"
 
 	// Commitment operations. Both are always executable as stated: a
-	// delegated governed turn, or a reminder Ghost really creates.
+	// delegated governed turn, or a reminder Kaya really creates.
 	opCommitmentTurn   = "commitment_turn"
 	opCommitmentRemind = "commitment_remind"
 )
@@ -72,7 +72,7 @@ const (
 // request a card button would.
 const proposalSession = "main"
 
-// planForObservation states the single concrete action Ghost offers for an
+// planForObservation states the single concrete action Kaya offers for an
 // observed situation. Every plan names its capability and risk up front: the
 // broker sees exactly what the owner is being asked to allow, and nothing
 // here can be widened later.
@@ -122,7 +122,7 @@ func (al *AgentLoop) planForObservation(o ideas.Observation) *ideas.Plan {
 		}
 	case ideas.ObsCommitmentDue, ideas.ObsCommitmentStalled:
 		// The capability-aware planner owns obligation actions: it decides
-		// whether Ghost can honestly offer anything at all.
+		// whether Kaya can honestly offer anything at all.
 		if al == nil || al.workspace == "" {
 			return nil
 		}
@@ -379,7 +379,7 @@ func (al *AgentLoop) expireProposal(store *ideas.Store, idea ideas.Idea, now tim
 //
 // Two things happen here, and neither creates an authorization:
 //
-//   - A dry-run policy check. A proposal Ghost's own policy forbids is never
+//   - A dry-run policy check. A proposal Kaya's own policy forbids is never
 //     shown as an offer it cannot keep. Nothing is written and no request is
 //     created, so a suggestion that is never answered leaves no residue and
 //     cannot go stale.
@@ -602,7 +602,7 @@ func (al *AgentLoop) publishProactive(typ cevents.Type, idea ideas.Idea, note st
 	ev := &cevents.Event{
 		Type:      typ,
 		SessionID: proposalSession,
-		GhostID:   al.governance.GhostID,
+		KayaID:   al.governance.KayaID,
 		AgentID:   al.governance.AgentID,
 		Status:    string(idea.Status),
 		Payload:   payload,
@@ -806,7 +806,7 @@ const (
 	// own, which is progress, not failure.
 	outcomeNeedsApproval planOutcome = "needs_approval"
 	// outcomeBlocked: the work did not happen, and nothing failed either —
-	// Ghost needs something from the owner (a recipient, a file, a channel).
+	// Kaya needs something from the owner (a recipient, a file, a channel).
 	// It is not success and must never be recorded as one.
 	outcomeBlocked planOutcome = "blocked"
 )
@@ -959,7 +959,7 @@ func (al *AgentLoop) executeLocalPlan(ctx context.Context, idea ideas.Idea, chan
 
 // executeDelegatedTurn runs a normal governed agent turn. Any consequential
 // tool the model reaches for still goes through the broker on its own; this
-// step only decides that Ghost should look.
+// step only decides that Kaya should look.
 func (al *AgentLoop) executeDelegatedTurn(ctx context.Context, idea ideas.Idea, channel, chatID, prompt string) (planOutcome, string, map[string]interface{}, error) {
 	session := "proactive:" + idea.ID
 	before := al.sessionMaxEventSeq(session)
@@ -1043,7 +1043,7 @@ func (al *AgentLoop) publishProactiveWithEvidence(typ cevents.Type, idea ideas.I
 	al.governance.Events.Publish(&cevents.Event{
 		Type: cevents.VerificationCompleted, RequestID: idea.PermissionRequestID,
 		SessionID: proposalSession, Status: "verified",
-		GhostID: al.governance.GhostID, AgentID: al.governance.AgentID,
+		KayaID: al.governance.KayaID, AgentID: al.governance.AgentID,
 		Payload: payload,
 	})
 }

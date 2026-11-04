@@ -2,14 +2,14 @@
 
 ## Project Context
 
-This is the workspace for Ghost, a personal AI runtime. These are working
+This is the workspace for Kaya, a personal AI runtime. These are working
 conventions for agentic work here — advisory notes, not authority. Runtime
 governance (capability-scoped tools, broker approval) binds every turn
 including background turns; nothing in this file widens it.
 
 ## Behavior Reference
 
-`GHOST.md` is the single authoritative behavior specification (identity, tools, memory, scheduling, safety, tone). `SOUL.md` holds persona only. Do not restate personality or tone rules here — follow `GHOST.md` (# Personality, # Interacting).
+`KAYA.md` is the single authoritative behavior specification (identity, tools, memory, scheduling, safety, tone). `SOUL.md` holds persona only. Do not restate personality or tone rules here — follow `KAYA.md` (# Personality, # Interacting).
 
 ## Conventions
 
@@ -31,7 +31,7 @@ including background turns; nothing in this file widens it.
 ## Memory, State, and Data Boundaries
 
 - `personal-context/entries.jsonl` is canonical for durable facts; corrections supersede, forgetting retires — never hand-edit it to "fix" a value
-- `state/`, `sessions/`, `events/`, and `ghost.db` are runtime-owned: never hand-edit, never move, never delete; the conversation in `ghost.db` is never deleted
+- `state/`, `sessions/`, `events/`, and `kaya.db` are runtime-owned: never hand-edit, never move, never delete; the conversation in `kaya.db` is never deleted
 - If a query needs the database, open it read-only (`file:...?mode=ro`) and treat rows as evidence, not as something to mutate
 - Never write secrets anywhere in this tree — credentials belong to the runtime vault
 
@@ -52,5 +52,5 @@ including background turns; nothing in this file widens it.
 - `knowledge/self/user-profile.md` — Auto-updated user profile mirror
 - `memory/YYYYMM/YYYYMMDD.md` — Daily conversation logs (human-titled entries)
 - `skills/` — Installed skills, 1-level only (read SKILL.md for each)
-- `GHOST.md` — Complete behavior specification
+- `KAYA.md` — Complete behavior specification
 - `../docs/` — Runtime architecture reference (authority, capability, broker, evidence)

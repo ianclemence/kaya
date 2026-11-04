@@ -9,7 +9,7 @@ import (
 	"time"
 )
 
-// A credentials card is Ghost saying "I need to sign in to X, and I have no
+// A credentials card is Kaya saying "I need to sign in to X, and I have no
 // sign-in for it", with a form the owner fills in on their phone. The card
 // carries what the form needs to say and nothing the owner types: the phone
 // sends the username and password to the Pod's Vault directly, and the card
@@ -47,7 +47,7 @@ func CredentialHost(raw string) string {
 }
 
 // NewCredentialRequest builds the card. service is the name the owner knows the
-// site by ("Google Ads"); reason says what Ghost will do once signed in.
+// site by ("Google Ads"); reason says what Kaya will do once signed in.
 func NewCredentialRequest(site, service, reason string) (Card, error) {
 	host := CredentialHost(site)
 	if host == "" {

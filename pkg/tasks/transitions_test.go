@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/ianclemence/ghost/pkg/cevents"
+	"github.com/ianclemence/kaya/pkg/cevents"
 	_ "modernc.org/sqlite"
 )
 

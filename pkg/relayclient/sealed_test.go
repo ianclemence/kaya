@@ -17,9 +17,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ianclemence/ghost/pkg/entitlement"
-	"github.com/ianclemence/ghost/pkg/relay/server"
-	"github.com/ianclemence/ghost/pkg/relaycrypto"
+	"github.com/ianclemence/kaya/pkg/entitlement"
+	"github.com/ianclemence/kaya/pkg/relay/server"
+	"github.com/ianclemence/kaya/pkg/relaycrypto"
 )
 
 // tap sits in front of the relay and keeps everything that crosses it, which
@@ -74,7 +74,7 @@ type podEnv struct {
 	tap      *tap
 	client   *Client
 	podPub   []byte
-	ghostID  string
+	kayaID  string
 	tokens   map[string]string
 	gotVia   chan string
 	cancel   context.CancelFunc
@@ -84,7 +84,7 @@ func gateway(t *testing.T, via chan string) *httptest.Server {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/v1/health", func(w http.ResponseWriter, r *http.Request) {
 		select {
-		case via <- r.Header.Get("X-Ghost-Via"):
+		case via <- r.Header.Get("X-Kaya-Via"):
 		default:
 		}
 		w.Header().Set("X-Seen-Auth", r.Header.Get("Authorization"))
@@ -113,14 +113,14 @@ func gateway(t *testing.T, via chan string) *httptest.Server {
 
 func startPod(t *testing.T, cfg server.Config, clientCfg func(*ClientConfig)) *podEnv {
 	t.Helper()
-	t.Setenv("GHOST_DIR", t.TempDir())
+	t.Setenv("KAYA_DIR", t.TempDir())
 	cfg.RegistryPath = t.TempDir() + "/registry.json"
 	srv, err := server.NewServer(cfg)
 	if err != nil {
 		t.Fatal(err)
 	}
 	reg, _ := server.NewRegistry(cfg.RegistryPath)
-	secret, _ := reg.Add("ghost-1", "pod")
+	secret, _ := reg.Add("kaya-1", "pod")
 	srv, _ = server.NewServer(cfg) // reload so the relay sees the registered device
 
 	p := &tap{next: http.HandlerFunc(srv.HandleHTTP)}
@@ -128,13 +128,13 @@ func startPod(t *testing.T, cfg server.Config, clientCfg func(*ClientConfig)) *p
 	t.Cleanup(ts.Close)
 
 	id, _ := relaycrypto.NewIdentity()
-	env := &podEnv{relayURL: ts.URL, tap: p, podPub: id.Public(), ghostID: "ghost-1",
+	env := &podEnv{relayURL: ts.URL, tap: p, podPub: id.Public(), kayaID: "kaya-1",
 		tokens: map[string]string{}, gotVia: make(chan string, 4)}
-	env.tokens["full"], _ = AddClientScoped("ghost-1", "phone", "full")
-	env.tokens["chat"], _ = AddClientScoped("ghost-1", "watch", "chat")
+	env.tokens["full"], _ = AddClientScoped("kaya-1", "phone", "full")
+	env.tokens["chat"], _ = AddClientScoped("kaya-1", "watch", "chat")
 
 	gw := gateway(t, env.gotVia)
-	cc := ClientConfig{DeviceID: "ghost-1", DeviceSecret: secret, RelayServer: ts.URL, GatewayURL: gw.URL,
+	cc := ClientConfig{DeviceID: "kaya-1", DeviceSecret: secret, RelayServer: ts.URL, GatewayURL: gw.URL,
 		ReconnectMin: 1, ReconnectMax: 1, Identity: id, RequireSealed: true}
 	if clientCfg != nil {
 		clientCfg(&cc)
@@ -163,7 +163,7 @@ func (e *podEnv) waitConnected(t *testing.T) {
 
 func (e *podEnv) do(t *testing.T, which string, req SealedRequest) (*SealedResponse, error) {
 	t.Helper()
-	return DoSealed(e.relayURL, e.ghostID, e.tokens[which], e.podPub, req)
+	return DoSealed(e.relayURL, e.kayaID, e.tokens[which], e.podPub, req)
 }
 
 func TestSealedRoundTripThroughRelay(t *testing.T) {
@@ -179,7 +179,7 @@ func TestSealedRoundTripThroughRelay(t *testing.T) {
 	}
 
 	resp, err = e.do(t, "full", SealedRequest{Path: "/v1/health", Headers: map[string][]string{
-		"Authorization": {"Bearer device-credential"}, "X-Ghost-Via": {"loopback"}}})
+		"Authorization": {"Bearer device-credential"}, "X-Kaya-Via": {"loopback"}}})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -203,8 +203,8 @@ func TestPlainTrafficRefusedWhenSealingIsRequired(t *testing.T) {
 	e := startPod(t, server.Config{}, nil)
 	e.waitConnected(t)
 	req, _ := http.NewRequest("POST", e.relayURL+"/v1/chat", strings.NewReader("hi"))
-	req.Header.Set("X-Ghost-Client-Id", e.ghostID)
-	req.Header.Set("X-Ghost-Client-Token", e.tokens["full"])
+	req.Header.Set("X-Kaya-Client-Id", e.kayaID)
+	req.Header.Set("X-Kaya-Client-Token", e.tokens["full"])
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		t.Fatal(err)
@@ -218,8 +218,8 @@ func TestPlainTrafficStillWorksOnYourOwnRelay(t *testing.T) {
 	e := startPod(t, server.Config{}, func(c *ClientConfig) { c.RequireSealed = false })
 	e.waitConnected(t)
 	req, _ := http.NewRequest("POST", e.relayURL+"/v1/chat", strings.NewReader("hi"))
-	req.Header.Set("X-Ghost-Client-Id", e.ghostID)
-	req.Header.Set("X-Ghost-Client-Token", e.tokens["full"])
+	req.Header.Set("X-Kaya-Client-Id", e.kayaID)
+	req.Header.Set("X-Kaya-Client-Token", e.tokens["full"])
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil || resp.StatusCode != 200 {
 		t.Fatalf("self-hosted plain traffic should keep working: %v %v", resp, err)
@@ -246,7 +246,7 @@ func TestPodChecksTheTokenInsideTheEnvelope(t *testing.T) {
 	e.waitConnected(t)
 	// A valid header token (so the relay lets it through) but a different token
 	// sealed inside: the Pod must go by the sealed one.
-	_, err := doSealedRaw(e.relayURL, e.ghostID, e.tokens["full"], e.podPub, SealedRequest{
+	_, err := doSealedRaw(e.relayURL, e.kayaID, e.tokens["full"], e.podPub, SealedRequest{
 		Timestamp: time.Now().UnixMilli(), Method: "GET", Path: "/v1/health", Token: "not-a-paired-token"})
 	if err == nil {
 		t.Fatal("an unknown sealed token must be refused")
@@ -274,8 +274,8 @@ func TestReplayedRequestIsRefused(t *testing.T) {
 	captured := e.tap.requests[len(e.tap.requests)-1]
 	e.tap.mu.Unlock()
 	req, _ := http.NewRequest("POST", e.relayURL+"/v1/sealed", bytes.NewReader(captured))
-	req.Header.Set("X-Ghost-Client-Id", e.ghostID)
-	req.Header.Set("X-Ghost-Client-Token", e.tokens["full"])
+	req.Header.Set("X-Kaya-Client-Id", e.kayaID)
+	req.Header.Set("X-Kaya-Client-Token", e.tokens["full"])
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		t.Fatal(err)
@@ -333,7 +333,7 @@ func TestHostedRelayWantsAnEntitlement(t *testing.T) {
 	// With one it connects, and a renewal sent while connected is accepted.
 	now := time.Now()
 	mint := func(ttl time.Duration) string {
-		tok, _ := entitlement.Sign(priv, entitlement.Claims{Pod: "ghost-1", Account: "acct", IssuedAt: now.Unix(), ExpiresAt: now.Add(ttl).Unix()})
+		tok, _ := entitlement.Sign(priv, entitlement.Claims{Pod: "kaya-1", Account: "acct", IssuedAt: now.Unix(), ExpiresAt: now.Add(ttl).Unix()})
 		return tok
 	}
 	e2 := startPod(t, cfg, func(c *ClientConfig) { c.Entitlement = mint(time.Hour) })
@@ -391,8 +391,8 @@ func TestOversizeSealedRequestIsRefusedUpFront(t *testing.T) {
 	e.waitConnected(t)
 	req, _ := http.NewRequest("POST", e.relayURL+"/v1/sealed", io.LimitReader(zeros{}, relaycrypto.MaxRequest+10))
 	req.ContentLength = relaycrypto.MaxRequest + 10
-	req.Header.Set("X-Ghost-Client-Id", e.ghostID)
-	req.Header.Set("X-Ghost-Client-Token", e.tokens["full"])
+	req.Header.Set("X-Kaya-Client-Id", e.kayaID)
+	req.Header.Set("X-Kaya-Client-Token", e.tokens["full"])
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		t.Fatal(err)
@@ -416,14 +416,14 @@ func TestPairingAndRevokingTakeEffectWithoutReconnect(t *testing.T) {
 	e := startPod(t, server.Config{}, nil)
 	e.waitConnected(t)
 
-	late, err := AddClientScoped("ghost-1", "new phone", "full")
+	late, err := AddClientScoped("kaya-1", "new phone", "full")
 	if err != nil {
 		t.Fatal(err)
 	}
 	deadline := time.Now().Add(3 * time.Second)
 	var last error
 	for time.Now().Before(deadline) {
-		if _, last = DoSealed(e.relayURL, e.ghostID, late, e.podPub, SealedRequest{Path: "/v1/health"}); last == nil {
+		if _, last = DoSealed(e.relayURL, e.kayaID, late, e.podPub, SealedRequest{Path: "/v1/health"}); last == nil {
 			break
 		}
 		time.Sleep(60 * time.Millisecond)
@@ -433,12 +433,12 @@ func TestPairingAndRevokingTakeEffectWithoutReconnect(t *testing.T) {
 	}
 
 	hash := sha256.Sum256([]byte(late))
-	if err := RemoveClient("ghost-1", fmt.Sprintf("%x", hash[:8])); err != nil {
+	if err := RemoveClient("kaya-1", fmt.Sprintf("%x", hash[:8])); err != nil {
 		t.Fatal(err)
 	}
 	deadline = time.Now().Add(3 * time.Second)
 	for time.Now().Before(deadline) {
-		if _, last = DoSealed(e.relayURL, e.ghostID, late, e.podPub, SealedRequest{Path: "/v1/health"}); last != nil {
+		if _, last = DoSealed(e.relayURL, e.kayaID, late, e.podPub, SealedRequest{Path: "/v1/health"}); last != nil {
 			return
 		}
 		time.Sleep(60 * time.Millisecond)

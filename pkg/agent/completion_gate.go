@@ -22,10 +22,10 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/ianclemence/ghost/pkg/capability"
+	"github.com/ianclemence/kaya/pkg/capability"
 )
 
-// completionClaimRE matches prose that asserts Ghost completed an action:
+// completionClaimRE matches prose that asserts Kaya completed an action:
 // first-person perfect/simple past over a consequential verb, and task
 // completion frames. Prospective/conditional phrasing ("I will send it",
 // "I'll schedule it") deliberately never matches.

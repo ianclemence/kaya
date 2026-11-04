@@ -7,7 +7,7 @@ import (
 	"strings"
 	"unicode"
 
-	"github.com/ianclemence/ghost/pkg/personalcontext"
+	"github.com/ianclemence/kaya/pkg/personalcontext"
 )
 
 // MemoryCorrectTool lets the model find, correct or forget one structured
@@ -36,7 +36,7 @@ func NewMemoryCorrectTool(store *personalcontext.Store) *MemoryCorrectTool {
 func (t *MemoryCorrectTool) Name() string { return "memory_correct" }
 
 func (t *MemoryCorrectTool) Description() string {
-	return "Find, correct or forget one thing Ghost believes about the owner (a trip's dates, where they live, a plan). " +
+	return "Find, correct or forget one thing Kaya believes about the owner (a trip's dates, where they live, a plan). " +
 		"action=find with about=<words>: lists matching beliefs with their ids and when the owner said them. " +
 		"action=update with entry_id and new_value: changes that belief. action=forget with entry_id: drops it. " +
 		"Always find first (unless an Unconfirmed changes note already gave you the ids). action=dismiss with entry_id drops an unconfirmed candidate the owner said was wrong. Update and forget only PREVIEW (change nothing) until you pass confirmed=true; pass it only when " +
@@ -227,7 +227,7 @@ func (t *MemoryCorrectTool) change(ctx context.Context, session string, args map
 		if !confirmed {
 			return NewToolResult(fmt.Sprintf("Nothing changed yet. I would forget: %q. Ask the owner to confirm, then call again with confirmed=true.", old))
 		}
-		if _, err := personalcontext.ForgetPipelineWith(t.store, t.store.Workspace(), cur.ID, "the owner asked Ghost to forget it"); err != nil {
+		if _, err := personalcontext.ForgetPipelineWith(t.store, t.store.Workspace(), cur.ID, "the owner asked Kaya to forget it"); err != nil {
 			return ErrorResult(fmt.Sprintf("Could not forget that: %v", err))
 		}
 		t.clearCandidates(cur.Subject, cur.Predicate)

@@ -3,7 +3,7 @@ package agent
 import (
 	"testing"
 
-	"github.com/ianclemence/ghost/pkg/providers"
+	"github.com/ianclemence/kaya/pkg/providers"
 )
 
 // An older turn may have stored the model's own echo of the label

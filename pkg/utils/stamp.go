@@ -11,7 +11,7 @@ import (
 // its own history sometimes imitates it in replies, so every output
 // boundary strips it. Exported because the streaming path needs the same
 // shape test (pkg/agent) and the history endpoints need the same strip
-// (cmd/ghost).
+// (cmd/kaya).
 //
 // Two artifacts are tolerated: the space between date and time is
 // optional (a model that drops spaces before numbers echoes the label as

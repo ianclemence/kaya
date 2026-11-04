@@ -19,11 +19,11 @@ func bwrapAvailable() bool {
 // skills legitimately produce.
 var writableWorkspaceDirs = []string{"tmp", "knowledge", "data", "learning"}
 
-// sandboxHiddenDirs are Ghost's governed stores — the scoped memory
+// sandboxHiddenDirs are Kaya's governed stores — the scoped memory
 // journal, long-term memory, runtime state, session logs, the scheduler,
 // the event trail, in-flight work and reflection state. They are not even
 // visible to executed code: an empty tmpfs is mounted over each, so a user
-// project can neither read nor alter Ghost's own state. The real files stay
+// project can neither read nor alter Kaya's own state. The real files stay
 // untouched on the host.
 var sandboxHiddenDirs = []string{
 	"personal-context", "state", "memory", "sessions", "commitments",
@@ -70,7 +70,7 @@ func bwrapArgs(cwd, workspace string, allowNetwork bool) []string {
 		}
 	}
 	if workspace != "" {
-		// Ghost's own tree is read-only to executed code. The scratch and
+		// Kaya's own tree is read-only to executed code. The scratch and
 		// owner-content areas are re-bound read-write; HOME points at
 		// scratch so tool caches (go, pip, npm, python) land somewhere
 		// writable instead of failing against the read-only estate.
@@ -105,10 +105,10 @@ func bwrapArgs(cwd, workspace string, allowNetwork bool) []string {
 			// A directory outside the workspace (a user project on the Pod)
 			// is bound read-write so real work can happen there. Inside the
 			// workspace the read-only bind and the writable areas already
-			// decided access, so no extra bind is added; Ghost's own
+			// decided access, so no extra bind is added; Kaya's own
 			// runtime home beside the workspace is never bound.
 			if workspace == "" || !under(workspace, cwd) {
-				if !ghostRuntimeHomePath(workspace, cwd) {
+				if !kayaRuntimeHomePath(workspace, cwd) {
 					args = append(args, "--bind", cwd, cwd)
 				}
 			}

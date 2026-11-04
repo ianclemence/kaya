@@ -3,8 +3,8 @@ package connector
 import (
 	"testing"
 
-	"github.com/ianclemence/ghost/pkg/capability"
-	"github.com/ianclemence/ghost/pkg/connectedapp"
+	"github.com/ianclemence/kaya/pkg/capability"
+	"github.com/ianclemence/kaya/pkg/connectedapp"
 )
 
 const crmDoc = `{

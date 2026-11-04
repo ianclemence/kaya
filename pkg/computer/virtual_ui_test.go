@@ -19,7 +19,7 @@ func TestVirtualUICompleteSettingsFlow(t *testing.T) {
 	if err != nil || !res.Verified {
 		t.Fatalf("desktop inspect: %v verified=%v", err, res.Verified)
 	}
-	if !strings.Contains(res.Output, "Ghost Desktop") {
+	if !strings.Contains(res.Output, "Kaya Desktop") {
 		t.Fatalf("desktop inspect missing window title: %s", res.Output)
 	}
 	if !strings.Contains(res.Output, "Settings") {
@@ -48,7 +48,7 @@ func TestVirtualUICompleteSettingsFlow(t *testing.T) {
 	}
 
 	// 4. type the new name into the focused field.
-	typ, err := v.Do(ctx, OpType, Args{"text": "Ghost"})
+	typ, err := v.Do(ctx, OpType, Args{"text": "Kaya"})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -73,10 +73,10 @@ func TestVirtualUICompleteSettingsFlow(t *testing.T) {
 	if err != nil || !final.Verified {
 		t.Fatalf("final inspect: %v", err)
 	}
-	if !strings.Contains(final.Output, "Ghost Desktop") {
+	if !strings.Contains(final.Output, "Kaya Desktop") {
 		t.Fatalf("final inspect not back on desktop: %s", final.Output)
 	}
-	if !strings.Contains(strings.ToLower(final.Output), "display name: ghost") {
+	if !strings.Contains(strings.ToLower(final.Output), "display name: kaya") {
 		t.Fatalf("final state did not reflect the saved name: %s", final.Output)
 	}
 }
@@ -113,7 +113,7 @@ func TestVirtualUIRequiresObservationForTruth(t *testing.T) {
 		t.Fatal(err)
 	}
 	res, _ = v.Do(ctx, OpInspectUI, nil)
-	if !strings.Contains(res.Output, "Ghost Desktop") {
+	if !strings.Contains(res.Output, "Kaya Desktop") {
 		t.Fatalf("empty click must not open anything: %s", res.Output)
 	}
 }

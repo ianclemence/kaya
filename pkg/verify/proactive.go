@@ -4,12 +4,12 @@ import (
 	"errors"
 	"time"
 
-	"github.com/ianclemence/ghost/pkg/commitments"
-	"github.com/ianclemence/ghost/pkg/ideas"
+	"github.com/ianclemence/kaya/pkg/commitments"
+	"github.com/ianclemence/kaya/pkg/ideas"
 )
 
 // Proactive opportunity lifecycle: the deterministic guarantees that keep
-// Ghost from nagging and keep a stale approval from acting. This check runs on
+// Kaya from nagging and keep a stale approval from acting. This check runs on
 // a scratch workspace with no model and no network — it is the anti-spam and
 // stale-approval contract, not the execution path (execution through the
 // broker and the tool registry is proven by pkg/agent and the golden suite).
@@ -105,7 +105,7 @@ func checkProactiveLifecycle(e *Env) Check {
 }
 
 // The durable commitment ledger: the bridge from conversation to proactive
-// action. This check proves the grounding rules that keep Ghost from turning
+// action. This check proves the grounding rules that keep Kaya from turning
 // speculation or paraphrase into an obligation, and the settlement rules that
 // keep a failed action from closing a promise.
 func checkCommitmentLedger(e *Env) Check {
@@ -143,7 +143,7 @@ func checkCommitmentLedger(e *Env) Check {
 		return fail("Commitments", "restatement dedupes", "the same promise was recorded twice", true)
 	}
 
-	// Extraction grounding: speculation, questions, requests to Ghost and
+	// Extraction grounding: speculation, questions, requests to Kaya and
 	// explicit reminder asks never become obligations.
 	for _, msg := range []string{
 		"I might send Alex those photos Friday",

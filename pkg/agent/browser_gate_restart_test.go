@@ -4,7 +4,7 @@ import (
 	"context"
 	"testing"
 
-	"github.com/ianclemence/ghost/pkg/cevents"
+	"github.com/ianclemence/kaya/pkg/cevents"
 )
 
 // Approval wait → process death → restart → approve → resume continues the
@@ -126,7 +126,7 @@ func TestGateEventCarriesExecutionEvidence(t *testing.T) {
 			t.Fatalf("event payload missing %q: %+v", k, ev.Payload)
 		}
 	}
-	if ev.Payload["owner"] != h.ghostID || ev.Payload["task"] != "sess-l" || ev.Payload["permission"] != "allow" {
+	if ev.Payload["owner"] != h.kayaID || ev.Payload["task"] != "sess-l" || ev.Payload["permission"] != "allow" {
 		t.Fatalf("event evidence wrong: %+v", ev.Payload)
 	}
 

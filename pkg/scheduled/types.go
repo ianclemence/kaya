@@ -1,4 +1,4 @@
-// Package scheduled implements Ghost's scheduled intelligence system.
+// Package scheduled implements Kaya's scheduled intelligence system.
 // It provides a unified model for reminders, future events, automations,
 // and durable tasks with deterministic scheduling, reliable execution,
 // and human-readable presentation.

@@ -2,10 +2,10 @@
 name: shopping
 description: Maintain a persistent shopping list. Invoke when user says "add X to my shopping list", "what do I need to buy", "remove X from the list", "clear my shopping list", or "check if I have X on my list". Persists to workspace/data/shopping_list.txt.
 version: 1.1.0
-author: Ghost
+author: Kaya
 license: MIT
 metadata:
-  ghost:
+  kaya:
     tags: [shopping, todo, list, productivity]
 prerequisites:
   commands: []

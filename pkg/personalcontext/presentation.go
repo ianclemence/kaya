@@ -222,7 +222,7 @@ func SentenceValue(e Entry) bool {
 	return len(r) > 0 && unicode.IsUpper(r[0]) && len(strings.Fields(v)) >= 3
 }
 
-// Line is one memory as a single line for Ghost's own profile and digest:
+// Line is one memory as a single line for Kaya's own profile and digest:
 // the sentence itself when it is one, else "Label: value".
 func Line(e Entry) string {
 	if SentenceValue(e) {
@@ -499,7 +499,7 @@ func knownDomain(d Domain) bool {
 }
 
 // SaidBy is who a belief came from: "you" when the owner stated or corrected
-// it, "ghost" when Ghost worked it out.
+// it, "kaya" when Kaya worked it out.
 func SaidBy(e Entry) string {
 	for _, src := range e.Sources {
 		switch src.Kind {
@@ -507,10 +507,10 @@ func SaidBy(e Entry) string {
 			return "you"
 		}
 	}
-	return "ghost"
+	return "kaya"
 }
 
-// LearnedAt is when Ghost first heard it: the earliest receipt, not when the
+// LearnedAt is when Kaya first heard it: the earliest receipt, not when the
 // record was written. A memory restored or rewritten today was still learned
 // the day the owner said it.
 func LearnedAt(e Entry) time.Time {

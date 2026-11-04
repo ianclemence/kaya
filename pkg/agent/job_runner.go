@@ -6,10 +6,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ianclemence/ghost/pkg/bus"
-	"github.com/ianclemence/ghost/pkg/logger"
-	"github.com/ianclemence/ghost/pkg/tasks"
-	"github.com/ianclemence/ghost/pkg/tools"
+	"github.com/ianclemence/kaya/pkg/bus"
+	"github.com/ianclemence/kaya/pkg/logger"
+	"github.com/ianclemence/kaya/pkg/tasks"
+	"github.com/ianclemence/kaya/pkg/tools"
 )
 
 // subagentJobKind is the one job kind this runtime knows how to execute.
@@ -152,7 +152,7 @@ func (al *AgentLoop) announceJobSettled(j tasks.Job) {
 	default:
 		// A scheduled retry is not news, and a terminal failure already
 		// reached the owner through task.failed. Announcing here would be
-		// the same event twice, which reads as Ghost losing the plot.
+		// the same event twice, which reads as Kaya losing the plot.
 		return
 	}
 	al.bus.PublishInbound(bus.InboundMessage{

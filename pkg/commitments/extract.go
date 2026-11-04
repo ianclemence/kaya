@@ -8,8 +8,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ianclemence/ghost/pkg/providers"
-	"github.com/ianclemence/ghost/pkg/scheduled"
+	"github.com/ianclemence/kaya/pkg/providers"
+	"github.com/ianclemence/kaya/pkg/scheduled"
 )
 
 // Extraction turns one owner message into zero or more durable obligations.
@@ -18,7 +18,7 @@ import (
 //
 //  1. Only genuine obligations qualify. A speculation ("I might send Alex the
 //     photos"), a hypothetical ("maybe I should..."), a question, a request to
-//     Ghost ("can you send..."), and an explicit reminder request ("remind me
+//     Kaya ("can you send..."), and an explicit reminder request ("remind me
 //     to send...") are all rejected — the reminder case because the scheduler
 //     already owns it, the rest because they are not promises.
 //
@@ -51,7 +51,7 @@ var markerRE = regexp.MustCompile(`(?i)\b(i(?:'ve| have)? (?:still )?(?:need|hav
 // speculation is not an obligation, so these reject the whole message.
 var speculativeRE = regexp.MustCompile(`(?i)\b(maybe|might|may\b|perhaps|possibly|probably not|not sure|unsure|thinking (?:about|of)|toying with|wondering|suppose|hypothetical|if i\b|should i\b|consider(?:ing)?\b|do i need)\b`)
 
-// requestRE matches the owner asking Ghost to do it, which is a request, not a
+// requestRE matches the owner asking Kaya to do it, which is a request, not a
 // commitment. Explicit reminder requests are excluded too: the scheduler owns
 // those, and storing them twice would create two durable records of one intent.
 var requestRE = regexp.MustCompile(`(?i)^\s*(?:can|could|would|will) you\b|\bplease\b|\bremind me\b|\bset (?:a|an)? ?reminder\b|\bschedule\b`)
@@ -125,7 +125,7 @@ func namedSubject(message string) string {
 		"january": true, "february": true, "march": true, "april": true,
 		"may": true, "june": true, "july": true, "august": true,
 		"september": true, "october": true, "november": true, "december": true,
-		"today": true, "tomorrow": true, "tonight": true, "ghost": true,
+		"today": true, "tomorrow": true, "tonight": true, "kaya": true,
 	}
 	fields := strings.Fields(message)
 	for i, f := range fields {
@@ -433,7 +433,7 @@ var vagueWords = map[string]bool{
 }
 
 // vagueClause reports whether a clause names no real task. "get it soon" has a
-// verb and nothing to do it to, so there is nothing Ghost could ever pick up,
+// verb and nothing to do it to, so there is nothing Kaya could ever pick up,
 // and "be flying from Phuket" is a plan being described, not a job to do.
 func vagueClause(clause string) bool {
 	words := strings.Fields(strings.ToLower(clause))
@@ -447,11 +447,11 @@ func vagueClause(clause string) bool {
 	for _, w := range words {
 		switch strings.Trim(w, ",.;:!?\"'()") {
 		case "you", "your", "yourself":
-			// "I want to see you use the page" asks Ghost for something; it
+			// "I want to see you use the page" asks Kaya for something; it
 			// is not a job the owner took on.
 			return true
 		case "now":
-			// "I'll do it now" is done before Ghost could ever follow up.
+			// "I'll do it now" is done before Kaya could ever follow up.
 			return true
 		}
 	}

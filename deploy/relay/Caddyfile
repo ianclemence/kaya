@@ -1,4 +1,4 @@
-# TLS and the public address for the relay, in front of ghost-relay on 127.0.0.1:8080.
+# TLS and the public address for the relay, in front of kaya-relay on 127.0.0.1:8080.
 # Replace relay.example.com with your relay's address. Caddy gets and renews the
 # certificate by itself; DNS must already point here and ports 80 and 443 be open.
 #

@@ -24,7 +24,7 @@ import (
 
 	"golang.org/x/oauth2"
 
-	"github.com/ianclemence/ghost/pkg/config"
+	"github.com/ianclemence/kaya/pkg/config"
 )
 
 // Outlook OAuth scopes (narrowest-first). Mail + calendar together.
@@ -320,7 +320,7 @@ func OutlookClientConfigFromEnv() (OutlookOAuthConfig, bool) {
 	cfg := OutlookOAuthConfig{
 		ClientID:     c.ClientID,
 		ClientSecret: c.ClientSecret,
-		RedirectURL:  redirectOr("GHOST_OUTLOOK_REDIRECT_URL", ProviderMicrosoft),
+		RedirectURL:  redirectOr("KAYA_OUTLOOK_REDIRECT_URL", ProviderMicrosoft),
 		Tenant:       c.Tenant,
 	}
 	if cfg.ClientID == "" || cfg.ClientSecret == "" || cfg.RedirectURL == "" {

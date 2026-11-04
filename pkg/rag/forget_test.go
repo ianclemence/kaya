@@ -4,8 +4,8 @@ import (
 	"context"
 	"testing"
 
-	"github.com/ianclemence/ghost/pkg/config"
-	"github.com/ianclemence/ghost/pkg/db"
+	"github.com/ianclemence/kaya/pkg/config"
+	"github.com/ianclemence/kaya/pkg/db"
 )
 
 func newForgetTestStore(t *testing.T) *Store {

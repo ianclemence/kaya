@@ -1,4 +1,4 @@
-// Package bench answers "does this Ghost behave like a good Ghost?"
+// Package bench answers "does this Kaya behave like a good Kaya?"
 // — distinct from unit tests ("does code behave in isolation?").
 //
 // Dimensions: responsiveness (latencies, split by layer), capability
@@ -28,20 +28,20 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ianclemence/ghost/pkg/activity"
-	"github.com/ianclemence/ghost/pkg/cevents"
-	"github.com/ianclemence/ghost/pkg/hardware"
-	"github.com/ianclemence/ghost/pkg/permissions"
-	"github.com/ianclemence/ghost/pkg/personalcontext"
-	"github.com/ianclemence/ghost/pkg/product"
-	"github.com/ianclemence/ghost/pkg/provider"
-	"github.com/ianclemence/ghost/pkg/providers/weather"
-	"github.com/ianclemence/ghost/pkg/routines"
-	"github.com/ianclemence/ghost/pkg/scheduled"
+	"github.com/ianclemence/kaya/pkg/activity"
+	"github.com/ianclemence/kaya/pkg/cevents"
+	"github.com/ianclemence/kaya/pkg/hardware"
+	"github.com/ianclemence/kaya/pkg/permissions"
+	"github.com/ianclemence/kaya/pkg/personalcontext"
+	"github.com/ianclemence/kaya/pkg/product"
+	"github.com/ianclemence/kaya/pkg/provider"
+	"github.com/ianclemence/kaya/pkg/providers/weather"
+	"github.com/ianclemence/kaya/pkg/routines"
+	"github.com/ianclemence/kaya/pkg/scheduled"
 	_ "modernc.org/sqlite"
 )
 
-// Dimension weights (Ghost product priorities: governance first).
+// Dimension weights (Kaya product priorities: governance first).
 var weights = map[string]float64{
 	"responsiveness": 0.15,
 	"capability":     0.20,
@@ -112,7 +112,7 @@ func Run(workspace string, timeout time.Duration) Report {
 		ctx, cancel = context.WithTimeout(ctx, timeout)
 		defer cancel()
 	}
-	ws, err := os.MkdirTemp("", "ghost-bench-")
+	ws, err := os.MkdirTemp("", "kaya-bench-")
 	if err != nil {
 		return Report{Overall: "FAIL", HardFail: []string{"scratch workspace: " + err.Error()}}
 	}
@@ -201,7 +201,7 @@ func benchResponsiveness(e *Env) []Metric {
 	var ds []time.Duration
 	for i := 0; i < 200; i++ {
 		start := time.Now()
-		st.Publish(&cevents.Event{Type: cevents.AgentProgress, RequestID: "bench", GhostID: "g"})
+		st.Publish(&cevents.Event{Type: cevents.AgentProgress, RequestID: "bench", KayaID: "g"})
 		ds = append(ds, time.Since(start))
 	}
 	out = append(out, latencyMetric("responsiveness", "event_publish", ds, 5))
@@ -332,7 +332,7 @@ var memoryEvalSet = []struct{ text, predicate string }{
 	{"my name is Ian", "identity/name"},
 	{"I live in Bangkok", "fact/location"},
 	{"I prefer tea", "preference/prefers"},
-	{"my goal is to launch Ghost", "goal/primary"},
+	{"my goal is to launch Kaya", "goal/primary"},
 	{"I work at Acme", "fact/work"},
 }
 
@@ -443,7 +443,7 @@ func benchPrivacy(e *Env) []Metric {
 	var out []Metric
 	st, _ := cevents.Open(e.DB, e.Workspace+"/events")
 	leaks := 0
-	ev := st.Publish(&cevents.Event{Type: cevents.MessageCreated, RequestID: "bench-priv", GhostID: "g",
+	ev := st.Publish(&cevents.Event{Type: cevents.MessageCreated, RequestID: "bench-priv", KayaID: "g",
 		Payload: map[string]interface{}{"api_key": "sk-proj-abcdefghijklmnop", "token": "ghp_abcdefghijklmnopqrstuvwx"}})
 	raw, _ := json.Marshal(ev.Payload)
 	for _, s := range []string{"sk-proj-abcdefghijklmnop", "ghp_abcdefghijklmnopqrstuvwx"} {
@@ -485,7 +485,7 @@ func benchAppliance(e *Env) []Metric {
 	done := make(chan bool, 4)
 	for _, id := range []string{"c1", "c2", "c3", "c4"} {
 		go func(rid string) {
-			st.Publish(&cevents.Event{Type: cevents.MessageCreated, RequestID: rid, GhostID: "g"})
+			st.Publish(&cevents.Event{Type: cevents.MessageCreated, RequestID: rid, KayaID: "g"})
 			done <- true
 		}(id)
 	}
@@ -549,7 +549,7 @@ func Compare(prev, cur Report) string {
 // Render produces the human-readable benchmark report.
 func Render(r Report) string {
 	var b strings.Builder
-	b.WriteString("\nGHOST BENCHMARK\n\n")
+	b.WriteString("\nKAYA BENCHMARK\n\n")
 	byDim := map[string][]Metric{}
 	for _, m := range r.Metrics {
 		byDim[m.Dimension] = append(byDim[m.Dimension], m)
@@ -583,7 +583,7 @@ func Render(r Report) string {
 			b.WriteString(line + "\n")
 		}
 	}
-	b.WriteString(fmt.Sprintf("\nGHOST CORE SCORE: %.1f\n", r.Score))
+	b.WriteString(fmt.Sprintf("\nKAYA CORE SCORE: %.1f\n", r.Score))
 	if len(r.HardFail) > 0 {
 		b.WriteString("HARD FAILURES: " + strings.Join(r.HardFail, ", ") + "\n")
 	}

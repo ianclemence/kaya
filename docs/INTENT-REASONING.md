@@ -25,11 +25,11 @@ and whether the request is ambiguous.
 
 ## The model participates, but does not authorize
 
-Ghost is model-agnostic. The active model is a replaceable reasoning
+Kaya is model-agnostic. The active model is a replaceable reasoning
 participant. It can:
 
 - interpret and plan;
-- choose among the semantic tools Ghost exposes;
+- choose among the semantic tools Kaya exposes;
 - propose a capability request with arguments.
 
 It cannot:
@@ -39,17 +39,17 @@ It cannot:
 - assert success;
 - grant itself or a skill any authority.
 
-Reasoning is advisory. Authority is Ghost's.
+Reasoning is advisory. Authority is Kaya's.
 
 ## Not this
 
-Ghost's canonical architecture is **not**:
+Kaya's canonical architecture is **not**:
 
 ```
 User → Model → arbitrary tool → machine
 ```
 
-That pattern lets the model reach execution directly. Ghost instead bounds the
+That pattern lets the model reach execution directly. Kaya instead bounds the
 model to a small set of **semantic surfaces** and places governance between
 the request and execution.
 
@@ -65,7 +65,7 @@ The model sees bounded, semantic tools such as:
 - `computer_*` — observe and control the desktop;
 - memory tools, `artifact` publishing, and scheduling.
 
-These are invocation surfaces. Underneath, Ghost resolves them to capabilities
+These are invocation surfaces. Underneath, Kaya resolves them to capabilities
 and implementations. A tool name is never the permission identity. See
 [Capability](CAPABILITY.md).
 
@@ -80,8 +80,8 @@ routes to the Pod.
 
 ## Ambiguity and clarification
 
-When a request is ambiguous, Ghost asks rather than guessing at a consequential
-action. Clarification is a first-class path: Ghost can ask the user a question,
+When a request is ambiguous, Kaya asks rather than guessing at a consequential
+action. Clarification is a first-class path: Kaya can ask the user a question,
 wait, and resume the same work once the answer arrives.
 
 ## The distinctions that matter
@@ -90,8 +90,8 @@ wait, and resume the same work once the answer arrives.
 |---|---|
 | Reasoning | Deciding what to do |
 | Intent | What the user meant |
-| Capability request | The semantic action Ghost proposes |
-| Authorization | Whether Ghost may do it (broker) |
+| Capability request | The semantic action Kaya proposes |
+| Authorization | Whether Kaya may do it (broker) |
 | Execution | Doing it |
 | Evidence | Proving it happened |
 
@@ -101,7 +101,7 @@ request and the action.
 
 ## Proactive opportunities
 
-Reasoning also runs without a request. Ghost watches the state it already
+Reasoning also runs without a request. Kaya watches the state it already
 keeps — reminders that never reached the owner, routines whose latest run
 failed, routines parked waiting on an approval, goals that went quiet,
 background tasks waiting on a human — and turns what it finds into one
@@ -132,7 +132,7 @@ observation → candidate → gate → proposal → approval → broker → exec
   reply. The approval is bound to the proposal id, the capability, the
   arguments, and the state the proposal was built from.
 - **Broker.** The proposal asks the broker *before* it is shown, so an
-  offer Ghost cannot keep is never made. There is no proactive bypass.
+  offer Kaya cannot keep is never made. There is no proactive bypass.
   Authorization is minted at the moment of approval, never at surfacing:
   an unanswered suggestion therefore leaves no expiring token behind, and
   an owner who answers late is still acting on something real.
@@ -155,16 +155,16 @@ verbatim quote), and a lifecycle state (`open`, `blocked`, `completed`,
 `cancelled`, `expired`).
 
 - **Only real promises.** Speculation ("I might…"), hypotheticals,
-  questions, requests addressed to Ghost, and explicit reminder requests
+  questions, requests addressed to Kaya, and explicit reminder requests
   (which the scheduler already owns) never become obligations.
 - **Nothing is invented.** The deterministic pass handles the common
   shapes without a model call. When the semantic pass runs, the quote, the
   subject and the time phrase must each appear in the message, or the
   extraction is discarded. Dates are resolved by the runtime's own
   natural-language schedule parser, never by model arithmetic.
-- **Actionability is planned, not guessed.** A planner decides what Ghost
+- **Actionability is planned, not guessed.** A planner decides what Kaya
   can honestly offer. When the obligation needs a channel that has never
-  carried a message, the offer degrades to a reminder Ghost really
+  carried a message, the offer degrades to a reminder Kaya really
   creates, rather than promising to send something it cannot send.
 - **Settlement is driven by outcomes.** A verified success completes the
   promise; a failure leaves it open with the reason; a dismissal leaves it
@@ -195,7 +195,7 @@ preferences file.
 
 | Key | Meaning | Default |
 |---|---|---|
-| `enabled` | Master switch for notices **and** opportunities. Off silences Ghost volunteering things; it never disables work the owner explicitly asked for. | `true` |
+| `enabled` | Master switch for notices **and** opportunities. Off silences Kaya volunteering things; it never disables work the owner explicitly asked for. | `true` |
 | `quiet_hours` | Window in which non-urgent delivery is held, in the owner's timezone. | `23:00-08:00` |
 | `max_pushes_per_day` | Daily cap on non-urgent check-ins. | `5` |
 | `cooldown_per_topic` | Per-topic silence after a push. | `6h` |
@@ -211,11 +211,11 @@ proposal stays valid: what the owner answers is what the broker decides on.
 Forgetting is not a control here: dismissing an opportunity records a
 receipt and suppresses that opportunity for the dismissal cooldown; it
 never deletes memory. See [User](USER.md) for what the owner can change
-about Ghost's memory.
+about Kaya's memory.
 
 The model's role here is unchanged: it may interpret what an approved
 action needs, but it never grants permission, never declares success, and
-never decides whether Ghost should speak. See
+never decides whether Kaya should speak. See
 [Permission Broker](PERMISSION-BROKER.md) for where authority is enforced.
 
 ## Turn latency
@@ -255,7 +255,7 @@ to the model as the fallback for anything the classifier does not anticipate,
 which is what makes a conservative gate safe. Retrieval counts and deliberate
 skips are visible through `/v1/doctor`.
 
-**Context is tiered, statically.** The behavioural core of `GHOST.md` —
+**Context is tiered, statically.** The behavioural core of `KAYA.md` —
 invariants, identity, authority and permissions, execution and evidence,
 memory, routines, time, personality, interacting, safety, recovery, final
 rules — always ships. Operational reference (the per-tool operating manual,
@@ -287,7 +287,7 @@ reports none, or `unknown`). An estimate is never presented as a measurement.
 
 If reasoning were authoritative, a model mistake or a malicious instruction
 embedded in fetched content could cause real-world effects. By separating
-reasoning from authority, Ghost ensures that:
+reasoning from authority, Kaya ensures that:
 
 - the model can be wrong without being dangerous;
 - external content cannot become an instruction to act;

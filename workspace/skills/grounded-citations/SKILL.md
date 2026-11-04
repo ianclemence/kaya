@@ -2,7 +2,7 @@
 name: grounded-citations
 description: "Ground answers and documents in cited, verifiable sources. Invoke when the user asks for sources, 'where did you get that', a fact-checked summary, or a report that must cite its evidence."
 version: 1.2.0
-author: Ghost + Teknium
+author: Kaya + Teknium
 license: MIT
 platforms: [linux, macos, windows]
 ---
@@ -45,8 +45,8 @@ None beyond the standard toolset. `scripts/sources.py` is stdlib-only Python 3.
 Retrieval comes from whatever is configured: `web_search`, `web_extract`,
 `browser_navigate`, or `terminal` (curl, CLIs).
 
-Ledger location: `$GHOST_HOME/cache/citations/ledger.json` (profile-aware).
-Override per task with `--ledger <path>` or `GHOST_CITATION_LEDGER`.
+Ledger location: `$KAYA_HOME/cache/citations/ledger.json` (profile-aware).
+Override per task with `--ledger <path>` or `KAYA_CITATION_LEDGER`.
 
 ## How to Run
 
@@ -137,8 +137,8 @@ with every claim attributed to the platform it came from:
 | X/Twitter | `xurl` (needs API access) | announcements, developer chatter |
 
 The `reddit-reading` and `rss-feeds` skills are optional. If absent, install with
-`install the skill in Ghost official/social-media/reddit-reading` or
-`install the skill in Ghost official/research/rss-feeds` before using them.
+`install the skill in Kaya official/social-media/reddit-reading` or
+`install the skill in Kaya official/research/rss-feeds` before using them.
 
 Register every URL from every route in the ledger as it arrives (step ②). Keep
 opinion and measurement apart: a Reddit thread is evidence that users *report*
@@ -226,7 +226,7 @@ and read the `info: stats:` line to see the counts before picking a number.
 - **Citing the ledger in code/config artifacts.** Source comments belong in
   prose deliverables and doc headers, not inside generated code.
 - **Parallel subagents.** Each subagent has its own working directory; point
-  them all at one ledger with `--ledger` (or `GHOST_CITATION_LEDGER`) if their
+  them all at one ledger with `--ledger` (or `KAYA_CITATION_LEDGER`) if their
   outputs get merged, otherwise their ids will collide.
 - **Quoting from a snippet instead of the page.** Evidence quotes must come
   from the extracted page text, not a search-result description — `web_extract`

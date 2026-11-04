@@ -1,5 +1,5 @@
 // Package browser makes web browsing a controlled capability of the
-// personal AI runtime. One Ghost drives the browser through sessions
+// personal AI runtime. One Kaya drives the browser through sessions
 // scoped to owner+context+task; page content is always untrusted data,
 // never instructions; credentials never enter prompts, logs, or events.
 package browser

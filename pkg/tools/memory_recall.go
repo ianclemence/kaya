@@ -25,7 +25,7 @@ type SearchMemo func(ctx context.Context, query string, limit int) []MemoryResul
 
 // MemoryRecall searches the on-disk memory notes (daily notes, MEMORY.md,
 // captures) for relevant past content. It is the targeted long-tail retrieval
-// primitive: use it when you need something Ghost wrote earlier that isn't in
+// primitive: use it when you need something Kaya wrote earlier that isn't in
 // the current context. Bounded and local — no external index.
 type MemoryRecall struct {
 	workspace string
@@ -53,7 +53,7 @@ func (t *MemoryRecall) SetScopesOf(fn func(sessionKey string) []string) { t.Scop
 func (t *MemoryRecall) Name() string { return "memory_recall" }
 
 func (t *MemoryRecall) Description() string {
-	return "Search Ghost's memory notes for past content on a topic. Not for live facts (use web_search) or past conversations (use session_search)."
+	return "Search Kaya's memory notes for past content on a topic. Not for live facts (use web_search) or past conversations (use session_search)."
 }
 
 func (t *MemoryRecall) Parameters() map[string]interface{} {

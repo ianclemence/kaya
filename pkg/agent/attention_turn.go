@@ -6,16 +6,16 @@ import (
 	"sync"
 	"time"
 
-	"github.com/ianclemence/ghost/pkg/attention"
-	"github.com/ianclemence/ghost/pkg/cards"
-	"github.com/ianclemence/ghost/pkg/cevents"
-	"github.com/ianclemence/ghost/pkg/ghoststate"
-	"github.com/ianclemence/ghost/pkg/logger"
-	"github.com/ianclemence/ghost/pkg/personalcontext"
-	"github.com/ianclemence/ghost/pkg/proactive"
+	"github.com/ianclemence/kaya/pkg/attention"
+	"github.com/ianclemence/kaya/pkg/cards"
+	"github.com/ianclemence/kaya/pkg/cevents"
+	"github.com/ianclemence/kaya/pkg/kayastate"
+	"github.com/ianclemence/kaya/pkg/logger"
+	"github.com/ianclemence/kaya/pkg/personalcontext"
+	"github.com/ianclemence/kaya/pkg/proactive"
 )
 
-// The attention loop: every few minutes Ghost looks at what it knows (dated
+// The attention loop: every few minutes Kaya looks at what it knows (dated
 // plans in memory, reminders that went unseen, notices from its own
 // routines), offers each thing to the attention layer, says the urgent ones,
 // and once a morning sends everything else as one message.
@@ -42,7 +42,7 @@ func (al *AgentLoop) attentionQueue() *attention.Queue {
 }
 
 // OfferAttention puts one item in front of the attention layer from any
-// part of Ghost, and says it now when the layer decides it cannot wait.
+// part of Kaya, and says it now when the layer decides it cannot wait.
 func (al *AgentLoop) OfferAttention(it attention.Item) attention.Decision {
 	d := al.attentionQueue().Offer(it, time.Now())
 	if d == attention.Now {
@@ -166,7 +166,7 @@ func (al *AgentLoop) deliverDigest(briefing string, items []attention.Item, now 
 	}
 	if ev := al.CanonicalEvents(); ev != nil {
 		ev.Publish(&cevents.Event{
-			Type: cevents.DigestDelivered, GhostID: al.ghostID(), SessionID: ownerConversation, Status: "success",
+			Type: cevents.DigestDelivered, KayaID: al.kayaID(), SessionID: ownerConversation, Status: "success",
 			Payload: map[string]interface{}{"summary": digestSummary(len(items))},
 		})
 	}
@@ -184,7 +184,7 @@ func digestSummary(n int) string {
 // morningOpening greets the owner by name.
 func morningOpening(workspace string, local time.Time) string {
 	name := ""
-	if id, err := ghoststate.LoadIdentity(workspace); err == nil && id != nil {
+	if id, err := kayastate.LoadIdentity(workspace); err == nil && id != nil {
 		name = strings.TrimSpace(id.OwnerName)
 	}
 	part := "Good morning"
@@ -214,7 +214,7 @@ func (al *AgentLoop) AttentionAnswered(source string) {
 
 // offerUpcoming turns dated plans in memory into a week-ahead note, a
 // day-before note, a note on the day, and a "how did it go" after. Each is
-// said once; a plan without a real date (Ghost never guesses "next month")
+// said once; a plan without a real date (Kaya never guesses "next month")
 // produces nothing.
 func (al *AgentLoop) offerUpcoming(now time.Time, loc *time.Location) {
 	if al.pcStore == nil {

@@ -14,7 +14,7 @@ import (
 // sends on its second model call.
 func toolLoopTranscript() []Message {
 	return []Message{
-		{Role: "system", Content: "You are Ghost."},
+		{Role: "system", Content: "You are Kaya."},
 		{Role: "user", Content: "Weather and time in Paris?"},
 		{Role: "assistant", Content: "", ToolCalls: []ToolCall{
 			{ID: "tu_1", Name: "weather", Arguments: map[string]interface{}{"city": "Paris"}},
@@ -208,7 +208,7 @@ func TestAnthropicGenerationParseDated(t *testing.T) {
 // the model.
 func TestAnthropicSystemCacheBoundary(t *testing.T) {
 	msgs := []Message{
-		{Role: "system", Content: "# Ghost\nstable rules\n\n" + SystemPromptCacheBoundary + "\n\n## Current Time\n2026-09-29 15:04", CacheControl: &CacheControl{Type: "ephemeral"}},
+		{Role: "system", Content: "# Kaya\nstable rules\n\n" + SystemPromptCacheBoundary + "\n\n## Current Time\n2026-09-29 15:04", CacheControl: &CacheControl{Type: "ephemeral"}},
 		{Role: "user", Content: "hi"},
 	}
 	req := requestJSON(t, "claude-opus-5-5", msgs, nil, loopDefaultOptions())

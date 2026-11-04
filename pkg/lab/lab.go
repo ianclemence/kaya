@@ -1,4 +1,4 @@
-// Package lab is Ghost's evaluation-lab harness: cheap deterministic
+// Package lab is Kaya's evaluation-lab harness: cheap deterministic
 // gates in front of expensive model-judged passes, with append-only
 // per-case records, cost/duration budgets, and machine-readable output.
 //

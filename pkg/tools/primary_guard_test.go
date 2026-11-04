@@ -8,7 +8,7 @@ import (
 	"testing"
 )
 
-// Ghost's primary files — the database, the prompt contract files, the
+// Kaya's primary files — the database, the prompt contract files, the
 // skills estate, and the long-term memory digest — must never be
 // overwritten or destroyed through the model's file tools, regardless of
 // the workspace-restriction setting. Integrity is not a config option:
@@ -31,10 +31,10 @@ func TestFileToolsNeverDestroyPrimaryFiles(t *testing.T) {
 	ctx := context.Background()
 
 	primaryPaths := []string{
-		"ghost.db",
-		"ghost.db-wal",
-		"GHOST.md",
-		"GHOST.md.pre-caveat.bak",
+		"kaya.db",
+		"kaya.db-wal",
+		"KAYA.md",
+		"KAYA.md.pre-caveat.bak",
 		"AGENTS.md",
 		"SOUL.md",
 		"IDENTITY.md",
@@ -84,7 +84,7 @@ func TestFileToolsNeverDestroyPrimaryFiles(t *testing.T) {
 }
 
 // The shell must never reference the database or config at all, and must
-// refuse any destructive shape aimed at Ghost's primary estate — even when
+// refuse any destructive shape aimed at Kaya's primary estate — even when
 // the command would be harmless if it ran (the assertions below run echo).
 func TestExecNeverTouchesPrimaryFiles(t *testing.T) {
 	ws := t.TempDir()
@@ -92,9 +92,9 @@ func TestExecNeverTouchesPrimaryFiles(t *testing.T) {
 	ctx := context.Background()
 
 	denied := []string{
-		"echo ghost.db",            // blanket: the database is never named from the shell
+		"echo kaya.db",            // blanket: the database is never named from the shell
 		"echo rm -rf skills",       // destructive verb aimed at the skills estate
-		"echo mv GHOST.md /tmp",    // moving the prompt contract out
+		"echo mv KAYA.md /tmp",    // moving the prompt contract out
 		"echo rm -rf .",            // broad recursive wipe of the working tree
 		"echo rm memory/MEMORY.md", // destroying the long-term memory digest
 	}
@@ -142,7 +142,7 @@ func TestExecConfinesWorkingDir(t *testing.T) {
 	}
 }
 
-// Ghost's runtime-owned estate — session logs, the scheduler, the event
+// Kaya's runtime-owned estate — session logs, the scheduler, the event
 // trail, the personal-context journal, reflection and in-flight state, the
 // runtime journal, portable conversations, the heartbeat log and the
 // installer-owned docs — is never created, changed, or deleted through the
@@ -221,7 +221,7 @@ func TestFileToolsNeverWriteRuntimeEstate(t *testing.T) {
 	}
 }
 
-// Outside the workspace, Ghost's own runtime home (backups, install
+// Outside the workspace, Kaya's own runtime home (backups, install
 // snapshots) is never a write target even though validatePath's
 // project-root allowance reaches the parent directory.
 func TestFileToolsNeverWriteRuntimeHome(t *testing.T) {
@@ -251,10 +251,10 @@ func TestFileToolsNeverWriteRuntimeHome(t *testing.T) {
 	}
 }
 
-// Executed code never gets a writable view of Ghost's own tree: even when
+// Executed code never gets a writable view of Kaya's own tree: even when
 // the command string names no primary file, the read-only mount stops the
 // write, and scratch remains writable.
-func TestExecSandboxKeepsGhostEstateReadOnly(t *testing.T) {
+func TestExecSandboxKeepsKayaEstateReadOnly(t *testing.T) {
 	if !IsolationActive() {
 		t.Skip("OS isolation unavailable on this machine")
 	}
@@ -276,7 +276,7 @@ func TestExecSandboxKeepsGhostEstateReadOnly(t *testing.T) {
 	// sandbox; the read-only mount is what must refuse it.
 	res := tool.Execute(ctx, map[string]interface{}{"command": "echo clobbered > README.md"})
 	if !res.IsError {
-		t.Errorf("write into Ghost's tree must fail under the read-only mount, got %q", res.ForLLM)
+		t.Errorf("write into Kaya's tree must fail under the read-only mount, got %q", res.ForLLM)
 	}
 	if data, _ := os.ReadFile(filepath.Join(ws, "README.md")); string(data) != "original" {
 		t.Errorf("README.md was modified: %q", string(data))
@@ -305,7 +305,7 @@ func TestExecSandboxKeepsGhostEstateReadOnly(t *testing.T) {
 }
 
 // A user project outside the workspace remains a writable working
-// directory; Ghost's runtime home does not.
+// directory; Kaya's runtime home does not.
 func TestExecWorkingDirBoundary(t *testing.T) {
 	home := t.TempDir()
 	ws := filepath.Join(home, "workspace")
@@ -325,7 +325,7 @@ func TestExecWorkingDirBoundary(t *testing.T) {
 
 	res := tool.Execute(ctx, map[string]interface{}{"command": "echo hi", "working_dir": backups})
 	if !res.IsError || !strings.Contains(res.ForLLM, "runtime") {
-		t.Errorf("Ghost runtime home must not be a working dir, got IsError=%v msg=%q", res.IsError, res.ForLLM)
+		t.Errorf("Kaya runtime home must not be a working dir, got IsError=%v msg=%q", res.IsError, res.ForLLM)
 	}
 
 	res = tool.Execute(ctx, map[string]interface{}{"command": "pwd", "working_dir": proj})
@@ -334,7 +334,7 @@ func TestExecWorkingDirBoundary(t *testing.T) {
 	}
 }
 
-// Ghost's governed stores are invisible to executed code: a user project
+// Kaya's governed stores are invisible to executed code: a user project
 // can neither read the long-term memory or runtime state nor alter the real
 // files, even when it writes to the shadowed path.
 func TestExecSandboxHidesGovernedStores(t *testing.T) {

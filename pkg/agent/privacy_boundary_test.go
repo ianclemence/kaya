@@ -8,10 +8,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ianclemence/ghost/pkg/contexts"
-	"github.com/ianclemence/ghost/pkg/ghoststate"
-	"github.com/ianclemence/ghost/pkg/personalcontext"
-	"github.com/ianclemence/ghost/pkg/tools"
+	"github.com/ianclemence/kaya/pkg/contexts"
+	"github.com/ianclemence/kaya/pkg/kayastate"
+	"github.com/ianclemence/kaya/pkg/personalcontext"
+	"github.com/ianclemence/kaya/pkg/tools"
 )
 
 // TestPrivacyNoCrossContextPromptAssembly is the deterministic, model-free
@@ -22,11 +22,11 @@ import (
 // behavior.
 func TestPrivacyNoCrossContextPromptAssembly(t *testing.T) {
 	ws := t.TempDir()
-	gid, err := ghoststate.EnsureIdentity(ws)
+	gid, err := kayastate.EnsureIdentity(ws)
 	if err != nil {
 		t.Fatal(err)
 	}
-	cs, err := contexts.Open(ws, gid.GhostID)
+	cs, err := contexts.Open(ws, gid.KayaID)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -101,11 +101,11 @@ func TestPrivacyNoCrossContextPromptAssembly(t *testing.T) {
 // leak channel (the model reading entries.jsonl directly).
 func TestPrivacyFileGuardProtectsMemoryStore(t *testing.T) {
 	ws := t.TempDir()
-	gid, err := ghoststate.EnsureIdentity(ws)
+	gid, err := kayastate.EnsureIdentity(ws)
 	if err != nil {
 		t.Fatal(err)
 	}
-	cs, err := contexts.Open(ws, gid.GhostID)
+	cs, err := contexts.Open(ws, gid.KayaID)
 	if err != nil {
 		t.Fatal(err)
 	}

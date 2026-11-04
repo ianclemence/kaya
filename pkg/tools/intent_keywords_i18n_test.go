@@ -34,7 +34,7 @@ func TestOwnersGetTheirToolsInTheirOwnLanguage(t *testing.T) {
 		{"오늘 걸음 수 알려줘", "phone"},
 		{"ما هي فاتورتي هذا الشهر", "finances"},
 		{"मेरा बजट कितना है", "finances"},
-		{"обнови Ghost до последней версии", "update"},
+		{"обнови Kaya до последней версии", "update"},
 		{"ışıkları kapat", "device"},
 		{"ตรวจสอบตัวเอง", "self_check"},
 		{"Responde al correo de Ana", "draft"},

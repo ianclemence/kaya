@@ -18,7 +18,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ianclemence/ghost/pkg/scheduled"
+	"github.com/ianclemence/kaya/pkg/scheduled"
 )
 
 // Intent is a parsed routine request.
@@ -75,7 +75,7 @@ func extractTask(rest string) string {
 	connectives := []string{"also ", "and also ", "and ", "then ", "plus ",
 		// A time-of-day word the clock time already said ("at 7:30 in the
 		// morning, check the weather"): left in, it made the title "In the
-		// morning, check…" and hid that the task is an instruction to Ghost.
+		// morning, check…" and hid that the task is an instruction to Kaya.
 		"in the morning ", "in the evening ", "in the afternoon ", "at night ", "tonight "}
 	changed := true
 	for changed {

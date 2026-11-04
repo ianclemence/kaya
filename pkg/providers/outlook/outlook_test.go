@@ -6,7 +6,7 @@ import (
 )
 
 func TestSearchNotConfigured(t *testing.T) {
-	t.Setenv("GHOST_CREDENTIALS_DIR", t.TempDir())
+	t.Setenv("KAYA_CREDENTIALS_DIR", t.TempDir())
 	svc := New(Config{})
 	if svc.Configured() {
 		t.Fatal("empty token must not be configured")
@@ -17,7 +17,7 @@ func TestSearchNotConfigured(t *testing.T) {
 }
 
 func TestSendNotConfigured(t *testing.T) {
-	t.Setenv("GHOST_CREDENTIALS_DIR", t.TempDir())
+	t.Setenv("KAYA_CREDENTIALS_DIR", t.TempDir())
 	svc := New(Config{})
 	if _, r := svc.Send(context.Background(), "a@b.c", "s", "b"); r.Err == nil {
 		t.Fatal("send without token must fail")

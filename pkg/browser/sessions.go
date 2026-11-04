@@ -32,7 +32,7 @@ const DefaultSessionTTL = 30 * time.Minute
 
 // safeID matches owner/context/task/profile identifiers safe for paths
 // and SQL alike. Anything else is rejected rather than sanitized into
-// something surprising. ':' is allowed because Ghost session keys use
+// something surprising. ':' is allowed because Kaya session keys use
 // "<conversation>::<participant>" form and are legitimate internal task
 // bindings; it is harmless on the local filesystem and in parameterized
 // SQL.
@@ -308,7 +308,7 @@ func (s *SessionStore) PurgeProfile(owner, contextID, profile string) (int64, er
 	return closed, nil
 }
 
-// PurgeProfiles signs the browser out everywhere on this Ghost: it closes
+// PurgeProfiles signs the browser out everywhere on this Kaya: it closes
 // every session row and deletes every profile directory (cookie jars, local
 // storage). Profiles are listed from disk, not the session table, because a
 // profile deliberately outlives an expired session — that is what makes a

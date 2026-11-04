@@ -1,7 +1,7 @@
 package tools
 
 import (
-	"github.com/ianclemence/ghost/pkg/personalcontext"
+	"github.com/ianclemence/kaya/pkg/personalcontext"
 
 	"context"
 	"database/sql"
@@ -18,8 +18,8 @@ type SessionSearchTool struct {
 	// read sessions inside its own context — session transcripts in another
 	// context (work vs personal) never surface.
 	ContextOf func(sessionKey string) string
-	// Workspace, when set, keeps facts the owner asked Ghost to forget out of
-	// what a search reads back. The transcript is untouched; Ghost just no
+	// Workspace, when set, keeps facts the owner asked Kaya to forget out of
+	// what a search reads back. The transcript is untouched; Kaya just no
 	// longer recites a forgotten dentist from it.
 	Workspace string
 }
@@ -103,7 +103,7 @@ func (t *SessionSearchTool) Timeout() time.Duration { return 20 * time.Second }
 func (t *SessionSearchTool) RetryPolicy() (int, time.Duration) { return 1, 300 * time.Millisecond }
 
 func (t *SessionSearchTool) Description() string {
-	return "Search Ghost's past conversation history. Use it whenever the user refers to anything said or done earlier, in this conversation or another (\"what did I say about X\", \"what we discussed\", \"earlier today\", \"last time\", \"what did you get wrong\", \"why did you answer that\"): search before you answer, and answer only from what it returns. For a question about the whole conversation (\"what have we talked about\", \"summarize this chat\", \"how many times did I ask\"), use mode outline first: it lists every owner message in order, and a search does not. Do NOT use it for general knowledge, facts, weather, currency, or skills — use a matching Ghost skill or the general search instead."
+	return "Search Kaya's past conversation history. Use it whenever the user refers to anything said or done earlier, in this conversation or another (\"what did I say about X\", \"what we discussed\", \"earlier today\", \"last time\", \"what did you get wrong\", \"why did you answer that\"): search before you answer, and answer only from what it returns. For a question about the whole conversation (\"what have we talked about\", \"summarize this chat\", \"how many times did I ask\"), use mode outline first: it lists every owner message in order, and a search does not. Do NOT use it for general knowledge, facts, weather, currency, or skills — use a matching Kaya skill or the general search instead."
 }
 
 func (t *SessionSearchTool) Parameters() map[string]interface{} {
@@ -206,7 +206,7 @@ func redactForgottenJSON(text string, match func(string) bool) string {
 	return string(out)
 }
 
-const forgottenMark = "[forgotten: the owner asked Ghost to forget this. Say it was forgotten at their request; never repeat or guess it, and never say it was never mentioned]"
+const forgottenMark = "[forgotten: the owner asked Kaya to forget this. Say it was forgotten at their request; never repeat or guess it, and never say it was never mentioned]"
 
 func (t *SessionSearchTool) execute(ctx context.Context, args map[string]interface{}) *ToolResult {
 	mode, _ := args["mode"].(string)

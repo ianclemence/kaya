@@ -4,12 +4,12 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/ianclemence/ghost/pkg/permissions"
+	"github.com/ianclemence/kaya/pkg/permissions"
 )
 
 // Trust boundary for tool execution.
 //
-// Host tools (Ghost's own code) are trusted: their behavior is reviewed
+// Host tools (Kaya's own code) are trusted: their behavior is reviewed
 // and their inputs are validated. Guest-defined tools — custom commands
 // registered by skills, extensions, or retrieved content — are
 // untrusted: they run under the restricted boundary (validated args,

@@ -5,18 +5,18 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/ianclemence/ghost/pkg/cards"
-	"github.com/ianclemence/ghost/pkg/credentials"
+	"github.com/ianclemence/kaya/pkg/cards"
+	"github.com/ianclemence/kaya/pkg/credentials"
 )
 
 func vaultFixture(t *testing.T) {
 	t.Helper()
-	t.Setenv("GHOST_CONFIG_DIR", t.TempDir())
+	t.Setenv("KAYA_CONFIG_DIR", t.TempDir())
 }
 
-// "Ghost never sees a saved card's number or security code": the one tool that
+// "Kaya never sees a saved card's number or security code": the one tool that
 // reads the Vault for the model, over every kind.
-func TestGhostReadsTheVaultButNeverASecret(t *testing.T) {
+func TestKayaReadsTheVaultButNeverASecret(t *testing.T) {
 	vaultFixture(t)
 	for _, it := range []credentials.Item{
 		{Kind: credentials.KindLogin, URL: "https://ads.google.com", Username: "ian@example.com", Password: "never-show-this-pw"},
@@ -34,12 +34,12 @@ func TestGhostReadsTheVaultButNeverASecret(t *testing.T) {
 	}
 	for _, secret := range []string{"never-show-this-pw", "4242 4242 4242 4242", "4242424242424242", "sk_live_never_show_key", "123", "Ian C"} {
 		if strings.Contains(res.ForLLM, secret) {
-			t.Fatalf("Ghost was shown %q:\n%s", secret, res.ForLLM)
+			t.Fatalf("Kaya was shown %q:\n%s", secret, res.ForLLM)
 		}
 	}
 	for _, want := range []string{"ads.google.com · ian@example.com", "ending 4242", "Amina Hassan", "amina@example.com", "Stripe"} {
 		if !strings.Contains(res.ForLLM, want) {
-			t.Errorf("Ghost should be able to read %q:\n%s", want, res.ForLLM)
+			t.Errorf("Kaya should be able to read %q:\n%s", want, res.ForLLM)
 		}
 	}
 	if one := NewVaultItemsTool().Execute(context.Background(), map[string]interface{}{"kind": "contact"}); strings.Contains(one.ForLLM, "ads.google.com") {
@@ -57,10 +57,10 @@ func TestAnEmptyVaultSaysSo(t *testing.T) {
 	}
 }
 
-// A key the owner allowed commands to use is useless if Ghost does not know how
+// A key the owner allowed commands to use is useless if Kaya does not know how
 // to hand it over: the command must name the variable, and the value reaches
 // only that command.
-func TestACommandKeyTellsGhostHowToUseIt(t *testing.T) {
+func TestACommandKeyTellsKayaHowToUseIt(t *testing.T) {
 	vaultFixture(t)
 	if _, err := credentials.SaveItem(credentials.Item{
 		Kind: credentials.KindKey, Title: "DeepSeek", Service: "DeepSeek",
@@ -77,7 +77,7 @@ func TestACommandKeyTellsGhostHowToUseIt(t *testing.T) {
 	}
 	for _, want := range []string{"commands can read it as $DEEPSEEK_API_KEY", "DEEPSEEK_API_KEY=$DEEPSEEK_API_KEY", "never print it"} {
 		if !strings.Contains(res.ForLLM, want) {
-			t.Errorf("Ghost should be told %q:\n%s", want, res.ForLLM)
+			t.Errorf("Kaya should be told %q:\n%s", want, res.ForLLM)
 		}
 	}
 }
@@ -92,7 +92,7 @@ func credentialsTool(published *[]cards.Card) *RequestCredentialsTool {
 	return tool
 }
 
-// "Pause my Google Ads campaigns": no login is saved, so Ghost asks for one with
+// "Pause my Google Ads campaigns": no login is saved, so Kaya asks for one with
 // a private form, and never in the chat.
 func TestAMissingSignInIsAskedForWithAPrivateForm(t *testing.T) {
 	vaultFixture(t)
@@ -137,7 +137,7 @@ func TestOnlyAnAppThatCanShowAPrivateFormIsAskedToFillOne(t *testing.T) {
 	tool.SetContext("telegram", "123")
 	res := tool.Execute(context.Background(), map[string]interface{}{"site": "ads.google.com"})
 	if len(published) != 0 || !strings.Contains(res.ForLLM, "Never ask for the password here") {
-		t.Fatalf("a chat app must be sent to the Ghost app, not given a form: %d %s", len(published), res.ForLLM)
+		t.Fatalf("a chat app must be sent to the Kaya app, not given a form: %d %s", len(published), res.ForLLM)
 	}
 	for _, bad := range []string{"", "localhost", "10.0.0.1", "not a site"} {
 		if r := credentialsTool(&published).Execute(context.Background(), map[string]interface{}{"site": bad}); !r.IsError {

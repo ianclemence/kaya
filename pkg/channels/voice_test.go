@@ -8,7 +8,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/ianclemence/ghost/pkg/voice"
+	"github.com/ianclemence/kaya/pkg/voice"
 )
 
 type stubVoiceTranscriber struct {

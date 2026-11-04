@@ -6,7 +6,7 @@ import (
 	"testing"
 )
 
-// The policy exists to stop Ghost narrating its own plumbing. These cases are
+// The policy exists to stop Kaya narrating its own plumbing. These cases are
 // the contract in both directions: a limitation that does not change the answer
 // must stay internal, and one that does must reach the owner.
 func TestDecideLimitationTooQuiet(t *testing.T) {
@@ -15,14 +15,14 @@ func TestDecideLimitationTooQuiet(t *testing.T) {
 		facts LimitationFacts
 	}{
 		// Two corroborating sources while a page would not parse: the answer is
-		// sound and the disruption is Ghost's problem.
+		// sound and the disruption is Kaya's problem.
 		{"corroborated despite an unreadable page", LimitationFacts{
 			AnyEvidence: true, SnippetOnly: true, Corroborated: true,
 		}},
 		// An ordinary read-through answer with nothing wrong.
 		{"clean read-through", LimitationFacts{AnyEvidence: true}},
-		// A source Ghost merely tried, not one the owner asked for.
-		{"page ghost chose to fetch failed", LimitationFacts{AnyEvidence: true}},
+		// A source Kaya merely tried, not one the owner asked for.
+		{"page kaya chose to fetch failed", LimitationFacts{AnyEvidence: true}},
 	}
 	for _, c := range internal {
 		if got := DecideLimitation(c.facts); got.Surfaces() {
@@ -82,9 +82,9 @@ func TestDecideLimitationSeverityOrder(t *testing.T) {
 }
 
 // The prompt-facing rule and the runtime policy must not drift apart: the model
-// follows GHOST.md, so the policy has to be stated there.
-func TestCaveatRuleIsPresentInGhostPrompt(t *testing.T) {
-	for _, path := range []string{"../../workspace/GHOST.md"} {
+// follows KAYA.md, so the policy has to be stated there.
+func TestCaveatRuleIsPresentInKayaPrompt(t *testing.T) {
+	for _, path := range []string{"../../workspace/KAYA.md"} {
 		raw, err := os.ReadFile(path)
 		if err != nil {
 			t.Fatalf("read %s: %v", path, err)
@@ -100,8 +100,8 @@ func TestCaveatRuleIsPresentInGhostPrompt(t *testing.T) {
 // get the seed files, and whichever an agent reads first wins. Byte
 // equality is the contract; edit both copies together.
 func TestSeedContractsMatchLive(t *testing.T) {
-	for _, name := range []string{"AGENTS.md", "GHOST.md", "SOUL.md", "IDENTITY.md", "HEARTBEAT.md", "USER.md"} {
-		seed, err := os.ReadFile("../../cmd/ghost/workspace/" + name)
+	for _, name := range []string{"AGENTS.md", "KAYA.md", "SOUL.md", "IDENTITY.md", "HEARTBEAT.md", "USER.md"} {
+		seed, err := os.ReadFile("../../cmd/kaya/workspace/" + name)
 		if err != nil {
 			t.Fatalf("read seed %s: %v", name, err)
 		}

@@ -9,9 +9,9 @@ import (
 )
 
 // Trip is a journey the owner is taking, put together from what they said and
-// the bookings they forwarded or Ghost read in their email: where and when,
+// the bookings they forwarded or Kaya read in their email: where and when,
 // and each leg (a flight, a train, a hotel stay, a booking) with its own time
-// and reference. Ghost uses it to say the right thing at the right moment: the
+// and reference. Kaya uses it to say the right thing at the right moment: the
 // week before, the day before a flight, when to leave for the airport, and
 // how it went afterwards.
 type Trip struct {
@@ -43,7 +43,7 @@ type Leg struct {
 	// International decides how early to be at the airport (3 hours, else 2).
 	International bool `json:"international,omitempty"`
 	// TravelMinutes is how long it takes the owner to get to where this leg
-	// starts, when they said; otherwise Ghost allows 45 minutes.
+	// starts, when they said; otherwise Kaya allows 45 minutes.
 	TravelMinutes int `json:"travel_minutes,omitempty"`
 }
 
@@ -154,7 +154,7 @@ func checkLeg(l *Leg) error {
 }
 
 // Save keeps a trip: a new one, or the one with the same title starting the
-// same day (Ghost read another booking for it), whose legs are merged (a leg
+// same day (Kaya read another booking for it), whose legs are merged (a leg
 // with the same reference and start is not added twice).
 func (t *Trips) Save(in TripInput, now time.Time) (Trip, bool, error) {
 	if in.Source.At.IsZero() {

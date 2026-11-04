@@ -2,7 +2,7 @@ package agent
 
 // Live browser end-to-end: real model (configured deepseek-flash),
 // real agent-browser CLI, real gate/broker/evidence — on a scratch
-// workspace copy, in scratch sessions. Gated: GHOST_LIVE_BROWSER=1,
+// workspace copy, in scratch sessions. Gated: KAYA_LIVE_BROWSER=1,
 // otherwise skipped so CI and normal runs never touch the network,
 // the model, or a browser.
 //
@@ -22,13 +22,13 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ianclemence/ghost/pkg/bus"
-	"github.com/ianclemence/ghost/pkg/cevents"
-	"github.com/ianclemence/ghost/pkg/config"
-	"github.com/ianclemence/ghost/pkg/contexts"
-	"github.com/ianclemence/ghost/pkg/ghoststate"
-	"github.com/ianclemence/ghost/pkg/permissions"
-	"github.com/ianclemence/ghost/pkg/providers"
+	"github.com/ianclemence/kaya/pkg/bus"
+	"github.com/ianclemence/kaya/pkg/cevents"
+	"github.com/ianclemence/kaya/pkg/config"
+	"github.com/ianclemence/kaya/pkg/contexts"
+	"github.com/ianclemence/kaya/pkg/kayastate"
+	"github.com/ianclemence/kaya/pkg/permissions"
+	"github.com/ianclemence/kaya/pkg/providers"
 )
 
 type liveBrowserStep struct {
@@ -46,8 +46,8 @@ type liveBrowserTurn struct {
 
 func liveBrowserGate(t *testing.T) {
 	t.Helper()
-	if os.Getenv("GHOST_LIVE_BROWSER") != "1" {
-		t.Skip("live browser needs GHOST_LIVE_BROWSER=1 (real model, real browser, real cost)")
+	if os.Getenv("KAYA_LIVE_BROWSER") != "1" {
+		t.Skip("live browser needs KAYA_LIVE_BROWSER=1 (real model, real browser, real cost)")
 	}
 	if _, err := exec.LookPath("agent-browser"); err != nil {
 		t.Skip("agent-browser not installed")
@@ -71,9 +71,9 @@ func wireLiveBrowserGovernance(loop *AgentLoop, ws string) error {
 	if err != nil {
 		return fmt.Errorf("open events: %w", err)
 	}
-	gid := "ghost-live"
-	if id, err := ghoststate.LoadIdentity(ws); err == nil && id != nil {
-		gid = id.GhostID
+	gid := "kaya-live"
+	if id, err := kayastate.LoadIdentity(ws); err == nil && id != nil {
+		gid = id.KayaID
 	}
 	cs, err := contexts.Open(ws, gid)
 	if err != nil {
@@ -93,7 +93,7 @@ func TestLiveBrowser(t *testing.T) {
 	if err := os.MkdirAll(wsCopy, 0o755); err != nil {
 		t.Fatal(err)
 	}
-	copyDir(t, "/var/lib/ghost/workspace", wsCopy)
+	copyDir(t, "/var/lib/kaya/workspace", wsCopy)
 
 	cfg, err := config.LoadConfig(filepath.Join(liveEvalConfigDir(), "config.json"))
 	if err != nil {

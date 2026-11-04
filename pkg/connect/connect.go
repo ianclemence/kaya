@@ -1,6 +1,6 @@
-// Package connect is the Pod's side of Ghost Connect, the hosted relay.
+// Package connect is the Pod's side of Kaya Connect, the hosted relay.
 //
-// A Pod links itself to the Ghost site the way a TV links to a streaming
+// A Pod links itself to the Kaya site the way a TV links to a streaming
 // account: it asks the site for a short code, the owner types the code into the
 // site while signed in, and the Pod is handed an entitlement, a signed pass the
 // relay checks. The site never learns anything about the Pod's contents and the
@@ -32,8 +32,8 @@ var (
 	ErrPending = errors.New("connect: waiting for the code to be entered")
 	// ErrExpired means the code ran out before it was used.
 	ErrExpired = errors.New("connect: the code expired, start again")
-	// ErrNoSubscription means the account has no active Ghost Connect plan.
-	ErrNoSubscription = errors.New("connect: no active Ghost Connect subscription")
+	// ErrNoSubscription means the account has no active Kaya Connect plan.
+	ErrNoSubscription = errors.New("connect: no active Kaya Connect subscription")
 	// ErrRejected means the site did not accept the Pod's pass at all.
 	ErrRejected = errors.New("connect: the site did not accept this Pod's pass")
 )
@@ -118,9 +118,9 @@ func ClearState(workspace string) error {
 	return err
 }
 
-// Client talks to the Ghost site.
+// Client talks to the Kaya site.
 type Client struct {
-	Site string // e.g. https://ghost.example, no trailing slash
+	Site string // e.g. https://kaya.example, no trailing slash
 	HTTP *http.Client
 }
 
@@ -131,7 +131,7 @@ func NewClient(site string) *Client {
 
 // StartResult is what the site gives a Pod that wants to link.
 type StartResult struct {
-	UserCode  string `json:"user_code"`  // what the owner types, e.g. GHOST-4F7K
+	UserCode  string `json:"user_code"`  // what the owner types, e.g. KAYA-4F7K
 	VerifyURL string `json:"verify_url"` // where, with the code filled in
 	PollToken string `json:"poll_token"` // secret the Pod polls with
 	ExpiresIn int    `json:"expires_in"` // seconds the code lasts

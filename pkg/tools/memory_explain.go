@@ -6,8 +6,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ianclemence/ghost/pkg/cards"
-	"github.com/ianclemence/ghost/pkg/personalcontext"
+	"github.com/ianclemence/kaya/pkg/cards"
+	"github.com/ianclemence/kaya/pkg/personalcontext"
 )
 
 // MemoryExplainTool answers "why do you believe that?" with the receipt: the
@@ -43,7 +43,7 @@ func (t *MemoryExplainTool) SetPublisher(fn func(channel, chatID, sessionID stri
 func (t *MemoryExplainTool) Name() string { return "memory_explain" }
 
 func (t *MemoryExplainTool) Description() string {
-	return "Explain why Ghost believes something: the verbatim quote, the conversation it came from, confidence, and whether it was superseded or forgotten. Use when the user asks \"why do you think that?\" or \"where did you learn that?\". Give the receipt plainly; if there is no quote (an older belief), say so instead of inventing one."
+	return "Explain why Kaya believes something: the verbatim quote, the conversation it came from, confidence, and whether it was superseded or forgotten. Use when the user asks \"why do you think that?\" or \"where did you learn that?\". Give the receipt plainly; if there is no quote (an older belief), say so instead of inventing one."
 }
 
 func (t *MemoryExplainTool) Parameters() map[string]interface{} {
@@ -154,7 +154,7 @@ func (t *MemoryExplainTool) publishReceipt(ctx context.Context, ex personalconte
 	if t.publish == nil || t.channel == "" || t.chatID == "" {
 		return
 	}
-	card, err := cards.New(cards.KindMemoryReceipt, "Why Ghost knows this", ex.Quote)
+	card, err := cards.New(cards.KindMemoryReceipt, "Why Kaya knows this", ex.Quote)
 	if err != nil {
 		return
 	}

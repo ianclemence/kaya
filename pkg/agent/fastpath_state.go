@@ -9,21 +9,21 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ianclemence/ghost/pkg/activity"
-	"github.com/ianclemence/ghost/pkg/cevents"
-	"github.com/ianclemence/ghost/pkg/commitments"
-	"github.com/ianclemence/ghost/pkg/hardware"
-	"github.com/ianclemence/ghost/pkg/ideas"
-	"github.com/ianclemence/ghost/pkg/modes"
-	"github.com/ianclemence/ghost/pkg/permissions"
-	"github.com/ianclemence/ghost/pkg/proactive"
-	"github.com/ianclemence/ghost/pkg/routines"
-	"github.com/ianclemence/ghost/pkg/watch"
+	"github.com/ianclemence/kaya/pkg/activity"
+	"github.com/ianclemence/kaya/pkg/cevents"
+	"github.com/ianclemence/kaya/pkg/commitments"
+	"github.com/ianclemence/kaya/pkg/hardware"
+	"github.com/ianclemence/kaya/pkg/ideas"
+	"github.com/ianclemence/kaya/pkg/modes"
+	"github.com/ianclemence/kaya/pkg/permissions"
+	"github.com/ianclemence/kaya/pkg/proactive"
+	"github.com/ianclemence/kaya/pkg/routines"
+	"github.com/ianclemence/kaya/pkg/watch"
 )
 
 // Deterministic state answers.
 //
-// Ghost already owns the authoritative answer to a large class of questions —
+// Kaya already owns the authoritative answer to a large class of questions —
 // what is scheduled, what needs the owner, what failed, how much disk is left.
 // Sending those through a model costs a cloud round trip (~0.9 s measured) plus
 // a ~22k-token prompt, and adds a chance of the model paraphrasing runtime
@@ -77,12 +77,12 @@ var (
 		`)\b`)
 
 	healthQueryRE = regexp.MustCompile(`(?i)\b(` +
-		`(?:are|is) (?:you|ghost) (?:ok|okay|healthy|fine|alright|up)|` +
-		`ghost health|system health|how healthy|` +
+		`(?:are|is) (?:you|kaya) (?:ok|okay|healthy|fine|alright|up)|` +
+		`kaya health|system health|how healthy|` +
 		`(?:how much|what'?s) (?:disk|space|storage) (?:is )?(?:left|free|available)|` +
 		`free (?:disk|space|storage)|disk (?:space|usage)|storage (?:left|usage)|` +
 		`how much (?:memory|ram)|memory usage|cpu (?:usage|load)|` +
-		`ghost status|system status` +
+		`kaya status|system status` +
 		`)\b`)
 
 	environmentQueryRE = regexp.MustCompile(`(?i)\b(` +
@@ -111,9 +111,9 @@ var (
 		`)\b`)
 
 	watchQueryRE = regexp.MustCompile(`(?i)\b(` +
-		`what am i (?:watching|tracking)|what (?:are|is) (?:you|ghost) watching|` +
+		`what am i (?:watching|tracking)|what (?:are|is) (?:you|kaya) watching|` +
 		`my watches|list watches|show (?:me )?my watches|any watches|` +
-		`which flights? (?:are|am) (?:you|ghost) watching|am i watching` +
+		`which flights? (?:are|am) (?:you|kaya) watching|am i watching` +
 		`)\b`)
 )
 
@@ -255,7 +255,7 @@ func (al *AgentLoop) renderRoutines() (string, bool) {
 	if al.routineSvc == nil {
 		return "", false
 	}
-	list := al.routineSvc.List(al.ghostID(), 50)
+	list := al.routineSvc.List(al.kayaID(), 50)
 	if len(list) == 0 {
 		return "You don't have any routines yet.", true
 	}
@@ -320,7 +320,7 @@ func (al *AgentLoop) renderJobs() (string, bool) {
 	return strings.Join(parts, ". ") + ".", true
 }
 
-// renderActivity reports what Ghost recently did, projected from the canonical
+// renderActivity reports what Kaya recently did, projected from the canonical
 // event stream through the same chip projection the console uses.
 func (al *AgentLoop) renderActivity() (string, bool) {
 	if al.governance == nil || al.governance.Events == nil {
@@ -329,7 +329,7 @@ func (al *AgentLoop) renderActivity() (string, bool) {
 	events := al.governance.Events.Recent(120, cevents.Filter{})
 	// Same honesty rule the console gets: a request the owner has already
 	// answered is not something still waiting on them. Without this, a
-	// resolved approval survives in the recent trail and Ghost would report
+	// resolved approval survives in the recent trail and Kaya would report
 	// itself as waiting when it is not.
 	events = activity.WithoutAnsweredApprovals(events, permissions.OpenRequests(al.governance.Broker))
 	type row struct {

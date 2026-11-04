@@ -25,7 +25,7 @@ func localTestServer(t *testing.T, text string, check func(r *http.Request)) *ht
 }
 
 func TestLocalTranscribe(t *testing.T) {
-	srv := localTestServer(t, "hello ghost", func(r *http.Request) {
+	srv := localTestServer(t, "hello kaya", func(r *http.Request) {
 		if err := r.ParseMultipartForm(10 << 20); err != nil {
 			t.Errorf("not multipart: %v", err)
 			return
@@ -58,7 +58,7 @@ func TestLocalTranscribe(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if res.Text != "hello ghost" {
+	if res.Text != "hello kaya" {
 		t.Fatalf("wrong text %q", res.Text)
 	}
 }

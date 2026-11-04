@@ -1,0 +1,9 @@
+[Unit]
+Description=Back up the Kaya relay registry every six hours
+
+[Timer]
+OnCalendar=*-*-* 00/6:17:00
+Persistent=true
+
+[Install]
+WantedBy=timers.target

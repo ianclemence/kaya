@@ -2,10 +2,10 @@
 name: tmux
 description: Control tmux sessions programmatically — send keystrokes to interactive CLIs, capture pane output, spawn persistent sessions. Invoke when user asks to "attach to tmux", "send a command to tmux session", "run interactive CLI in background", or "watch tmux pane for output". Requires tmux binary.
 version: 1.1.0
-author: Ghost
+author: Kaya
 license: MIT
 metadata:
-  ghost:
+  kaya:
     tags: [tmux, terminal, session, multiplexer, CLI]
 prerequisites:
   commands: [tmux]
@@ -18,10 +18,10 @@ Use tmux only when you need an interactive TTY. Prefer exec background mode for 
 ## Quickstart (isolated socket, exec tool)
 
 ```bash
-SOCKET_DIR="${GHOST_TMUX_SOCKET_DIR:-${TMPDIR:-/tmp}/ghost-tmux-sockets}"
+SOCKET_DIR="${KAYA_TMUX_SOCKET_DIR:-${TMPDIR:-/tmp}/kaya-tmux-sockets}"
 mkdir -p "$SOCKET_DIR"
-SOCKET="$SOCKET_DIR/ghost.sock"
-SESSION=ghost-tmux
+SOCKET="$SOCKET_DIR/kaya.sock"
+SESSION=kaya-tmux
 
 tmux -S "$SOCKET" new -d -s "$SESSION" -n shell
 tmux -S "$SOCKET" send-keys -t "$SESSION":0.0 -- 'PYTHON_BASIC_REPL=1 python3 -q' Enter
@@ -38,8 +38,8 @@ To monitor:
 
 ## Socket convention
 
-- Use `GHOST_TMUX_SOCKET_DIR` environment variable.
-- Default socket path: `"$GHOST_TMUX_SOCKET_DIR/ghost.sock"`.
+- Use `KAYA_TMUX_SOCKET_DIR` environment variable.
+- Default socket path: `"$KAYA_TMUX_SOCKET_DIR/kaya.sock"`.
 
 ## Targeting panes and naming
 
@@ -50,7 +50,7 @@ To monitor:
 ## Finding sessions
 
 - List sessions on your socket: `{baseDir}/scripts/find-sessions.sh -S "$SOCKET"`.
-- Scan all sockets: `{baseDir}/scripts/find-sessions.sh --all` (uses `GHOST_TMUX_SOCKET_DIR`).
+- Scan all sockets: `{baseDir}/scripts/find-sessions.sh --all` (uses `KAYA_TMUX_SOCKET_DIR`).
 
 ## Sending input safely
 

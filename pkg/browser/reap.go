@@ -10,7 +10,7 @@ import (
 	"time"
 )
 
-// Browser processes left behind by a previous Ghost run are the known cause of
+// Browser processes left behind by a previous Kaya run are the known cause of
 // every browser action hanging until its timeout: new invocations attach to
 // the wedged daemon instead of launching a fresh browser, so the failure looks
 // identical for every site. Reaping them at startup (and after a timeout)
@@ -62,7 +62,7 @@ func OrphanBrowserPIDs(procRoot string) []int {
 	return out
 }
 
-// isBrowserProcess recognizes the three process shapes Ghost's browser stack
+// isBrowserProcess recognizes the three process shapes Kaya's browser stack
 // creates. The Chromium user-data-dir marker keeps this from matching a
 // desktop browser a person may be using.
 func isBrowserProcess(cmd string) bool {

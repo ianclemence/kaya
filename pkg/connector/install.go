@@ -13,7 +13,7 @@ import (
 
 // SourceRecordName is the provenance file written next to an installed
 // connector. It records what was installed, from where, and the content hash.
-const SourceRecordName = ".ghost-source.json"
+const SourceRecordName = ".kaya-source.json"
 
 // Install validates a connector file and installs it into dir/<id>/.
 func Install(path, dir string, force bool) (string, error) {

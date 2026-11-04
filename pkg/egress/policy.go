@@ -1,13 +1,13 @@
-// Package egress decides which hosts code Ghost runs on the owner's behalf may
+// Package egress decides which hosts code Kaya runs on the owner's behalf may
 // reach, and enforces it.
 //
 // An allowlist of domains is a capability grant, not just a filter: anything
 // reachable through an allowed host is an exfiltration path. So the decision is
 // made where it cannot be talked around: the sandbox has no network of its own
-// and its only way out is a proxy Ghost runs, which resolves the name itself,
+// and its only way out is a proxy Kaya runs, which resolves the name itself,
 // judges the address it actually dials, and writes down what it let through.
 //
-// Modes (GHOST_EXEC_EGRESS):
+// Modes (KAYA_EXEC_EGRESS):
 //
 //	open       the sandbox shares the Pod's network (the default; nothing changes)
 //	guard      the public internet only: loopback, the LAN, link-local and cloud
@@ -39,21 +39,21 @@ type Policy struct {
 	Allow []string // exact hosts, "*.example.com", or IP literals
 }
 
-// FromEnv reads GHOST_EXEC_EGRESS and the allow file (GHOST_EXEC_EGRESS_ALLOW,
-// default $GHOST_DIR/egress-allow.txt). The file lives beside the config, never
+// FromEnv reads KAYA_EXEC_EGRESS and the allow file (KAYA_EXEC_EGRESS_ALLOW,
+// default $KAYA_DIR/egress-allow.txt). The file lives beside the config, never
 // in the workspace: code the agent runs can write the workspace, and a policy
 // it can edit is not a policy.
 func FromEnv() Policy {
 	p := Policy{Mode: Open}
-	switch Mode(strings.ToLower(strings.TrimSpace(os.Getenv("GHOST_EXEC_EGRESS")))) {
+	switch Mode(strings.ToLower(strings.TrimSpace(os.Getenv("KAYA_EXEC_EGRESS")))) {
 	case Guard:
 		p.Mode = Guard
 	case Allowlist:
 		p.Mode = Allowlist
 	}
-	path := strings.TrimSpace(os.Getenv("GHOST_EXEC_EGRESS_ALLOW"))
+	path := strings.TrimSpace(os.Getenv("KAYA_EXEC_EGRESS_ALLOW"))
 	if path == "" {
-		if d := strings.TrimSpace(os.Getenv("GHOST_DIR")); d != "" {
+		if d := strings.TrimSpace(os.Getenv("KAYA_DIR")); d != "" {
 			path = filepath.Join(d, "egress-allow.txt")
 		}
 	}

@@ -34,7 +34,7 @@ detail. Hard cut in, hard cut out.
 
 **G. Camera-follow travel (2 to 3 s).** Cubic Bézier path, heading from the
 derivative, camera centre = position + 120 px lead, `speedLines` seeded by
-frame, `loops` fixed seed, hatched shadow, ghost limbs, cached background.
+frame, `loops` fixed seed, hatched shadow, kaya limbs, cached background.
 
 **H. POV mosaic (0.6 to 1.2 s).** Scene in a layer, `iris` clip,
 `mosaic(c, L, s)` with `s` from 40 down to 13, chalk rim; optionally

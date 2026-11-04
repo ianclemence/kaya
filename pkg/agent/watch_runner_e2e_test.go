@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ianclemence/ghost/pkg/watch"
+	"github.com/ianclemence/kaya/pkg/watch"
 )
 
 // A2, runner level: a failed probe after restart records as a failure and is

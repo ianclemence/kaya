@@ -1,0 +1,25 @@
+[Unit]
+Description=Kaya room climate bridge (Arduino Uno + DHT11 -> sensor inbox)
+After=local-fs.target
+# Start even without the board: the bridge waits and retries.
+
+[Service]
+Type=simple
+Environment=KAYA_WORKSPACE_DIR=/var/lib/kaya/workspace
+ExecStart=/usr/bin/python3 /usr/local/lib/kaya/room-climate/room-climate-bridge.py
+Restart=always
+RestartSec=10
+
+# Hardening: read-only system, writes only into the Kaya workspace.
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+ReadWritePaths=/var/lib/kaya/workspace
+
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=kaya-room-climate
+
+[Install]
+WantedBy=multi-user.target

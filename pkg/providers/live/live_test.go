@@ -1,15 +1,15 @@
 // Live end-to-end tests: real HTTP through the real provider strategy,
 // validation, and cache layers. No mocks.
 //
-// Gate: GHOST_LIVE_TESTS=1 (default: skip). Keyed vendors run only when
+// Gate: KAYA_LIVE_TESTS=1 (default: skip). Keyed vendors run only when
 // their env keys are present, else skip (recorded as NEEDS_CONFIGURATION,
 // never PASS, never FAIL).
 //
 // Failure semantics (the L6 distinction):
 //   - transport/infra failure (DNS, timeout, 5xx, 429) → Skip:
-//     EXTERNAL_SERVICE_UNAVAILABLE, not a Ghost defect.
+//     EXTERNAL_SERVICE_UNAVAILABLE, not a Kaya defect.
 //   - HTTP 200 with unparseable/invalid payload → Fail: our parser or
-//     contract is broken (GHOST_DEFECT).
+//     contract is broken (KAYA_DEFECT).
 package live
 
 import (
@@ -18,19 +18,19 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ianclemence/ghost/pkg/provider"
-	"github.com/ianclemence/ghost/pkg/providers/aqi"
-	"github.com/ianclemence/ghost/pkg/providers/crypto"
-	"github.com/ianclemence/ghost/pkg/providers/currency"
-	"github.com/ianclemence/ghost/pkg/providers/flight"
-	"github.com/ianclemence/ghost/pkg/providers/nearby"
-	"github.com/ianclemence/ghost/pkg/providers/weather"
+	"github.com/ianclemence/kaya/pkg/provider"
+	"github.com/ianclemence/kaya/pkg/providers/aqi"
+	"github.com/ianclemence/kaya/pkg/providers/crypto"
+	"github.com/ianclemence/kaya/pkg/providers/currency"
+	"github.com/ianclemence/kaya/pkg/providers/flight"
+	"github.com/ianclemence/kaya/pkg/providers/nearby"
+	"github.com/ianclemence/kaya/pkg/providers/weather"
 )
 
 func liveEnabled(t *testing.T) bool {
 	t.Helper()
-	if os.Getenv("GHOST_LIVE_TESTS") != "1" {
-		t.Skip("live tests off (GHOST_LIVE_TESTS=1 to run)")
+	if os.Getenv("KAYA_LIVE_TESTS") != "1" {
+		t.Skip("live tests off (KAYA_LIVE_TESTS=1 to run)")
 	}
 	return true
 }
@@ -62,7 +62,7 @@ func TestLiveWeatherBangkok(t *testing.T) {
 	cur, r := svc.CurrentByCoords(c, 13.75, 100.5, false)
 	if r.Err != nil {
 		skipInfra(t, r.Err, r.Failure)
-		t.Fatalf("GHOST_DEFECT: live weather failed: %v (class %s)", r.Err, r.Failure)
+		t.Fatalf("KAYA_DEFECT: live weather failed: %v (class %s)", r.Err, r.Failure)
 	}
 	if cur.TemperatureC < -90 || cur.TemperatureC > 60 {
 		t.Fatalf("implausible live temp: %f", cur.TemperatureC)
@@ -80,7 +80,7 @@ func TestLiveWeatherPlace(t *testing.T) {
 	cur, r := svc.CurrentByPlace(c, "Bangkok", false)
 	if r.Err != nil {
 		skipInfra(t, r.Err, r.Failure)
-		t.Fatalf("GHOST_DEFECT: live place weather failed: %v", r.Err)
+		t.Fatalf("KAYA_DEFECT: live place weather failed: %v", r.Err)
 	}
 	t.Logf("Bangkok via place: %.1f°C (%s)", cur.TemperatureC, r.Provider)
 }
@@ -97,7 +97,7 @@ func TestLiveAQIBangkok(t *testing.T) {
 	rep, r := svc.CurrentByCoords(c, 13.75, 100.5, false)
 	if r.Err != nil {
 		skipInfra(t, r.Err, r.Failure)
-		t.Fatalf("GHOST_DEFECT: live AQI failed: %v", r.Err)
+		t.Fatalf("KAYA_DEFECT: live AQI failed: %v", r.Err)
 	}
 	if rep.Category == "" {
 		t.Fatal("missing AQI category")
@@ -117,7 +117,7 @@ func TestLiveCurrencyUSDEUR(t *testing.T) {
 	conv, r := svc.Convert(c, "USD", "EUR", 100)
 	if r.Err != nil {
 		skipInfra(t, r.Err, r.Failure)
-		t.Fatalf("GHOST_DEFECT: live currency failed: %v", r.Err)
+		t.Fatalf("KAYA_DEFECT: live currency failed: %v", r.Err)
 	}
 	if conv.Rate <= 0 || conv.Converted <= 0 {
 		t.Fatalf("bad conversion: %+v", conv)
@@ -137,7 +137,7 @@ func TestLiveCryptoBitcoin(t *testing.T) {
 	p, r := svc.GetPrice(c, "bitcoin", "USD")
 	if r.Err != nil {
 		skipInfra(t, r.Err, r.Failure)
-		t.Fatalf("GHOST_DEFECT: live crypto failed: %v", r.Err)
+		t.Fatalf("KAYA_DEFECT: live crypto failed: %v", r.Err)
 	}
 	if p.Value <= 0 {
 		t.Fatalf("bad price: %+v", p)
@@ -161,7 +161,7 @@ func TestLiveNearbyCafes(t *testing.T) {
 		if r.Failure == provider.FailEmpty {
 			t.Skip("no cafes indexed near test point (honest empty)")
 		}
-		t.Fatalf("GHOST_DEFECT: live nearby failed: %v", r.Err)
+		t.Fatalf("KAYA_DEFECT: live nearby failed: %v", r.Err)
 	}
 	if len(places) == 0 || places[0].Name == "" {
 		t.Fatal("empty place list on success")
@@ -205,7 +205,7 @@ func TestLiveFlightLookup(t *testing.T) {
 		if r.Failure == provider.FailEmpty || r.Failure == provider.FailNotConfigured {
 			t.Skipf("honest non-success: %v", r.Err)
 		}
-		t.Fatalf("GHOST_DEFECT: live flight failed: %v", r.Err)
+		t.Fatalf("KAYA_DEFECT: live flight failed: %v", r.Err)
 	}
 	t.Logf("TG123: %s %s->%s via %s", f.Status, f.From, f.To, r.Provider)
 }
@@ -226,7 +226,7 @@ func TestLiveWeatherFallbackChain(t *testing.T) {
 	_, r := svc.CurrentByCoords(c, 13.75, 100.5, false)
 	if r.Err != nil {
 		skipInfra(t, r.Err, r.Failure)
-		t.Fatalf("GHOST_DEFECT: %v", r.Err)
+		t.Fatalf("KAYA_DEFECT: %v", r.Err)
 	}
 	t.Logf("weather via %s", r.Provider)
 }

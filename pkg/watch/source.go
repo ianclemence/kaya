@@ -11,7 +11,7 @@ import (
 
 // A probe answers one question about the world: what does this thing look
 // like right now? It is consulted by the clock (cadence.go), never by the
-// model, and its failure modes are explicit so Ghost can distinguish "I
+// model, and its failure modes are explicit so Kaya can distinguish "I
 // cannot check right now" from "nothing changed".
 type Probe interface {
 	// Name is the source id stored on the watch.

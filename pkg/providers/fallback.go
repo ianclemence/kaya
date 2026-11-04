@@ -7,8 +7,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/ianclemence/ghost/pkg/logger"
-	"github.com/ianclemence/ghost/pkg/provider"
+	"github.com/ianclemence/kaya/pkg/logger"
+	"github.com/ianclemence/kaya/pkg/provider"
 )
 
 type FallbackCandidate struct {

@@ -1,0 +1,49 @@
+# The Kaya Connect relay. Install as /etc/systemd/system/kaya-relay.service.
+#
+#   sudo useradd --system --home /var/lib/kaya-relay --shell /usr/sbin/nologin kaya-relay
+#   sudo install -m 0755 kaya-relay-server /usr/local/bin/
+#   sudo install -d -m 0750 -o root -g kaya-relay /etc/kaya-relay
+#   sudoedit /etc/kaya-relay/env     # KAYA_RELAY_ENTITLEMENT_KEYS=<the site's public key>
+#   sudo systemctl enable --now kaya-relay
+#
+# It listens on loopback only; Caddy (see Caddyfile) puts TLS in front of it.
+[Unit]
+Description=Kaya Connect relay
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+User=kaya-relay
+Group=kaya-relay
+EnvironmentFile=/etc/kaya-relay/env
+ExecStart=/usr/local/bin/kaya-relay-server serve \
+  --listen 127.0.0.1:8080 \
+  --registry /var/lib/kaya-relay/registry.json
+Restart=always
+RestartSec=3
+# One open connection per Pod, plus phones.
+LimitNOFILE=65536
+# Created and owned by systemd; the registry lives here.
+StateDirectory=kaya-relay
+StateDirectoryMode=0750
+
+# The relay needs the network and one directory. Nothing else.
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+PrivateDevices=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictAddressFamilies=AF_INET AF_INET6
+RestrictNamespaces=true
+LockPersonality=true
+MemoryDenyWriteExecute=true
+SystemCallFilter=@system-service
+CapabilityBoundingSet=
+# A sealed upload is held in flight, not on disk, but cap the damage of a bug.
+MemoryMax=768M
+
+[Install]
+WantedBy=multi-user.target

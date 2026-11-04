@@ -15,7 +15,7 @@ Write technical text with the rules of ASD-STE100 Simplified Technical English. 
 
 Write for that tired reader. Each sentence must survive one read.
 
-## How to use it in Ghost
+## How to use it in Kaya
 
 The text usually arrives one of three ways:
 

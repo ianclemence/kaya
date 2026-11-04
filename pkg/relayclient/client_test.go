@@ -17,9 +17,9 @@ func tempDir(t *testing.T) string {
 func TestAddAndListClients(t *testing.T) {
 	dir := tempDir(t)
 	// Override clients path for testing
-	origEnv := os.Getenv("GHOST_DIR")
-	os.Setenv("GHOST_DIR", dir)
-	defer os.Setenv("GHOST_DIR", origEnv)
+	origEnv := os.Getenv("KAYA_DIR")
+	os.Setenv("KAYA_DIR", dir)
+	defer os.Setenv("KAYA_DIR", origEnv)
 
 	token1, err := AddClient("device-1", "phone")
 	if err != nil {
@@ -53,9 +53,9 @@ func TestAddAndListClients(t *testing.T) {
 
 func TestRemoveClient(t *testing.T) {
 	dir := tempDir(t)
-	origEnv := os.Getenv("GHOST_DIR")
-	os.Setenv("GHOST_DIR", dir)
-	defer os.Setenv("GHOST_DIR", origEnv)
+	origEnv := os.Getenv("KAYA_DIR")
+	os.Setenv("KAYA_DIR", dir)
+	defer os.Setenv("KAYA_DIR", origEnv)
 
 	token1, _ := AddClient("device-1", "phone")
 	token2, _ := AddClient("device-1", "tablet")
@@ -81,9 +81,9 @@ func TestRemoveClient(t *testing.T) {
 
 func TestRemoveClientNotFound(t *testing.T) {
 	dir := tempDir(t)
-	origEnv := os.Getenv("GHOST_DIR")
-	os.Setenv("GHOST_DIR", dir)
-	defer os.Setenv("GHOST_DIR", origEnv)
+	origEnv := os.Getenv("KAYA_DIR")
+	os.Setenv("KAYA_DIR", dir)
+	defer os.Setenv("KAYA_DIR", origEnv)
 
 	AddClient("device-1", "phone")
 
@@ -95,9 +95,9 @@ func TestRemoveClientNotFound(t *testing.T) {
 
 func TestClientPersistence(t *testing.T) {
 	dir := tempDir(t)
-	origEnv := os.Getenv("GHOST_DIR")
-	os.Setenv("GHOST_DIR", dir)
-	defer os.Setenv("GHOST_DIR", origEnv)
+	origEnv := os.Getenv("KAYA_DIR")
+	os.Setenv("KAYA_DIR", dir)
+	defer os.Setenv("KAYA_DIR", origEnv)
 
 	token, _ := AddClient("device-1", "phone")
 
@@ -124,9 +124,9 @@ func TestClientFilePermissions(t *testing.T) {
 		t.Skip("file permissions differ on Windows")
 	}
 	dir := tempDir(t)
-	origEnv := os.Getenv("GHOST_DIR")
-	os.Setenv("GHOST_DIR", dir)
-	defer os.Setenv("GHOST_DIR", origEnv)
+	origEnv := os.Getenv("KAYA_DIR")
+	os.Setenv("KAYA_DIR", dir)
+	defer os.Setenv("KAYA_DIR", origEnv)
 
 	AddClient("device-1", "phone")
 

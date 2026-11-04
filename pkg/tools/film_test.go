@@ -8,8 +8,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/ianclemence/ghost/pkg/artifacts"
-	"github.com/ianclemence/ghost/pkg/film"
+	"github.com/ianclemence/kaya/pkg/artifacts"
+	"github.com/ianclemence/kaya/pkg/film"
 )
 
 func filmWorkspace(t *testing.T) string {
@@ -54,7 +54,7 @@ func TestFilmToolStartsAProjectAndRefusesTheRest(t *testing.T) {
 	if bad := tool.Execute(ctx, map[string]interface{}{"action": "new", "project": "X", "template": "nope"}); !bad.IsError {
 		t.Error("an unknown template must be refused")
 	}
-	if missing := tool.Execute(ctx, map[string]interface{}{"action": "check", "project": "ghost-film"}); !missing.IsError || !strings.Contains(missing.ForLLM, "action new") {
+	if missing := tool.Execute(ctx, map[string]interface{}{"action": "check", "project": "kaya-film"}); !missing.IsError || !strings.Contains(missing.ForLLM, "action new") {
 		t.Errorf("an unknown film should say how to start one: %+v", missing)
 	}
 	if esc := tool.Execute(ctx, map[string]interface{}{"action": "check", "project": "../../etc"}); !esc.IsError {

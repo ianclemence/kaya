@@ -1,11 +1,11 @@
-// Package desk is Ghost's read-only feed of the things Ghost has made FOR the
+// Package desk is Kaya's read-only feed of the things Kaya has made FOR the
 // owner — the artifacts it produced on their behalf.
 //
 // It owns no tables, no execution, no authority, and no credentials. The
 // artifact authority has already validated existence and provenance; this
 // package only normalizes and orders.
 //
-// The Desk is exactly what Ghost made for the owner: never workspace files,
+// The Desk is exactly what Kaya made for the owner: never workspace files,
 // built tools or live surfaces.
 package desk
 
@@ -15,13 +15,13 @@ import (
 	"time"
 )
 
-// Kind is the shape of a Desk item. Every item is something Ghost made.
+// Kind is the shape of a Desk item. Every item is something Kaya made.
 type Kind string
 
 const (
-	KindFile Kind = "file" // a file Ghost produced
+	KindFile Kind = "file" // a file Kaya produced
 	KindText Kind = "text" // a written result
-	KindLink Kind = "link" // a link Ghost handed over
+	KindLink Kind = "link" // a link Kaya handed over
 )
 
 // Render is a backend-declared affordance. It is a display hint, never an
@@ -35,7 +35,7 @@ const (
 	RenderVisit    Render = "visit"
 )
 
-// Item is one thing Ghost made for the owner.
+// Item is one thing Kaya made for the owner.
 type Item struct {
 	ID        string    `json:"id"`
 	Kind      Kind      `json:"kind"`

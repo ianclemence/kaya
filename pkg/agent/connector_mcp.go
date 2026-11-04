@@ -4,10 +4,10 @@ import (
 	"context"
 	"strings"
 
-	"github.com/ianclemence/ghost/pkg/config"
-	"github.com/ianclemence/ghost/pkg/connector"
-	"github.com/ianclemence/ghost/pkg/mcp"
-	"github.com/ianclemence/ghost/pkg/tools"
+	"github.com/ianclemence/kaya/pkg/config"
+	"github.com/ianclemence/kaya/pkg/connector"
+	"github.com/ianclemence/kaya/pkg/mcp"
+	"github.com/ianclemence/kaya/pkg/tools"
 )
 
 // connectorMCPConfig maps a connector's mcp spec to the MCP manager's server

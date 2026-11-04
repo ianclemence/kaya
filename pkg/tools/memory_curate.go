@@ -10,7 +10,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/ianclemence/ghost/pkg/logger"
+	"github.com/ianclemence/kaya/pkg/logger"
 )
 
 // MemoryCurateTool provides bounded, curated memory that persists across sessions.
@@ -19,7 +19,7 @@ import (
 //   - user-profile.md: what the agent knows about the user (preferences, communication style, habits)
 //
 // Both are injected into the system prompt. Character limits force the agent to curate,
-// keeping only what actually matters. This complements Ghost's existing RAG memory system.
+// keeping only what actually matters. This complements Kaya's existing RAG memory system.
 type MemoryCurateTool struct {
 	workspace string
 	// ContextFor resolves the calling session's context (nil = legacy
@@ -29,7 +29,7 @@ type MemoryCurateTool struct {
 	memoryCharLimit  int
 	profileCharLimit int
 	// OnRemoved is told the text of a note removed from the curated memory,
-	// so the same statement does not live on in Ghost's other stores.
+	// so the same statement does not live on in Kaya's other stores.
 	OnRemoved func(text string)
 }
 
@@ -552,7 +552,7 @@ func (t *MemoryCurateTool) Entries(target string) []string {
 }
 
 // Delete removes the entry everywhere it appears (global + all context
-// files): the owner console manages the whole Ghost, so forgetting is
+// files): the owner console manages the whole Kaya, so forgetting is
 // total. Returns the remaining count across all files.
 func (t *MemoryCurateTool) Delete(target, oldText string) (int, error) {
 	oldText = strings.TrimSpace(oldText)

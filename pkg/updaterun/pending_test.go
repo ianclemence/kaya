@@ -6,7 +6,7 @@ import (
 )
 
 func TestPendingIsReportedOnce(t *testing.T) {
-	t.Setenv("GHOST_DIR", t.TempDir())
+	t.Setenv("KAYA_DIR", t.TempDir())
 	if _, ok := TakePending(time.Hour); ok {
 		t.Fatal("nothing recorded yet")
 	}
@@ -23,7 +23,7 @@ func TestPendingIsReportedOnce(t *testing.T) {
 }
 
 func TestStalePendingIsDroppedAndClearWorks(t *testing.T) {
-	t.Setenv("GHOST_DIR", t.TempDir())
+	t.Setenv("KAYA_DIR", t.TempDir())
 	_ = WritePending(Pending{From: "v1", At: time.Now().Add(-3 * time.Hour)})
 	if _, ok := TakePending(time.Hour); ok {
 		t.Fatal("an update from hours ago is not waiting on an answer")

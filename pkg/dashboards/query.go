@@ -9,7 +9,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ianclemence/ghost/pkg/credentials"
+	"github.com/ianclemence/kaya/pkg/credentials"
 
 	_ "github.com/jackc/pgx/v5/stdlib"
 )

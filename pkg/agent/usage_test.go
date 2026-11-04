@@ -4,8 +4,8 @@ import (
 	"database/sql"
 	"testing"
 
-	"github.com/ianclemence/ghost/pkg/cevents"
-	"github.com/ianclemence/ghost/pkg/schema"
+	"github.com/ianclemence/kaya/pkg/cevents"
+	"github.com/ianclemence/kaya/pkg/schema"
 	_ "modernc.org/sqlite"
 )
 
@@ -29,7 +29,7 @@ func usageStream(t *testing.T) (*cevents.Stream, *sql.DB) {
 
 func TestRecordTurnUsage(t *testing.T) {
 	s, db := usageStream(t)
-	al := &AgentLoop{governance: &Governance{Events: s, GhostID: "g", AgentID: "a"}}
+	al := &AgentLoop{governance: &Governance{Events: s, KayaID: "g", AgentID: "a"}}
 	opts := processOptions{SessionKey: "sess-1", RequestID: "req-1"}
 	// Measured turn: exact dollars recorded.
 	recordTurnUsage(al, opts, "deepseek:deepseek-flash", 2, 1000, 500, 1500, 0.004, 2, 0, "measured", turnCache{})

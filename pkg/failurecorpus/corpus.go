@@ -13,7 +13,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/ianclemence/ghost/pkg/redact"
+	"github.com/ianclemence/kaya/pkg/redact"
 )
 
 // Category classifies where a failure occurred (the brief's failure taxonomy).

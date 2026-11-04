@@ -11,7 +11,7 @@ import (
 // BridgeAddr is where the proxy appears inside the sandbox's private network.
 const BridgeAddr = "127.0.0.1:3128"
 
-// RunBridge is `ghost __egress-exec <socket> -- cmd args...`, run inside the
+// RunBridge is `kaya __egress-exec <socket> -- cmd args...`, run inside the
 // sandbox. The sandbox has no network, only a loopback; this listens on it,
 // carries every connection to the host proxy over the unix socket, and runs the
 // command with its proxy variables pointing here. It returns the exit code.

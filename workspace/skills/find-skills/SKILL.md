@@ -1,11 +1,11 @@
 ---
 name: find-skills
-description: Discover, verify, and install third-party Ghost skills. Invoke when the user asks for a new capability ("can you handle PDFs?", "is there a skill for X"), wants to install a skill from a repo or URL, or asks what skills exist. Verifies provenance and freshness before recommending anything.
+description: Discover, verify, and install third-party Kaya skills. Invoke when the user asks for a new capability ("can you handle PDFs?", "is there a skill for X"), wants to install a skill from a repo or URL, or asks what skills exist. Verifies provenance and freshness before recommending anything.
 version: 1.0.0
-author: Ghost
+author: Kaya
 license: MIT
 metadata:
-  ghost:
+  kaya:
     tags: [skills, discovery, install, ecosystem]
 ---
 
@@ -16,12 +16,12 @@ Discover and install skills through the package manager — never by pasting fil
 ## Install
 
 ```bash
-ghost skills add owner/repo[@skill][/path][#ref]   # GitHub shorthand
-ghost skills add git@host:owner/repo.git           # SSH / private repos
-ghost skills add https://host/owner/repo           # any git host
-ghost skills add ./local/path                      # local directory
-ghost skills add example.com@skill-name            # well-known index
-ghost skills add <source> --copy                   # copy instead of symlink
+kaya skills add owner/repo[@skill][/path][#ref]   # GitHub shorthand
+kaya skills add git@host:owner/repo.git           # SSH / private repos
+kaya skills add https://host/owner/repo           # any git host
+kaya skills add ./local/path                      # local directory
+kaya skills add example.com@skill-name            # well-known index
+kaya skills add <source> --copy                   # copy instead of symlink
 ```
 
 Identity is `owner/repo@skill`. Every install writes two locks: a
@@ -31,7 +31,7 @@ content-hash lock for reproducible workspaces.
 ## Verify before recommending
 
 1. Prefer well-known publishers and skills with a history of installs.
-2. Check freshness: `ghost skills update <name>` reports whether upstream moved.
+2. Check freshness: `kaya skills update <name>` reports whether upstream moved.
 3. Read the installed `SKILL.md` before invoking a new skill the first time.
 4. Never execute install scripts bundled with a skill sight unseen; the
    skill's own `prerequisites.commands` list is the install surface.
@@ -39,9 +39,9 @@ content-hash lock for reproducible workspaces.
 ## Updates
 
 ```bash
-ghost skills update            # check everything locked
-ghost skills update <name>     # check one skill
-ghost skills update --apply    # reinstall whatever moved
+kaya skills update            # check everything locked
+kaya skills update <name>     # check one skill
+kaya skills update --apply    # reinstall whatever moved
 ```
 
 ## Rules

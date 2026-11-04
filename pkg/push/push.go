@@ -1,4 +1,4 @@
-// Package push sends the phone a notification when Ghost needs it and the app
+// Package push sends the phone a notification when Kaya needs it and the app
 // isn't running to hear about it.
 //
 // The app's live connection only exists while the app is alive, so a reminder,
@@ -34,18 +34,18 @@ const (
 	// Reminder is something the owner asked to be told at this time. It is
 	// never held for quiet hours: they set it, for this moment.
 	Reminder Category = "reminder"
-	// Alert is Ghost telling the owner something it cannot fix alone (an empty
+	// Alert is Kaya telling the owner something it cannot fix alone (an empty
 	// balance, someone probing the network, an overheating Pod). Never held for
 	// quiet hours.
 	Alert Category = "alert"
 )
 
 var copyFor = map[Category]struct{ body, anchor string }{
-	Approval: {"Ghost needs your OK.", "approvals"},
-	Question: {"Ghost has a question for you.", "thread"},
-	Update:   {"Ghost has an update for you.", "thread"},
-	Reminder: {"Ghost has a reminder for you.", "thread"},
-	Alert:    {"Ghost needs your attention.", "thread"},
+	Approval: {"Kaya needs your OK.", "approvals"},
+	Question: {"Kaya has a question for you.", "thread"},
+	Update:   {"Kaya has an update for you.", "thread"},
+	Reminder: {"Kaya has a reminder for you.", "thread"},
+	Alert:    {"Kaya needs your attention.", "thread"},
 }
 
 // minGap coalesces bursts: several messages in a minute are one nudge, not a
@@ -132,10 +132,10 @@ type Notifier struct {
 	lastText string
 }
 
-// NewNotifier builds a notifier. GHOST_EXPO_PUSH_URL overrides the service
+// NewNotifier builds a notifier. KAYA_EXPO_PUSH_URL overrides the service
 // address (used by tests and self-hosted relays).
 func NewNotifier(store *Store) *Notifier {
-	url := strings.TrimSpace(os.Getenv("GHOST_EXPO_PUSH_URL"))
+	url := strings.TrimSpace(os.Getenv("KAYA_EXPO_PUSH_URL"))
 	if url == "" {
 		url = defaultURL
 	}
@@ -150,7 +150,7 @@ func (n *Notifier) Notify(ctx context.Context, cat Category) (int, error) {
 }
 
 // NotifyWith is Notify with the words to show. Only a reminder carries its
-// own words: the owner wrote them for exactly this moment, and "Ghost has a
+// own words: the owner wrote them for exactly this moment, and "Kaya has a
 // reminder for you" on a locked phone makes them open the app to learn it was
 // "Stretch". Everything else keeps fixed copy, so a conversation never leaves
 // the Pod through the push service.
@@ -181,7 +181,7 @@ func (n *Notifier) NotifyWith(ctx context.Context, cat Category, text string, ex
 	msgs := make([]map[string]interface{}, 0, len(tokens))
 	for _, t := range tokens {
 		m := map[string]interface{}{
-			"to": t, "title": "Ghost", "body": shown, "sound": "default", "priority": "high",
+			"to": t, "title": "Kaya", "body": shown, "sound": "default", "priority": "high",
 			"ttl": 3600, "channelId": "default",
 			"data": pushData(cat, c.anchor, extra),
 		}

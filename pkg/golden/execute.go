@@ -11,23 +11,23 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ianclemence/ghost/pkg/agent"
-	"github.com/ianclemence/ghost/pkg/bus"
-	"github.com/ianclemence/ghost/pkg/cevents"
-	"github.com/ianclemence/ghost/pkg/computer"
-	"github.com/ianclemence/ghost/pkg/config"
-	"github.com/ianclemence/ghost/pkg/contexts"
-	"github.com/ianclemence/ghost/pkg/ghoststate"
-	"github.com/ianclemence/ghost/pkg/permissions"
-	"github.com/ianclemence/ghost/pkg/personalcontext"
-	"github.com/ianclemence/ghost/pkg/product"
-	gprovider "github.com/ianclemence/ghost/pkg/provider"
-	"github.com/ianclemence/ghost/pkg/providers"
-	"github.com/ianclemence/ghost/pkg/routines"
-	"github.com/ianclemence/ghost/pkg/scheduled"
-	"github.com/ianclemence/ghost/pkg/schema"
-	"github.com/ianclemence/ghost/pkg/tools"
-	"github.com/ianclemence/ghost/pkg/watch"
+	"github.com/ianclemence/kaya/pkg/agent"
+	"github.com/ianclemence/kaya/pkg/bus"
+	"github.com/ianclemence/kaya/pkg/cevents"
+	"github.com/ianclemence/kaya/pkg/computer"
+	"github.com/ianclemence/kaya/pkg/config"
+	"github.com/ianclemence/kaya/pkg/contexts"
+	"github.com/ianclemence/kaya/pkg/kayastate"
+	"github.com/ianclemence/kaya/pkg/permissions"
+	"github.com/ianclemence/kaya/pkg/personalcontext"
+	"github.com/ianclemence/kaya/pkg/product"
+	gprovider "github.com/ianclemence/kaya/pkg/provider"
+	"github.com/ianclemence/kaya/pkg/providers"
+	"github.com/ianclemence/kaya/pkg/routines"
+	"github.com/ianclemence/kaya/pkg/scheduled"
+	"github.com/ianclemence/kaya/pkg/schema"
+	"github.com/ianclemence/kaya/pkg/tools"
+	"github.com/ianclemence/kaya/pkg/watch"
 	_ "modernc.org/sqlite"
 )
 
@@ -90,7 +90,7 @@ type CaseResult struct {
 	Error          string            `json:"error,omitempty"`
 	// Workspace is set when the case workspace was kept on disk (kept
 	// automatically on failure for post-mortem forensics, or always when
-	// GHOST_GOLDEN_KEEP is set). Empty when the workspace was removed.
+	// KAYA_GOLDEN_KEEP is set). Empty when the workspace was removed.
 	Workspace string `json:"workspace,omitempty"`
 }
 
@@ -248,14 +248,14 @@ func (r *Runner) runCase(c Conversation) CaseResult {
 		return cr
 	}
 
-	root, err := os.MkdirTemp("", "ghost-golden-")
+	root, err := os.MkdirTemp("", "kaya-golden-")
 	if err != nil {
 		return failCase(cr, TestHarness, err.Error())
 	}
 	// Failing workspaces are kept automatically: a deleted workspace makes
 	// a failure (especially a privacy hard-fail) impossible to diagnose
-	// after the fact. GHOST_GOLDEN_KEEP keeps passing workspaces too.
-	keep := os.Getenv("GHOST_GOLDEN_KEEP") != ""
+	// after the fact. KAYA_GOLDEN_KEEP keeps passing workspaces too.
+	keep := os.Getenv("KAYA_GOLDEN_KEEP") != ""
 	if keep {
 		cr.Workspace = root
 	}
@@ -339,7 +339,7 @@ func (r *Runner) runCase(c Conversation) CaseResult {
 		// workspaces must too, or governed paths (durable jobs, browser
 		// sessions/leases) query a stale v1 schema and fail. Migrate the
 		// loop-created DB before governance wiring and turns.
-		if err := migrateGoldenDB(filepath.Join(ws, "ghost.db")); err != nil {
+		if err := migrateGoldenDB(filepath.Join(ws, "kaya.db")); err != nil {
 			return failOut(Runtime, "migrate workspace: "+err.Error())
 		}
 		// Real-time governance wiring (broker + events + contexts) exactly
@@ -548,11 +548,11 @@ func seedContextAndMemory(ws string, p Person, sessionKey string, t Target) erro
 	}
 	// Contexts (non-personal) + session mapping must exist before the loop.
 	if p.Context != "" && p.Context != "personal" {
-		gid, err := ghoststate.EnsureIdentity(ws)
+		gid, err := kayastate.EnsureIdentity(ws)
 		if err != nil {
 			return err
 		}
-		cs, err := contexts.Open(ws, gid.GhostID)
+		cs, err := contexts.Open(ws, gid.KayaID)
 		if err != nil {
 			return err
 		}
@@ -645,9 +645,9 @@ func wireGovernance(loop *agent.AgentLoop, ws string, fx Fixture) (*agent.Govern
 	if err != nil {
 		return nil, db, err
 	}
-	gid := "ghost-local"
-	if id, err := ghoststate.LoadIdentity(ws); err == nil && id != nil {
-		gid = id.GhostID
+	gid := "kaya-local"
+	if id, err := kayastate.LoadIdentity(ws); err == nil && id != nil {
+		gid = id.KayaID
 	}
 	cs, err := contexts.Open(ws, gid)
 	if err != nil {
@@ -687,9 +687,9 @@ func applyFixture(loop *agent.AgentLoop, fx Fixture) error {
 		}
 		loop.SetRoutineSignals(routineSvc, svc)
 		_ = loop.RecordLastActiveSession("web", "chat")
-		gid := "ghost-local"
-		if id, ierr := ghoststate.LoadIdentity(loop.Config().WorkspacePath()); ierr == nil && id != nil {
-			gid = id.GhostID
+		gid := "kaya-local"
+		if id, ierr := kayastate.LoadIdentity(loop.Config().WorkspacePath()); ierr == nil && id != nil {
+			gid = id.KayaID
 		}
 		r, err := routineSvc.Create(gid, "owner", "Nightly report", "send the nightly report",
 			"UTC", scheduled.Schedule{Kind: scheduled.ScheduleEvery, Every: 24 * time.Hour}, nil)

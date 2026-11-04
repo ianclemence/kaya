@@ -7,12 +7,12 @@ import (
 
 // Binary-shadow detection.
 //
-// A `ghost` binary earlier in PATH silently shadows a newer one installed
-// later: `ghost update` installs to /usr/local/bin, while a user-local copy at
-// ~/.local/bin usually comes FIRST in PATH. When that copy is stale, `ghost`
+// A `kaya` binary earlier in PATH silently shadows a newer one installed
+// later: `kaya update` installs to /usr/local/bin, while a user-local copy at
+// ~/.local/bin usually comes FIRST in PATH. When that copy is stale, `kaya`
 // keeps running the old build after an update. This check makes the situation
 // visible.
-// BinaryPath is one `ghost` executable found on PATH, in PATH order.
+// BinaryPath is one `kaya` executable found on PATH, in PATH order.
 type BinaryPath struct {
 	// Path is the absolute path to the executable.
 	Path string
@@ -20,11 +20,11 @@ type BinaryPath struct {
 	Index int
 }
 
-// FindGhostBinaries returns every `ghost` executable on PATH, in PATH order.
+// FindKayaBinaries returns every `kaya` executable on PATH, in PATH order.
 // findIn resolves an executable name within a directory (os/exec.LookPath-like
 // but injectable for tests). Directories are de-duplicated; non-existing
 // entries are skipped by findIn.
-func FindGhostBinaries(pathEnv string, findIn func(dir, name string) (string, bool)) []BinaryPath {
+func FindKayaBinaries(pathEnv string, findIn func(dir, name string) (string, bool)) []BinaryPath {
 	var out []BinaryPath
 	seen := map[string]bool{}
 	idx := 0
@@ -37,7 +37,7 @@ func FindGhostBinaries(pathEnv string, findIn func(dir, name string) (string, bo
 			continue
 		}
 		seen[clean] = true
-		if p, ok := findIn(clean, "ghost"); ok {
+		if p, ok := findIn(clean, "kaya"); ok {
 			out = append(out, BinaryPath{Path: p, Index: idx})
 			idx++
 		}
@@ -45,7 +45,7 @@ func FindGhostBinaries(pathEnv string, findIn func(dir, name string) (string, bo
 	return out
 }
 
-// BinaryShadow describes a stale earlier-PATH `ghost` that shadows a later one.
+// BinaryShadow describes a stale earlier-PATH `kaya` that shadows a later one.
 type BinaryShadow struct {
 	// Wins is the path that actually runs (first in PATH).
 	Wins string
@@ -56,7 +56,7 @@ type BinaryShadow struct {
 	ShadowsVersion string
 }
 
-// DetectBinaryShadow reports whether the first `ghost` on PATH is STALE
+// DetectBinaryShadow reports whether the first `kaya` on PATH is STALE
 // relative to another one later on PATH. version(path) returns the binary's
 // version string ("" when unknown). Returns ok=false when there is no shadow
 // to report: fewer than two binaries, or the winner is not older than the rest.

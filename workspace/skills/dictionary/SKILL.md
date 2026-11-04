@@ -2,10 +2,10 @@
 name: dictionary
 description: Define English words with pronunciation and examples. Invoke when user asks "define X", "what does X mean", "meaning of X", "pronunciation of X", or any single-word definition. Uses free dictionaryapi.dev, no API key required.
 version: 1.0.0
-author: Ghost
+author: Kaya
 license: MIT
 metadata:
-  ghost:
+  kaya:
     tags: [dictionary, define, meaning, vocabulary]
 prerequisites:
   commands: [curl]

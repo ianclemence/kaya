@@ -12,7 +12,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/ianclemence/ghost/pkg/artifacts"
+	"github.com/ianclemence/kaya/pkg/artifacts"
 )
 
 // CanvasPublisher records a canvas as a handoff in the conversation, so it is
@@ -21,7 +21,7 @@ type CanvasPublisher interface {
 	Publish(in artifacts.Input) (*artifacts.Artifact, error)
 }
 
-// CanvasTool lets Ghost show the owner something they can see and use: a page,
+// CanvasTool lets Kaya show the owner something they can see and use: a page,
 // a chart, a game, a calculator, a mock-up. It is one self-contained HTML
 // document. Each call is saved as a numbered version of that canvas in the
 // workspace and published as an artifact, so the app can run it in the chat and
@@ -82,8 +82,8 @@ func (t *CanvasTool) Description() string {
 		"app screen, read skills/canvas-design/SKILL.md with read_file: it sets the bar for layout, type, " +
 		"colour, states and motion, and what to do about a plain or generic result. " +
 		"To remember what the owner does between opens (a score, where they are in a deck of " +
-		"flashcards and when each card is due again, what they ticked), call ghost.save(value) with any " +
-		"JSON value (up to 64 KB) and read it back as ghost.saved when the page loads (null the first " +
+		"flashcards and when each card is due again, what they ticked), call kaya.save(value) with any " +
+		"JSON value (up to 64 KB) and read it back as kaya.saved when the page loads (null the first " +
 		"time). It is kept for this canvas across its versions; read it yourself with read_saved: true " +
 		"and the title (no html), for instance to build the next version from where they got to. " +
 		"To change a canvas, call canvas again with the WHOLE updated document and the same title: it " +
@@ -112,7 +112,7 @@ func (t *CanvasTool) Parameters() map[string]interface{} {
 			},
 			"read_saved": map[string]interface{}{
 				"type":        "boolean",
-				"description": "Read what the canvas with this title saved with ghost.save, instead of showing a new version.",
+				"description": "Read what the canvas with this title saved with kaya.save, instead of showing a new version.",
 			},
 		},
 		"required": []string{"title"},
@@ -200,7 +200,7 @@ func (t *CanvasTool) Execute(ctx context.Context, args map[string]interface{}) *
 	if read, _ := args["read_saved"].(bool); read {
 		raw, err := ReadCanvasSaved(t.workspace, "canvas/"+canvasSlug(title)+"-v1.html")
 		if err != nil || raw == nil {
-			return &ToolResult{ForLLM: fmt.Sprintf("The canvas %q has no saved state (its page never called ghost.save). This says nothing about pages shown in this chat — those live in the conversation, not in saved state.", title), Silent: true}
+			return &ToolResult{ForLLM: fmt.Sprintf("The canvas %q has no saved state (its page never called kaya.save). This says nothing about pages shown in this chat — those live in the conversation, not in saved state.", title), Silent: true}
 		}
 		return &ToolResult{ForLLM: fmt.Sprintf("What the canvas %q saved (JSON): %s", title, raw), Silent: true}
 	}
@@ -270,7 +270,7 @@ func (t *CanvasTool) Execute(ctx context.Context, args map[string]interface{}) *
 	return &ToolResult{ForLLM: msg + advice, Silent: true}
 }
 
-// MaxCanvasSaved is the most a canvas may keep with ghost.save.
+// MaxCanvasSaved is the most a canvas may keep with kaya.save.
 const MaxCanvasSaved = 64 << 10
 
 var canvasVersioned = regexp.MustCompile(`^canvas/([a-z0-9-]+)-v\d+\.html$`)

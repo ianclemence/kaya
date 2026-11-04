@@ -6,15 +6,15 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/ianclemence/ghost/pkg/logger"
-	"github.com/ianclemence/ghost/pkg/redact"
+	"github.com/ianclemence/kaya/pkg/logger"
+	"github.com/ianclemence/kaya/pkg/redact"
 )
 
 // Registry execution logs must never carry secret-shaped model args: the
 // logger does not redact, so the registry does at the boundary. Tool
 // execution still receives the ORIGINAL args.
 func TestRegistryLogsRedactArgs(t *testing.T) {
-	logPath := t.TempDir() + "/ghost.log"
+	logPath := t.TempDir() + "/kaya.log"
 	if err := logger.EnableFileLogging(logPath); err != nil {
 		t.Fatal(err)
 	}

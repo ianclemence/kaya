@@ -6,7 +6,7 @@ import (
 	"html"
 	"strings"
 
-	"github.com/ianclemence/ghost/pkg/documents"
+	"github.com/ianclemence/kaya/pkg/documents"
 )
 
 //go:embed player.js
@@ -16,7 +16,7 @@ var playerJS string
 var playerCSS string
 
 // Page is the motion as one self-contained HTML document: the spec, the
-// player and Ghost's own type, nothing fetched. Preview mode fits the width it
+// player and Kaya's own type, nothing fetched. Preview mode fits the width it
 // runs in and plays on a tap; render mode is the bare stage at its pixel size
 // for the Pod to step through frame by frame.
 func Page(s Spec, render bool) string {

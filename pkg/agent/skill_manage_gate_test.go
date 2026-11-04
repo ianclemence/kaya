@@ -4,7 +4,7 @@ import (
 	"testing"
 )
 
-// skill_manage modifies Ghost's durable procedural behavior. It must be
+// skill_manage modifies Kaya's durable procedural behavior. It must be
 // broker-governed: the model cannot create/patch/delete/enable/disable
 // skills without an explicit decision.
 func TestSkillManageGovernedByBroker(t *testing.T) {

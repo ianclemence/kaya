@@ -64,7 +64,7 @@ func TestNoSensorIsHonestNotAnError(t *testing.T) {
 	write(t, root, "sys/class/thermal/thermal_zone0/temp", "48000")
 	d := Describe(ReadEnvironment(root))
 	if !strings.Contains(d, "no temperature or humidity sensor connected") || !strings.Contains(d, "48°C") {
-		t.Fatalf("with no sensor Ghost must say so and not invent a climate: %q", d)
+		t.Fatalf("with no sensor Kaya must say so and not invent a climate: %q", d)
 	}
 	if Describe(ReadEnvironment(t.TempDir())) == "" {
 		t.Fatal("an empty system still yields a sentence")

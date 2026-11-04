@@ -1,0 +1,762 @@
+package main
+
+import (
+	"bytes"
+	"context"
+	"encoding/json"
+	"fmt"
+	"net/http"
+	"os"
+	"os/exec"
+	"path/filepath"
+	"runtime"
+	"strings"
+	"time"
+
+	"github.com/ianclemence/kaya/pkg/appliance"
+	"github.com/ianclemence/kaya/pkg/changelog"
+)
+
+// updateCmd deploys a Kaya release. It runs as the invoking user and only
+// escalates the specific steps that need root (replacing a system-wide
+// binary, restarting system units). A user-scoped install (binary in
+// ~/.local/bin, `systemctl --user` units) needs no sudo at all — matching how
+// Scout and comparable agents install.
+func updateCmd() {
+	args := os.Args[2:]
+	dryRun, force, check, notes := false, false, false, false
+	channel := "release"
+	for i := 0; i < len(args); i++ {
+		switch a := args[i]; a {
+		case "--dry-run":
+			dryRun = true
+		case "--force":
+			force = true
+		case "--check":
+			check = true
+		case "--notes":
+			notes = true
+		case "--channel":
+			if i+1 < len(args) {
+				i++
+				channel = args[i]
+			}
+		case "--root":
+			// Explicit opt-in to the privileged path (system install).
+			channel = "dev"
+		}
+	}
+
+	if notes {
+		printKayaChangelog()
+		return
+	}
+
+	scope := appliance.DetectScope()
+	if check {
+		kayaCheck(scope)
+		return
+	}
+
+	if channel == "dev" {
+		updateDevChannel(scope, dryRun, force)
+		return
+	}
+
+	// Default: release channel. Fall back to the dev/build path when the
+	// checkout is the source of truth on this machine (no published assets),
+	// but never require root for a user-scoped install.
+	if err := updateReleaseChannel(scope, dryRun, force); err != nil {
+		fmt.Printf("Error: %v\n", err)
+		os.Exit(1)
+	}
+}
+
+// updateReleaseChannel deploys the latest GitHub release: a verified prebuilt
+// binary when the release has one for this platform, otherwise the release
+// tag built from a throwaway checkout (update_release.go). It never builds the
+// owner's working tree, which may be older than the release or dirty.
+func updateReleaseChannel(scope appliance.ScopePaths, dryRun, force bool) error {
+	current := kayaVersion()
+
+	rel, err := resolveRelease(offline())
+	if err != nil {
+		// No release channel reachable: fall back to the local tag, if this
+		// machine has a checkout at all.
+		kayaDir := locateKayaDir()
+		target := ""
+		if kayaDir != "" {
+			target = gitTagAtCheckout(kayaDir)
+		}
+		if target == "" {
+			return fmt.Errorf("could not resolve a release (%v) and there is no local checkout to fall back to", err)
+		}
+		fmt.Printf("Release channel unavailable (%v); deploying local tag %s.\n", err, target)
+		if !force && target == current {
+			fmt.Println("Already current (" + current + "). Use --force to redeploy.")
+			return nil
+		}
+		if dryRun {
+			return nil
+		}
+		buildAndDeploy(scope, kayaDir, force)
+		return nil
+	}
+
+	target := rel.Version
+	fmt.Printf("Installed: %s\nAvailable: %s\n", current, target)
+	if !force && !appliance.IsNewer(target, current) {
+		fmt.Println("Already current.")
+		printKayaNotes(current)
+		return nil
+	}
+	if dryRun {
+		kind := "fetch the release tag and build it"
+		if _, ok := rel.FindAsset(appliance.BinaryAssetName("kaya", runtimeGOOS(), runtimeArch())); ok {
+			kind = "download and verify the prebuilt binary"
+		}
+		fmt.Printf("[dry-run] would %s and install into %s (scope: %s, root: %v)\n", kind, scope.BinDir, scope.Scope, scope.NeedsRoot())
+		return nil
+	}
+	fmt.Printf("Deploying %s...\n", target)
+	return deployRelease(realUpdateEnv(), scope, rel)
+}
+
+// kayaRepo is the release repository.
+const kayaRepo = "ianclemence/kaya"
+
+func offline() bool {
+	return os.Getenv("KAYA_OFFLINE") != ""
+}
+
+// resolveRelease fetches the latest Kaya release (or a pinned one via
+// KAYA_VERSION) from GitHub. When offline it returns an error so the caller
+// can fall back to the local tag.
+func resolveRelease(isOffline bool) (*appliance.Release, error) {
+	if isOffline {
+		return nil, fmt.Errorf("offline")
+	}
+	client := releaseClient()
+	if v := strings.TrimSpace(os.Getenv("KAYA_VERSION")); v != "" {
+		return client.ByTag(v)
+	}
+	return client.Latest()
+}
+
+// restartScope reloads and restarts the service in the detected scope.
+func restartScope(scope appliance.ScopePaths) {
+	if scope.Scope == appliance.ScopeUser {
+		exec.Command("systemctl", "--user", "daemon-reload").Run()
+		exec.Command("systemctl", "--user", "restart", "kaya").Run()
+	} else {
+		_ = runSudo("systemctl", "daemon-reload")
+		_ = runSudo("systemctl", "restart", "kaya")
+		if systemUnitExists("kaya-web") {
+			_ = runSudo("systemctl", "restart", "kaya-web")
+		}
+	}
+}
+
+// systemUnitExists reports whether a system systemd unit is known.
+func systemUnitExists(name string) bool {
+	return exec.Command("systemctl", "cat", name).Run() == nil
+}
+
+// servingVersion asks the daemon that is actually answering what version it
+// is, so "installed" can never again disagree silently with "running".
+func servingVersion() string {
+	port := 8766
+	if cfg, err := loadConfig(); err == nil && cfg.Gateway.Port != 0 {
+		port = cfg.Gateway.Port
+	}
+	client := &http.Client{Timeout: 3 * time.Second}
+	resp, err := client.Get(fmt.Sprintf("http://127.0.0.1:%d/v1/health", port))
+	if err != nil {
+		return ""
+	}
+	defer resp.Body.Close()
+	var h struct {
+		Version string `json:"version"`
+	}
+	if json.NewDecoder(resp.Body).Decode(&h) != nil {
+		return ""
+	}
+	return h.Version
+}
+
+// reportServing prints what is really running and flags the two situations
+// that make an update look like it worked when it didn't.
+func reportServing(installed string) {
+	if v := servingVersion(); v != "" {
+		fmt.Printf("Running:   %s\n", v)
+		if installed != "" && v != installed && appliance.IsNewer(installed, v) {
+			fmt.Printf("  The running daemon is older than the installed binary. Run `kaya update --force`\n  (or restart the service) so the running Kaya picks it up.\n")
+		}
+	} else {
+		fmt.Println("Running:   not responding")
+	}
+	if appliance.BothDaemonsRunning() {
+		fmt.Println("  Two Kaya daemons are running: the system service and a per-user service.")
+		fmt.Println("  They compete for one port. Keep one: `systemctl --user disable --now kaya`")
+		fmt.Println("  (keeps the system service), or `sudo systemctl disable --now kaya` (keeps the user one).")
+	}
+}
+
+func runtimeGOOS() string { return runtime.GOOS }
+func runtimeArch() string { return runtime.GOARCH }
+
+// updateDevChannel is the developer path: build the working tree (refusing a
+// dirty checkout unless --force) and install it.
+func updateDevChannel(scope appliance.ScopePaths, dryRun, force bool) {
+	kayaDir := findKayaDir()
+	if !force {
+		if out, gerr := exec.Command("git", "-C", kayaDir, "status", "--porcelain").Output(); gerr == nil {
+			if !appliance.IsClean(string(out)) {
+				fmt.Fprintln(os.Stderr, "✗ Refusing to update: the checkout has uncommitted changes.")
+				for _, p := range appliance.SummarizeDirty(string(out), 8) {
+					fmt.Fprintf(os.Stderr, "    %s\n", p)
+				}
+				fmt.Fprintln(os.Stderr, "  Commit and tag a release, or deploy anyway with --force.")
+				os.Exit(1)
+			}
+		}
+	}
+	if dryRun {
+		fmt.Printf("[dry-run] would build %s and install into %s (scope: %s)\n", kayaDir, scope.BinDir, scope.Scope)
+		return
+	}
+	buildAndDeploy(scope, kayaDir, force)
+}
+
+// kayaVersion reports the installed Kaya's version without ever starting an
+// interactive session. It prefers the running binary's own version, then asks
+// an installed binary with the explicit `version` subcommand (a bare
+// invocation would launch a chat), bounded by a short timeout.
+func kayaVersion() string {
+	if v := strings.TrimSpace(version); v != "" && v != "dev" {
+		return v
+	}
+	for _, p := range []string{filepath.Join(homeDir(), ".local", "bin", "kaya"), "/usr/local/bin/kaya"} {
+		if _, err := os.Stat(p); err != nil {
+			continue
+		}
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		out, err := exec.CommandContext(ctx, p, "version").Output()
+		cancel()
+		if err != nil {
+			continue
+		}
+		// `kaya version` prints a multi-line block whose first meaningful
+		// line is "👻 Kaya <version> (git: ...)". Extract that token, not
+		// the trailing "Go: goX.Y" line.
+		for _, line := range strings.Split(string(out), "\n") {
+			i := strings.Index(line, "Kaya ")
+			if i < 0 {
+				continue
+			}
+			rest := strings.TrimSpace(line[i+len("Kaya "):])
+			if j := strings.IndexAny(rest, " \t"); j >= 0 {
+				rest = rest[:j]
+			}
+			if rest != "" {
+				return rest
+			}
+		}
+	}
+	return "unknown"
+}
+
+func kayaCheck(scope appliance.ScopePaths) {
+	current := kayaVersion()
+	target := ""
+	if rel, err := resolveRelease(offline()); err == nil {
+		target = rel.Version
+	} else {
+		if dir := locateKayaDir(); dir != "" {
+			target = gitTagAtCheckout(dir)
+		}
+	}
+	fmt.Printf("Installed: %s\n", current)
+	if target != "" {
+		fmt.Printf("Available: %s\n", target)
+	}
+	fmt.Printf("Scope: %s (%s, root: %v)\n", scope.Scope, scope.BinDir, scope.NeedsRoot())
+	reportServing(current)
+	if target == "" {
+		fmt.Println("No release channel reachable; run `kaya update --channel dev` to build locally.")
+		return
+	}
+	if !appliance.IsNewer(target, current) {
+		fmt.Println("Already current.")
+		printKayaNotes(current)
+		return
+	}
+	fmt.Println("Run `kaya update` to deploy.")
+}
+
+// kayaDataDir is where the changelog marker lives (the install root).
+func kayaDataDir() string {
+	if v := os.Getenv("KAYA_DATA_DIR"); v != "" {
+		return v
+	}
+	if v := os.Getenv("KAYA_DIR"); v != "" {
+		return v
+	}
+	if _, err := os.Stat(appliance.DefaultKayaDir); err == nil {
+		return appliance.DefaultKayaDir
+	}
+	h, _ := os.UserHomeDir()
+	return filepath.Join(h, ".local", "share", "kaya")
+}
+
+// printKayaNotes prints changelog entries newer than the given version (or
+// nothing on a fresh install, which just records the current version).
+func printKayaNotes(version string) {
+	entries := changelog.NewSince(kayaDataDir(), version)
+	if len(entries) == 0 {
+		return
+	}
+	// Show the newest few in full and point at the rest, and remember that
+	// they were shown: without the marker every `kaya update` (even "Already
+	// current") replayed the whole backlog, release after release.
+	const show = 3
+	shown := entries
+	if len(shown) > show {
+		shown = shown[:show]
+	}
+	for _, e := range shown {
+		fmt.Printf("\nWhat's new in %s:\n\n%s\n", e.Version, e.Body)
+	}
+	if more := len(entries) - len(shown); more > 0 {
+		fmt.Printf("\n...and %d earlier release(s). `kaya update --notes` shows them all.\n", more)
+	}
+	_ = changelog.MarkSeen(kayaDataDir(), version)
+}
+
+// printNotesFor prints the notes for an exact version after an update.
+func printNotesFor(version string) {
+	if body := changelog.ForVersion(version); body != "" {
+		fmt.Printf("\nWhat's new in %s:\n\n%s\n", version, body)
+	}
+}
+
+func gitTagAtCheckout(dir string) string {
+	out, err := exec.Command("git", "-C", dir, "describe", "--tags", "--always").Output()
+	if err != nil {
+		return ""
+	}
+	return strings.TrimSpace(string(out))
+}
+
+func homeDir() string {
+	if h := os.Getenv("HOME"); h != "" {
+		return h
+	}
+	h, _ := os.UserHomeDir()
+	return h
+}
+
+// printKayaChangelog prints the full embedded changelog (kaya update --notes).
+func printKayaChangelog() {
+	fmt.Println(changelog.Raw())
+}
+
+// buildAndDeploy runs the crash-safe update sequence for the detected scope.
+// Read-only planning happens while services are up; the build/install step is
+// the only one that escalates, and only when the install is system-scoped.
+func buildAndDeploy(scope appliance.ScopePaths, kayaDir string, force bool) {
+	fmt.Println("Updating Kaya...")
+
+	systemSvc := func(action string, svcs ...string) {
+		args := append([]string{action}, svcs...)
+		base := []string{"systemctl"}
+		if scope.Scope == appliance.ScopeUser {
+			base = []string{"systemctl", "--user"}
+		}
+		exec.Command(base[0], append(base[1:], args...)...).Run()
+	}
+
+	steps := appliance.UpdateSteps{
+		Pull: func() error {
+			// Release channel deploys a pinned tag; the dev channel already
+			// validated the tree. No network pull happens here so updates
+			// never touch the working tree implicitly.
+			return nil
+		},
+		Plan: func() error {
+			fmt.Println("1. Validating workspace layout (services still running)...")
+			return appliance.CheckWorkspaceMigration(appliance.DefaultKayaDir)
+		},
+		Snapshot: func() error {
+			fmt.Println("2. Taking recovery snapshot (services still running)...")
+			return appliance.PreUpdateSnapshot()
+		},
+		Stop: func() {
+			fmt.Println("3. Stopping services...")
+			systemSvc("stop", "kaya")
+			systemSvc("stop", "kaya-web")
+		},
+		Apply: func() error {
+			fmt.Println("4. Building and installing...")
+			if err := migrateApplianceWorkspace(false); err != nil {
+				return err
+			}
+			return installScope(scope, kayaDir, force)
+		},
+		Start: func() error {
+			fmt.Println("Update failed — restarting services...")
+			var first error
+			for _, svc := range []string{"kaya", "kaya-web"} {
+				systemSvc("start", svc)
+			}
+			return first
+		},
+	}
+	if err := appliance.RunUpdate(steps); err != nil {
+		fmt.Printf("Error: %v\n", err)
+		os.Exit(1)
+	}
+
+	fmt.Println("Update complete!")
+}
+
+// migrateApplianceWorkspace moves the Kaya workspace from the legacy
+// <kayaDir>/workspace location to the runtime location when needed. The
+// Kaya runs from DefaultKayaDir regardless of where the checkout (and
+// therefore the git pull) lives, so this always targets the Kaya dir.
+func migrateApplianceWorkspace(dryRun bool) error {
+	kayaDir := appliance.DefaultKayaDir
+	plan, err := appliance.PlanWorkspaceMigrationFromDisk(kayaDir, "")
+	if err != nil {
+		return fmt.Errorf("plan workspace migration: %w", err)
+	}
+	if !plan.Needed {
+		fmt.Printf("  Workspace layout OK: %s\n", plan.Reason)
+		return nil
+	}
+	fmt.Printf("  Workspace migration: %s\n", plan.Reason)
+	if dryRun {
+		fmt.Printf("  [dry-run] would move %s -> %s\n", plan.LegacyDir, plan.TargetDir)
+		return nil
+	}
+	newWorkspace, err := appliance.MigrateWorkspaceIfNeeded(kayaDir)
+	if err != nil {
+		return err
+	}
+	fmt.Printf("  Workspace migrated to %s\n", newWorkspace)
+	return nil
+}
+
+// installScope builds Kaya and installs it into the detected scope. The
+// user scope is fully unprivileged: build to a temp file, then atomically
+// rename into ~/.local/bin and (re)start the per-user service. The system
+// scope escalates only the binary replacement and service restart, via sudo,
+// and preserves ownership of the runtime data for the invoking user.
+func installScope(scope appliance.ScopePaths, kayaDir string, force bool) error {
+	tag := gitTagAtCheckout(kayaDir)
+	staged, cleanup, err := buildKayaBinary(kayaDir, tag)
+	if err != nil {
+		return err
+	}
+	defer cleanup()
+
+	target := scope.BinDir + "/kaya"
+	if scope.NeedsRoot() && os.Geteuid() != 0 {
+		// System install: run only the swap under sudo.
+		fmt.Println("  (system install: using sudo for the binary swap)")
+		if err := runSudo("install", "-m", "0755", staged, target); err != nil {
+			return err
+		}
+	} else {
+		if err := os.MkdirAll(scope.BinDir, 0o755); err != nil {
+			return err
+		}
+		// Atomic: write alongside, then rename. Never overwrite a running
+		// binary in place.
+		tmp := target + ".new"
+		data, err := os.ReadFile(staged)
+		if err != nil {
+			return err
+		}
+		if err := os.WriteFile(tmp, data, 0o755); err != nil {
+			return err
+		}
+		if err := os.Rename(tmp, target); err != nil {
+			os.Remove(tmp)
+			return err
+		}
+	}
+	fmt.Printf("  Installed %s\n", target)
+	// The web console is a second binary that runs as its own root-owned
+	// system unit from the same directory. Leaving it behind meant an
+	// updated daemon served by an old console.
+	if scope.Scope == appliance.ScopeSystem && systemUnitExists("kaya-web") {
+		web, cleanWeb, err := buildBinary(kayaDir, tag, "./cmd/kaya-web")
+		if err != nil {
+			return err
+		}
+		defer cleanWeb()
+		webTarget := scope.BinDir + "/kaya-web"
+		if err := runSudo("install", "-m", "0755", web, webTarget); err != nil {
+			return err
+		}
+		fmt.Printf("  Installed %s\n", webTarget)
+	}
+	if scope.Scope == appliance.ScopeSystem {
+		refreshSystemUnits(kayaDir, scope.BinDir)
+	}
+	if scope.Scope == appliance.ScopeSystem {
+		home, _ := os.UserHomeDir()
+		removeStaleShadows(scope.BinDir, []string{filepath.Join(home, ".local", "bin"), "/usr/local/sbin"})
+	}
+	restartScope(scope)
+	trimBuildCache()
+	return nil
+}
+
+// removeStaleShadows deletes an older copy of kaya that sits earlier in PATH
+// than the system install (typically ~/.local/bin/kaya from a per-user
+// install). A stale copy makes an update look like it did not take: the owner's
+// terminal runs it while the services run the new one. Only a file that
+// identifies itself as Kaya is removed, never an unrelated program that
+// happens to be called kaya.
+func removeStaleShadows(canonicalDir string, dirs []string) {
+	for _, d := range dirs {
+		if d == "" || filepath.Clean(d) == filepath.Clean(canonicalDir) {
+			continue
+		}
+		f := filepath.Join(d, "kaya")
+		b, err := os.ReadFile(f)
+		if err != nil || !(bytes.Contains(b, []byte("Kaya - Your Local AI")) || bytes.Contains(b, []byte("Kaya - Personal AI Assistant"))) {
+			continue
+		}
+		if err := os.Remove(f); err != nil {
+			if runSudo("rm", "-f", f) != nil {
+				continue
+			}
+		}
+		fmt.Printf("  Removed a stale copy at %s so `kaya` runs the new one.\n", f)
+	}
+}
+
+// trimBuildCache stops updates that build on the device from slowly filling
+// its SD card. Go's build cache grows with every build and is never trimmed
+// by Go itself; on a Pod it reached 5 GB and the next update refused to run.
+// Over a gigabyte, it is dropped (the next build is just slower, once).
+func trimBuildCache() {
+	out, err := exec.Command("go", "env", "GOCACHE").Output()
+	if err != nil {
+		return
+	}
+	dir := strings.TrimSpace(string(out))
+	if dir == "" || dir == "off" {
+		return
+	}
+	var size int64
+	_ = filepath.WalkDir(dir, func(_ string, d os.DirEntry, err error) error {
+		if err == nil && !d.IsDir() {
+			if info, ierr := d.Info(); ierr == nil {
+				size += info.Size()
+			}
+		}
+		return nil
+	})
+	if size > buildCacheLimit {
+		if exec.Command("go", "clean", "-cache").Run() == nil {
+			fmt.Printf("  Cleared a %d MB build cache to keep disk space free.\n", size>>20)
+		}
+	}
+}
+
+// buildCacheLimit is how large the Go build cache may grow before an update
+// clears it.
+const buildCacheLimit = 1 << 30
+
+// refreshSystemUnits re-renders the system unit files from this release's
+// templates. Binaries used to be the only thing an update replaced, so a fix to
+// a unit (a hardening flag, a restart policy) never reached an installed Pod.
+// A unit that differs is backed up to <unit>.bak first; a unit that isn't
+// installed is left alone (this is not how services get created).
+func refreshSystemUnits(kayaDir, binDir string) {
+	for _, name := range []string{"kaya", "kaya-web"} {
+		tpl, err := os.ReadFile(filepath.Join(kayaDir, name+".service.template"))
+		if err != nil {
+			continue
+		}
+		refreshUnit(runSudo, name, string(tpl), binDir)
+	}
+}
+
+// refreshUnit renders one unit from its template and installs it when it
+// differs from what is installed (keeping the old one as .bak). A unit that
+// isn't installed is left alone.
+func refreshUnit(sudo func(string, ...string) error, name, tpl, binDir string) {
+	want := renderUnit(tpl, binDir)
+	path := "/etc/systemd/system/" + name + ".service"
+	have, err := os.ReadFile(path)
+	if err != nil || string(have) == want {
+		return
+	}
+	tmp, err := os.CreateTemp("", name+"-unit-*")
+	if err != nil {
+		return
+	}
+	defer os.Remove(tmp.Name())
+	tmp.WriteString(want)
+	tmp.Close()
+	_ = sudo("cp", path, path+".bak")
+	if err := sudo("install", "-m", "0644", tmp.Name(), path); err != nil {
+		fmt.Printf("  Could not refresh %s.service: %v\n", name, err)
+	} else {
+		fmt.Printf("  Refreshed %s.service (previous kept as %s.service.bak)\n", name, name)
+	}
+}
+
+// renderUnit fills a unit template exactly as `make install-kaya` does for a
+// system install.
+func renderUnit(tpl, binDir string) string {
+	return strings.NewReplacer(
+		"__USER__", "root", "__GROUP__", "root",
+		"__KAYA_DIR__", appliance.DefaultKayaDir, "__BIN_DIR__", binDir,
+	).Replace(tpl)
+}
+
+// buildKayaBinary builds the kaya binary for the current platform into a
+// temp file and returns its path plus a cleanup func. It injects the version
+// so the installed binary reports the tag, not a bare hash.
+func buildKayaBinary(kayaDir, tag string) (string, func(), error) {
+	return buildBinary(kayaDir, tag, "./cmd/kaya")
+}
+
+// buildBinary builds one of Kaya's binaries (./cmd/kaya, ./cmd/kaya-web)
+// into a temp file, stamping the release version into it.
+func buildBinary(kayaDir, tag, pkg string) (string, func(), error) {
+	f, err := os.CreateTemp("", "kaya-build-*")
+	if err != nil {
+		return "", func() {}, err
+	}
+	f.Close()
+	path := f.Name()
+	cleanup := func() { os.Remove(path) }
+	ldflags := "-s -w"
+	if tag != "" {
+		ldflags += " -X main.version=" + tag
+	}
+	cmd := exec.Command("go", "build", "-ldflags", ldflags, "-o", path, pkg)
+	cmd.Dir = kayaDir
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	if err := cmd.Run(); err != nil {
+		cleanup()
+		return "", func() {}, fmt.Errorf("build failed: %w", err)
+	}
+	return path, cleanup, nil
+}
+
+// runSudo runs one command under sudo, inheriting the invoking user so any
+// user-scoped paths the command touches resolve correctly.
+func runSudo(name string, args ...string) error {
+	full := append([]string{name}, args...)
+	cmd := exec.Command("sudo", full...)
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	return cmd.Run()
+}
+
+func updaterCmd() {
+	if wantsHelp(os.Args[2:]) {
+		fmt.Println("Usage: kaya auto-update [--interval DURATION]")
+		fmt.Println()
+		fmt.Println("Periodically check GitHub Releases and install a newer release using the")
+		fmt.Println("same verified, user-scoped updater as 'kaya update'.")
+		fmt.Println()
+		fmt.Println("  --interval/-i DURATION   how often to check (default 6h, e.g. 30m, 24h)")
+		fmt.Println()
+		fmt.Println("For a one-shot deploy, use 'kaya update'.")
+		return
+	}
+
+	interval := 6 * time.Hour
+	args := os.Args[2:]
+	for i, arg := range args {
+		if (arg == "--interval" || arg == "-i") && i+1 < len(args) {
+			if d, err := time.ParseDuration(args[i+1]); err == nil {
+				interval = d
+			}
+		}
+	}
+
+	fmt.Printf("Kaya updater started (checking every %s)\n", interval)
+
+	ticker := time.NewTicker(interval)
+	defer ticker.Stop()
+
+	// Check immediately
+	checkAndUpdate()
+
+	for range ticker.C {
+		checkAndUpdate()
+	}
+}
+
+// checkAndUpdate is the periodic tick for `kaya auto-update`. It uses the
+// same release-channel updater as `kaya update`, so there is exactly one
+// code path: resolve a release, verify, install, restart.
+func checkAndUpdate() {
+	fmt.Println("Checking for updates...")
+	scope := appliance.DetectScope()
+	if err := updateReleaseChannel(scope, false, false); err != nil {
+		fmt.Printf("Update failed: %v\n", err)
+	}
+}
+
+func findKayaDir() string {
+	if dir := locateKayaDir(); dir != "" {
+		return dir
+	}
+	fmt.Println("Error: Kaya directory not found")
+	os.Exit(1)
+	return ""
+}
+
+// locateKayaDir finds a git checkout of Kaya, or returns "" when there is
+// none (an install that came from a release has no checkout, and must still be
+// able to update).
+func locateKayaDir() string {
+	// Try environment variable
+	if dir := os.Getenv("KAYA_DIR"); dir != "" {
+		return dir
+	}
+
+	// Try current directory
+	if _, err := os.Stat(".git"); err == nil {
+		dir, _ := os.Getwd()
+		return dir
+	}
+
+	// Try common locations (including non-root home dirs when running as root)
+	home, _ := os.UserHomeDir()
+	candidates := []string{
+		filepath.Join(home, "kaya"),
+		filepath.Join(home, ".kaya"),
+		"/var/kaya",
+	}
+
+	// When running as root, also check /home/*  for the repo
+	if home == "/root" {
+		if entries, err := os.ReadDir("/home"); err == nil {
+			for _, e := range entries {
+				if e.IsDir() {
+					candidates = append(candidates, filepath.Join("/home", e.Name(), "kaya"))
+				}
+			}
+		}
+	}
+
+	for _, dir := range candidates {
+		if _, err := os.Stat(filepath.Join(dir, ".git")); err == nil {
+			return dir
+		}
+	}
+	return ""
+}

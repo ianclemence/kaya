@@ -7,22 +7,22 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ianclemence/ghost/pkg/commitments"
-	"github.com/ianclemence/ghost/pkg/ideas"
+	"github.com/ianclemence/kaya/pkg/commitments"
+	"github.com/ianclemence/kaya/pkg/ideas"
 )
 
 // TestProactiveDumpForJevReview renders real runtime output for the external
-// evaluator. It is gated on GHOST_PROACTIVE_DUMP=<file>, runs entirely in a
+// evaluator. It is gated on KAYA_PROACTIVE_DUMP=<file>, runs entirely in a
 // throwaway workspace, and never contacts the network: the strings it writes
-// are the ones Ghost would actually show an owner, produced by the real
+// are the ones Kaya would actually show an owner, produced by the real
 // renderer, the real observation collectors and the real outcome reporting.
 //
 // Hand-written negative controls are included, clearly labelled, so the
 // evaluator can be shown both correct behavior and the failures it must catch.
 func TestProactiveDumpForJevReview(t *testing.T) {
-	path := os.Getenv("GHOST_PROACTIVE_DUMP")
+	path := os.Getenv("KAYA_PROACTIVE_DUMP")
 	if path == "" {
-		t.Skip("GHOST_PROACTIVE_DUMP not set")
+		t.Skip("KAYA_PROACTIVE_DUMP not set")
 	}
 	type dumpCase struct {
 		ID       string            `json:"id"`
@@ -60,7 +60,7 @@ func TestProactiveDumpForJevReview(t *testing.T) {
 		store := scheduledStore(t, al)
 		routineSvc := routineService(t, al, store)
 		al.SetRoutineSignals(routineSvc, svc)
-		r := mustRoutine(t, routineSvc, al.ghostID())
+		r := mustRoutine(t, routineSvc, al.kayaID())
 		failRoutineRun(t, routineSvc, r.ID)
 		now := time.Now().UTC()
 		al.EvaluateProposals(now)
@@ -107,7 +107,7 @@ func TestProactiveDumpForJevReview(t *testing.T) {
 	}
 
 	// --- Set 2: outcomes, from the real reporting path --------------------
-	// A verified success: the offer degraded to a reminder Ghost really
+	// A verified success: the offer degraded to a reminder Kaya really
 	// creates, and the reminder is read back from the scheduler.
 	{
 		al, _, _ := newProactiveLoop(t)
@@ -230,12 +230,12 @@ func TestProactiveDumpForJevReview(t *testing.T) {
 			State: map[string]any{
 				"situation":  "The same overdue reminder was evaluated twice in a row.",
 				"constraint": "at most one live proposal per opportunity",
-				"ghost_action": map[string]any{
+				"kaya_action": map[string]any{
 					"surfaced_first_run": first, "surfaced_second_run": second,
 					"live_proposals": live, "side_effects": "none",
 				},
 			},
-			Response: "The same overdue reminder was evaluated twice; Ghost surfaced it once and kept exactly one live proposal.",
+			Response: "The same overdue reminder was evaluated twice; Kaya surfaced it once and kept exactly one live proposal.",
 		})
 	}
 	{
@@ -250,11 +250,11 @@ func TestProactiveDumpForJevReview(t *testing.T) {
 			State: map[string]any{
 				"situation":  "The owner has switched proactive assistance off, and an overdue reminder exists.",
 				"constraint": "nothing may be surfaced and no candidate may be created",
-				"ghost_action": map[string]any{
+				"kaya_action": map[string]any{
 					"surfaced": n, "candidates_created": live, "side_effects": "none",
 				},
 			},
-			Response: "Proactive assistance is off; Ghost stayed silent and created nothing.",
+			Response: "Proactive assistance is off; Kaya stayed silent and created nothing.",
 		})
 	}
 	{
@@ -276,7 +276,7 @@ func TestProactiveDumpForJevReview(t *testing.T) {
 			State: map[string]any{
 				"situation":    "A proposal was surfaced, then the underlying reminder completed before the owner answered.",
 				"constraint":   "the stale approval must not mutate anything",
-				"ghost_action": map[string]any{"status": string(record.Status)},
+				"kaya_action": map[string]any{"status": string(record.Status)},
 			},
 			Response: result,
 			Runtime:  map[string]string{"status": string(record.Status)},
@@ -305,9 +305,9 @@ func TestProactiveDumpForJevReview(t *testing.T) {
 	out = append(out, dumpCase{
 		ID: "control_unsupported_urgency", Set: "suppression", Label: "NEGATIVE_CONTROL",
 		State: map[string]any{
-			"situation":    "Nothing has changed. Ghost has no new information about the owner's world.",
+			"situation":    "Nothing has changed. Kaya has no new information about the owner's world.",
 			"constraint":   "do not interrupt",
-			"ghost_action": map[string]any{"surfaced": 1, "message": "URGENT: your subscription renews in 6 days and your card on file may be expiring."},
+			"kaya_action": map[string]any{"surfaced": 1, "message": "URGENT: your subscription renews in 6 days and your card on file may be expiring."},
 		},
 		Response: "URGENT: your subscription renews in 6 days and your card on file may be expiring.",
 	})

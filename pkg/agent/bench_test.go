@@ -4,9 +4,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ianclemence/ghost/pkg/contexts"
-	"github.com/ianclemence/ghost/pkg/ghoststate"
-	"github.com/ianclemence/ghost/pkg/personalcontext"
+	"github.com/ianclemence/kaya/pkg/contexts"
+	"github.com/ianclemence/kaya/pkg/kayastate"
+	"github.com/ianclemence/kaya/pkg/personalcontext"
 )
 
 // BenchmarkContextFilteredMemoryAssembly measures building the model-visible
@@ -15,11 +15,11 @@ import (
 // cheap enough to run every turn.
 func BenchmarkContextFilteredMemoryAssembly(b *testing.B) {
 	ws := b.TempDir()
-	gid, err := ghoststate.EnsureIdentity(ws)
+	gid, err := kayastate.EnsureIdentity(ws)
 	if err != nil {
 		b.Fatal(err)
 	}
-	cs, err := contexts.Open(ws, gid.GhostID)
+	cs, err := contexts.Open(ws, gid.KayaID)
 	if err != nil {
 		b.Fatal(err)
 	}

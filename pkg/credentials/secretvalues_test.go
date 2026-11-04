@@ -28,7 +28,7 @@ func TestCollectSecretValuesFindsKeysTokensAndWebLoginPasswords(t *testing.T) {
 // The vault is sealed on disk: what it holds must still be found to scrub.
 func TestSecretValuesReadTheSealedVault(t *testing.T) {
 	dir := t.TempDir()
-	t.Setenv("GHOST_CONFIG_DIR", dir)
+	t.Setenv("KAYA_CONFIG_DIR", dir)
 	if err := SaveWebLogin(WebLogin{URL: "https://example.com/login", Username: "ian", Password: "web-pass-123"}); err != nil {
 		t.Fatal(err)
 	}

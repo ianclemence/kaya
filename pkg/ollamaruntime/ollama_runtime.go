@@ -7,8 +7,8 @@ import (
 	"context"
 	"strings"
 
-	"github.com/ianclemence/ghost/pkg/infer"
-	"github.com/ianclemence/ghost/pkg/providers"
+	"github.com/ianclemence/kaya/pkg/infer"
+	"github.com/ianclemence/kaya/pkg/providers"
 )
 
 // Runtime wraps an existing providers.LLMProvider as an InferenceRuntime.

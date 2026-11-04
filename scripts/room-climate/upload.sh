@@ -9,7 +9,7 @@ set -euo pipefail
 
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 HEX="$DIR/uno_dht11/build/uno_dht11.hex"
-SERVICE=ghost-room-climate.service
+SERVICE=kaya-room-climate.service
 
 # The adapter re-enumerates (ttyUSB0 -> ttyUSB1) when unplugged, so the port
 # is looked up instead of assumed. Pass one as $1 to pin it.

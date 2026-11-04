@@ -2,10 +2,10 @@
 name: travel
 description: Look up places, get directions and travel/commute info. Invoke when the user asks "how do I get to X", "directions to Y", "how long to get to work", "what's the fastest route", "where is the nearest pharmacy", or "travel time". Uses OpenStreetMap and OSRM — free, no API key required.
 version: 1.0.0
-author: Ghost
+author: Kaya
 license: MIT
 metadata:
-  ghost:
+  kaya:
     tags: [travel, directions, commute, maps, routing, transit]
 prerequisites:
   commands: [curl]

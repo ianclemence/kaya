@@ -11,7 +11,7 @@ import (
 // ("database or disk is full") or a disk I/O error mid-commit; both
 // arrive as opaque driver errors. Translate them once, at the boundary,
 // into a typed error carrying the remedy — raw SQLite text must never
-// reach an owner wondering why Ghost stopped.
+// reach an owner wondering why Kaya stopped.
 
 // ErrDiskFull signals a full filesystem. Compare with errors.Is.
 var ErrDiskFull = errors.New("disk full")
@@ -43,7 +43,7 @@ func IsDiskFullError(err error) bool {
 // snapshots first, then retry. Pruning is the cheapest reclaim on an
 // personal AI (archives are large and retention-bounded).
 func DiskFullError(op string, err error) error {
-	return fmt.Errorf("%w during %s: free space now or run `ghost state prune` to drop old snapshots (original error: %v)", ErrDiskFull, op, err)
+	return fmt.Errorf("%w during %s: free space now or run `kaya state prune` to drop old snapshots (original error: %v)", ErrDiskFull, op, err)
 }
 
 // TranslateError maps full-filesystem failures to ErrDiskFull,
@@ -70,7 +70,7 @@ func CheckIntegrity(db *sql.DB) error {
 		if IsDiskFullError(err) {
 			return DiskFullError("integrity check", err)
 		}
-		return fmt.Errorf("integrity check failed to run (%v): restore from a backup with `ghost state import` and try again", err)
+		return fmt.Errorf("integrity check failed to run (%v): restore from a backup with `kaya state import` and try again", err)
 	}
 	defer rows.Close()
 	var first string
@@ -89,7 +89,7 @@ func CheckIntegrity(db *sql.DB) error {
 		return TranslateError("integrity check", err)
 	}
 	if n != 1 || first != "ok" {
-		return fmt.Errorf("database integrity check failed (%d problems, first: %q): restore from a backup with `ghost state import` and try again", n, first)
+		return fmt.Errorf("database integrity check failed (%d problems, first: %q): restore from a backup with `kaya state import` and try again", n, first)
 	}
 	return nil
 }

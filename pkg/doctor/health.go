@@ -8,8 +8,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ianclemence/ghost/pkg/credentials"
-	"github.com/ianclemence/ghost/pkg/hardware"
+	"github.com/ianclemence/kaya/pkg/credentials"
+	"github.com/ianclemence/kaya/pkg/hardware"
 )
 
 // Health checks: disk pressure with remedies, vault openability, and
@@ -18,7 +18,7 @@ import (
 // next action in the message — health output is read by owners, not
 // engineers.
 
-// SetConfigPath binds the Ghost config for the vault check.
+// SetConfigPath binds the Kaya config for the vault check.
 // Empty means unbound: the check reports info instead of guessing
 // layout (the config dir is not derivable from the workspace).
 func (d *Doctor) SetConfigPath(path string) {
@@ -38,7 +38,7 @@ func (d *Doctor) checkDiskPressure(ctx context.Context) CheckResult {
 	switch s.Worst() {
 	case hardware.PressureCritical:
 		status = "error"
-		msg += ". Almost full: free some space, or run `ghost state prune` to drop old snapshots"
+		msg += ". Almost full: free some space, or run `kaya state prune` to drop old snapshots"
 	case hardware.PressureWarning:
 		status = "warning"
 		msg += ". Running low, so old snapshots and caches are cleared first"

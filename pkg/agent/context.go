@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
-	"github.com/ianclemence/ghost/pkg/uploads"
+	"github.com/ianclemence/kaya/pkg/uploads"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -12,15 +12,15 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ianclemence/ghost/pkg/browser"
-	"github.com/ianclemence/ghost/pkg/contextcache"
-	"github.com/ianclemence/ghost/pkg/logger"
-	"github.com/ianclemence/ghost/pkg/personalcontext"
-	"github.com/ianclemence/ghost/pkg/personality"
-	"github.com/ianclemence/ghost/pkg/providers"
-	"github.com/ianclemence/ghost/pkg/skills"
-	"github.com/ianclemence/ghost/pkg/tools"
-	"github.com/ianclemence/ghost/pkg/utils"
+	"github.com/ianclemence/kaya/pkg/browser"
+	"github.com/ianclemence/kaya/pkg/contextcache"
+	"github.com/ianclemence/kaya/pkg/logger"
+	"github.com/ianclemence/kaya/pkg/personalcontext"
+	"github.com/ianclemence/kaya/pkg/personality"
+	"github.com/ianclemence/kaya/pkg/providers"
+	"github.com/ianclemence/kaya/pkg/skills"
+	"github.com/ianclemence/kaya/pkg/tools"
+	"github.com/ianclemence/kaya/pkg/utils"
 )
 
 type ContextBuilder struct {
@@ -65,13 +65,13 @@ func getGlobalConfigDir() string {
 	if err != nil {
 		return ""
 	}
-	return filepath.Join(home, ".GHOST")
+	return filepath.Join(home, ".KAYA")
 }
 
 func NewContextBuilder(workspace string) *ContextBuilder {
 	// builtin skills: skills directory in current project
 	// Use the skills/ directory under the current working directory
-	builtinSkillsDir := filepath.Join(getGlobalConfigDir(), "ghost", "skills")
+	builtinSkillsDir := filepath.Join(getGlobalConfigDir(), "kaya", "skills")
 	globalSkillsDir := filepath.Join(getGlobalConfigDir(), "skills")
 
 	return &ContextBuilder{
@@ -79,7 +79,7 @@ func NewContextBuilder(workspace string) *ContextBuilder {
 		skillsLoader: skills.NewSkillsLoader(workspace, globalSkillsDir, builtinSkillsDir),
 		memory:       NewMemoryStore(workspace),
 		// Personalities resolve through the Loader (builtins from code,
-		// customs from ~/.GHOST/personalities) so every listed name
+		// customs from ~/.KAYA/personalities) so every listed name
 		// actually injects.
 		personalityLoader: personality.NewLoader(getGlobalConfigDir()),
 	}
@@ -107,9 +107,9 @@ func (cb *ContextBuilder) getIdentity() string {
 	// Build tools section dynamically
 	toolsSection := cb.buildToolsSection()
 
-	return fmt.Sprintf(`# Ghost 👻
+	return fmt.Sprintf(`# Kaya 👻
 
-You are **Ghost**: a personal AI that lives on the owner's own machine and keeps learning them, and their way into information and the world. You are not a chatbot and not a person; do not call yourself an assistant.
+You are **Kaya**: a personal AI that lives on the owner's own machine and keeps learning them, and their way into information and the world. You are not a chatbot and not a person; do not call yourself an assistant.
 
 ## Runtime
 %s
@@ -123,7 +123,7 @@ Your workspace is ready.
 
 ## How you work
 
-1. **Stay governed.** Act within Ghost's authority model. Read-only and already-authorized work goes ahead freely; anything consequential goes through runtime approval. Never assume authority, never route around governance, and never claim success without runtime evidence.
+1. **Stay governed.** Act within Kaya's authority model. Read-only and already-authorized work goes ahead freely; anything consequential goes through runtime approval. Never assume authority, never route around governance, and never claim success without runtime evidence.
 2. **Bring substance.** The owner is intelligent and curious. Give the real thing: the mechanism, the tradeoff, the source. For analysis, say what is happening, why, what it means for them, and what to do about it. Simplify when asked, not by default.
 3. **Stay grounded.** Never state a fact, price, date or figure you have not verified; check with search or the owner's files first. Mark what you could not verify as uncertain, and name the source of what you did.
 4. **Finish what was asked.** Once the owner asks, take it end to end. But narration is not an ask: answer the person first, and act only on real intent.
@@ -173,20 +173,20 @@ func (cb *ContextBuilder) buildToolsSection() string {
 	return sb.String()
 }
 
-// buildOwnerRecordSection tells the model what Ghost keeps about its owner, so a
+// buildOwnerRecordSection tells the model what Kaya keeps about its owner, so a
 // request to show or audit it is answered from what exists. Without it the
 // model denied a mechanism that is running ("no trait scoring, no behavioural
 // classifier") because nothing in its instructions said the relational state
 // existed.
 func buildOwnerRecordSection() string {
-	return `## What Ghost keeps about the owner
+	return `## What Kaya keeps about the owner
 
 When the owner asks what you know, remember or infer about them, answer from these and check them first. Never say a mechanism does not exist without looking.
 
 - Personal Context: typed entries (fact, preference, person, project, health and so on), each with a source (declared, inferred or corrected), a confidence and a status. context_get reads them; /context lists them; /forget erases one.
 - The curated profile and the MEMORY.md digest are generated from those entries.
 - Daily journals are model-written summaries of past conversations. They carry the summariser's framing, not the owner's words, and can hold errors the entries no longer do.
-- Ghost does not score the tone of the owner's messages and keeps no mood or affinity total. An older version did; its file is deleted when Ghost starts. If asked, say so plainly.
+- Kaya does not score the tone of the owner's messages and keeps no mood or affinity total. An older version did; its file is deleted when Kaya starts. If asked, say so plainly.
 
 Say which is stored, which is inferred and which you are generating now. An inference about the owner's character is your own reading, not a record.`
 }
@@ -223,7 +223,7 @@ func buildBehaviorSection() string {
 
 ## Quiet hours
 
-- Ghost has quiet hours (23:00 to 08:00 unless the owner changed them). They hold back notices Ghost raises on its own. A reminder or routine the owner scheduled fires at the time they chose, quiet hours or not. If asked about night-time pings, say exactly that, and offer to move a specific reminder; never say there is no such setting.
+- Kaya has quiet hours (23:00 to 08:00 unless the owner changed them). They hold back notices Kaya raises on its own. A reminder or routine the owner scheduled fires at the time they chose, quiet hours or not. If asked about night-time pings, say exactly that, and offer to move a specific reminder; never say there is no such setting.
 
 ## Grounding & Citations
 
@@ -297,7 +297,7 @@ func (cb *ContextBuilder) BuildSystemPrompt(scopes []string) string {
 	if skillsSummary != "" {
 		parts = append(parts, fmt.Sprintf(`# Skills
 
-Ghost ships specialized skills. When a request matches one, PREFER it:
+Kaya ships specialized skills. When a request matches one, PREFER it:
 
 1. PICK the single best-matching skill — by meaning and the <triggers> listed, not loose keyword overlap.
 2. READ its SKILL.md with the read_file tool.
@@ -328,7 +328,7 @@ CRITICAL — Skill is authoritative. After you READ a SKILL.md, you MUST:
 	}
 
 	// Browser capability discovery: the version-pinned stub tells the
-	// model Ghost drives pages natively (prefer it over built-in browser
+	// model Kaya drives pages natively (prefer it over built-in browser
 	// automation). The FULL contract (SkillCore) is injected only on
 	// turns where browser_* tools are actually visible — see
 	// injectBrowserContract — so the cheap stub covers discovery without
@@ -346,7 +346,7 @@ CRITICAL — Skill is authoritative. After you READ a SKILL.md, you MUST:
 		}
 	}
 
-	// Changes Ghost heard but has not confirmed: the old belief is still the
+	// Changes Kaya heard but has not confirmed: the old belief is still the
 	// one in force, and the owner is asked which is right.
 	if cb.personalContext != nil {
 		if pend := cb.personalContext.PendingChanges(scopes); len(pend) > 0 {
@@ -403,7 +403,7 @@ CRITICAL — Skill is authoritative. After you READ a SKILL.md, you MUST:
 // promptTier selects how much of the workspace documentation is injected.
 //
 // The full bootstrap set is ~66 KB, and the measured prompt on the live device
-// was ~22.6k tokens — around 61% of it GHOST.md alone, sent on every call
+// was ~22.6k tokens — around 61% of it KAYA.md alone, sent on every call
 // whether or not the turn needed it. Every byte of that is a stable prefix, so
 // the reduction must be STATIC (the same content every turn) rather than
 // request-dependent: varying the prefix per turn would invalidate the
@@ -413,7 +413,7 @@ CRITICAL — Skill is authoritative. After you READ a SKILL.md, you MUST:
 //
 //   - Behavioural core (invariants, identity, authority, evidence, memory,
 //     routines, time, personality, interacting, safety, recovery, final
-//     rules) is always present. Nothing that governs how Ghost behaves or
+//     rules) is always present. Nothing that governs how Kaya behaves or
 //     what it may do is ever dropped.
 //   - Operational reference (the per-tool operating manual, the skills index,
 //     channels, browser/computer surfaces, credentials setup, artifacts) is
@@ -433,15 +433,15 @@ const (
 
 // bootstrapCoreFiles are injected on every turn: identity, the owner's facts,
 // and persona.
-var bootstrapCoreFiles = []string{"GHOST.md", "USER.md", "SOUL.md"}
+var bootstrapCoreFiles = []string{"KAYA.md", "USER.md", "SOUL.md"}
 
 // bootstrapReferenceFiles are injected only for the full tier.
 var bootstrapReferenceFiles = []string{"HEARTBEAT.md", "AGENTS.md"}
 
-// ghostReferenceSections are GHOST.md level-1 sections that are operational
+// kayaReferenceSections are KAYA.md level-1 sections that are operational
 // reference rather than behavioural core. Anything not listed here is CORE, so
 // a newly added section is always injected until it is deliberately tiered.
-var ghostReferenceSections = map[string]bool{
+var kayaReferenceSections = map[string]bool{
 	"tools the operating manual":         true,
 	"skills":                             true,
 	"artifacts and activity":             true,
@@ -465,10 +465,10 @@ func normalizeHeading(h string) string {
 	return strings.Join(strings.Fields(b.String()), " ")
 }
 
-// tieredGhostDoc returns the portion of GHOST.md that belongs in the prompt
+// tieredKayaDoc returns the portion of KAYA.md that belongs in the prompt
 // for the requested tier. The preamble before the first level-1 heading is
 // always kept.
-func tieredGhostDoc(doc string, tier promptTier) string {
+func tieredKayaDoc(doc string, tier promptTier) string {
 	if tier == promptTierFull || doc == "" {
 		return doc
 	}
@@ -477,7 +477,7 @@ func tieredGhostDoc(doc string, tier promptTier) string {
 	drop := false
 	for _, line := range lines {
 		if strings.HasPrefix(line, "# ") {
-			drop = ghostReferenceSections[normalizeHeading(strings.TrimPrefix(line, "# "))]
+			drop = kayaReferenceSections[normalizeHeading(strings.TrimPrefix(line, "# "))]
 		}
 		if !drop {
 			out = append(out, line)
@@ -487,7 +487,7 @@ func tieredGhostDoc(doc string, tier promptTier) string {
 	if trimmed == "" {
 		return doc
 	}
-	return trimmed + "\n\n_(Operational reference — the per-tool operating manual, skills, channels, browser/computer surfaces, credentials setup and artifacts — lives in GHOST.md. Read it with read_file when a task needs that detail.)_"
+	return trimmed + "\n\n_(Operational reference — the per-tool operating manual, skills, channels, browser/computer surfaces, credentials setup and artifacts — lives in KAYA.md. Read it with read_file when a task needs that detail.)_"
 }
 
 // LoadBootstrapFiles injects the always-on behavioural core.
@@ -500,8 +500,8 @@ func (cb *ContextBuilder) LoadBootstrapFiles() string {
 			continue
 		}
 		content := string(data)
-		if filename == "GHOST.md" {
-			content = tieredGhostDoc(content, promptTierCore)
+		if filename == "KAYA.md" {
+			content = tieredKayaDoc(content, promptTierCore)
 		}
 		result += fmt.Sprintf("## %s\n\n%s\n\n", filename, content)
 	}

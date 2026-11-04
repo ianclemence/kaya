@@ -2,10 +2,10 @@
 name: organizer
 description: Sort messy directories into categorized subfolders by file type. Invoke when user asks "organize my downloads", "sort files", "tidy up folder", "move files into folders", or "categorize this directory". SAFETY: never touch project roots or system directories without explicit confirmation.
 version: 1.1.0
-author: Ghost
+author: Kaya
 license: MIT
 metadata:
-  ghost:
+  kaya:
     tags: [files, organization, directory, cleanup, productivity]
 prerequisites:
   commands: [python]

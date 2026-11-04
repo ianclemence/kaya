@@ -61,14 +61,14 @@ Output constraints:
 
 ## Continuous Learning (Weekly)
 
-- [ ] List installed skills and short descriptions (`ghost skills list`).
-- [ ] Run `ghost doctor` and note any new skill dependency issues.
+- [ ] List installed skills and short descriptions (`kaya skills list`).
+- [ ] Run `kaya doctor` and note any new skill dependency issues.
 - [ ] Review `knowledge/ops/inbox.md` — process any stale captures (>48h).
 - [ ] Recommend up to 3 improvements based on recurring user requests.
 - [ ] Avoid repeating prior recommendations from the last 14 days.
 
 ## Skill Health Check (Daily)
 
-- [ ] Run `ghost doctor` skill dependency check.
+- [ ] Run `kaya doctor` skill dependency check.
 - [ ] Update `knowledge/self/skills-state.md` with current missing dependencies.
 - [ ] Flag any skill whose prerequisite binary is permanently unavailable.

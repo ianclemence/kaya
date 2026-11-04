@@ -5,7 +5,7 @@ version: 1.0.0
 author: community
 license: MIT
 metadata:
-  ghost:
+  kaya:
     tags: [PDF, Documents, Editing, NLP, Productivity]
     homepage: https://pypi.org/project/nano-pdf/
 prerequisites:
@@ -19,7 +19,7 @@ Edit PDFs using natural-language instructions. Point it at a page and describe w
 ## Prerequisites
 
 ```bash
-# Install with uv (recommended — already available in Ghost)
+# Install with uv (recommended — already available in Kaya)
 uv pip install nano-pdf
 
 # Or with pip

@@ -5,9 +5,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ianclemence/ghost/pkg/capability"
-	"github.com/ianclemence/ghost/pkg/cevents"
-	"github.com/ianclemence/ghost/pkg/product"
+	"github.com/ianclemence/kaya/pkg/capability"
+	"github.com/ianclemence/kaya/pkg/cevents"
+	"github.com/ianclemence/kaya/pkg/product"
 )
 
 func ev(t cevents.Type, payload map[string]interface{}) *cevents.Event {
@@ -147,7 +147,7 @@ func TestLeakRegression(t *testing.T) {
 	// tool schemas, internal paths must never surface in chips.
 	nasty := map[string]interface{}{
 		"capability": "weather.current",
-		"summary":    "FILE: SKILL.md DIR: skills/ tool instructions exec manifest .bundled /var/lib/ghost/secret",
+		"summary":    "FILE: SKILL.md DIR: skills/ tool instructions exec manifest .bundled /var/lib/kaya/secret",
 	}
 	chip, ok := Project(ev(cevents.CapabilityCompleted, nasty))
 	if !ok {
@@ -189,7 +189,7 @@ func TestMemoryDeletedChip(t *testing.T) {
 	chip, ok := Project(ev(cevents.MemoryDeleted, map[string]interface{}{
 		"title":   "preference/favorite_color",
 		"summary": "Recorded so old messages cannot bring it back. Rebuilt notes, search, digest.",
-		"reason":  "the owner asked Ghost to forget it",
+		"reason":  "the owner asked Kaya to forget it",
 	}))
 	if !ok {
 		t.Fatal("memory.deleted was dropped from the activity feed")
@@ -309,7 +309,7 @@ func TestSkillLifecycleProjectsSuccessNotRunning(t *testing.T) {
 	}
 }
 
-// The revelation layer: an owner must be able to see WHY Ghost asked or
+// The revelation layer: an owner must be able to see WHY Kaya asked or
 // acted on consequential work, and get no noise for routine reads.
 func TestWhyForConsequentialActions(t *testing.T) {
 	cases := []struct {
@@ -320,12 +320,12 @@ func TestWhyForConsequentialActions(t *testing.T) {
 		{
 			"approval requested explains itself",
 			ev(cevents.PermissionRequested, map[string]interface{}{"capability": "email.send", "risk": "consequential"}),
-			"This changes something, so Ghost asked first.",
+			"This changes something, so Kaya asked first.",
 		},
 		{
 			"approval says what the yes did, in plain words",
 			ev(cevents.PermissionApproved, map[string]interface{}{"capability": "browser", "risk": "consequential"}),
-			"You said yes, so Ghost went ahead.",
+			"You said yes, so Kaya went ahead.",
 		},
 		{
 			"high-impact approval warns it is hard to undo",
@@ -335,7 +335,7 @@ func TestWhyForConsequentialActions(t *testing.T) {
 		{
 			"denial is honest that nothing ran",
 			ev(cevents.PermissionDenied, map[string]interface{}{"capability": "message.send", "risk": "consequential"}),
-			"You declined this action, so Ghost did not do it.",
+			"You declined this action, so Kaya did not do it.",
 		},
 		{
 			"expiry is honest that nothing ran",
@@ -376,7 +376,7 @@ func TestWhyForConsequentialActions(t *testing.T) {
 	}
 }
 
-// Activity reports what Ghost did, with provenance. It is not a place for
+// Activity reports what Kaya did, with provenance. It is not a place for
 // defensive prose: a source list is useful, a caveat is noise.
 func TestActivityCarriesSourcesWithoutCaveatProse(t *testing.T) {
 	ev := &cevents.Event{

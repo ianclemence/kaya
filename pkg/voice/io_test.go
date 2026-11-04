@@ -50,9 +50,9 @@ func TestAdapterUnavailableFailsClosed(t *testing.T) {
 }
 
 func TestAdapterUsesEngine(t *testing.T) {
-	a := NewFileTranscriberAdapter(&fakeTranscriber{text: "hello ghost"})
+	a := NewFileTranscriberAdapter(&fakeTranscriber{text: "hello kaya"})
 	tr, err := a.Recognize(context.Background(), []byte{1, 2}, "audio/wav")
-	if err != nil || tr.Text != "hello ghost" {
+	if err != nil || tr.Text != "hello kaya" {
 		t.Fatalf("adapter broken: %+v %v", tr, err)
 	}
 }

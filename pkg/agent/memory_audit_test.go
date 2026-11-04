@@ -8,13 +8,13 @@ import (
 
 	_ "modernc.org/sqlite"
 
-	"github.com/ianclemence/ghost/pkg/cevents"
-	"github.com/ianclemence/ghost/pkg/personalcontext"
+	"github.com/ianclemence/kaya/pkg/cevents"
+	"github.com/ianclemence/kaya/pkg/personalcontext"
 )
 
 // A forgetting must reach the canonical stream, because until this existed
 // memory.created and memory.updated did and memory.deleted did not: a belief
-// Ghost removed simply vanished from the record the owner can read.
+// Kaya removed simply vanished from the record the owner can read.
 func TestForgetPublishesMemoryDeletedEvent(t *testing.T) {
 	db, err := sql.Open("sqlite", "file:"+t.TempDir()+"/cevents.db?_pragma=busy_timeout(5000)")
 	if err != nil {
@@ -26,7 +26,7 @@ func TestForgetPublishesMemoryDeletedEvent(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	al := &AgentLoop{governance: &Governance{Events: stream, GhostID: "ghost-1", AgentID: "agent-main"}}
+	al := &AgentLoop{governance: &Governance{Events: stream, KayaID: "kaya-1", AgentID: "agent-main"}}
 	al.wireMemoryAudit()
 	t.Cleanup(func() { personalcontext.OnForgetReceipt = nil })
 

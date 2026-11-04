@@ -1,17 +1,17 @@
 # Memory, Activity, Routines & Artifacts
 
-These are the systems downstream of canonical execution. They turn Ghost's
+These are the systems downstream of canonical execution. They turn Kaya's
 runtime record into persistent behavior and durable outputs.
 
 ---
 
 # Memory
 
-Memory is Ghost's persistent information about the user, conversations, and
+Memory is Kaya's persistent information about the user, conversations, and
 interactions. It is governed, scoped, and durable — not an uncontrolled
 transcript dump.
 
-## What Ghost remembers
+## What Kaya remembers
 
 - **Beliefs** — identity facts, preferences, decisions, relationships, goals —
   stored as structured entries with provenance.
@@ -64,7 +64,7 @@ order on reconnect, where the Pod governs them like any other turn.
 
 # Activity
 
-Activity is the human-facing representation of what Ghost actually did or is
+Activity is the human-facing representation of what Kaya actually did or is
 doing.
 
 ## What it shows
@@ -98,11 +98,11 @@ source of authority.
 
 # Routines
 
-**Routines** is the single owner-facing destination for anything Ghost runs on
+**Routines** is the single owner-facing destination for anything Kaya runs on
 its own: a reminder, a recurring instruction, a scheduled action, or a task.
 
 The owner never chooses between the internal models. They express an intent —
-"every Monday at 9, prepare my weekly brief" — and Ghost infers the shape. The
+"every Monday at 9, prepare my weekly brief" — and Kaya infers the shape. The
 split between "Routines" and "Automations" was an internal taxonomy leaking
 into the product; it no longer exists on any owner surface.
 
@@ -128,7 +128,7 @@ a scheduled row. Human schedule phrasing reuses the scheduler's own humanizer
 so no surface can disagree about what `0 9 * * 1-5` means.
 
 The deep rules below still govern execution: a routine is surfaced by
-`pkg/routinefeed`, but it wakes Ghost through the scheduler and re-enters the
+`pkg/routinefeed`, but it wakes Kaya through the scheduler and re-enters the
 normal capability, permission, and evidence path like any other work.
 
 ---
@@ -140,7 +140,7 @@ recurring behavior: scheduling is the implementation machinery.
 
 ## One scheduler
 
-Ghost has one active scheduler authority (`pkg/scheduled`). The former JSON
+Kaya has one active scheduler authority (`pkg/scheduled`). The former JSON
 cron engine (`pkg/cron`) is retired. Legacy scheduled jobs are migrated into
 the authoritative scheduler idempotently.
 
@@ -164,7 +164,7 @@ EVIDENCE
 EVENT
 ```
 
-A routine wakes Ghost. It does not authorize anything. Each run re-enters the
+A routine wakes Kaya. It does not authorize anything. Each run re-enters the
 normal capability, permission, and evidence path, so a routine whose authority
 has been revoked fails or waits instead of executing.
 
@@ -188,7 +188,7 @@ may describe a possible routine, but creating one is an explicit user action.
 
 # Artifacts
 
-An **artifact** is a concrete output Ghost produces or hands back: a file, a
+An **artifact** is a concrete output Kaya produces or hands back: a file, a
 generated document, or another bounded output.
 
 ## Runtime entities

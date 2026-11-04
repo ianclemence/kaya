@@ -9,7 +9,7 @@ import (
 
 func TestWebLoginRoundTripSealedAndMasked(t *testing.T) {
 	dir := t.TempDir()
-	t.Setenv("GHOST_CONFIG_DIR", dir)
+	t.Setenv("KAYA_CONFIG_DIR", dir)
 
 	if err := SaveWebLogin(WebLogin{
 		URL: "https://accounts.example.com/login", Username: "ian@example.com", Password: "hunter2",
@@ -56,7 +56,7 @@ func TestWebLoginRoundTripSealedAndMasked(t *testing.T) {
 }
 
 func TestSaveWebLoginValidates(t *testing.T) {
-	t.Setenv("GHOST_CONFIG_DIR", t.TempDir())
+	t.Setenv("KAYA_CONFIG_DIR", t.TempDir())
 	cases := []WebLogin{
 		{URL: "ftp://example.com", Username: "u", Password: "p"},
 		{URL: "https://example.com/login", Password: "p"},

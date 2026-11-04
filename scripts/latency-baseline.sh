@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Latency baseline harness.
 #
-# Reads Ghost's own turn telemetry from the systemd journal (no new
+# Reads Kaya's own turn telemetry from the systemd journal (no new
 # instrumentation: the loop already logs iterations, prompt/completion tokens,
 # ttfb_ms, duration_ms, usage_source and tools_used per turn) and reports
 # p50/p95 turn duration, p50/p95 first-token latency, and the usage-source
@@ -21,15 +21,15 @@ SINCE="${1:-24 hours ago}"
 # software version is identified. Telemetry from a different build must never
 # be attributed to this one.
 REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-VERSION="$(/usr/local/bin/ghost version 2>/dev/null | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+[^ ]*' | head -1)"
+VERSION="$(/usr/local/bin/kaya version 2>/dev/null | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+[^ ]*' | head -1)"
 COMMIT="$(git -C "$REPO_ROOT" rev-parse --short HEAD 2>/dev/null || echo unknown)"
-echo "ghost version: ${VERSION:-unknown}"
+echo "kaya version: ${VERSION:-unknown}"
 echo "git commit:    ${COMMIT}"
 echo "timestamp:     $(date -Is)"
-echo "config:        since='${SINCE}' unit=ghost.service"
+echo "config:        since='${SINCE}' unit=kaya.service"
 echo
 
-journalctl -u ghost --since "$SINCE" --no-pager 2>/dev/null \
+journalctl -u kaya --since "$SINCE" --no-pager 2>/dev/null \
   | grep 'turn telemetry' \
   | python3 -c '
 import re, sys

@@ -1,9 +1,9 @@
-/* Ghost Motion player. Draws a motion spec at any moment t, the same way every
+/* Kaya Motion player. Draws a motion spec at any moment t, the same way every
  * time: the phone previews it with it, the Pod renders it frame by frame into an
  * MP4 with it. Nothing here is random and nothing depends on wall-clock time
  * except play(), which only advances t.
  *
- * window.ghostMotion = { duration, seek(t), play(), pause(), ready }
+ * window.kayaMotion = { duration, seek(t), play(), pause(), ready }
  */
 (function () {
   "use strict";
@@ -711,7 +711,7 @@
   function pause() { playing = false; cancelAnimationFrame(raf); root.classList.add("paused"); }
 
   var ready = (document.fonts && document.fonts.ready ? document.fonts.ready : Promise.resolve()).then(function () { seek(0); });
-  window.ghostMotion = { duration: total, width: W, height: H, seek: seek, play: play, pause: pause, ready: ready };
+  window.kayaMotion = { duration: total, width: W, height: H, seek: seek, play: play, pause: pause, ready: ready };
 
   if (mode === "render") {
     var fr = document.getElementById("frame");
@@ -724,12 +724,12 @@
     // fits the whole screen. Either way it is centred on the dark ground.
     function fit() {
       var cw = document.documentElement.clientWidth;
-      var ch = window.__GHOST_INLINE__ ? 480 : document.documentElement.clientHeight || window.innerHeight;
+      var ch = window.__KAYA_INLINE__ ? 480 : document.documentElement.clientHeight || window.innerHeight;
       var s = Math.min(cw / W, ch / H);
       var left = Math.max(0, (cw - W * s) / 2);
       root.style.transform = "translate(" + left + "px,0) scale(" + s + ")";
-      document.getElementById("frame").style.height = (window.__GHOST_INLINE__ ? H * s : Math.max(H * s, ch)) + "px";
-      if (!window.__GHOST_INLINE__) root.style.top = Math.max(0, (ch - H * s) / 2) + "px";
+      document.getElementById("frame").style.height = (window.__KAYA_INLINE__ ? H * s : Math.max(H * s, ch)) + "px";
+      if (!window.__KAYA_INLINE__) root.style.top = Math.max(0, (ch - H * s) / 2) + "px";
     }
     fit();
     window.addEventListener("resize", fit);

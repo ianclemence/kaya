@@ -104,7 +104,7 @@ func TestImageBase64Part(t *testing.T) {
 	}
 }
 
-// TestHTTPProvider_DeepSeekThinkingDefaultsOff verifies Ghost disables
+// TestHTTPProvider_DeepSeekThinkingDefaultsOff verifies Kaya disables
 // DeepSeek thinking mode unless explicitly requested, using the provider's
 // object toggle {"thinking":{"type":"disabled"|"enabled"}}.
 func TestHTTPProvider_DeepSeekThinkingDefaultsOff(t *testing.T) {

@@ -3,7 +3,7 @@ package tools
 import (
 	"context"
 	"fmt"
-	"github.com/ianclemence/ghost/pkg/config"
+	"github.com/ianclemence/kaya/pkg/config"
 	"os"
 	"path/filepath"
 	"strings"
@@ -46,7 +46,7 @@ func validatePath(path, workspace string, restrict bool) (string, error) {
 
 	if restrict {
 		// Allow access to temporary media files from mobile uploads.
-		tempMediaDir := filepath.Join(os.TempDir(), "GHOST_media")
+		tempMediaDir := filepath.Join(os.TempDir(), "KAYA_media")
 		if under(tempMediaDir, absPath) {
 			return absPath, nil
 		}
@@ -216,7 +216,7 @@ func (t *WriteFileTool) Execute(ctx context.Context, args map[string]interface{}
 	if err := guardPrimaryFileIn(t.workspace, resolvedPath); err != nil {
 		return ErrorResult(err.Error())
 	}
-	if err := guardGhostEstateWrite(t.workspace, resolvedPath); err != nil {
+	if err := guardKayaEstateWrite(t.workspace, resolvedPath); err != nil {
 		return ErrorResult(err.Error())
 	}
 	if err := t.guard.Check(SessionKeyFromContext(ctx), OpWrite, resolvedPath); err != nil {

@@ -6,12 +6,12 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/ianclemence/ghost/pkg/browser"
+	"github.com/ianclemence/kaya/pkg/browser"
 )
 
 // A page that re-renders between one step and the next is the normal
 // condition on a real site: a modal opens, a list reorders, a component
-// swaps its tree. Ghost used to answer that with two wasted round trips —
+// swaps its tree. Kaya used to answer that with two wasted round trips —
 // refuse, then make the model ask for a snapshot. These tests pin the
 // recovery: the refusal comes back with the page as it is now, and the
 // very next act uses a live ref from it.
@@ -68,7 +68,7 @@ func TestStaleRefHandsBackTheLivePage(t *testing.T) {
 		t.Fatalf("the refused ref must never be executed (clicks=%d)", count("click"))
 	}
 	if count("snapshot") == 0 {
-		t.Fatal("Ghost must look at the page itself rather than send the model back for it")
+		t.Fatal("Kaya must look at the page itself rather than send the model back for it")
 	}
 	if !strings.Contains(res.ForLLM, "shop.test/cart") || !strings.Contains(res.ForLLM, "Pay now") {
 		t.Fatalf("refusal does not carry the live page: %s", res.ForLLM)
@@ -119,7 +119,7 @@ func TestCLIUnknownRefIsRecoveredTheSameWay(t *testing.T) {
 	if count("snapshot") == 0 {
 		t.Fatal("expected a look at the page after the CLI refused the ref")
 	}
-	// The action still records as an error: Ghost did not do what was asked.
+	// The action still records as an error: Kaya did not do what was asked.
 	if res.Evidence["outcome"] != "error" {
 		t.Fatalf("a recovered refusal must still record outcome=error: %+v", res.Evidence)
 	}

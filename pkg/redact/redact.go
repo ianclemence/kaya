@@ -1,4 +1,4 @@
-// Package redact is Ghost's centralized secret boundary.
+// Package redact is Kaya's centralized secret boundary.
 //
 // Borrowed pattern (OpenMausBot redact.ts): redact at the transport
 // boundary, not at each call site. Every event payload, log field,
@@ -32,7 +32,7 @@ var secretKeyParts = []string{
 	"authorization", "auth_token", "private_key", "access_key", "client_secret",
 }
 
-// measurementKeys are the exact field names Ghost uses for NUMERIC
+// measurementKeys are the exact field names Kaya uses for NUMERIC
 // measurements. "prompt_tokens": 45512 is a reading, not a credential, and
 // masking it broke usage observability while protecting nothing.
 //

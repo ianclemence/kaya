@@ -2,10 +2,10 @@
 name: github-repo-management
 description: Clone, create, fork, configure, and manage GitHub repositories. Manage remotes, secrets, releases, and workflows. Works with gh CLI or falls back to git + GitHub REST API via curl.
 version: 1.1.0
-author: Ghost
+author: Kaya
 license: MIT
 metadata:
-  ghost:
+  kaya:
     tags: [GitHub, Repositories, Git, Releases, Secrets, Configuration]
     related_skills: [github-auth, github-pr-workflow, github-issues]
 ---
@@ -26,7 +26,7 @@ if command -v gh &>/dev/null && gh auth status &>/dev/null; then
 else
   AUTH="git"
   if [ -z "$GITHUB_TOKEN" ]; then
-    echo "Need authentication first (gh auth login or Ghost settings -> Integrations)"
+    echo "Need authentication first (gh auth login or Kaya settings -> Integrations)"
     exit 1
   fi
 fi

@@ -36,7 +36,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/ianclemence/ghost/pkg/credentials"
+	"github.com/ianclemence/kaya/pkg/credentials"
 )
 
 const (
@@ -197,7 +197,7 @@ func (f *Fetcher) get(ctx context.Context, rawURL string, max int64) ([]byte, st
 	if err != nil {
 		return nil, ""
 	}
-	req.Header.Set("User-Agent", "Mozilla/5.0 (compatible; GhostPod/1.0)")
+	req.Header.Set("User-Agent", "Mozilla/5.0 (compatible; KayaPod/1.0)")
 	req.Header.Set("Accept", "image/*,text/html;q=0.8,*/*;q=0.5")
 	resp, err := f.client.Do(req)
 	if err != nil {

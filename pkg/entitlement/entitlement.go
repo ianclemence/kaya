@@ -1,6 +1,6 @@
 // Package entitlement is the signed pass that lets a Pod use the hosted relay.
 //
-// The Ghost site signs a token when a subscription is paid for; the relay
+// The Kaya site signs a token when a subscription is paid for; the relay
 // checks the signature and nothing else about the owner. The token names a
 // Pod, carries an opaque account id and an expiry, and is short-lived so a
 // lapsed subscription simply stops being renewed. The relay holds only the

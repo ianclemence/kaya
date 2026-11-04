@@ -12,7 +12,7 @@ import (
 // available") at a human-check step.
 func TestWithWritableBrowserHomeRedirectsWhenHomeUnwritable(t *testing.T) {
 	root := t.TempDir()
-	t.Setenv("GHOST_DIR", root)
+	t.Setenv("KAYA_DIR", root)
 
 	env := []string{"HOME=/proc/nonexistent-home", "PATH=/usr/bin"}
 	got := WithWritableBrowserHome(env)

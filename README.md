@@ -1,12 +1,12 @@
-# Ghost
+# Kaya
 
 **Your AI. Your Memory. Your Machine.**
 
-Ghost is a personal AI that lives on a small computer in your home, called a
+Kaya is a personal AI that lives on a small computer in your home, called a
 Pod. It remembers the people and plans in your life, does things for you (it
 browses the web, keeps your reminders and routines, works with your files and
 apps), and speaks up when something needs you. You reach it from your phone, a
-browser or a terminal, and it is the same Ghost everywhere.
+browser or a terminal, and it is the same Kaya everywhere.
 
 It is yours in a way a service can't be. Your memory, your files and your logins
 stay on the Pod. You choose which AI model it thinks with, in the cloud or on the
@@ -14,9 +14,9 @@ machine itself, and you can change your mind without losing anything.
 
 ---
 
-## What makes it Ghost
+## What makes it Kaya
 
-- **It stays.** One Ghost, with one memory, across days, devices, restarts and
+- **It stays.** One Kaya, with one memory, across days, devices, restarts and
   changes of model. It isn't a conversation you start over.
 - **It learns you.** It keeps a private, editable memory of your people, places,
   habits and plans, and uses it in every conversation. You can read all of it and
@@ -30,9 +30,9 @@ machine itself, and you can change your mind without losing anything.
 
 ---
 
-## A day with Ghost
+## A day with Kaya
 
-| You say | Ghost |
+| You say | Kaya |
 |---|---|
 | "Find the cheapest flights from Bangkok to Shenzhen on 15 October." | Uses its browser when a plain search isn't enough, compares what it finds, and tells you where each answer came from and which sites blocked it. |
 | "Remind me tomorrow at 9 to look at the flights." | Sends it on time, even with the app closed and the AI provider down. |
@@ -47,10 +47,10 @@ when a new version is out, and when something on your network keeps trying to ge
 
 ## You stay in control
 
-A model saying "done" is only a claim. Ghost decides what happened from evidence,
+A model saying "done" is only a claim. Kaya decides what happened from evidence,
 and it decides what is allowed with one rule: a single Permission Broker allows,
 asks or denies, and the model cannot grant itself anything. Your secrets are
-sealed on the Pod and are never shown back or sent to the model. Ghost's own
+sealed on the Pod and are never shown back or sent to the model. Kaya's own
 identity and memory files can't be deleted by a request, however it is phrased.
 
 More in [the Permission Broker](docs/PERMISSION-BROKER.md).
@@ -59,8 +59,8 @@ More in [the Permission Broker](docs/PERMISSION-BROKER.md).
 
 ## Get started
 
-**With a Pod.** Plug it in, open `http://ghost.local` on the same network, enter
-the setup code, choose how Ghost thinks, and you are talking to it in about ten
+**With a Pod.** Plug it in, open `http://kaya.local` on the same network, enter
+the setup code, choose how Kaya thinks, and you are talking to it in about ten
 minutes. The whole path is in [Your Pod, from the box to your first
 conversation](docs/POD-QUICKSTART.md). What to buy or reuse is in [What a Pod
 needs](docs/HARDWARE.md).
@@ -69,17 +69,17 @@ needs](docs/HARDWARE.md).
 
 ```bash
 sudo apt install -y git make golang-go
-git clone https://github.com/ianclemence/ghost.git
-cd ghost
-sudo make install-ghost
+git clone https://github.com/ianclemence/kaya.git
+cd kaya
+sudo make install-kaya
 sudo reboot
 ```
 
 Then open `http://<the machine's address>` and follow setup. (`ffmpeg` is for
 voice notes and spoken replies. On Windows, run `setup.bat`.)
 
-**On your phone.** Run `ghost pair` on the Pod for a QR code, and scan it in the
-[Ghost app](https://github.com/ianclemence/ghost-app).
+**On your phone.** Run `kaya pair` on the Pod for a QR code, and scan it in the
+[Kaya app](https://github.com/ianclemence/kaya-app).
 
 ---
 
@@ -87,16 +87,16 @@ voice notes and spoken replies. On Windows, run `setup.bat`.)
 
 | If you want to | Read |
 |---|---|
-| Use Ghost day to day: reminders, files, connecting apps, updating, backups | [Using Ghost](docs/GUIDE.md) |
+| Use Kaya day to day: reminders, files, connecting apps, updating, backups | [Using Kaya](docs/GUIDE.md) |
 | Know what hardware a Pod needs | [What a Pod needs](docs/HARDWARE.md) |
-| Reach Ghost when you are away from home | [Away from home](docs/CONNECT.md) |
+| Reach Kaya when you are away from home | [Away from home](docs/CONNECT.md) |
 | Look up a command or a setting | [Commands and configuration](docs/COMMANDS.md) |
-| Understand how Ghost works and why it can be trusted | [How Ghost works](docs/README.md) |
+| Understand how Kaya works and why it can be trusted | [How Kaya works](docs/README.md) |
 | See what changed | [Changelog](pkg/changelog/CHANGELOG.md) |
-| Work on Ghost | [Developing Ghost](docs/DEVELOPMENT.md) |
+| Work on Kaya | [Developing Kaya](docs/DEVELOPMENT.md) |
 
 The phone app lives in its own repository:
-[ghost-app](https://github.com/ianclemence/ghost-app).
+[kaya-app](https://github.com/ianclemence/kaya-app).
 
 ## License
 

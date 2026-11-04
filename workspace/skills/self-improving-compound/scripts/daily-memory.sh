@@ -7,7 +7,7 @@
 
 set -euo pipefail
 
-ROOT="${GHOST_WORKSPACE:-$PWD}"
+ROOT="${KAYA_WORKSPACE:-$PWD}"
 DATE=""
 COLLECTOR="${SELF_IMPROVING_DAILY_COLLECTOR:-}"
 
@@ -19,13 +19,13 @@ Prepare a Daily Memory Digest run. The agent should then gather/read context,
 write memory/YYYY-MM-DD.md, and run the self-improvement capture pass.
 
 Options:
-  --root PATH          Workspace root (default: GHOST_WORKSPACE or $PWD)
+  --root PATH          Workspace root (default: KAYA_WORKSPACE or $PWD)
   --date DATE          Target date in YYYY-MM-DD format (default: today in Asia/Shanghai)
   --collector COMMAND  Optional command that collects/prints daily context.
                        Also configurable via SELF_IMPROVING_DAILY_COLLECTOR.
 
 Collector contract:
-  If provided, COMMAND is executed with DAILY_MEMORY_DATE and GHOST_WORKSPACE
+  If provided, COMMAND is executed with DAILY_MEMORY_DATE and KAYA_WORKSPACE
   in the environment. It may print a context file path or summary. The agent
   must inspect the output before writing the final note.
 USAGE
@@ -55,7 +55,7 @@ mkdir -p "$ROOT/memory"
 
 if [[ -n "$COLLECTOR" ]]; then
   echo "[daily-memory] Running collector: $COLLECTOR"
-  DAILY_MEMORY_DATE="$DATE" GHOST_WORKSPACE="$ROOT" bash -lc "$COLLECTOR"
+  DAILY_MEMORY_DATE="$DATE" KAYA_WORKSPACE="$ROOT" bash -lc "$COLLECTOR"
 else
   echo "[daily-memory] No collector configured. Gather context with runtime tools before writing the note."
 fi

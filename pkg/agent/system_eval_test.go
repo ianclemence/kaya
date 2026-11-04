@@ -13,17 +13,17 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ianclemence/ghost/pkg/ideas"
-	"github.com/ianclemence/ghost/pkg/permissions"
-	"github.com/ianclemence/ghost/pkg/personalcontext"
-	"github.com/ianclemence/ghost/pkg/providers"
-	"github.com/ianclemence/ghost/pkg/tools"
+	"github.com/ianclemence/kaya/pkg/ideas"
+	"github.com/ianclemence/kaya/pkg/permissions"
+	"github.com/ianclemence/kaya/pkg/personalcontext"
+	"github.com/ianclemence/kaya/pkg/providers"
+	"github.com/ianclemence/kaya/pkg/tools"
 )
 
 // The system evaluation: one table of deterministic checks, grouped by the
-// property Ghost has to hold, run against the real components (registry,
+// property Kaya has to hold, run against the real components (registry,
 // broker, governance, stores, fallback chain) with no model in the loop. A
-// model-free eval cannot say Ghost is good at a task; it can say these
+// model-free eval cannot say Kaya is good at a task; it can say these
 // guarantees hold and keep holding. The scorecard at the end is computed from
 // the subtests that ran, never written by hand.
 
@@ -218,7 +218,7 @@ func TestSystemEval(t *testing.T) {
 					t.Fatalf("%v %q", err, data)
 				}
 			}},
-			{"a probe session cannot teach Ghost about the owner", func(t *testing.T) {
+			{"a probe session cannot teach Kaya about the owner", func(t *testing.T) {
 				ws := t.TempDir()
 				al := productionRuleLoop(t, ws)
 				runTurn(t, al, "my dog Biscuit is a golden retriever", "memtest:req-1")

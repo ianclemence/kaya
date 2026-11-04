@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ianclemence/ghost/pkg/provider"
+	"github.com/ianclemence/kaya/pkg/provider"
 )
 
 func TestFallbackTriesNextOnEmptyResponse(t *testing.T) {

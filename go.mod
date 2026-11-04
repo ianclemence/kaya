@@ -1,4 +1,4 @@
-module github.com/ianclemence/ghost
+module github.com/ianclemence/kaya
 
 go 1.26.0
 

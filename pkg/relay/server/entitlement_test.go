@@ -14,9 +14,9 @@ import (
 	"time"
 
 	"github.com/gorilla/websocket"
-	"github.com/ianclemence/ghost/pkg/entitlement"
-	"github.com/ianclemence/ghost/pkg/relay/proto"
-	"github.com/ianclemence/ghost/pkg/relaycrypto"
+	"github.com/ianclemence/kaya/pkg/entitlement"
+	"github.com/ianclemence/kaya/pkg/relay/proto"
+	"github.com/ianclemence/kaya/pkg/relaycrypto"
 )
 
 type meteredEnv struct {
@@ -69,9 +69,9 @@ func (e *meteredEnv) enroll(pod, secret, tok string) *http.Response {
 }
 
 func (e *meteredEnv) dial(pod, secret, tok string) (*websocket.Conn, *http.Response, error) {
-	h := http.Header{"X-Ghost-Device": {pod}, "X-Ghost-Device-Secret": {secret}}
+	h := http.Header{"X-Kaya-Device": {pod}, "X-Kaya-Device-Secret": {secret}}
 	if tok != "" {
-		h.Set("X-Ghost-Entitlement", tok)
+		h.Set("X-Kaya-Entitlement", tok)
 	}
 	return websocket.DefaultDialer.Dial(wsURL(e.ts.URL)+"/v1/tunnel", h)
 }
@@ -313,8 +313,8 @@ func TestSealedExchangeIsOpaqueToTheRelay(t *testing.T) {
 	}()
 
 	req, _ := http.NewRequest("POST", ts.URL+"/v1/sealed", bytes.NewReader(env))
-	req.Header.Set("X-Ghost-Client-Id", "pod-1")
-	req.Header.Set("X-Ghost-Client-Token", "tok")
+	req.Header.Set("X-Kaya-Client-Id", "pod-1")
+	req.Header.Set("X-Kaya-Client-Token", "tok")
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		t.Fatal(err)
@@ -322,7 +322,7 @@ func TestSealedExchangeIsOpaqueToTheRelay(t *testing.T) {
 	defer resp.Body.Close()
 	wire, _ := io.ReadAll(resp.Body)
 
-	if resp.StatusCode != 200 || resp.Header.Get("X-Ghost-Relay") != "sealed" {
+	if resp.StatusCode != 200 || resp.Header.Get("X-Kaya-Relay") != "sealed" {
 		t.Fatalf("unexpected response %d %v", resp.StatusCode, resp.Header)
 	}
 	if got := <-podSaw; !bytes.Equal(got, env) {
@@ -355,7 +355,7 @@ func TestSealedNeedsAPairedClient(t *testing.T) {
 	srv.tunnels.SetClients("pod-1", []ClientBinding{{TokenHash: HashToken("tok")}})
 	for name, hdr := range map[string]http.Header{
 		"no credentials": {},
-		"wrong token":    {"X-Ghost-Client-Id": {"pod-1"}, "X-Ghost-Client-Token": {"nope"}},
+		"wrong token":    {"X-Kaya-Client-Id": {"pod-1"}, "X-Kaya-Client-Token": {"nope"}},
 	} {
 		req := httptest.NewRequest("POST", "/v1/sealed", strings.NewReader("x"))
 		req.Header = hdr
@@ -366,8 +366,8 @@ func TestSealedNeedsAPairedClient(t *testing.T) {
 		}
 	}
 	req := httptest.NewRequest("POST", "/v1/sealed", strings.NewReader("x"))
-	req.Header.Set("X-Ghost-Client-Id", "pod-1")
-	req.Header.Set("X-Ghost-Client-Token", "tok")
+	req.Header.Set("X-Kaya-Client-Id", "pod-1")
+	req.Header.Set("X-Kaya-Client-Token", "tok")
 	w := httptest.NewRecorder()
 	srv.HandleHTTP(w, req)
 	if w.Code != 503 {

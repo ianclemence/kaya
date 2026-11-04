@@ -2,11 +2,11 @@
 name: ascii-art
 description: "Generate ASCII art and text banners (pyfiglet fonts, cowsay, boxes, image-to-ascii). Invoke when the user asks for ASCII art, a text banner, figlet text, or to turn an image into text art. No API keys required."
 version: 4.0.0
-author: Ghost
+author: Kaya
 license: MIT
 dependencies: []
 metadata:
-  ghost:
+  kaya:
     tags:
       [
         ASCII,
@@ -117,7 +117,7 @@ cowsay -l                          # List all characters
 ### Available characters (50+)
 
 `beavis.zen`, `bong`, `bunny`, `cheese`, `daemon`, `default`, `dragon`,
-`dragon-and-cow`, `elephant`, `eyes`, `flaming-skull`, `ghostbusters`,
+`dragon-and-cow`, `elephant`, `eyes`, `flaming-skull`, `kayabusters`,
 `hellokitty`, `kiss`, `kitty`, `koala`, `luke-koala`, `mech-and-cow`,
 `meow`, `moofasa`, `moose`, `ren`, `sheep`, `skeleton`, `small`,
 `stegosaurus`, `stimpy`, `supermilker`, `surgery`, `three-eyes`,
@@ -166,9 +166,9 @@ boxes -l                                       # List all 70+ designs
 ### Combine with pyfiglet or asciified
 
 ```bash
-python3 -m pyfiglet "GHOST" -f slant | boxes -d stone
+python3 -m pyfiglet "KAYA" -f slant | boxes -d stone
 # Or without pyfiglet installed:
-curl -s "https://asciified.thelicato.io/api/v2/ascii?text=GHOST&font=Slant" | boxes -d stone
+curl -s "https://asciified.thelicato.io/api/v2/ascii?text=KAYA&font=Slant" | boxes -d stone
 ```
 
 ## Tool 5: TOIlet (Colored Text Art)

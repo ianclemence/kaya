@@ -9,7 +9,7 @@ import (
 	"testing"
 )
 
-// home returns a Ghost home with a workspace inside it, like /var/ghost.
+// home returns a Kaya home with a workspace inside it, like /var/kaya.
 func projectsHome(t *testing.T) (home, workspace string) {
 	t.Helper()
 	home = t.TempDir()
@@ -150,7 +150,7 @@ func TestExecRefusesAnInvalidProjectName(t *testing.T) {
 	}
 }
 
-// What the live Ghost did: from its default directory it ran
+// What the live Kaya did: from its default directory it ran
 // "cd projects && git clone ..." and never named a working_dir. The natural
 // path has to work, and land in the real folder beside the workspace.
 func TestExecFromTheDefaultDirectoryCanUseProjects(t *testing.T) {
@@ -193,8 +193,8 @@ func TestExecInsideOneProjectDoesNotSeeTheOthers(t *testing.T) {
 }
 
 // The sandbox binds a working directory outside the workspace read-write, so
-// where a command may run is the boundary that keeps Ghost's config out of reach.
-func TestExecCannotRunInGhostsOwnConfigOrOtherSiblings(t *testing.T) {
+// where a command may run is the boundary that keeps Kaya's config out of reach.
+func TestExecCannotRunInKayasOwnConfigOrOtherSiblings(t *testing.T) {
 	home, ws := projectsHome(t)
 	cfg := filepath.Join(home, "config")
 	if err := os.MkdirAll(cfg, 0o755); err != nil {

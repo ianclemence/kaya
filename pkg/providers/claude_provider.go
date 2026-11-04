@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/ianclemence/ghost/pkg/auth"
+	"github.com/ianclemence/kaya/pkg/auth"
 )
 
 type ClaudeProvider struct {
@@ -71,7 +71,7 @@ func createClaudeTokenSource() func() (string, error) {
 			return "", fmt.Errorf("loading auth credentials: %w", err)
 		}
 		if cred == nil {
-			return "", fmt.Errorf("no credentials for anthropic. Run: GHOST auth login --provider anthropic")
+			return "", fmt.Errorf("no credentials for anthropic. Run: KAYA auth login --provider anthropic")
 		}
 		return cred.AccessToken, nil
 	}

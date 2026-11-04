@@ -277,7 +277,7 @@ Style can drift in extensions — restate genre/mood when extending.
   than just listing genres. "Whisper to roar to whisper" gives
   Suno a performance map.
 - Keeping some original lines intact in a parody adds recognizability
-  and emotional weight — the audience feels the ghost of the original.
+  and emotional weight — the audience feels the kaya of the original.
 - The bridge slot in a song is where you can transform imagery.
   Swap the original's specific references for your theme's metaphors
   while keeping the emotional function (reflection, shift, revelation).
@@ -298,10 +298,10 @@ cover this (heavy dependencies, so not installed by default):
 
 - **heartmula** — full songs with vocals from lyrics + tags
   (open-source Suno alternative, 8-16GB VRAM):
-  the HeartMuLa skill (ask Ghost to enable it)
+  the HeartMuLa skill (ask Kaya to enable it)
 - **audiocraft** — Meta's MusicGen (instrumental text-to-music) and
   AudioGen (sound effects):
-  the AudioCraft skill (ask Ghost to enable it)
+  the AudioCraft skill (ask Kaya to enable it)
 
 The lyric-writing and prompting craft in this skill applies to
 heartmula too — its input format is lyrics with bracketed structure

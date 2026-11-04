@@ -10,10 +10,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ianclemence/ghost/pkg/credentials"
+	"github.com/ianclemence/kaya/pkg/credentials"
 )
 
-// browser_login signs in to a site using a login the owner saved in Ghost
+// browser_login signs in to a site using a login the owner saved in Kaya
 // settings (Apps → Website logins).
 //
 // Secret discipline: the credential is read from the sealed vault inside this
@@ -21,7 +21,7 @@ import (
 // model, never a log line) — that is the secret. agent-browser's `auth save`
 // requires the username as a flag, so the username does appear in this
 // machine's process list (owner-only, same uid) but is never returned to the
-// model, never logged by Ghost, and scrubbed from every byte we return,
+// model, never logged by Kaya, and scrubbed from every byte we return,
 // together with the password. A missing login produces the setup message — this tool never asks
 // for a password in chat.
 func (t *BrowserTool) executeLogin(ctx context.Context, args map[string]interface{}) *ToolResult {
@@ -74,7 +74,7 @@ func (t *BrowserTool) executeLogin(ctx context.Context, args map[string]interfac
 	saveCtx, cancel := context.WithTimeout(ctx, 45*time.Second)
 	defer cancel()
 	if out, err := browserCLIRun(saveCtx, browserEnvironment(t.sessionProfile), login.Password, saveArgs...); err != nil {
-		// This is a fault on Ghost's side, not a missing login: say so, so it is
+		// This is a fault on Kaya's side, not a missing login: say so, so it is
 		// never reported to the owner as "no saved login".
 		return ErrorResult("The login for " + login.Host + " IS saved, but the browser could not use it: " + scrubSecret(string(out), login) + " Do not tell the owner the login is missing.")
 	}
@@ -98,7 +98,7 @@ var (
 // sign-in form: the page itself when it has a password field, otherwise the
 // page behind its "Log in" link. If the sign-in page asks for a human check
 // (a CAPTCHA or Cloudflare's "Verify you are human"), it returns an owner-facing
-// message instead: Ghost does not fill a form it cannot finish, and says who
+// message instead: Kaya does not fill a form it cannot finish, and says who
 // has to do the next step. Best effort: on any browser error it returns
 // nothing and the normal sign-in path runs.
 func (t *BrowserTool) findLoginPage(ctx context.Context, pageURL string) (found, blocked string) {
@@ -130,8 +130,8 @@ func (t *BrowserTool) findLoginPage(ctx context.Context, pageURL string) (found,
 	if humanCheckRe.MatchString(s) {
 		return "", "That sign-in page asks for a human check (a CAPTCHA or Cloudflare's \"Verify you are human\"). " +
 			"I can't complete that step, so I haven't typed anything into the form. Open that sign-in page with browser_navigate so it shows as a live browser card in the app, " +
-			"then tell the owner plainly what to do: in the Ghost app, tap \"Take over and steer\" on the browser card, tick the box and sign in themselves, then tap Done. " +
-			"You carry on when they do. If it is their own site they can instead allow Ghost past the check."
+			"then tell the owner plainly what to do: in the Kaya app, tap \"Take over and steer\" on the browser card, tick the box and sign in themselves, then tap Done. " +
+			"You carry on when they do. If it is their own site they can instead allow Kaya past the check."
 	}
 	if out, err := browserCLIRun(c, env, "", "get", "url"); err == nil {
 		if u := strings.TrimSpace(string(out)); strings.HasPrefix(u, "http") {

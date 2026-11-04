@@ -6,13 +6,13 @@ import (
 )
 
 // ConfigShadow describes a config-resolution mismatch that would confuse an
-// operator: the CLI resolved to one config file, while an installed Ghost
+// operator: the CLI resolved to one config file, while an installed Kaya
 // exists and appears to hold the credential the CLI is missing.
 type ConfigShadow struct {
 	// ResolvedPath is the config file the CLI actually loaded.
 	ResolvedPath string
-	// InstalledPath is the installed Ghost's config file (e.g.
-	// /var/ghost/config/config.json).
+	// InstalledPath is the installed Kaya's config file (e.g.
+	// /var/kaya/config/config.json).
 	InstalledPath string
 	// InstalledHasSecret reports whether the installed config carries a
 	// non-empty key for the provider in question.
@@ -20,13 +20,13 @@ type ConfigShadow struct {
 }
 
 // DetectConfigShadow reports whether a CLI run resolved to a config that is
-// NOT the installed Ghost's, while an installed Ghost config exists. It is the
+// NOT the installed Kaya's, while an installed Kaya config exists. It is the
 // honesty check behind "no API key configured": when true, the real problem is
 // usually that the operator is pointed at a checkout config, not that no key
 // was ever saved.
 //
 // providerKey returns the provider's API key from a config file (may be "").
-// Returns ok=false when there is no shadowing to report (no installed Ghost,
+// Returns ok=false when there is no shadowing to report (no installed Kaya,
 // or the resolved path already IS the installed one).
 func DetectConfigShadow(resolvedPath string, installed bool, providerKey func(path string) string) (ConfigShadow, bool) {
 	if !installed || resolvedPath == "" {

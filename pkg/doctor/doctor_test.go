@@ -4,10 +4,10 @@ import (
 	"context"
 	"testing"
 
-	"github.com/ianclemence/ghost/pkg/db"
-	"github.com/ianclemence/ghost/pkg/providers"
-	"github.com/ianclemence/ghost/pkg/schema"
-	"github.com/ianclemence/ghost/pkg/tools"
+	"github.com/ianclemence/kaya/pkg/db"
+	"github.com/ianclemence/kaya/pkg/providers"
+	"github.com/ianclemence/kaya/pkg/schema"
+	"github.com/ianclemence/kaya/pkg/tools"
 )
 
 type testProvider struct{}
@@ -28,7 +28,7 @@ func TestDoctorRunAll(t *testing.T) {
 
 	// checkBinaries scans PATH: an empty PATH means no binaries found, so
 	// the row omits itself and the count stays deterministic on any machine
-	// (machines with shadowed ghost installs report an 11th row live).
+	// (machines with shadowed kaya installs report an 11th row live).
 	t.Setenv("PATH", t.TempDir())
 
 	reg := tools.NewToolRegistry()

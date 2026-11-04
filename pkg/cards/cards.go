@@ -1,4 +1,4 @@
-// Package cards defines Ghost's rich card payloads: structured,
+// Package cards defines Kaya's rich card payloads: structured,
 // client-rendered companions to chat text — suggestions, goal updates,
 // carts, checkout sheets, browser views. Every card carries a plain-text
 // fallback in the message Content, so channels without rich rendering
@@ -17,7 +17,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/ianclemence/ghost/pkg/bus"
+	"github.com/ianclemence/kaya/pkg/bus"
 )
 
 // Kind is the card family. Only listed kinds validate; new kinds ship
@@ -39,33 +39,33 @@ const (
 	// KindBrowserView deep-links a live browser surface.
 	KindBrowserView Kind = "browser_view"
 	// KindMemoryReceipt is the trust card: the verbatim quote, confidence,
-	// source message, and lifecycle behind a belief Ghost just explained.
+	// source message, and lifecycle behind a belief Kaya just explained.
 	// Informational only — it carries no actions, because forgetting stays
 	// an explicit owner act on the Memory screen, never a card button.
 	KindMemoryReceipt Kind = "memory_receipt"
 	// KindBrowserRecovery tells the owner their browser was stuck and has
 	// been reset. Informational; the recovery already happened.
 	KindBrowserRecovery Kind = "browser_recovery"
-	// KindPresent is an answer Ghost chose to show rather than write: a
+	// KindPresent is an answer Kaya chose to show rather than write: a
 	// weather glance, a flight, a plan, a comparison. It is built from blocks
 	// (blocks.go), never from layout the model invents.
 	KindPresent Kind = "present"
 	// KindReminder is a reminder that went off, with what can be done about
 	// it (done, snooze). Its buttons are "act" actions the Pod carries out.
 	KindReminder Kind = "reminder"
-	// KindDigest is the morning message: several small things Ghost held
+	// KindDigest is the morning message: several small things Kaya held
 	// back so they arrive together instead of as separate pings.
 	KindDigest Kind = "digest"
-	// KindQuestion is Ghost asking something it needs to go on (the clarify
+	// KindQuestion is Kaya asking something it needs to go on (the clarify
 	// tool): the question as a title and the ways to answer it as input
 	// blocks. Answering it hands the answer to the turn that asked, or, when
 	// that turn has moved on, sends it as the owner's next message.
 	KindQuestion Kind = "question"
-	// KindDraft is something Ghost wrote for the owner to send (an email, a
+	// KindDraft is something Kaya wrote for the owner to send (an email, a
 	// calendar invite, a text message), shown in full and editable before
 	// anything leaves. Sending is the owner's own act on the card. See draft.go.
 	KindDraft Kind = "draft"
-	// KindCredentials is Ghost asking for a sign-in it needs and does not have.
+	// KindCredentials is Kaya asking for a sign-in it needs and does not have.
 	// The owner types it into the card on their phone, and it goes from the
 	// phone to the Vault on the Pod. It never passes through the conversation,
 	// so the model never reads it, and the card holds only the site it is for.
@@ -85,7 +85,7 @@ type Action struct {
 	Style     string `json:"style,omitempty"` // primary | secondary | destructive
 	RequestID string `json:"request_id,omitempty"`
 	// Kind is what tapping does, and it is only ever one of these:
-	//   "reply"   send Text to Ghost as if the owner had typed it
+	//   "reply"   send Text to Kaya as if the owner had typed it
 	//   "dismiss" put the card away
 	//   "act"     the Pod carries out the choice named by ID for this card's
 	//             kind (a reminder's Done or Snooze). The phone sends only the

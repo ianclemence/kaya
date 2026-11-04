@@ -11,7 +11,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ianclemence/ghost/pkg/relaycrypto"
+	"github.com/ianclemence/kaya/pkg/relaycrypto"
 )
 
 // SealedResponse is a response that crossed the relay sealed.
@@ -28,7 +28,7 @@ var ErrTruncated = errors.New("relayclient: sealed response was cut short")
 // DoSealed is the phone's side of a sealed exchange, as a reference for the app
 // and a tool for tests and the phone simulator. podPublic is the key pinned
 // when the phone paired.
-func DoSealed(relayURL, ghostID, clientToken string, podPublic []byte, req SealedRequest) (*SealedResponse, error) {
+func DoSealed(relayURL, kayaID, clientToken string, podPublic []byte, req SealedRequest) (*SealedResponse, error) {
 	req.Token = clientToken
 	if req.Timestamp == 0 {
 		req.Timestamp = time.Now().UnixMilli()
@@ -36,10 +36,10 @@ func DoSealed(relayURL, ghostID, clientToken string, podPublic []byte, req Seale
 	if req.Method == "" {
 		req.Method = http.MethodGet
 	}
-	return doSealedRaw(relayURL, ghostID, clientToken, podPublic, req)
+	return doSealedRaw(relayURL, kayaID, clientToken, podPublic, req)
 }
 
-func doSealedRaw(relayURL, ghostID, clientToken string, podPublic []byte, req SealedRequest) (*SealedResponse, error) {
+func doSealedRaw(relayURL, kayaID, clientToken string, podPublic []byte, req SealedRequest) (*SealedResponse, error) {
 	plain, err := json.Marshal(req)
 	if err != nil {
 		return nil, err
@@ -52,8 +52,8 @@ func doSealedRaw(relayURL, ghostID, clientToken string, podPublic []byte, req Se
 	if err != nil {
 		return nil, err
 	}
-	hreq.Header.Set("X-Ghost-Client-Id", ghostID)
-	hreq.Header.Set("X-Ghost-Client-Token", clientToken)
+	hreq.Header.Set("X-Kaya-Client-Id", kayaID)
+	hreq.Header.Set("X-Kaya-Client-Token", clientToken)
 	hreq.Header.Set("Content-Type", "application/octet-stream")
 	resp, err := (&http.Client{Timeout: 5 * time.Minute}).Do(hreq)
 	if err != nil {

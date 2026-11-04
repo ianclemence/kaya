@@ -1,12 +1,12 @@
-// Package golden implements the Ghost Golden Conversation Suite: a
+// Package golden implements the Kaya Golden Conversation Suite: a
 // model-agnostic, repeatable evaluation of realistic natural-language
-// interactions against the REAL Ghost runtime.
+// interactions against the REAL Kaya runtime.
 //
 // Two guarantees are asserted per conversation:
-//  1. Runtime correctness — what Ghost claims actually happened (memory,
+//  1. Runtime correctness — what Kaya claims actually happened (memory,
 //     permissions, routines, events, evidence).
 //  2. Model behavior quality — the model understands the user, does not
-//     fabricate tool results, respects Ghost's semantics, and stays
+//     fabricate tool results, respects Kaya's semantics, and stays
 //     truthful.
 //
 // Every conversation runs from a fresh, isolated workspace through the

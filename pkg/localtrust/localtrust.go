@@ -25,7 +25,7 @@ import (
 const FileName = ".local-token"
 
 // Header carries the token from a local program to the gateway.
-const Header = "X-Ghost-Local-Token"
+const Header = "X-Kaya-Local-Token"
 
 var (
 	mu     sync.RWMutex

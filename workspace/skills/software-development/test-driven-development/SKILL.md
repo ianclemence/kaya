@@ -2,10 +2,10 @@
 name: test-driven-development
 description: Use when implementing any feature or bugfix, before writing implementation code. Enforces RED-GREEN-REFACTOR cycle with test-first approach.
 version: 1.1.0
-author: Ghost
+author: Kaya
 license: MIT
 metadata:
-  ghost:
+  kaya:
     tags: [testing, tdd, development, quality, red-green-refactor]
     related_skills:
       [systematic-debugging, writing-plans, subagent-driven-development]
@@ -298,7 +298,7 @@ Can't check all boxes? You skipped TDD. Start over.
 | Must mock everything   | Code too coupled. Use dependency injection.                        |
 | Test setup huge        | Extract helpers. Still complex? Simplify the design.               |
 
-## Ghost Integration
+## Kaya Integration
 
 ### Running Tests
 

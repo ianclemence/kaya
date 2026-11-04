@@ -1,10 +1,10 @@
 package voice
 
 // Channel-neutral voice interfaces: voice is an input/output channel into
-// the SAME Ghost runtime — never a separate agent architecture.
+// the SAME Kaya runtime — never a separate agent architecture.
 //
 // Pipeline: Voice Input → SpeechRecognizer → canonical user message →
-// Ghost Runtime → canonical events → response text → SpeechSynthesizer.
+// Kaya Runtime → canonical events → response text → SpeechSynthesizer.
 // The brain produces a normal response; TTS is presentation. Vendors
 // (local or cloud speech) plug in behind these interfaces.
 
@@ -13,7 +13,7 @@ import (
 	"errors"
 	"os"
 
-	"github.com/ianclemence/ghost/pkg/bus"
+	"github.com/ianclemence/kaya/pkg/bus"
 )
 
 // Transcript is a recognition result. Partial transcripts support
@@ -53,7 +53,7 @@ func (a *FileTranscriberAdapter) Recognize(ctx context.Context, audio []byte, mi
 	if len(audio) == 0 {
 		return Transcript{}, errors.New("empty audio")
 	}
-	f, err := os.CreateTemp("", "ghost-voice-*.bin")
+	f, err := os.CreateTemp("", "kaya-voice-*.bin")
 	if err != nil {
 		return Transcript{}, err
 	}

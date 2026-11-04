@@ -8,7 +8,7 @@ import (
 	"time"
 )
 
-// A draft is something Ghost wrote for the owner to send: an email, a calendar
+// A draft is something Kaya wrote for the owner to send: an email, a calendar
 // invite, a text message. It is shown in full and can be edited on the card;
 // nothing leaves until the owner taps Send, and the card says what really
 // happened afterwards ("Sent 10:42", or why it did not go). The fields live in

@@ -2,10 +2,10 @@
 name: process-manager
 description: Monitor CPU and memory usage, list running processes, and terminate unresponsive programs. Invoke when user asks "what processes are running", "kill process X", "CPU usage", "memory hogs", or "which process is using port 8080". Linux: ps/kill/pkill. Windows: tasklist/taskkill.
 version: 1.1.0
-author: Ghost
+author: Kaya
 license: MIT
 metadata:
-  ghost:
+  kaya:
     tags: [processes, system-monitor, task-manager, CPU, memory, killing]
 prerequisites:
   commands: []
@@ -163,7 +163,7 @@ Restart-Service nginx
 
 ## Recurring Monitoring (Linux) — See Also: `tmux` Skill
 
-To watch processes on a schedule, create a Ghost routine (e.g. "report the
+To watch processes on a schedule, create a Kaya routine (e.g. "report the
 top CPU processes every 5 minutes") instead of raw system cron — routines
 stay governed, permissioned, and visible, while a crontab entry bypasses
 all of that. Example one-shot check:

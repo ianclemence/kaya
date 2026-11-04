@@ -8,9 +8,9 @@ import (
 
 func TestOwnersAppIsStoredSealedAndNeverPlain(t *testing.T) {
 	dir := t.TempDir()
-	t.Setenv("GHOST_CREDENTIALS_DIR", dir)
-	t.Setenv("GHOST_GOOGLE_CLIENT_ID", "")
-	t.Setenv("GHOST_GOOGLE_CLIENT_SECRET", "")
+	t.Setenv("KAYA_CREDENTIALS_DIR", dir)
+	t.Setenv("KAYA_GOOGLE_CLIENT_ID", "")
+	t.Setenv("KAYA_GOOGLE_CLIENT_SECRET", "")
 	if OAuthClientConfigured(ProviderGoogle) {
 		t.Fatal("nothing is set up yet")
 	}
@@ -37,7 +37,7 @@ func TestOwnersAppIsStoredSealedAndNeverPlain(t *testing.T) {
 }
 
 func TestSavingNeedsBothPartsAndAKnownProvider(t *testing.T) {
-	t.Setenv("GHOST_CREDENTIALS_DIR", t.TempDir())
+	t.Setenv("KAYA_CREDENTIALS_DIR", t.TempDir())
 	if SaveOAuthClient(ProviderGoogle, OAuthClient{ClientID: "only-id"}) == nil {
 		t.Error("a missing secret must be refused")
 	}
@@ -47,9 +47,9 @@ func TestSavingNeedsBothPartsAndAKnownProvider(t *testing.T) {
 }
 
 func TestEnvironmentStillOverrides(t *testing.T) {
-	t.Setenv("GHOST_CREDENTIALS_DIR", t.TempDir())
-	t.Setenv("GHOST_SPOTIFY_CLIENT_ID", "env-id")
-	t.Setenv("GHOST_SPOTIFY_CLIENT_SECRET", "env-secret")
+	t.Setenv("KAYA_CREDENTIALS_DIR", t.TempDir())
+	t.Setenv("KAYA_SPOTIFY_CLIENT_ID", "env-id")
+	t.Setenv("KAYA_SPOTIFY_CLIENT_SECRET", "env-secret")
 	cfg, ok := SpotifyClientConfigFromEnv()
 	if !ok || cfg.ClientID != "env-id" || cfg.RedirectURL != "http://127.0.0.1:8888/callback" {
 		t.Errorf("%+v %v", cfg, ok)

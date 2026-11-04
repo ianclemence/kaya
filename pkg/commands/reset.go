@@ -9,10 +9,10 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/ianclemence/ghost/pkg/config"
+	"github.com/ianclemence/kaya/pkg/config"
 )
 
-// resetHandler implements /reset — factory reset for Ghost.
+// resetHandler implements /reset — factory reset for Kaya.
 //
 //	/reset all                        wipes EVERYTHING, no flags, no confirmation:
 //	                                  chats, memory, activity, automations,
@@ -110,7 +110,7 @@ func resetHandler(ctx context.Context, req Request, rt *Runtime) error {
 	if scopes["chats"] && scopes["memory"] && scopes["activity"] &&
 		scopes["automations"] && scopes["context"] && scopes["devices"] &&
 		scopes["secrets"] && scopes["model"] {
-		results = append(results, "Ghost is now fresh — like a new installation. Say hello to start.")
+		results = append(results, "Kaya is now fresh — like a new installation. Say hello to start.")
 	}
 
 	if len(errs) > 0 {
@@ -216,10 +216,10 @@ func workspaceForRuntime(rt *Runtime) string {
 	if rt != nil && rt.Workspace != "" {
 		return rt.Workspace
 	}
-	if v := strings.TrimSpace(os.Getenv("GHOST_WORKSPACE_DIR")); v != "" {
+	if v := strings.TrimSpace(os.Getenv("KAYA_WORKSPACE_DIR")); v != "" {
 		return v
 	}
-	if v := strings.TrimSpace(os.Getenv("GHOST_WORKSPACE")); v != "" {
+	if v := strings.TrimSpace(os.Getenv("KAYA_WORKSPACE")); v != "" {
 		return v
 	}
 	return "workspace"
@@ -329,7 +329,7 @@ func resetModelDefault(ws string) (string, error) {
 	if err := config.SaveConfig(path, cfg); err != nil {
 		return "", err
 	}
-	return "AI: default provider reset to local (" + canonical + ") — restart Ghost to apply", nil
+	return "AI: default provider reset to local (" + canonical + ") — restart Kaya to apply", nil
 }
 
 // resolveConfigFilePath finds the runtime config.json for a workspace. The
@@ -337,7 +337,7 @@ func resetModelDefault(ws string) (string, error) {
 // locations are tried and the first existing file wins.
 func resolveConfigFilePath(ws string) string {
 	var candidates []string
-	if d := strings.TrimSpace(os.Getenv("GHOST_CONFIG_DIR")); d != "" {
+	if d := strings.TrimSpace(os.Getenv("KAYA_CONFIG_DIR")); d != "" {
 		candidates = append(candidates, filepath.Join(d, "config.json"))
 	}
 	if ws != "" {
@@ -351,8 +351,8 @@ func resolveConfigFilePath(ws string) string {
 	}
 	if home, err := os.UserHomeDir(); err == nil {
 		candidates = append(candidates,
-			filepath.Join(home, "ghost", "config", "config.json"),
-			filepath.Join(home, ".ghost", "config.json"),
+			filepath.Join(home, "kaya", "config", "config.json"),
+			filepath.Join(home, ".kaya", "config.json"),
 		)
 	}
 	for _, c := range candidates {
@@ -455,7 +455,7 @@ func clearSecrets(ws string) error {
 	if path := resolveConfigFilePath(ws); path != "" {
 		dirs = append(dirs, filepath.Dir(path))
 	}
-	if d := strings.TrimSpace(os.Getenv("GHOST_CONFIG_DIR")); d != "" {
+	if d := strings.TrimSpace(os.Getenv("KAYA_CONFIG_DIR")); d != "" {
 		dirs = append(dirs, d)
 	}
 	seen := map[string]bool{}
@@ -487,7 +487,7 @@ func dbFromRuntime(rt *Runtime, ws string) *sql.DB {
 		}
 	}
 	// Fallback: open DB directly
-	dbPath := filepath.Join(ws, "ghost.db")
+	dbPath := filepath.Join(ws, "kaya.db")
 	dsn := fmt.Sprintf("file:%s?_pragma=busy_timeout(5000)", dbPath)
 	db, err := sql.Open("sqlite", dsn)
 	if err != nil {

@@ -1,18 +1,18 @@
-// Package live is Ghost's Live Surface plane: a small, authoritative domain
-// primitive describing "a real execution surface Ghost is acting on that the
+// Package live is Kaya's Live Surface plane: a small, authoritative domain
+// primitive describing "a real execution surface Kaya is acting on that the
 // owner's device may observe and, when authorized, temporarily take over"
 // (Browser and Computer). It is not a UI framework and not a transport.
 //
 // Core invariant: OBSERVATION IS NOT CONTROL, and CONTROL IS EXPLICIT.
 //
-//   - Ghost controls a surface while it is executing on it (gate/executor).
+//   - Kaya controls a surface while it is executing on it (gate/executor).
 //   - A mobile takeover leases control to one authenticated user/device and
-//     PAUSES Ghost: while user_control is held, the model/runtime is refused
+//     PAUSES Kaya: while user_control is held, the model/runtime is refused
 //     further actions on that surface (the gates consult this plane).
-//   - Releasing control does NOT blindly resume Ghost: the surface moves to
+//   - Releasing control does NOT blindly resume Kaya: the surface moves to
 //     "paused" and only a revalidating resume (owner/context/generation/
 //     lease/permission rechecked by the caller's existing machinery) returns
-//     it to Ghost.
+//     it to Kaya.
 //   - User control leases expire. A dead mobile connection can never leave a
 //     permanent human owner; the safe fallback is "no valid control owner".
 //
@@ -43,7 +43,7 @@ const (
 	StateStarting     State = "starting"
 	StateActive       State = "active"
 	StateWaiting      State = "waiting"
-	StateUserControl  State = "user_control" // human owns control; Ghost paused
+	StateUserControl  State = "user_control" // human owns control; Kaya paused
 	StatePaused       State = "paused"       // released by human; revalidate before resume
 	StateCompleted    State = "completed"
 	StateFailed       State = "failed"
@@ -56,7 +56,7 @@ type Owner string
 
 const (
 	OwnerNone  Owner = "none"
-	OwnerGhost Owner = "ghost"
+	OwnerKaya Owner = "kaya"
 	OwnerUser  Owner = "user"
 )
 
@@ -98,7 +98,7 @@ type Surface struct {
 	State    State       `json:"state"`
 	Control  Owner       `json:"control"`
 	Lease    *UserLease  `json:"lease,omitempty"`
-	OwnerID  string      `json:"owner"` // ghost owner id surfaces belong to
+	OwnerID  string      `json:"owner"` // kaya owner id surfaces belong to
 	Obs      Observation `json:"observation"`
 	Updated  time.Time   `json:"updated"`
 	Sequence int64       `json:"sequence"` // monotonic per-surface change counter
@@ -109,14 +109,14 @@ type Surface struct {
 	// shows it in that conversation and nowhere else. Empty until a turn
 	// announces it (the always-present local computer has none while idle).
 	Session string `json:"session,omitempty"`
-	// Activity is what Ghost is doing on the surface right now, in plain
+	// Activity is what Kaya is doing on the surface right now, in plain
 	// words ("Opening news.ycombinator.com"). Cleared when the work settles.
 	Activity string `json:"activity,omitempty"`
 	// WaitingFor says who the surface waits on: "human" when the page needs a
 	// person (a "verify you are human" check). Such a surface stays live when
 	// the turn ends; it is the owner's move.
 	WaitingFor string `json:"waiting_for,omitempty"`
-	// Steps is what Ghost has done on the surface so far, oldest first, one
+	// Steps is what Kaya has done on the surface so far, oldest first, one
 	// plain line each ("Opened en.wikipedia.org"). Bounded; never page text.
 	Steps []string `json:"steps,omitempty"`
 	// Task binds the surface to the unit of work that created it. It is
@@ -128,12 +128,12 @@ type Surface struct {
 // Registry tracks the live surfaces the runtime is (or was just) acting on.
 type Registry struct {
 	mu    sync.Mutex
-	owner string // the ghost owner identity every surface belongs to
+	owner string // the kaya owner identity every surface belongs to
 	byID  map[string]*Surface
 	seq   int64
 }
 
-// NewRegistry creates the plane for one ghost owner.
+// NewRegistry creates the plane for one kaya owner.
 func NewRegistry(owner string) *Registry {
 	return &Registry{owner: owner, byID: map[string]*Surface{}}
 }
@@ -282,7 +282,7 @@ func (r *Registry) Observe(id string, o Observation) bool {
 	return true
 }
 
-// SetControlOwner marks who controls the surface (ghost/none). It never
+// SetControlOwner marks who controls the surface (kaya/none). It never
 // grants user control — Takeover does that with a lease.
 func (r *Registry) SetControlOwner(id string, o Owner) bool {
 	r.mu.Lock()
@@ -292,19 +292,19 @@ func (r *Registry) SetControlOwner(id string, o Owner) bool {
 		return false
 	}
 	s.Control = o
-	if o == OwnerGhost {
+	if o == OwnerKaya {
 		s.State = StateActive
 	}
 	s.bump(time.Now())
 	return true
 }
 
-// GhostMayAct reports whether the runtime may issue an action on the
+// KayaMayAct reports whether the runtime may issue an action on the
 // surface. It is the pause enforcement consulted by the browser/computer
-// gates BEFORE executing: while a user holds control Ghost is paused, and
+// gates BEFORE executing: while a user holds control Kaya is paused, and
 // after a release/expiry the surface stays paused until a revalidating
-// Resume returns it to Ghost.
-func (r *Registry) GhostMayAct(id string) (allowed bool, reason string) {
+// Resume returns it to Kaya.
+func (r *Registry) KayaMayAct(id string) (allowed bool, reason string) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	s, ok := r.byID[id]
@@ -319,10 +319,10 @@ func (r *Registry) GhostMayAct(id string) (allowed bool, reason string) {
 			s.bump(time.Now())
 			return false, "the human control lease expired; the runtime must revalidate before resuming"
 		}
-		return false, "the user is controlling this surface right now; Ghost is paused"
+		return false, "the user is controlling this surface right now; Kaya is paused"
 	}
 	if s.State == StatePaused {
-		return false, "the surface is paused after user release; it must be revalidated and resumed before Ghost acts"
+		return false, "the surface is paused after user release; it must be revalidated and resumed before Kaya acts"
 	}
 	return true, ""
 }
@@ -330,7 +330,7 @@ func (r *Registry) GhostMayAct(id string) (allowed bool, reason string) {
 // Takeover attempts to lease control to one authenticated device.
 //   - A surface under a DIFFERENT user's active lease fails closed.
 //   - The same device re-requesting takeover renews its lease (idempotent).
-//   - Successful takeover pauses Ghost (Control=user, State=user_control).
+//   - Successful takeover pauses Kaya (Control=user, State=user_control).
 func (r *Registry) Takeover(id, deviceID string, ttl time.Duration) (*UserLease, error) {
 	if deviceID == "" {
 		return nil, fmt.Errorf("takeover requires an authenticated device")
@@ -362,8 +362,8 @@ func (r *Registry) Takeover(id, deviceID string, ttl time.Duration) (*UserLease,
 	return &cp, nil
 }
 
-// Release clears user control WITHOUT resuming Ghost. The surface moves to
-// paused; only an explicit, revalidating resume returns it to Ghost.
+// Release clears user control WITHOUT resuming Kaya. The surface moves to
+// paused; only an explicit, revalidating resume returns it to Kaya.
 // Only the controlling device (or the owner on behalf of a device) may
 // release.
 func (r *Registry) Release(id, deviceID string, isOwner bool) error {
@@ -379,7 +379,7 @@ func (r *Registry) Release(id, deviceID string, isOwner bool) error {
 		}
 		s.Lease = nil
 		s.Control = OwnerNone
-		s.State = StatePaused // Ghost does NOT auto-resume
+		s.State = StatePaused // Kaya does NOT auto-resume
 		s.bump(time.Now())
 		return nil
 	}
@@ -400,7 +400,7 @@ func (r *Registry) Release(id, deviceID string, isOwner bool) error {
 	return nil
 }
 
-// Resume returns a paused surface to Ghost after the caller has
+// Resume returns a paused surface to Kaya after the caller has
 // revalidated ownership/context/generation/lease/permission (the existing
 // gate machinery performs that revalidation on the next real op). It fails
 // closed unless the surface is paused (or idle) and no user holds control.
@@ -420,7 +420,7 @@ func (r *Registry) Resume(id string) error {
 	if s.State != StatePaused {
 		return fmt.Errorf("only a paused surface can resume (state %s)", s.State)
 	}
-	s.Control = OwnerGhost
+	s.Control = OwnerKaya
 	s.State = StateActive
 	s.bump(time.Now())
 	return nil
@@ -483,7 +483,7 @@ func (r *Registry) SetSession(id, session string) {
 	s.bump(time.Now())
 }
 
-// SetActivity records what Ghost is doing on a surface right now.
+// SetActivity records what Kaya is doing on a surface right now.
 func (r *Registry) SetActivity(id, activity string) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
@@ -498,7 +498,7 @@ func (r *Registry) SetActivity(id, activity string) {
 // maxSteps bounds the step trail a surface keeps.
 const maxSteps = 8
 
-// AddStep appends one plain line to what Ghost has done on a surface. The
+// AddStep appends one plain line to what Kaya has done on a surface. The
 // same line twice in a row (three clicks on one page) is kept once.
 func (r *Registry) AddStep(id, step string) {
 	if step == "" {
@@ -553,7 +553,7 @@ func (r *Registry) SettleSession(session string, failed bool) []Surface {
 	return out
 }
 
-// CompleteTask settles every surface of one finished task that Ghost
+// CompleteTask settles every surface of one finished task that Kaya
 // still owns. User-held and already-terminal surfaces are never touched:
 // a human holding control, a paused surface awaiting revalidation, and
 // finished work all keep their truthful state.

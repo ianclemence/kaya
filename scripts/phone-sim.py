@@ -17,7 +17,7 @@ ap = argparse.ArgumentParser()
 ap.add_argument("--host", default="127.0.0.1")
 ap.add_argument("--port", default="8766")
 ap.add_argument("--reminder", action="store_true")
-ap.add_argument("--ghost", default="ghost")
+ap.add_argument("--kaya", default="kaya")
 args = ap.parse_args()
 BASE = f"http://{args.host}:{args.port}"
 results = []
@@ -33,7 +33,7 @@ def check(name, ok, detail=""):
 def call(method, path, body=None, dev=None, timeout=60, raw=False):
     hdr = {"Content-Type": "application/json"}
     if dev:
-        hdr.update({"X-Ghost-Device-ID": dev["device_id"], "X-Ghost-Credential": dev["credential"]})
+        hdr.update({"X-Kaya-Device-ID": dev["device_id"], "X-Kaya-Credential": dev["credential"]})
     req = urllib.request.Request(BASE + path, json.dumps(body).encode() if body is not None else None, hdr, method=method)
     try:
         with urllib.request.urlopen(req, timeout=timeout) as r:
@@ -52,7 +52,7 @@ def chat(dev, text, media_items=None, session="main", timeout=180):
     if media_items:
         body["media_items"] = media_items
     hdr = {"Content-Type": "application/json", "X-Client-Type": "mobile",
-           "X-Ghost-Device-ID": dev["device_id"], "X-Ghost-Credential": dev["credential"]}
+           "X-Kaya-Device-ID": dev["device_id"], "X-Kaya-Credential": dev["credential"]}
     req = urllib.request.Request(BASE + "/v1/chat", json.dumps(body).encode(), hdr)
     out, frames = "", []
     with urllib.request.urlopen(req, timeout=timeout) as r:
@@ -75,9 +75,9 @@ def chat(dev, text, media_items=None, session="main", timeout=180):
 
 
 # 1. Pair, exactly like the app: an invitation, then /v1/pairing/complete.
-inv = subprocess.run([args.ghost, "pair", "Simulated phone"], capture_output=True, text=True, timeout=60)
+inv = subprocess.run([args.kaya, "pair", "Simulated phone"], capture_output=True, text=True, timeout=60)
 m = re.search(r"code\s+([0-9a-f]{64})", inv.stdout)
-if not check("ghost pair mints a single-use invitation", bool(m), inv.stdout[-200:] + inv.stderr[-200:]):
+if not check("kaya pair mints a single-use invitation", bool(m), inv.stdout[-200:] + inv.stderr[-200:]):
     sys.exit(1)
 code, dev = call("POST", "/v1/pairing/complete", {"token": m.group(1), "display_name": "Simulated phone", "platform": "sim"})
 if not check("the phone pairs and receives its own credential", code == 200 and dev.get("credential"), str(dev)):
@@ -130,7 +130,7 @@ try:
         import websockets
 
         async def live_count():
-            hdr = [("X-Ghost-Device-ID", dev["device_id"]), ("X-Ghost-Credential", dev["credential"])]
+            hdr = [("X-Kaya-Device-ID", dev["device_id"]), ("X-Kaya-Credential", dev["credential"])]
             _, before = call("GET", "/v1/push/status", dev=dev)
             async with websockets.connect(f"ws://{args.host}:{args.port}/v1/ws", additional_headers=hdr):
                 await asyncio.sleep(0.5)
@@ -164,7 +164,7 @@ try:
         import websockets
 
         async def reminder():
-            hdr = [("X-Ghost-Device-ID", dev["device_id"]), ("X-Ghost-Credential", dev["credential"])]
+            hdr = [("X-Kaya-Device-ID", dev["device_id"]), ("X-Kaya-Credential", dev["credential"])]
             uri = f"ws://{args.host}:{args.port}/v1/ws"
             async with websockets.connect(uri, additional_headers=hdr) as ws:
                 await asyncio.get_running_loop().run_in_executor(

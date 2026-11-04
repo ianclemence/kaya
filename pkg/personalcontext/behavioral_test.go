@@ -6,7 +6,7 @@ import (
 )
 
 // TestCommunicationStyleBehaviorProfile verifies the behavioral-profile
-// extraction: response style (single word) plus format cues Ghost should follow.
+// extraction: response style (single word) plus format cues Kaya should follow.
 func TestCommunicationStyleBehaviorProfile(t *testing.T) {
 	style := []struct {
 		text string

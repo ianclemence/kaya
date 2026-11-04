@@ -2,10 +2,10 @@
 name: unit-converter
 description: Convert units of length, weight, volume, temperature, and cooking measures. Invoke when user asks "convert X to Y", "how many ml in 2 cups", "kg to lbs", "cm to inches", "F to C", "celsius to fahrenheit", or any metric/imperial/cooking conversion. Fully offline, no API key required.
 version: 1.0.0
-author: Ghost
+author: Kaya
 license: MIT
 metadata:
-  ghost:
+  kaya:
     tags: [units, conversion, metric, imperial, cooking, temperature]
 prerequisites:
   commands: [python]

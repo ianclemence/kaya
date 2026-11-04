@@ -1,26 +1,26 @@
 #!/usr/bin/env python3
-"""Room climate bridge: Arduino Uno + DHT11 -> Ghost.
+"""Room climate bridge: Arduino Uno + DHT11 -> Kaya.
 
 The Uno prints one JSON line per reading on its serial port:
 
     {"t":31.5,"h":62.0}
     {"err":"no-read"}
 
-This bridge turns those readings into what Ghost already understands:
+This bridge turns those readings into what Kaya already understands:
 
   * <workspace>/state/room-climate.json - the latest reading, overwritten
     each time. Skills read this file to answer "what's the temperature in
     here?".
-  * <workspace>/state/sensors/*.json - Ghost's sensor inbox
+  * <workspace>/state/sensors/*.json - Kaya's sensor inbox
     (pkg/proactive/sensors.go). Written only when the temperature leaves
-    the comfort band (>=30 C or <=5 C, Ghost's own thresholds), so Ghost
+    the comfort band (>=30 C or <=5 C, Kaya's own thresholds), so Kaya
     pages the owner once per hot or cold spell instead of every reading.
-    Humidity stays in the latest-reading file only: Ghost reads humidity
+    Humidity stays in the latest-reading file only: Kaya reads humidity
     events but never treats them as urgent, so inbox files for humidity
     would only ever pile up.
 
 Stdlib only: serial access goes through termios, no pyserial needed.
-Runs under ghost-room-climate.service.
+Runs under kaya-room-climate.service.
 """
 
 from __future__ import annotations
@@ -39,10 +39,10 @@ from datetime import datetime, timezone
 # Set ROOM_CLIMATE_PORT to pin one explicitly.
 SERIAL_PORT = os.environ.get("ROOM_CLIMATE_PORT", "")
 BAUD = 9600
-WORKSPACE = os.environ.get("GHOST_WORKSPACE_DIR") or os.path.expanduser("~/.ghost/workspace")
+WORKSPACE = os.environ.get("KAYA_WORKSPACE_DIR") or os.path.expanduser("~/.kaya/workspace")
 DEVICE = os.environ.get("ROOM_CLIMATE_DEVICE", "room-uno")
 
-# Ghost's own comfort band (pkg/proactive/sensors.go: TempHighC, TempLowC).
+# Kaya's own comfort band (pkg/proactive/sensors.go: TempHighC, TempLowC).
 TEMP_HIGH_C = 30.0
 TEMP_LOW_C = 5.0
 
@@ -118,9 +118,9 @@ class Bridge:
         self.level_known = False
         self.last_publish = 0.0
 
-    # -- Ghost's sensor inbox -------------------------------------------------
+    # -- Kaya's sensor inbox -------------------------------------------------
     def pending_event(self, kind: str) -> bool:
-        """True while Ghost still has an unacted event of this kind pending."""
+        """True while Kaya still has an unacted event of this kind pending."""
         try:
             return any(f.endswith(".json") and kind in f for f in os.listdir(self.sensor_dir))
         except OSError:

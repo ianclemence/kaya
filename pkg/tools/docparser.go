@@ -516,7 +516,7 @@ func convertWithPandoc(filePath, format string) (string, error) {
 func extractPDFText(filePath string) (string, error) {
 	bin, err := exec.LookPath("pdftotext")
 	if err != nil {
-		return "", fmt.Errorf("reading PDFs needs poppler-utils (pdftotext), which isn't installed on this Ghost")
+		return "", fmt.Errorf("reading PDFs needs poppler-utils (pdftotext), which isn't installed on this Kaya")
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), pandocTimeout)
 	defer cancel()

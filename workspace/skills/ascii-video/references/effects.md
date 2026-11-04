@@ -1102,7 +1102,7 @@ def vf_game_of_life(g, f, t, S, rule="life", birth=None, survive=None,
                     steps_per_frame=1, density=0.3, fade=0.92, seed=42):
     """Cellular automaton as value field with analog fade trails.
     Grid cells are born/die by neighbor count rules. Dead cells fade
-    gradually instead of snapping to black, producing ghost trails.
+    gradually instead of snapping to black, producing kaya trails.
 
     rule presets:
         "life":     B3/S23 (Conway's Game of Life)

@@ -32,7 +32,7 @@ func (r TrialReport) PassAtK() float64 {
 }
 
 // PassHatK is the share of cases that passed in every trial: the number that
-// says whether Ghost can be relied on rather than merely able.
+// says whether Kaya can be relied on rather than merely able.
 func (r TrialReport) PassHatK() float64 {
 	return r.share(CaseTrials.PassHatK)
 }

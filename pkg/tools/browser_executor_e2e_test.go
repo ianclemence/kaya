@@ -8,17 +8,17 @@ import (
 	"testing"
 )
 
-// Real agent-browser executor E2E. Opt-in via GHOST_E2E_BROWSER=1 and an
+// Real agent-browser executor E2E. Opt-in via KAYA_E2E_BROWSER=1 and an
 // installed `agent-browser` (CDP wrapper). Skipped otherwise — this is the
-// actual external browser executor Ghost shells out to, never a fake.
+// actual external browser executor Kaya shells out to, never a fake.
 func TestBrowserExecutorRealE2E(t *testing.T) {
-	if os.Getenv("GHOST_E2E_BROWSER") == "" {
-		t.Skip("set GHOST_E2E_BROWSER=1 with agent-browser installed to run the real executor E2E")
+	if os.Getenv("KAYA_E2E_BROWSER") == "" {
+		t.Skip("set KAYA_E2E_BROWSER=1 with agent-browser installed to run the real executor E2E")
 	}
 	if _, err := exec.LookPath("agent-browser"); err != nil {
 		t.Skip("agent-browser not installed")
 	}
-	url := os.Getenv("GHOST_E2E_URL")
+	url := os.Getenv("KAYA_E2E_URL")
 	if url == "" {
 		// data: URLs are refused by the navigation policy (SSRF posture);
 		// a public http(s) page is the only honest e2e target.
@@ -41,7 +41,7 @@ func TestBrowserExecutorRealE2E(t *testing.T) {
 	if !strings.Contains(s.ForLLM, "snapshot") && !strings.Contains(s.ForLLM, "ref=e") {
 		t.Fatalf("snapshot missing accessibility tree: %.200s", s.ForLLM)
 	}
-	// Screens: Ghost's real capture path must produce a valid PNG from the
+	// Screens: Kaya's real capture path must produce a valid PNG from the
 	// live page, using the same executable steering as navigation.
 	shot, ok := captureBrowserShotWith(context.Background(), "e2e", defaultBrowserShotDir(), runBrowserScreenshot)
 	if !ok {

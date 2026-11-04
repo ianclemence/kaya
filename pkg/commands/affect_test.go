@@ -19,7 +19,7 @@ func runAffectHandler(t *testing.T, ws string) string {
 	return out
 }
 
-// Ghost no longer scores the tone of the owner's messages. /affect says so
+// Kaya no longer scores the tone of the owner's messages. /affect says so
 // instead of showing numbers that nothing keeps.
 func TestAffectSaysNothingIsScored(t *testing.T) {
 	out := runAffectHandler(t, t.TempDir())

@@ -5,7 +5,7 @@ import (
 	"time"
 )
 
-// This token was signed by the Ghost site's own code (ghost-site, tests/entitlement.test.ts
+// This token was signed by the Kaya site's own code (kaya-site, tests/entitlement.test.ts
 // holds the same pair). If the site changes the wire format, or this package does, the two
 // tests disagree and one of them fails: the contract is pinned on both sides.
 const (

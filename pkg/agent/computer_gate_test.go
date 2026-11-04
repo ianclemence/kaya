@@ -6,9 +6,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ianclemence/ghost/pkg/computer"
-	"github.com/ianclemence/ghost/pkg/db"
-	"github.com/ianclemence/ghost/pkg/live"
+	"github.com/ianclemence/kaya/pkg/computer"
+	"github.com/ianclemence/kaya/pkg/db"
+	"github.com/ianclemence/kaya/pkg/live"
 )
 
 // Screenshot (observation) is a broker read; control ops (click, type,
@@ -29,7 +29,7 @@ func TestComputerGateRiskAndBroker(t *testing.T) {
 		case "computer_click":
 			args = map[string]interface{}{"x": "10", "y": "10"}
 		case "computer_type":
-			args = map[string]interface{}{"text": "Ghost"}
+			args = map[string]interface{}{"text": "Kaya"}
 		case "computer_press_key":
 			args = map[string]interface{}{"key": "Return"}
 		}
@@ -73,7 +73,7 @@ func TestComputerGateGrantedBindingServerResolved(t *testing.T) {
 	if d.decision != "allow" {
 		t.Fatalf("granted click must allow: %+v", d)
 	}
-	if d.call.Owner != h.ghostID || d.call.ContextID != h.contexts.SessionContext("sess-cg") {
+	if d.call.Owner != h.kayaID || d.call.ContextID != h.contexts.SessionContext("sess-cg") {
 		t.Fatalf("forged owner/context leaked into binding: %+v", d.call)
 	}
 	if d.call.TaskID != "sess-cg" {
@@ -166,8 +166,8 @@ func TestComputerUnwiredLoopRefuses(t *testing.T) {
 }
 
 // Live Surface plane integration: a human takeover of the computer pauses
-// Ghost (the gate refuses further ops), release does NOT auto-resume, and
-// only a revalidating resume lets Ghost act again. This is the "takeover
+// Kaya (the gate refuses further ops), release does NOT auto-resume, and
+// only a revalidating resume lets Kaya act again. This is the "takeover
 // pauses autonomous control" invariant enforced at the real gate. Uses the
 // observation path (no durable lease) so the test is hermetic; the pause
 // check runs before the observation/control branch, so it covers control
@@ -176,7 +176,7 @@ func TestComputerGatePausedByLiveSurfaceTakeover(t *testing.T) {
 	h := newGateHarness(t)
 	al := h.loop
 	al.setTestComputer(computer.NewVirtualUI("settings"))
-	plane := live.NewRegistry("ghost-test-1")
+	plane := live.NewRegistry("kaya-test-1")
 	plane.Register("local", live.KindComputer)
 	al.SetLivePlane(plane)
 
@@ -186,36 +186,36 @@ func TestComputerGatePausedByLiveSurfaceTakeover(t *testing.T) {
 		return d.decision == "allow"
 	}
 	if !allow() {
-		t.Fatal("ghost may observe the computer before takeover")
+		t.Fatal("kaya may observe the computer before takeover")
 	}
 
 	if _, err := plane.Takeover("local", "device-mob", time.Minute); err != nil {
 		t.Fatal(err)
 	}
 	if allow() {
-		t.Fatal("ghost must be paused while the user controls the computer")
+		t.Fatal("kaya must be paused while the user controls the computer")
 	}
 
 	if err := plane.Release("local", "device-mob", false); err != nil {
 		t.Fatal(err)
 	}
 	if allow() {
-		t.Fatal("release must NOT auto-resume Ghost; revalidation required")
+		t.Fatal("release must NOT auto-resume Kaya; revalidation required")
 	}
 	if err := plane.Resume("local"); err != nil {
 		t.Fatal(err)
 	}
 	if !allow() {
-		t.Fatal("after revalidated resume ghost may act again")
+		t.Fatal("after revalidated resume kaya may act again")
 	}
 }
 
 // Browser gate honors the same Live Surface pause: a human takeover of the
-// browser session pauses Ghost; release requires a revalidating resume.
+// browser session pauses Kaya; release requires a revalidating resume.
 func TestBrowserGatePausedByLiveSurfaceTakeover(t *testing.T) {
 	h := newGateHarness(t)
 	al := h.loop
-	plane := live.NewRegistry("ghost-test-1")
+	plane := live.NewRegistry("kaya-test-1")
 	al.SetLivePlane(plane)
 
 	allow := func() bool {
@@ -223,14 +223,14 @@ func TestBrowserGatePausedByLiveSurfaceTakeover(t *testing.T) {
 		return d.decision == "allow"
 	}
 	if !allow() {
-		t.Fatal("ghost may observe the browser before takeover")
+		t.Fatal("kaya may observe the browser before takeover")
 	}
 	// The surface id is the deterministic browser session for owner+context+task.
 	ledger, err := al.browserSessionLedger()
 	if err != nil {
 		t.Fatal(err)
 	}
-	sess, err := ledger.GetOrCreate("ghost-test-1", "personal", "sess-bp", "default", 0)
+	sess, err := ledger.GetOrCreate("kaya-test-1", "personal", "sess-bp", "default", 0)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -238,19 +238,19 @@ func TestBrowserGatePausedByLiveSurfaceTakeover(t *testing.T) {
 		t.Fatal(err)
 	}
 	if allow() {
-		t.Fatal("ghost must be paused while the user controls the browser")
+		t.Fatal("kaya must be paused while the user controls the browser")
 	}
 	if err := plane.Release(sess.ID, "device-mob", false); err != nil {
 		t.Fatal(err)
 	}
 	if allow() {
-		t.Fatal("browser release must NOT auto-resume Ghost")
+		t.Fatal("browser release must NOT auto-resume Kaya")
 	}
 	if err := plane.Resume(sess.ID); err != nil {
 		t.Fatal(err)
 	}
 	if !allow() {
-		t.Fatal("after revalidated resume ghost may observe the browser again")
+		t.Fatal("after revalidated resume kaya may observe the browser again")
 	}
 }
 

@@ -125,7 +125,7 @@ func TestRegistryAllowedFor(t *testing.T) {
 }
 
 // "Search Amazon for a keyboard" names no address and none of the old browser
-// words; Ghost must still be handed a browser, or it tells the owner it can't
+// words; Kaya must still be handed a browser, or it tells the owner it can't
 // browse. High-impact submit stays behind explicit checkout language.
 func TestBrowserIsOfferedForNamedSitesAndShopping(t *testing.T) {
 	reg := NewToolRegistry()

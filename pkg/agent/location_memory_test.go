@@ -3,10 +3,10 @@ package agent
 import (
 	"testing"
 
-	"github.com/ianclemence/ghost/pkg/skills"
+	"github.com/ianclemence/kaya/pkg/skills"
 )
 
-// Answering the location question teaches Ghost where "here" is, so the next
+// Answering the location question teaches Kaya where "here" is, so the next
 // "what's the weather here" doesn't ask again.
 func TestRememberHomeLocationResolvesHere(t *testing.T) {
 	al := newTestAgentLoop(t, t.TempDir())

@@ -11,15 +11,15 @@ func TestGenerateTitle(t *testing.T) {
 	}{
 		{"", "New conversation"},
 		{"   ", "New conversation"},
-		{"Hey Ghost, what's the weather like?", "What's the weather like"},
-		{"hi ghost, can you help me with my code?", "Can you help me with my code"},
-		{"Hello Ghost, tell me a story about a dragon.", "Tell me a story about a dragon"},
+		{"Hey Kaya, what's the weather like?", "What's the weather like"},
+		{"hi kaya, can you help me with my code?", "Can you help me with my code"},
+		{"Hello Kaya, tell me a story about a dragon.", "Tell me a story about a dragon"},
 		{"What's 2+2?", "What's 2+2"},
 		{"Can you explain how TCP/IP works?", "Can you explain how TCP/IP works"},
-		{"hey ghost, what time is it in Bangkok right now?", "What time is it in Bangkok right now"},
+		{"hey kaya, what time is it in Bangkok right now?", "What time is it in Bangkok right now"},
 		{"This is a very long message that should be truncated because it exceeds the maximum length limit we set for titles.", "This is a very long message that should be truncated"},
 		{"Short", "Short"},
-		{"hey ghost, extra spaces after greeting", "Extra spaces after greeting"},
+		{"hey kaya, extra spaces after greeting", "Extra spaces after greeting"},
 	}
 	for _, tc := range cases {
 		got := GenerateTitle(tc.input)

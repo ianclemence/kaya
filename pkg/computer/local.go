@@ -12,7 +12,7 @@ import (
 	"time"
 )
 
-// LocalComputer is the real executor for the Ghost placement
+// LocalComputer is the real executor for the Kaya placement
 // (PlacementLocal). It drives the machine's own display through bounded,
 // explicit tools — xdotool for input, scrot/import for observation — never
 // through an arbitrary shell. Every operation is validated, bounded, and
@@ -25,7 +25,7 @@ import (
 //     state (e.g. a screenshot file exists with content). Dispatched input
 //     is reported as dispatched, not as confirmed — completion stays honest.
 //
-// This is Ghost's "preview vs control" boundary: control authority exists
+// This is Kaya's "preview vs control" boundary: control authority exists
 // only when an executor is actually present.
 type LocalComputer struct {
 	id          string
@@ -119,10 +119,10 @@ func NewLocalComputer(id string) *LocalComputer {
 func (c *LocalComputer) ID() string           { return c.id }
 func (c *LocalComputer) Placement() Placement { return PlacementLocal }
 func (c *LocalComputer) DisplayName() string {
-	return "Ghost"
+	return "Kaya"
 }
 
-// Authority is Ghost's explicit preview-vs-control signal: "control" when a
+// Authority is Kaya's explicit preview-vs-control signal: "control" when a
 // real input executor and display exist, "view_only" when observation may be
 // possible but control is not, "none" otherwise. The reason explains why.
 func (c *LocalComputer) Authority() (control string, reason string) {
@@ -132,7 +132,7 @@ func (c *LocalComputer) Authority() (control string, reason string) {
 	case c.shotTool != "" && c.display != "":
 		return "view_only", "observation tool present but no input executor on display " + c.display
 	default:
-		return "none", "no display and/or input or observation executor present on this Ghost"
+		return "none", "no display and/or input or observation executor present on this Kaya"
 	}
 }
 
@@ -540,7 +540,7 @@ func (c *LocalComputer) doClipboardSet(ctx context.Context, args Args) (Result, 
 // counted); extents that cannot be read print -1. The walker caps depth
 // and element count so a pathological tree cannot flood the turn. Python
 // is the only AT-SPI client guaranteed scriptable here: there is no
-// bounded CLI for the accessibility bus, and Ghost never shells anywhere
+// bounded CLI for the accessibility bus, and Kaya never shells anywhere
 // else for observation.
 const a11yProbeScript = `
 import sys
@@ -628,7 +628,7 @@ sys.stdout.write("SKIPPED\t%d\n" % skipped[0])
 // answers: elements with click centers, visible text, and the count of
 // withheld credential fields. ok=false means no backend (no python3, no
 // pyatspi, bus unreachable, timeout) and the caller falls back to the
-// window title. Availability is probed once and cached: a Ghost without a
+// window title. Availability is probed once and cached: a Kaya without a
 // bus must not pay an 8-second timeout on every inspect.
 func (c *LocalComputer) a11ySnapshot(ctx context.Context) (els []UIElement, text string, skipped int, ok bool) {
 	c.a11yMu.Lock()
@@ -743,15 +743,15 @@ func (c *LocalComputer) xdo(ctx context.Context, sub ...string) error {
 	return nil
 }
 
-// isSafeOutputPath restricts screenshot output to directories Ghost owns:
-// the OS temp dir or the workspace named by GHOST_WORKSPACE. Absolute paths
+// isSafeOutputPath restricts screenshot output to directories Kaya owns:
+// the OS temp dir or the workspace named by KAYA_WORKSPACE. Absolute paths
 // elsewhere are refused.
 func isSafeOutputPath(p string) bool {
 	if !filepath.IsAbs(p) {
 		return false
 	}
 	allowed := []string{filepath.Clean(os.TempDir())}
-	if ws := os.Getenv("GHOST_WORKSPACE"); ws != "" {
+	if ws := os.Getenv("KAYA_WORKSPACE"); ws != "" {
 		allowed = append(allowed, filepath.Clean(ws))
 	}
 	clean := filepath.Clean(p)

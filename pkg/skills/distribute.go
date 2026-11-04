@@ -1,4 +1,4 @@
-// Package-manager distribution for Ghost skills.
+// Package-manager distribution for Kaya skills.
 //
 // The legacy installer fetches one SKILL.md over HTTPS with no identity,
 // no lock, and no update story. The distributor replaces it with:
@@ -630,7 +630,7 @@ func fetchWellKnown(ctx context.Context, storeDir string, src DistSource) (strin
 			return "", "", fmt.Errorf("well-known digest mismatch for %q", src.Skill)
 		}
 	}
-	tmp, err := os.MkdirTemp("", "ghost-skill-wk-")
+	tmp, err := os.MkdirTemp("", "kaya-skill-wk-")
 	if err != nil {
 		return "", "", err
 	}
@@ -659,7 +659,7 @@ func fetchSnapshot(ctx context.Context, storeDir string, src DistSource) (string
 	if resp.StatusCode != 200 {
 		return "", "", fmt.Errorf("snapshot HTTP %d", resp.StatusCode)
 	}
-	tmp, err := os.MkdirTemp("", "ghost-skill-snap-")
+	tmp, err := os.MkdirTemp("", "kaya-skill-snap-")
 	if err != nil {
 		return "", "", err
 	}
@@ -677,7 +677,7 @@ func fetchClone(ctx context.Context, storeDir string, src DistSource) (string, s
 	if cloneURL == "" {
 		return "", "", fmt.Errorf("no clone URL for source kind %d", src.Kind)
 	}
-	tmp, err := os.MkdirTemp("", "ghost-skill-git-")
+	tmp, err := os.MkdirTemp("", "kaya-skill-git-")
 	if err != nil {
 		return "", "", err
 	}

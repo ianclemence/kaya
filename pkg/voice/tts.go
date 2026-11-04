@@ -19,12 +19,12 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ianclemence/ghost/pkg/logger"
+	"github.com/ianclemence/kaya/pkg/logger"
 )
 
 const (
 	// DefaultTTSModelsDir is where speech-synthesis voices live.
-	DefaultTTSModelsDir = "/var/ghost/models/tts"
+	DefaultTTSModelsDir = "/var/kaya/models/tts"
 	// DefaultSynthBin is the installed TTS engine binary.
 	DefaultSynthBin = "/usr/local/bin/sherpa-onnx-offline-tts"
 	// ActiveTTSVoiceLink is the stable path the synthesizer loads; it
@@ -136,7 +136,7 @@ func (s *LocalSynthesizer) Synthesize(ctx context.Context, text string) ([]byte,
 	if err != nil {
 		return nil, "", err
 	}
-	wav, err := os.CreateTemp("", "ghost-tts-*.wav")
+	wav, err := os.CreateTemp("", "kaya-tts-*.wav")
 	if err != nil {
 		return nil, "", err
 	}

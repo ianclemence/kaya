@@ -9,11 +9,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ianclemence/ghost/pkg/life"
+	"github.com/ianclemence/kaya/pkg/life"
 )
 
 // The owner's life beyond the conversation, as tools: the people in it, their
-// important documents, their finances. Each reads and writes only Ghost's own
+// important documents, their finances. Each reads and writes only Kaya's own
 // records on the Pod (pkg/life) and says where every fact came from. Forgetting
 // anything needs the owner's explicit yes (confirmed=true).
 
@@ -60,7 +60,7 @@ type PeopleTool struct {
 	store *life.People
 	loc   func() *time.Location
 	// OnForgotten is told the name of a person who was just forgotten, so
-	// what Ghost believes about them goes too.
+	// what Kaya believes about them goes too.
 	OnForgotten func(name string)
 }
 
@@ -116,7 +116,7 @@ func (t *PeopleTool) Execute(ctx context.Context, args map[string]interface{}) *
 			return ErrorResult(err.Error())
 		}
 		if len(found) == 0 {
-			return NewToolResult(fmt.Sprintf("No one Ghost knows matches %q. If the owner means someone new, ask who they are before remembering them.", sarg(args, "query")))
+			return NewToolResult(fmt.Sprintf("No one Kaya knows matches %q. If the owner means someone new, ask who they are before remembering them.", sarg(args, "query")))
 		}
 		if len(found) > 5 {
 			found = found[:5]
@@ -150,7 +150,7 @@ func (t *PeopleTool) Execute(ctx context.Context, args map[string]interface{}) *
 			return ErrorResult(err.Error())
 		}
 		if len(all) == 0 {
-			return NewToolResult("Ghost doesn't know anyone in the owner's life yet.")
+			return NewToolResult("Kaya doesn't know anyone in the owner's life yet.")
 		}
 		return NewToolResult(peopleText(all, now, loc))
 	case "forget":
@@ -167,7 +167,7 @@ func (t *PeopleTool) Execute(ctx context.Context, args map[string]interface{}) *
 		if t.OnForgotten != nil {
 			t.OnForgotten(p.Name)
 		}
-		return NewToolResult("Forgot " + p.Name + " and everything Ghost knew about them.")
+		return NewToolResult("Forgot " + p.Name + " and everything Kaya knew about them.")
 	}
 	return ErrorResult("action is find, remember, contacted, list or forget")
 }
@@ -225,7 +225,7 @@ func NewVaultTool(workspace string, loc func() *time.Location) *VaultTool {
 func (t *VaultTool) Name() string { return "vault" }
 
 func (t *VaultTool) Description() string {
-	return `The owner's important documents, kept with the facts that matter and the dates they expire or renew: passport, ID, visa, driving license, insurance, warranty, lease, contract, vehicle papers, medical, certificates. When the owner sends a photo or file of one, read it (vision or doc_parser) and keep it here with the facts you can actually read on it and its expiry date; Ghost reminds them before it runs out. Never invent a number or a date: leave out what you cannot read.
+	return `The owner's important documents, kept with the facts that matter and the dates they expire or renew: passport, ID, visa, driving license, insurance, warranty, lease, contract, vehicle papers, medical, certificates. When the owner sends a photo or file of one, read it (vision or doc_parser) and keep it here with the facts you can actually read on it and its expiry date; Kaya reminds them before it runs out. Never invent a number or a date: leave out what you cannot read.
 
 action:
 - keep: kind (passport, id, visa, license, insurance, warranty, lease, contract, vehicle, medical, certificate, ticket, receipt, other), title, holder? (whose, if not the owner's), facts [{label, value}] (up to 16), expires? / renews? (2006-01-02), file? (the workspace path of the photo or file), source photo or document.
@@ -292,7 +292,7 @@ func (t *VaultTool) Execute(ctx context.Context, args map[string]interface{}) *T
 		}
 		msg := fmt.Sprintf("%s %q in the vault (id %s).", verb, p.Title, p.ID)
 		if days, what, ok := life.DaysLeft(p, now, t.loc()); ok {
-			msg += fmt.Sprintf(" It %s in %d days; Ghost will remind the owner before then.", what, days)
+			msg += fmt.Sprintf(" It %s in %d days; Kaya will remind the owner before then.", what, days)
 		}
 		return NewToolResult(msg)
 	case "find", "list":
@@ -422,13 +422,13 @@ func (t *FinancesTool) Execute(ctx context.Context, args map[string]interface{})
 		if created {
 			verb = "Tracking"
 		}
-		return NewToolResult(fmt.Sprintf("%s %s: %s every %s, next on %s (id %s). Ghost reminds the owner before it is due.", verb, r.Name, life.FormatAmount(r.Amount, r.Currency), r.Every, r.Next, r.ID))
+		return NewToolResult(fmt.Sprintf("%s %s: %s every %s, next on %s (id %s). Kaya reminds the owner before it is due.", verb, r.Name, life.FormatAmount(r.Amount, r.Currency), r.Every, r.Next, r.ID))
 	case "cancel":
 		r, err := t.store.SetActive(sarg(args, "id"), false)
 		if err != nil {
 			return ErrorResult("No such subscription or bill: " + sarg(args, "id"))
 		}
-		return NewToolResult("Stopped tracking " + r.Name + ". (Ghost did not cancel anything with the company; tell the owner if they still need to.)")
+		return NewToolResult("Stopped tracking " + r.Name + ". (Kaya did not cancel anything with the company; tell the owner if they still need to.)")
 	case "import":
 		file := strings.TrimSpace(sarg(args, "file"))
 		abs := filepath.Join(t.workspace, filepath.Clean("/"+file))
@@ -546,7 +546,7 @@ func NewTripsTool(workspace string, loc func() *time.Location) *TripsTool {
 func (t *TripsTool) Name() string { return "trips" }
 
 func (t *TripsTool) Description() string {
-	return `The owner's trips, put together from what they said and their bookings (flights, trains, hotels, tickets): Ghost uses them to say the right thing at the right time (the week before, a passport that runs out too soon, the day before a flight, when to leave for the airport, how it went). When the owner mentions a trip or forwards a booking, or you find booking emails with email_search, save it here with each leg's real times and references. Never invent a time, a flight number or a booking reference.
+	return `The owner's trips, put together from what they said and their bookings (flights, trains, hotels, tickets): Kaya uses them to say the right thing at the right time (the week before, a passport that runs out too soon, the day before a flight, when to leave for the airport, how it went). When the owner mentions a trip or forwards a booking, or you find booking emails with email_search, save it here with each leg's real times and references. Never invent a time, a flight number or a booking reference.
 
 action:
 - save: title ("Lamu", "Wedding in Kisumu"), destination?, start, end (2006-01-02), legs? [{kind (flight, train, bus, ferry, car, hotel, event, other), title, ref? (flight number or booking ref), from?, to?, start (2026-10-12T09:40, local time where it happens), end?, place?, international? (flight), travel_minutes? (how long the owner takes to get there, only if they said)}], notes?. Saving the same title and start again adds the new legs.
@@ -611,7 +611,7 @@ func (t *TripsTool) Execute(ctx context.Context, args map[string]interface{}) *T
 		if created {
 			verb = "Saved"
 		}
-		return NewToolResult(fmt.Sprintf("%s the trip %q (id %s, %d legs). Ghost will bring up what matters before and during it.\n%s", verb, tr.Title, tr.ID, len(tr.Legs), tripText(tr)))
+		return NewToolResult(fmt.Sprintf("%s the trip %q (id %s, %d legs). Kaya will bring up what matters before and during it.\n%s", verb, tr.Title, tr.ID, len(tr.Legs), tripText(tr)))
 	case "list":
 		all, err := t.store.All(now)
 		if err != nil {
@@ -681,7 +681,7 @@ func NewKnowledgeTool(workspace string, loc func() *time.Location) *KnowledgeToo
 func (t *KnowledgeTool) Name() string { return "knowledge" }
 
 func (t *KnowledgeTool) Description() string {
-	return `What the owner reads and studies: books, courses, subjects they are studying for, articles, podcasts, videos, papers. Keep it whenever they mention one ("I started Sapiens", "I'm on lesson 6 of the Go course", "I have my CPA exam in March", "save this line: …"). It is how Ghost picks up where they left off, quizzes them on what they are learning, and nudges gently when something has gone quiet.
+	return `What the owner reads and studies: books, courses, subjects they are studying for, articles, podcasts, videos, papers. Keep it whenever they mention one ("I started Sapiens", "I'm on lesson 6 of the Go course", "I have my CPA exam in March", "save this line: …"). It is how Kaya picks up where they left off, quizzes them on what they are learning, and nudges gently when something has gone quiet.
 
 action:
 - save: title, kind? (book, course, subject, article, podcast, video, paper, other), author?, status? (want, active, paused, done), current? and total? (where they are and how long it is) with unit? (page, chapter, lesson, module, episode, percent), goal? (what it is for, in their words), due? (2006-01-02: an exam, a deadline), tags?, note? (a thought or summary; for a line they want to keep, the line itself with is_quote=true and where? "p. 112"). Saving the same title again changes it: progress moves it to active, reaching the end finishes it. Only what they said; never invent a page or a quote.
@@ -832,7 +832,7 @@ func (t *PhoneTool) Description() string {
 	return `What the owner's phone shares with their Pod, only what they switched on in the app (Settings → Phone):
 - notifications: recent notifications from the apps they allowed ("did Mum message me?", "what did the bank text say?"). Parameters: app?, query?, hours? (default 24, at most 168). If nothing comes back, the result says why (sharing off, the app not shared, or nothing new since it was added): tell the owner that, plainly, without guessing.
 - health: daily totals from Health Connect (steps, sleep, resting heart rate). days? (default 7). Speak about trends gently and never diagnose; show them with present_card (a chart of the days).
-- remind_at_place: a reminder when the owner arrives at (on=enter) or leaves (on=exit) a place: name, lat, lon (real coordinates: from places_nearby, or the owner's current location if they said "here"), radius? (metres, default 150), message, once? (default true). The phone watches the place; Ghost speaks when it crosses.
+- remind_at_place: a reminder when the owner arrives at (on=enter) or leaves (on=exit) a place: name, lat, lon (real coordinates: from places_nearby, or the owner's current location if they said "here"), radius? (metres, default 150), message, once? (default true). The phone watches the place; Kaya speaks when it crosses.
 - places: the place reminders being watched. cancel_place: id.
 To set an alarm, use the draft tool with kind alarm.`
 }
@@ -944,7 +944,7 @@ func (t *PhoneTool) Execute(ctx context.Context, args map[string]interface{}) *T
 		if p.On == "exit" {
 			when = "leave"
 		}
-		return NewToolResult(fmt.Sprintf("Set: when the owner %s %s, Ghost says %q (id %s). This works once their phone has place reminders turned on (Settings → Phone); if they haven't, tell them to turn it on.", when, p.Name, p.Message, p.ID))
+		return NewToolResult(fmt.Sprintf("Set: when the owner %s %s, Kaya says %q (id %s). This works once their phone has place reminders turned on (Settings → Phone); if they haven't, tell them to turn it on.", when, p.Name, p.Message, p.ID))
 	case "places":
 		list, err := t.store.Places(true)
 		if err != nil {
@@ -969,16 +969,16 @@ func (t *PhoneTool) Execute(ctx context.Context, args map[string]interface{}) *T
 }
 
 // noNotesWhy says why no notification was found, as precisely as the phone
-// lets Ghost know: sharing off, the app not shared, or shared with nothing
-// new since. Ghost only ever sees notifications that arrive after an app is
-// added, and they reach the Pod when the Ghost app is open.
+// lets Kaya know: sharing off, the app not shared, or shared with nothing
+// new since. Kaya only ever sees notifications that arrive after an app is
+// added, and they reach the Pod when the Kaya app is open.
 func noNotesWhy(sh *life.Sharing, app string, hours int, loc *time.Location) string {
-	const after = " Ghost only sees notifications that arrive after an app is added on the Phone screen, and they reach the Pod when the Ghost app is open."
+	const after = " Kaya only sees notifications that arrive after an app is added on the Phone screen, and they reach the Pod when the Kaya app is open."
 	if sh == nil {
 		return "No notifications like that came from the phone. Either nothing arrived, or notification sharing isn't on for that app (Settings → Phone in the app)." + after
 	}
 	if !sh.Notifications {
-		return "Notification sharing is off on the owner's phone (Settings → Phone in the app), so Ghost sees none."
+		return "Notification sharing is off on the owner's phone (Settings → Phone in the app), so Kaya sees none."
 	}
 	if app != "" {
 		shared := false

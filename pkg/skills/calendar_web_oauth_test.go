@@ -43,7 +43,7 @@ func TestBeginRequiresConfig(t *testing.T) {
 }
 
 func TestBeginAndCompleteRoundtrip(t *testing.T) {
-	t.Setenv("GHOST_CREDENTIALS_DIR", t.TempDir())
+	t.Setenv("KAYA_CREDENTIALS_DIR", t.TempDir())
 	url, state, err := CalendarOAuthBegin(testOAuthConfig(), "sess-1", "pending-123", false)
 	if err != nil {
 		t.Fatal(err)
@@ -82,7 +82,7 @@ func TestBeginAndCompleteRoundtrip(t *testing.T) {
 }
 
 func TestBadStateRejected(t *testing.T) {
-	t.Setenv("GHOST_CREDENTIALS_DIR", t.TempDir())
+	t.Setenv("KAYA_CREDENTIALS_DIR", t.TempDir())
 	exch := func(ctx context.Context, cfg CalendarOAuthConfig, w bool, code string) (*CalendarToken, error) {
 		return &CalendarToken{RefreshToken: "r"}, nil
 	}
@@ -96,7 +96,7 @@ func TestBadStateRejected(t *testing.T) {
 }
 
 func TestFailedValidationNotReady(t *testing.T) {
-	t.Setenv("GHOST_CREDENTIALS_DIR", t.TempDir())
+	t.Setenv("KAYA_CREDENTIALS_DIR", t.TempDir())
 	_, state, err := CalendarOAuthBegin(testOAuthConfig(), "sess", "", false)
 	if err != nil {
 		t.Fatal(err)
@@ -125,7 +125,7 @@ func (e *validationTestErr) Error() string { return e.s }
 
 func TestTokenFilePermsAndRedaction(t *testing.T) {
 	dir := t.TempDir()
-	t.Setenv("GHOST_CREDENTIALS_DIR", dir)
+	t.Setenv("KAYA_CREDENTIALS_DIR", dir)
 	if err := storeCalendarToken(&CalendarToken{RefreshToken: "secret-refresh", AccessToken: "secret-access"}); err != nil {
 		t.Fatal(err)
 	}

@@ -75,7 +75,7 @@ func NewCache[T any](ttl time.Duration) *Cache[T] {
 
 // Get returns the value, whether it was served stale, and provenance.
 // Fresh hits return stale=false. Expired entries return stale=true with
-// the last value so the caller can decide (Ghost must know it is stale).
+// the last value so the caller can decide (Kaya must know it is stale).
 func (c *Cache[T]) Get(key string) (val T, ok bool, stale bool, provenance string) {
 	c.mu.RLock()
 	defer c.mu.RUnlock()

@@ -24,7 +24,7 @@ const (
 	MaxSkillFiles     = 50
 	MaxSkillFileSize  = 200 * 1024 // per file
 	MaxSkillTotalSize = 1 << 20    // 1 MiB total
-	SkillSourceFile   = ".ghost-source.json"
+	SkillSourceFile   = ".kaya-source.json"
 )
 
 // BlockedSkillFileExts are file types that are never downloaded from an
@@ -43,7 +43,7 @@ func SkillFileBlocked(rel string) bool {
 	if clean == "" || strings.HasPrefix(clean, "../") || strings.Contains(clean, "/../") {
 		return true
 	}
-	if strings.HasPrefix(clean, ".") && clean != ".ghost-source.json" {
+	if strings.HasPrefix(clean, ".") && clean != ".kaya-source.json" {
 		return true
 	}
 	return BlockedSkillFileExts[strings.ToLower(filepath.Ext(clean))]

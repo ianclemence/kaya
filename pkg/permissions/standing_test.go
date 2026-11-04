@@ -6,7 +6,7 @@ import (
 )
 
 func TestProposeCalendarAdd(t *testing.T) {
-	p, rej, ok := ProposeStanding("Always let Ghost add calendar events")
+	p, rej, ok := ProposeStanding("Always let Kaya add calendar events")
 	if !ok || len(p.Grants) == 0 {
 		t.Fatalf("must propose: %+v %+v", p, rej)
 	}
@@ -20,9 +20,9 @@ func TestProposeCalendarAdd(t *testing.T) {
 
 func TestBroadRejected(t *testing.T) {
 	for _, text := range []string{
-		"Always let Ghost access my entire Google account",
-		"Always let Ghost do everything",
-		"Let Ghost always access all my data",
+		"Always let Kaya access my entire Google account",
+		"Always let Kaya do everything",
+		"Let Kaya always access all my data",
 	} {
 		p, rej, ok := ProposeStanding(text)
 		if !ok {
@@ -35,7 +35,7 @@ func TestBroadRejected(t *testing.T) {
 }
 
 func TestMalformedRejected(t *testing.T) {
-	p, rej, ok := ProposeStanding("Always let Ghost transcend spacetime")
+	p, rej, ok := ProposeStanding("Always let Kaya transcend spacetime")
 	if !ok || len(p.Grants) != 0 || rej.Reason == "" {
 		t.Fatalf("unknown scope must reject with guidance: %+v", p)
 	}
@@ -45,7 +45,7 @@ func TestMalformedRejected(t *testing.T) {
 }
 
 func TestNeverIsDeny(t *testing.T) {
-	p, _, ok := ProposeStanding("Never let Ghost control my lights")
+	p, _, ok := ProposeStanding("Never let Kaya control my lights")
 	if !ok || !p.Deny || len(p.Grants) == 0 {
 		t.Fatalf("deny proposal wrong: %+v", p)
 	}
@@ -73,10 +73,10 @@ func TestValidatedGrantsUnknownRejected(t *testing.T) {
 
 func TestNaturalGrantPhrases(t *testing.T) {
 	cases := map[string]bool{
-		"Always let Ghost add calendar events":      true,
+		"Always let Kaya add calendar events":      true,
 		"You can always add calendar events for me": true,
 		"I can always let you add reminders":        true,
-		"Never let Ghost control my lights":         true,
+		"Never let Kaya control my lights":         true,
 		"what's the weather":                        false,
 		"yes":                                       false,
 	}
@@ -141,7 +141,7 @@ func TestBroadScopeVetoVerbBoundaries(t *testing.T) {
 	}
 	for _, text := range []string{
 		"let me do anything with my account",
-		"always let ghost do everything on my account",
+		"always let kaya do everything on my account",
 		"you can always let me change anything in my google account",
 	} {
 		_, rej, ok := ProposeStanding(text)
@@ -176,7 +176,7 @@ func TestCrossClauseBroadScopeIsNotAStandingIntent(t *testing.T) {
 	if _, _, ok := ProposeStanding("I gave you access to my drive. Tell me everything about it."); ok {
 		t.Fatal("cross-clause broad language must not be vetoed as a permission request")
 	}
-	if _, rej, ok := ProposeStanding("Always let Ghost do everything on my account"); !ok || rej.Reason == "" {
+	if _, rej, ok := ProposeStanding("Always let Kaya do everything on my account"); !ok || rej.Reason == "" {
 		t.Fatal("a real broad-scope directive must still be vetoed deterministically")
 	}
 }

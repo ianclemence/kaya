@@ -2,7 +2,7 @@ package skills
 
 // Curated skill classification.
 //
-// Ghost ships a broad set of bundled skills across three product tiers.
+// Kaya ships a broad set of bundled skills across three product tiers.
 // Only Tiers 1-2 are ever live in the model prompt; Tier 3 is contributor
 // documentation and never enters the runtime.
 //
@@ -22,7 +22,7 @@ package skills
 //     templates (workflows belong in Automations UI, not the prompt).
 //
 // The list below marks Tier 2. Extra skills the user installs are treated
-// as core (unknown == core) so Ghost surfaces their real needs.
+// as core (unknown == core) so Kaya surfaces their real needs.
 
 // curatedOptional names bundled skills that require setup (a local tool,
 // hardware, or an external service) and therefore should not produce dependency

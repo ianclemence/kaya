@@ -31,7 +31,7 @@ func signedFile(t *testing.T, content string) (path, sig string, pub ed25519.Pub
 }
 
 func TestVerifyDetachedAcceptsAGoodSignature(t *testing.T) {
-	path, sig, pub := signedFile(t, "abc  ghost_linux_arm64\n")
+	path, sig, pub := signedFile(t, "abc  kaya_linux_arm64\n")
 	if err := VerifyDetached(path, sig, []ed25519.PublicKey{pub}); err != nil {
 		t.Fatalf("good signature refused: %v", err)
 	}
@@ -39,7 +39,7 @@ func TestVerifyDetachedAcceptsAGoodSignature(t *testing.T) {
 
 // The point of the strict verifier: nothing missing is ever "fine".
 func TestVerifyDetachedFailsClosed(t *testing.T) {
-	path, sig, pub := signedFile(t, "abc  ghost_linux_arm64\n")
+	path, sig, pub := signedFile(t, "abc  kaya_linux_arm64\n")
 	keys := []ed25519.PublicKey{pub}
 	other, _, _ := ed25519.GenerateKey(rand.Reader)
 
@@ -64,8 +64,8 @@ func TestVerifyDetachedFailsClosed(t *testing.T) {
 }
 
 func TestVerifyDetachedRejectsAChangedFile(t *testing.T) {
-	path, sig, pub := signedFile(t, "abc  ghost_linux_arm64\n")
-	if err := os.WriteFile(path, []byte("evil  ghost_linux_arm64\n"), 0o644); err != nil {
+	path, sig, pub := signedFile(t, "abc  kaya_linux_arm64\n")
+	if err := os.WriteFile(path, []byte("evil  kaya_linux_arm64\n"), 0o644); err != nil {
 		t.Fatal(err)
 	}
 	if err := VerifyDetached(path, sig, []ed25519.PublicKey{pub}); err == nil {
@@ -82,7 +82,7 @@ func TestVerifyDetachedAcceptsAnyTrustedKeyForRotation(t *testing.T) {
 }
 
 func TestVerifyChecksum(t *testing.T) {
-	f := filepath.Join(t.TempDir(), "ghost_linux_arm64")
+	f := filepath.Join(t.TempDir(), "kaya_linux_arm64")
 	os.WriteFile(f, []byte("binary"), 0o755)
 	sum, _ := SHA256File(f)
 	if err := VerifyChecksum(f, sum); err != nil {
@@ -116,24 +116,24 @@ func TestParseTrustedKeys(t *testing.T) {
 }
 
 func TestParseChecksumsAndAssetLookup(t *testing.T) {
-	sums := ParseChecksums("ABC123  ghost_linux_arm64\n" + strings.Repeat("f", 64) + " *ghost-web_linux_arm64\n\nbroken line here now\n")
-	if sums["ghost_linux_arm64"] != "abc123" || sums["ghost-web_linux_arm64"] != strings.Repeat("f", 64) {
+	sums := ParseChecksums("ABC123  kaya_linux_arm64\n" + strings.Repeat("f", 64) + " *kaya-web_linux_arm64\n\nbroken line here now\n")
+	if sums["kaya_linux_arm64"] != "abc123" || sums["kaya-web_linux_arm64"] != strings.Repeat("f", 64) {
 		t.Fatalf("got %v", sums)
 	}
-	rel := &Release{Assets: []Asset{{Name: "ghost_linux_arm64_other"}, {Name: "ghost_linux_arm64"}}}
-	if a, ok := rel.FindAsset("ghost_linux_arm64"); !ok || a.Name != "ghost_linux_arm64" {
+	rel := &Release{Assets: []Asset{{Name: "kaya_linux_arm64_other"}, {Name: "kaya_linux_arm64"}}}
+	if a, ok := rel.FindAsset("kaya_linux_arm64"); !ok || a.Name != "kaya_linux_arm64" {
 		t.Errorf("exact lookup returned %v %v (a name that merely contains it must not match)", a, ok)
 	}
-	if _, ok := rel.FindAsset("ghost_linux"); ok {
+	if _, ok := rel.FindAsset("kaya_linux"); ok {
 		t.Error("a partial name matched")
 	}
-	if BinaryAssetName("ghost-web", "linux", "amd64") != "ghost-web_linux_amd64" || ChecksumsSigAssetName != ChecksumsAssetName+".sig" {
+	if BinaryAssetName("kaya-web", "linux", "amd64") != "kaya-web_linux_amd64" || ChecksumsSigAssetName != ChecksumsAssetName+".sig" {
 		t.Error("asset naming drifted")
 	}
 	// Older updaters pick a binary by a substring of its name. Nothing a
 	// release publishes besides the binary may contain it.
-	for _, name := range []string{ChecksumsAssetName, ChecksumsSigAssetName, BinaryAssetName("ghost-web", "linux", "arm64")} {
-		if strings.Contains(strings.ToLower(name), "ghost_linux_arm64") {
+	for _, name := range []string{ChecksumsAssetName, ChecksumsSigAssetName, BinaryAssetName("kaya-web", "linux", "arm64")} {
+		if strings.Contains(strings.ToLower(name), "kaya_linux_arm64") {
 			t.Errorf("%s contains a binary's name; an older updater could mistake it for the binary", name)
 		}
 	}

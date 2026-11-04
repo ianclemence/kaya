@@ -7,7 +7,7 @@ import (
 
 // A sign-in the owner typed into a request card but chose not to save is for
 // one task. It lives in memory only, for a short while, under the site it was
-// typed for, and is gone when Ghost restarts. It is read through the same door
+// typed for, and is gone when Kaya restarts. It is read through the same door
 // as a saved login, so the browser needs no second path, and its password is
 // handed to the scrubber like any other secret.
 

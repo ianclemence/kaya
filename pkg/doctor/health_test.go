@@ -7,9 +7,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/ianclemence/ghost/pkg/db"
-	"github.com/ianclemence/ghost/pkg/schema"
-	"github.com/ianclemence/ghost/pkg/tools"
+	"github.com/ianclemence/kaya/pkg/db"
+	"github.com/ianclemence/kaya/pkg/schema"
+	"github.com/ianclemence/kaya/pkg/tools"
 )
 
 func healthFixture(t *testing.T) (*Doctor, string) {

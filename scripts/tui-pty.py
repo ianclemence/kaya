@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-"""Drive the Ghost terminal in a real PTY and print what a user would see.
+"""Drive the Kaya terminal in a real PTY and print what a user would see.
 
 Renders the byte stream through a terminal emulator (pyte), including
 scrollback, so layout bugs (duplicate docks, vanished rows, stale frames)
 are visible exactly as in a real terminal.
 
     pip install pyte pexpect
-    scripts/tui-pty.py COLS ROWS steps.json [-- ghost-binary args...]
+    scripts/tui-pty.py COLS ROWS steps.json [-- kaya-binary args...]
 
 steps.json is a list of:
     ["type", "text"]   send text char by char
@@ -20,7 +20,7 @@ import pexpect, pyte
 
 cols, rows = int(sys.argv[1]), int(sys.argv[2])
 steps = json.load(open(sys.argv[3]))
-cmd = sys.argv[5:] if len(sys.argv) > 4 and sys.argv[4] == "--" else ["ghost"]
+cmd = sys.argv[5:] if len(sys.argv) > 4 and sys.argv[4] == "--" else ["kaya"]
 screen = pyte.HistoryScreen(cols, rows, history=5000)
 stream = pyte.ByteStream(screen)
 env = dict(os.environ, TERM="xterm-256color", COLORTERM="truecolor")

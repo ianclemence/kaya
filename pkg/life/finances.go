@@ -320,7 +320,7 @@ func (m *Finances) Track(in RecurringInput, now time.Time) (Recurring, bool, err
 			}
 		}
 		if len(d.Recurring) >= maxRecurring {
-			return errors.New("Ghost already tracks the most it can")
+			return errors.New("Kaya already tracks the most it can")
 		}
 		r.ID = newID("recurring")
 		d.Recurring = append(d.Recurring, r)

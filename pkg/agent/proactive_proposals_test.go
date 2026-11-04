@@ -8,19 +8,19 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ianclemence/ghost/pkg/cards"
-	"github.com/ianclemence/ghost/pkg/cevents"
-	"github.com/ianclemence/ghost/pkg/commitments"
-	"github.com/ianclemence/ghost/pkg/ideas"
-	"github.com/ianclemence/ghost/pkg/permissions"
-	"github.com/ianclemence/ghost/pkg/proactive"
-	"github.com/ianclemence/ghost/pkg/product"
-	"github.com/ianclemence/ghost/pkg/providers"
-	"github.com/ianclemence/ghost/pkg/routines"
-	"github.com/ianclemence/ghost/pkg/scheduled"
+	"github.com/ianclemence/kaya/pkg/cards"
+	"github.com/ianclemence/kaya/pkg/cevents"
+	"github.com/ianclemence/kaya/pkg/commitments"
+	"github.com/ianclemence/kaya/pkg/ideas"
+	"github.com/ianclemence/kaya/pkg/permissions"
+	"github.com/ianclemence/kaya/pkg/proactive"
+	"github.com/ianclemence/kaya/pkg/product"
+	"github.com/ianclemence/kaya/pkg/providers"
+	"github.com/ianclemence/kaya/pkg/routines"
+	"github.com/ianclemence/kaya/pkg/scheduled"
 )
 
-// newProactiveLoop wires the same subsystems cmd/ghost wires at startup —
+// newProactiveLoop wires the same subsystems cmd/kaya wires at startup —
 // authoritative broker, canonical event stream, scheduler + routine signals —
 // over a throwaway workspace. It is the honest harness for the proactive
 // lifecycle: nothing here is stubbed except the scheduler's executor (the
@@ -50,7 +50,7 @@ func newProactiveLoopWith(t *testing.T, ws string, provider providers.LLMProvide
 	if err != nil {
 		t.Fatalf("open events: %v", err)
 	}
-	al.SetGovernance(NewGovernance(stream, broker, "ghost-test", "agent-test"))
+	al.SetGovernance(NewGovernance(stream, broker, "kaya-test", "agent-test"))
 
 	store := scheduled.NewStore(al.DB())
 	if err := store.InitSchema(); err != nil {
@@ -67,7 +67,7 @@ func newProactiveLoopWith(t *testing.T, ws string, provider providers.LLMProvide
 }
 
 // overdueReminder persists a one-shot reminder that was due in the past and
-// never fired — the real-world shape of a promise Ghost did not keep.
+// never fired — the real-world shape of a promise Kaya did not keep.
 func overdueReminder(t *testing.T, svc *scheduled.Service, title string, due time.Time) *scheduled.ScheduledItem {
 	t.Helper()
 	item := &scheduled.ScheduledItem{
@@ -305,7 +305,7 @@ func TestProactiveProposalApprovedExactlyOnce(t *testing.T) {
 }
 
 // Proactive assistance can be switched off entirely without disabling the rest
-// of Ghost, and the preference file drives it.
+// of Kaya, and the preference file drives it.
 func TestProactiveDisabledByPreference(t *testing.T) {
 	al, svc, _ := newProactiveLoop(t)
 	now := time.Now().UTC()
@@ -402,7 +402,7 @@ func TestProactiveEvaluationNeverCallsTheModel(t *testing.T) {
 }
 
 // A failing executor produces an honest failure, never a success claim, and
-// backs off so Ghost does not nag.
+// backs off so Kaya does not nag.
 func TestProactiveProposalFailureIsHonest(t *testing.T) {
 	al, svc, stream := newProactiveLoop(t)
 	now := time.Now().UTC()
@@ -501,7 +501,7 @@ func TestProactiveProposalRoutineFailure(t *testing.T) {
 	}
 	al.SetRoutineSignals(routineSvc, svc)
 
-	r, err := routineSvc.Create(al.ghostID(), "owner", "Nightly report", "send the nightly report",
+	r, err := routineSvc.Create(al.kayaID(), "owner", "Nightly report", "send the nightly report",
 		"UTC", scheduled.Schedule{Kind: scheduled.ScheduleEvery, Every: 24 * time.Hour}, nil)
 	if err != nil {
 		t.Fatalf("create routine: %v", err)
@@ -559,7 +559,7 @@ func TestProactiveRoutineProposalSupersededOnRecovery(t *testing.T) {
 	}
 	al.SetRoutineSignals(routineSvc, svc)
 
-	r, err := routineSvc.Create(al.ghostID(), "owner", "Nightly report", "send the nightly report",
+	r, err := routineSvc.Create(al.kayaID(), "owner", "Nightly report", "send the nightly report",
 		"UTC", scheduled.Schedule{Kind: scheduled.ScheduleEvery, Every: 24 * time.Hour}, nil)
 	if err != nil {
 		t.Fatalf("create routine: %v", err)
@@ -774,7 +774,7 @@ func TestTurnDidRealWorkRequiresAMutation(t *testing.T) {
 	publish := func(capability string) {
 		al.governance.Events.Publish(&cevents.Event{
 			Type: cevents.ToolCompleted, SessionID: session, Status: "success",
-			GhostID: "ghost-test", AgentID: "agent-test",
+			KayaID: "kaya-test", AgentID: "agent-test",
 			Payload: map[string]interface{}{"tool": "probe", "capability": capability, "status": "success"},
 		})
 	}
@@ -817,7 +817,7 @@ func TestSpeculationNeverBecomesACommitment(t *testing.T) {
 	}
 }
 
-// Without a channel that has ever carried a message, Ghost does not offer to
+// Without a channel that has ever carried a message, Kaya does not offer to
 // send something it cannot send: the offer degrades to a reminder, which it
 // really can create.
 func TestCommitmentDegradesWhenMessagingIsUnavailable(t *testing.T) {
@@ -857,7 +857,7 @@ func TestCommitmentDegradesWhenMessagingIsUnavailable(t *testing.T) {
 }
 
 // The awareness filter is the cheap gate in front of every event: only a
-// state change that can alter what Ghost should notice gets through.
+// state change that can alter what Kaya should notice gets through.
 func TestAwarenessEventFilter(t *testing.T) {
 	relevant := []cevents.Type{
 		cevents.CommitmentCreated, cevents.CommitmentCompleted,
@@ -892,7 +892,7 @@ func TestProactiveWatcherEvaluatesOnRelevantEvent(t *testing.T) {
 	al.StartProactiveWatcher()
 	al.governance.Events.Publish(&cevents.Event{
 		Type: cevents.RoutineFailed, SessionID: "main",
-		GhostID: "ghost-test", AgentID: "agent-test",
+		KayaID: "kaya-test", AgentID: "agent-test",
 		Payload: map[string]interface{}{"routine": "r1"},
 	})
 
@@ -918,7 +918,7 @@ func TestProactiveWatcherIgnoresIrrelevantEvent(t *testing.T) {
 	for i := 0; i < 20; i++ {
 		al.governance.Events.Publish(&cevents.Event{
 			Type: cevents.AgentProgress, SessionID: "main",
-			GhostID: "ghost-test", AgentID: "agent-test",
+			KayaID: "kaya-test", AgentID: "agent-test",
 			Payload: map[string]interface{}{"i": i},
 		})
 	}
@@ -967,9 +967,9 @@ func routineService(t *testing.T, al *AgentLoop, store *scheduled.Store) *routin
 	return svc
 }
 
-func mustRoutine(t *testing.T, svc *routines.Service, ghostID string) *routines.Routine {
+func mustRoutine(t *testing.T, svc *routines.Service, kayaID string) *routines.Routine {
 	t.Helper()
-	r, err := svc.Create(ghostID, "owner", "Nightly report", "send the nightly report",
+	r, err := svc.Create(kayaID, "owner", "Nightly report", "send the nightly report",
 		"UTC", scheduled.Schedule{Kind: scheduled.ScheduleEvery, Every: 24 * time.Hour}, nil)
 	if err != nil {
 		t.Fatalf("create routine: %v", err)

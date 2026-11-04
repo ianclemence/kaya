@@ -21,7 +21,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ianclemence/ghost/pkg/logger"
+	"github.com/ianclemence/kaya/pkg/logger"
 )
 
 // DefaultLocalSTTPort is the loopback port the whisper-server sidecar
@@ -144,7 +144,7 @@ func (t *LocalTranscriber) Transcribe(ctx context.Context, audioFilePath string)
 
 // AutoTranscriber tries the primary (local) engine first and falls back
 // to the secondary (cloud) engine per call, so a sidecar that restarts
-// is picked back up without restarting Ghost.
+// is picked back up without restarting Kaya.
 type AutoTranscriber struct {
 	primary  Transcriber
 	fallback Transcriber

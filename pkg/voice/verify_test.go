@@ -9,11 +9,11 @@ import (
 func TestVerifySHA256(t *testing.T) {
 	dir := t.TempDir()
 	f := filepath.Join(dir, "artifact.bin")
-	if err := os.WriteFile(f, []byte("ghost-artifact"), 0600); err != nil {
+	if err := os.WriteFile(f, []byte("kaya-artifact"), 0600); err != nil {
 		t.Fatal(err)
 	}
-	// sha256 of "ghost-artifact"
-	good := "b95492b6ed43c4849f436b0dece3a3ebbaa24fbfb318544779571e437aa14850"
+	// sha256 of "kaya-artifact"
+	good := "df00b5bfac0e17d27b38fcacf4e481540264a051d9c6ea4167cc740f0eb834c6"
 	if err := verifySHA256(f, good); err != nil {
 		t.Fatalf("matching digest must pass: %v", err)
 	}

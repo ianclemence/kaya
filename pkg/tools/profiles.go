@@ -64,7 +64,7 @@ var ProfileAllowlists = map[ToolProfile][]string{
 		"present_card", "draft",
 		// Documents are laid out on the Pod and shown; nothing is sent.
 		"document",
-		// Updating Ghost from the phone: "check for an update" must work on
+		// Updating Kaya from the phone: "check for an update" must work on
 		// the surface the owner actually uses. The tool can read the current
 		// and available version without changing anything; an actual update
 		// still requires confirm=true, and the broker still governs it.
@@ -261,7 +261,7 @@ var coreToolNames = map[string]bool{
 	"crypto_price": true, "currency_convert": true, "flight_status": true,
 	"clarify": true, "todo": true,
 	"schedule": true,
-	// Showing an answer as a card (or asking with one) is how Ghost talks on
+	// Showing an answer as a card (or asking with one) is how Kaya talks on
 	// the phone; it has to be there whatever the words of the message were.
 	"present_card": true,
 	"spawn":        true, "subagent": true,
@@ -311,7 +311,7 @@ var turnIntentTools = []struct {
 	{[]string{"how many", "which of my", "across all", "across my", "all my notes", "all my files", "every note", "every file", "count the", "of my notes", "of my files"}, []string{"pipeline"}},
 	{[]string{"compact", "summarize history", "context full"}, []string{"compact_context"}},
 	{[]string{"check yourself", "check your health", "self check", "self-check", "are you healthy", "are you ok", "are you okay", "is everything working", "run diagnostics", "run a diagnostic", "diagnose yourself", "health check", "healthcheck", "are you working"}, []string{"self_check"}},
-	{[]string{"update ghost", "upgrade ghost", "self-update", "update yourself", "update itself", "upgrade yourself", "latest version", "new version", "install the update",
+	{[]string{"update kaya", "upgrade kaya", "self-update", "update yourself", "update itself", "upgrade yourself", "latest version", "new version", "install the update",
 		// The question form was missing, so "check for an update" offered no
 		// update tool at all — on the phone, where it matters most.
 		"check for an update", "check for updates", "is there an update", "any update", "any updates", "update available",
@@ -367,7 +367,7 @@ var turnIntentTools = []struct {
 	{[]string{"light", "lights", "thermostat", "home assistant", "smart home", "turn on", "turn off", "turn the", "device", "scene"}, []string{"device"}},
 	// Durable handoff artifacts (low risk, evidence-backed).
 	{[]string{"artifact", "hand off", "handoff", "publish", "report", "deliverable"}, []string{"publish_artifact"}},
-	// The Vault: logins, cards, contacts and keys the owner keeps for Ghost to use.
+	// The Vault: logins, cards, contacts and keys the owner keeps for Kaya to use.
 	{[]string{"vault", "saved login", "saved password", "my password", "my logins", "credit card", "debit card", "my card", "card number",
 		"api key", "my contacts", "contact details", "my address", "my phone number", "my email address"},
 		[]string{"vault_items", "request_credentials"}},

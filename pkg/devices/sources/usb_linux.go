@@ -10,8 +10,8 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/ianclemence/ghost/pkg/devices/events"
-	"github.com/ianclemence/ghost/pkg/logger"
+	"github.com/ianclemence/kaya/pkg/devices/events"
+	"github.com/ianclemence/kaya/pkg/logger"
 )
 
 var usbClassToCapability = map[string]string{

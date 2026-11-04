@@ -1,11 +1,11 @@
 ---
 name: healthcheck
-description: Audit system security, hardening, and status for Ghost deployments. Invoke when user asks for a "security audit", "check system status", "hardening checklist", "risk assessment", or "is my system up to date". Runs diagnostics on firewall, SSH, updates, and package versions.
+description: Audit system security, hardening, and status for Kaya deployments. Invoke when user asks for a "security audit", "check system status", "hardening checklist", "risk assessment", or "is my system up to date". Runs diagnostics on firewall, SSH, updates, and package versions.
 version: 1.1.0
-author: Ghost
+author: Kaya
 license: MIT
 metadata:
-  ghost:
+  kaya:
     tags: [security, hardening, audit, system-status, diagnostics]
 prerequisites:
   commands: []
@@ -15,7 +15,7 @@ prerequisites:
 
 ## Overview
 
-Assess and harden the host running Ghost using standard system tools.
+Assess and harden the host running Kaya using standard system tools.
 
 ## Core rules
 
@@ -42,18 +42,18 @@ Run system checks (numbered):
 
 ### 2) Security Audit (Manual)
 
-Since Ghost does not have a built-in audit command yet, use standard tools:
+Since Kaya does not have a built-in audit command yet, use standard tools:
 
 1. **Check for root login (Linux)**: `grep PermitRootLogin /etc/ssh/sshd_config`
 2. **Check for password auth (Linux)**: `grep PasswordAuthentication /etc/ssh/sshd_config`
 3. **Check Windows Defender**: `Get-MpComputerStatus` (PowerShell)
 
-### 3) Check Ghost Status
+### 3) Check Kaya Status
 
-Run Ghost's built-in diagnostic command:
+Run Kaya's built-in diagnostic command:
 
 ```bash
-ghost doctor
+kaya doctor
 ```
 
 This runs automated checks for: database, LLM provider, gateway, tool registry, Python, and skill dependencies.

@@ -1,4 +1,4 @@
-// Package workflow is Ghost's thin AgentRun-style routine compiler.
+// Package workflow is Kaya's thin AgentRun-style routine compiler.
 //
 // It does NOT vendor AgentRun's TypeScript runtime and it does NOT call
 // Jev (TypeSafe System One) at runtime. Jev is a dev-time tuning partner

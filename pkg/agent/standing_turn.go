@@ -1,6 +1,6 @@
 package agent
 
-// Natural-language standing permissions: "Always let Ghost add calendar
+// Natural-language standing permissions: "Always let Kaya add calendar
 // events." Deterministic proposal → durable pending → explicit "yes" →
 // runtime re-validates scope → narrow scoped grant persisted. Broad,
 // malformed, cross-integration, and forged requests reject or stay
@@ -10,9 +10,9 @@ import (
 	"encoding/json"
 	"strings"
 
-	"github.com/ianclemence/ghost/pkg/bus"
-	"github.com/ianclemence/ghost/pkg/permissions"
-	"github.com/ianclemence/ghost/pkg/skills"
+	"github.com/ianclemence/kaya/pkg/bus"
+	"github.com/ianclemence/kaya/pkg/permissions"
+	"github.com/ianclemence/kaya/pkg/skills"
 )
 
 // standingBroker opens the loop-local broker handle (same SQLite file
@@ -102,7 +102,7 @@ func (al *AgentLoop) confirmStandingGrant(store *skills.PendingStore, pending *s
 		return "I couldn't store that permission — the scope isn't valid. Nothing changed.", true
 	}
 	if deny {
-		return "Understood. Ghost will never do that without asking first. Nothing else changed.", true
+		return "Understood. Kaya will never do that without asking first. Nothing else changed.", true
 	}
 	return "Done. " + pending.Question, true
 }

@@ -9,9 +9,9 @@ import (
 )
 
 func TestCalendarOAuthUnconfigured(t *testing.T) {
-	t.Setenv("GHOST_GOOGLE_CLIENT_ID", "")
-	t.Setenv("GHOST_GOOGLE_CLIENT_SECRET", "")
-	t.Setenv("GHOST_CALENDAR_REDIRECT_URL", "")
+	t.Setenv("KAYA_GOOGLE_CLIENT_ID", "")
+	t.Setenv("KAYA_GOOGLE_CLIENT_SECRET", "")
+	t.Setenv("KAYA_CALENDAR_REDIRECT_URL", "")
 	d := &Doctor{}
 	res := d.checkCalendarOAuth(context.Background())
 	if res.Status != "warning" {
@@ -20,9 +20,9 @@ func TestCalendarOAuthUnconfigured(t *testing.T) {
 }
 
 func TestCalendarOAuthBadClientID(t *testing.T) {
-	t.Setenv("GHOST_GOOGLE_CLIENT_ID", "not-a-client-id")
-	t.Setenv("GHOST_GOOGLE_CLIENT_SECRET", "s")
-	t.Setenv("GHOST_CALENDAR_REDIRECT_URL", "https://relay.example.com/oauth/calendar/callback")
+	t.Setenv("KAYA_GOOGLE_CLIENT_ID", "not-a-client-id")
+	t.Setenv("KAYA_GOOGLE_CLIENT_SECRET", "s")
+	t.Setenv("KAYA_CALENDAR_REDIRECT_URL", "https://relay.example.com/oauth/calendar/callback")
 	d := &Doctor{}
 	res := d.checkCalendarOAuth(context.Background())
 	if res.Status != "error" {
@@ -31,9 +31,9 @@ func TestCalendarOAuthBadClientID(t *testing.T) {
 }
 
 func TestCalendarOAuthNonHTTPSWarns(t *testing.T) {
-	t.Setenv("GHOST_GOOGLE_CLIENT_ID", "x.apps.googleusercontent.com")
-	t.Setenv("GHOST_GOOGLE_CLIENT_SECRET", "s")
-	t.Setenv("GHOST_CALENDAR_REDIRECT_URL", "http://192.168.1.10/oauth/calendar/callback")
+	t.Setenv("KAYA_GOOGLE_CLIENT_ID", "x.apps.googleusercontent.com")
+	t.Setenv("KAYA_GOOGLE_CLIENT_SECRET", "s")
+	t.Setenv("KAYA_CALENDAR_REDIRECT_URL", "http://192.168.1.10/oauth/calendar/callback")
 	d := &Doctor{}
 	res := d.checkCalendarOAuth(context.Background())
 	if res.Status != "warning" {
@@ -62,9 +62,9 @@ func TestDoctorRunAllAggregatesServices(t *testing.T) {
 
 // A disabled calendar skill must not nag the owner to configure sign-in.
 func TestCalendarOAuthSuppressedWhenSkillDisabled(t *testing.T) {
-	t.Setenv("GHOST_GOOGLE_CLIENT_ID", "")
-	t.Setenv("GHOST_GOOGLE_CLIENT_SECRET", "")
-	t.Setenv("GHOST_CALENDAR_REDIRECT_URL", "")
+	t.Setenv("KAYA_GOOGLE_CLIENT_ID", "")
+	t.Setenv("KAYA_GOOGLE_CLIENT_SECRET", "")
+	t.Setenv("KAYA_CALENDAR_REDIRECT_URL", "")
 	ws := t.TempDir()
 	if err := os.MkdirAll(filepath.Join(ws, "skills", "calendar"), 0o755); err != nil {
 		t.Fatal(err)
@@ -81,9 +81,9 @@ func TestCalendarOAuthSuppressedWhenSkillDisabled(t *testing.T) {
 
 // When the calendar skill IS enabled but unconfigured, the warning stays.
 func TestCalendarOAuthWarnsWhenSkillEnabled(t *testing.T) {
-	t.Setenv("GHOST_GOOGLE_CLIENT_ID", "")
-	t.Setenv("GHOST_GOOGLE_CLIENT_SECRET", "")
-	t.Setenv("GHOST_CALENDAR_REDIRECT_URL", "")
+	t.Setenv("KAYA_GOOGLE_CLIENT_ID", "")
+	t.Setenv("KAYA_GOOGLE_CLIENT_SECRET", "")
+	t.Setenv("KAYA_CALENDAR_REDIRECT_URL", "")
 	ws := t.TempDir()
 	if err := os.MkdirAll(filepath.Join(ws, "skills", "calendar"), 0o755); err != nil {
 		t.Fatal(err)
@@ -123,9 +123,9 @@ func TestRunAllOmitsCalendarCheckWhenSkillDisabled(t *testing.T) {
 
 // ...but an enabled-but-unconfigured calendar surfaces inside the aggregate.
 func TestRunAllIncludesCalendarCheckWhenSkillEnabled(t *testing.T) {
-	t.Setenv("GHOST_GOOGLE_CLIENT_ID", "")
-	t.Setenv("GHOST_GOOGLE_CLIENT_SECRET", "")
-	t.Setenv("GHOST_CALENDAR_REDIRECT_URL", "")
+	t.Setenv("KAYA_GOOGLE_CLIENT_ID", "")
+	t.Setenv("KAYA_GOOGLE_CLIENT_SECRET", "")
+	t.Setenv("KAYA_CALENDAR_REDIRECT_URL", "")
 	ws := t.TempDir()
 	if err := os.MkdirAll(filepath.Join(ws, "skills", "calendar"), 0o755); err != nil {
 		t.Fatal(err)

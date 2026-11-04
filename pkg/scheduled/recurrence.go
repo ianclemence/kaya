@@ -19,7 +19,7 @@ import (
 // The old parser knew four fixed sentences ("every day at N", "every <weekday>
 // at N", "every week at N", "every month on the Nth at N") and nothing else, so
 // "every weekday at 8am to take my vitamins" was not understood at all and
-// Ghost asked "what should happen?" about a request that had already said what.
+// Kaya asked "what should happen?" about a request that had already said what.
 // This finds the cadence and the time of day independently, anywhere in the
 // sentence, and reports which words it used so the caller can remove them and
 // keep the rest as the task.

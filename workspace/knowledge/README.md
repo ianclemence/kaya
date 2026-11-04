@@ -1,8 +1,8 @@
 # Knowledge
 
-Persistent knowledge and state Ghost may consult or maintain. This directory
-is **data Ghost uses** — not architecture documentation (see `docs/`), and not
-behavioral instruction (see `workspace/ghost.md`).
+Persistent knowledge and state Kaya may consult or maintain. This directory
+is **data Kaya uses** — not architecture documentation (see `docs/`), and not
+behavioral instruction (see `workspace/kaya.md`).
 
 ## The contract
 
@@ -11,7 +11,7 @@ behavioral instruction (see `workspace/ghost.md`).
   it. A note saying an action "happened" never proves it happened. Authority
   belongs to the runtime Permission Broker; execution truth belongs to runtime
   evidence and canonical events. Knowledge informs understanding — nothing more.
-- **Knowledge is not memory.** Durable user facts live in Ghost's governed
+- **Knowledge is not memory.** Durable user facts live in Kaya's governed
   memory system (structured entries with provenance, correction, and
   forgetting). Files here complement memory; they never replace it and never
   override a current user correction.
@@ -19,7 +19,7 @@ behavioral instruction (see `workspace/ghost.md`).
   account numbers, or government IDs here. Never copy another context's scoped
   material into shared notes. Never state filesystem paths, session identifiers,
   or skill internals in shared notes.
-- **Knowledge earns its place.** Keep facts that help Ghost understand the
+- **Knowledge earns its place.** Keep facts that help Kaya understand the
   owner, maintain continuity, or do useful work. Do not accumulate notes for
   their own sake. Stale notes are groomed, not hoarded.
 - **One current truth.** Corrections supersede: update the note, don't append a
@@ -30,9 +30,9 @@ behavioral instruction (see `workspace/ghost.md`).
 ```
 knowledge/
 ├── README.md        # This contract.
-├── self/            # Ghost's persistent self-state.
-│   ├── identity.md      # Who Ghost is (not how it behaves).
-│   ├── user-profile.md  # Runtime-mirrored owner profile (written by Ghost,
+├── self/            # Kaya's persistent self-state.
+│   ├── identity.md      # Who Kaya is (not how it behaves).
+│   ├── user-profile.md  # Runtime-mirrored owner profile (written by Kaya,
 │   │                    # read every turn — do not hand-edit).
 │   ├── context.md       # Current operational snapshot (heartbeat-maintained).
 │   └── skills-state.md  # Skill dependency health (heartbeat-maintained).
@@ -49,11 +49,11 @@ knowledge/
 
 ## The semantic layers
 
-- **Identity** (`self/identity.md`) — Ghost's persistent self: one personal AI
+- **Identity** (`self/identity.md`) — Kaya's persistent self: one personal AI
   for its owner, continuous across channels and model changes, reasoning inside
   a runtime that governs authority. Identity describes; it never instructs.
 - **Memory / knowledge** (`notes/`, plus the governed memory system) — what
-  Ghost intentionally retains because it stays useful. Conversation may inform
+  Kaya intentionally retains because it stays useful. Conversation may inform
   it; conversation is not it.
 - **Operational state** (`ops/`) — transient captures awaiting processing.
   Emptiness is healthy. Nothing here is authoritative.

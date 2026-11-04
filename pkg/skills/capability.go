@@ -4,7 +4,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ianclemence/ghost/pkg/capability"
+	"github.com/ianclemence/kaya/pkg/capability"
 )
 
 // Capability declares the generic execution contract for a skill.
@@ -14,7 +14,7 @@ import (
 //	allowed path -> Tool executes -> Result validated -> Model responds.
 //
 // Every skill gets a Capability (explicit frontmatter or registry default).
-// Once Ghost commits to a capability, the model is NOT free to wander into
+// Once Kaya commits to a capability, the model is NOT free to wander into
 // unrelated tools just because the first API response was poor.
 type Capability struct {
 	// ID is the stable capability id, e.g. "weather.current".
@@ -78,9 +78,9 @@ var capabilityRegistry = map[string]Capability{
 	// runs without an approval card; the closed path keeps it to those tools.
 	"hand-drawn-animation": {ID: "film.make", Skill: "hand-drawn-animation", AllowedTools: []string{"film", "read_file", "write_file", "edit_file", "append_file", "list_dir", "vision", "clarify"}, Primary: "film tool: strokes in code, looked at, then rendered on the Pod", Fallback: "none", MaxAttempts: 4, Risk: "read_only"},
 
-	// Ghost explaining its own design. It may look at its own health to answer;
+	// Kaya explaining its own design. It may look at its own health to answer;
 	// both tools only read.
-	"ghost-architecture": {ID: "self.explain", Skill: "ghost-architecture", AllowedTools: []string{"read_file", "self_check", "system_status"}, Primary: "the skill's own description; self_check to report real health", Fallback: "none", MaxAttempts: 2, Risk: "read_only"},
+	"kaya-architecture": {ID: "self.explain", Skill: "kaya-architecture", AllowedTools: []string{"read_file", "self_check", "system_status"}, Primary: "the skill's own description; self_check to report real health", Fallback: "none", MaxAttempts: 2, Risk: "read_only"},
 
 	// Declared write capabilities: narrow grant targets. Runtime gating
 	// for the calendar skill uses the read contract (same consequential
@@ -209,7 +209,7 @@ func (c Capability) CleanFailure() string {
 	case "find-nearby", "travel":
 		return "I couldn't search nearby places right now. Please check the location and try again."
 	case "calendar":
-		return "Calendar access isn't connected yet. Connect your calendar in Ghost settings to view your schedule."
+		return "Calendar access isn't connected yet. Connect your calendar in Kaya settings to view your schedule."
 	case "unit-converter":
 		return "I couldn't convert those units. Please check the unit names and try again."
 	case "world-clock":

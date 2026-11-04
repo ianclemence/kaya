@@ -1,6 +1,6 @@
-// Package documents turns what Ghost writes into a document the owner can
+// Package documents turns what Kaya writes into a document the owner can
 // keep, print, send or sign: a CV, a letter, an invoice, an itinerary, a
-// one-pager. Ghost writes Markdown; the Pod lays it out as a printed page
+// one-pager. Kaya writes Markdown; the Pod lays it out as a printed page
 // (pandoc to HTML in a fixed, quiet print style, then Chromium to PDF) and
 // keeps the Markdown beside it, so the same document can also be had as Word.
 //
@@ -174,7 +174,7 @@ func Word(ctx context.Context, workspace, mdRel string) ([]byte, error) {
 	}
 	ctx, cancel := context.WithTimeout(ctx, 30*time.Second)
 	defer cancel()
-	tmp, err := os.CreateTemp("", "ghost-doc-*.docx")
+	tmp, err := os.CreateTemp("", "kaya-doc-*.docx")
 	if err != nil {
 		return nil, err
 	}
@@ -193,7 +193,7 @@ func Word(ctx context.Context, workspace, mdRel string) ([]byte, error) {
 func printPDF(ctx context.Context, htmlPath, pdfPath string) error {
 	ctx, cancel := context.WithTimeout(ctx, 60*time.Second)
 	defer cancel()
-	profile, err := os.MkdirTemp("", "ghost-doc-profile-")
+	profile, err := os.MkdirTemp("", "kaya-doc-profile-")
 	if err != nil {
 		return err
 	}
@@ -321,7 +321,7 @@ func readInside(workspace, rel string) ([]byte, error) {
 }
 
 // SourceOf is the Markdown a document's PDF was made from, if it is one of
-// Ghost's documents ("documents/cv-v2.pdf" -> "documents/cv-v2.md").
+// Kaya's documents ("documents/cv-v2.pdf" -> "documents/cv-v2.md").
 func SourceOf(pdfRel string) (string, bool) {
 	if !strings.HasPrefix(pdfRel, Dir+"/") || !strings.HasSuffix(pdfRel, ".pdf") {
 		return "", false
@@ -344,7 +344,7 @@ func firstLine(s string, err error) string {
 	return "unknown error"
 }
 
-// The faces every document is set in, the same as Ghost's own: Instrument
+// The faces every document is set in, the same as Kaya's own: Instrument
 // Serif for headings, Inter for reading (OFL; licences beside them). They are
 // inlined, so a document looks the same on any Pod and needs nothing fetched.
 //
@@ -405,6 +405,6 @@ tr > :last-child:nth-child(n+3) { text-align: right; font-variant-numeric: tabul
 img { max-width: 100%; }
 `
 
-// FontFaces is Ghost's type as inline @font-face rules, for anything else the
+// FontFaces is Kaya's type as inline @font-face rules, for anything else the
 // Pod lays out (a motion, a page) that must look the same with nothing fetched.
 func FontFaces() string { return fontFaces() }

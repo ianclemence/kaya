@@ -1,0 +1,23 @@
+[Unit]
+Description=Kaya weekly state snapshot
+After=network-online.target
+Wants=network-online.target
+ConditionPathExists=/var/kaya/.setup-complete
+
+[Service]
+Type=oneshot
+User=root
+Group=root
+WorkingDirectory=/var/kaya
+EnvironmentFile=/var/kaya/.env
+Environment=KAYA_CONFIG_DIR=/var/kaya/config
+Environment=KAYA_WORKSPACE_DIR=/var/lib/kaya/workspace
+ExecStart=/usr/local/bin/kaya state backup --cron
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/kaya /var/lib/kaya
+PrivateTmp=true
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=kaya-backup

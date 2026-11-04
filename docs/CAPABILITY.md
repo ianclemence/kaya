@@ -1,6 +1,6 @@
 # Capability
 
-A **capability** is a stable, Ghost-owned semantic ability to accomplish a
+A **capability** is a stable, Kaya-owned semantic ability to accomplish a
 bounded task on behalf of the user. It is the contract between user intent,
 governance, execution, and evidence.
 
@@ -31,8 +31,8 @@ routine.create       routine.modify       routine.cancel
 | **permission** | permission is decided by the Permission Broker |
 | **implementation** | implementation is how a capability is carried out |
 
-Third-party systems do not define Ghost's capability vocabulary. A provider's
-tool names never become Ghost's semantic identity.
+Third-party systems do not define Kaya's capability vocabulary. A provider's
+tool names never become Kaya's semantic identity.
 
 ## The capability contract
 
@@ -54,7 +54,7 @@ Intent
   ↓
 Capability            (semantic identity)
   ↓
-Permission Broker     (may Ghost do this?)
+Permission Broker     (may Kaya do this?)
   ↓
 Resolver              (which implementation can fulfil it?)
   ↓
@@ -112,8 +112,8 @@ implementation
 CAPABILITY
 ```
 
-A connected app helps Ghost fulfil capabilities. It does not authorize them.
-Having credentials does not mean Ghost may use them for a given operation —
+A connected app helps Kaya fulfil capabilities. It does not authorize them.
+Having credentials does not mean Kaya may use them for a given operation —
 the Permission Broker still decides.
 
 > Connected app ≠ permission.
@@ -130,7 +130,7 @@ the requested operation, and authorization uses the capability identity.
 
 ## Skills
 
-A **skill** is reusable knowledge or procedure that helps Ghost accomplish a
+A **skill** is reusable knowledge or procedure that helps Kaya accomplish a
 class of tasks using capabilities it already has. A skill may declare
 requirements:
 
@@ -140,7 +140,7 @@ requires:
   - web.search
 ```
 
-That is a **request**, never a grant. Ghost's normal capability and permission
+That is a **request**, never a grant. Kaya's normal capability and permission
 system still authorizes each capability. A skill cannot grant authority, bypass
 the broker, redefine capability risk, or create persistent automation simply by
 being installed or read.
@@ -149,14 +149,14 @@ being installed or read.
 
 ## MCP
 
-MCP is an integration/protocol mechanism, not Ghost's authority model. Known
+MCP is an integration/protocol mechanism, not Kaya's authority model. Known
 read-oriented MCP operations may map to a semantic capability; unknown or
 mutating operations remain governed as a high-impact, scoped `mcp.execute`.
 
 An MCP server authenticating successfully does not grant permission. MCP
 cannot mint authority and cannot bypass evidence validation. MCP OAuth tokens
 are currently held as an in-memory session cache, not as a persistent second
-credential authority; persistent credentials are owned by Ghost's credential
+credential authority; persistent credentials are owned by Kaya's credential
 boundary (`pkg/credentials`).
 
 ## Capability and arguments

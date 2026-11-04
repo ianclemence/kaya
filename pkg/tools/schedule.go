@@ -10,7 +10,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/ianclemence/ghost/pkg/scheduled"
+	"github.com/ianclemence/kaya/pkg/scheduled"
 )
 
 // ScheduleService is the interface for creating scheduled items.
@@ -120,7 +120,7 @@ func (t *ScheduleTool) SetContext(channel, chatID string) {
 // The rule: if the owner's message yields a time, that time wins, and the
 // model's phrasing is only used to carry the content. If it does not, the tool
 // asks instead of guessing — the one exception being a short confirmation of a
-// time Ghost has already proposed out loud, which is agreement, not invention.
+// time Kaya has already proposed out loud, which is agreement, not invention.
 func (t *ScheduleTool) resolveScheduleTime(ctx context.Context, message, tz string) (*scheduled.ParsedSchedule, error) {
 	// No owner message on this request (direct tool use, background work).
 	// Keep the long-standing behaviour of trusting the supplied phrasing.
@@ -149,7 +149,7 @@ func (t *ScheduleTool) resolveScheduleTime(ctx context.Context, message, tz stri
 				return parsed, nil
 			}
 		}
-		// A short yes to a time Ghost already proposed out loud is agreement,
+		// A short yes to a time Kaya already proposed out loud is agreement,
 		// not invention: the supplied phrasing is what was agreed.
 		if isShortConfirmation(owner) {
 			if parsed, err := scheduled.ParseNaturalLanguage(message, time.Now(), tz); err == nil && parsed != nil {
@@ -192,13 +192,13 @@ func reminderSentence(owner string) string {
 	return found[0]
 }
 
-// ownerConfirmationStems are short replies that agree to something Ghost has
+// ownerConfirmationStems are short replies that agree to something Kaya has
 // already put in front of the owner. They carry no time of their own, which is
 // why the supplied phrasing is allowed to supply one.
 var ownerConfirmationStems = []string{
 	"yes", "yeah", "yep", "yup", "ok", "okay", "sure", "please", "confirm",
 	"confirmed", "correct", "right", "do it", "set it", "go ahead", "sounds good",
-	// The same consent in the languages Ghost is spoken to in.
+	// The same consent in the languages Kaya is spoken to in.
 	"sí", "si", "vale", "claro", "de acuerdo", "sim", "oui", "d'accord", "ja", "ndiyo", "ndio", "sawa",
 	"ใช่", "ตกลง", "ได้", "โอเค", "好", "好的", "可以", "是的", "はい", "네",
 	"that works", "fine", "good", "please do", "yes please",
@@ -298,7 +298,7 @@ func (t *ScheduleTool) Execute(ctx context.Context, args map[string]interface{})
 		return ErrorResult(err.Error())
 	}
 
-	// The owner cares WHAT Ghost does, not the schedule restated as a name.
+	// The owner cares WHAT Kaya does, not the schedule restated as a name.
 	// Prefer a title derived from the action content; fall back to the parsed
 	// schedule phrase only when there is no content to name it after. The
 	// schedule itself is carried separately and rendered as its own sentence.
@@ -747,7 +747,7 @@ func describeScheduleTime(item *scheduled.ScheduledItem) string {
 	if item.Schedule.Kind == scheduled.ScheduleAt && item.Schedule.At != nil {
 		// In the owner's zone, the one the item was made in. Stored rows come
 		// back in UTC, and "Cancelled it (Sunday at 11:00 AM)" for a 6 pm
-		// Bangkok reminder left Ghost telling the owner the times disagreed.
+		// Bangkok reminder left Kaya telling the owner the times disagreed.
 		at := *item.Schedule.At
 		if item.Timezone != "" {
 			if loc, err := time.LoadLocation(item.Timezone); err == nil {
@@ -905,7 +905,7 @@ func (t *ScheduleTool) cancelSchedule(target string) *ToolResult {
 	lister, ok := t.service.(scheduleLister)
 	canceller, ok2 := t.service.(scheduleCanceller)
 	if !ok || !ok2 {
-		return ErrorResult("I can't cancel schedules from here. It can be done under Routines in the console or with `ghost tasks`.")
+		return ErrorResult("I can't cancel schedules from here. It can be done under Routines in the console or with `kaya tasks`.")
 	}
 	items, err := lister.ListItems("", scheduled.StateScheduled, 200)
 	if err != nil {

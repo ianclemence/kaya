@@ -26,18 +26,18 @@ type AdminMeta struct {
 }
 
 // AdminHashPath returns the path to the admin password hash file.
-func AdminHashPath(ghostDir string) string {
-	return filepath.Join(ghostDir, "data", AdminHashFile)
+func AdminHashPath(kayaDir string) string {
+	return filepath.Join(kayaDir, "data", AdminHashFile)
 }
 
 // AdminMetaPath returns the path to the admin metadata file.
-func AdminMetaPath(ghostDir string) string {
-	return filepath.Join(ghostDir, "data", AdminMetaFile)
+func AdminMetaPath(kayaDir string) string {
+	return filepath.Join(kayaDir, "data", AdminMetaFile)
 }
 
 // LoadAdminMeta reads the admin metadata from disk. Returns nil if not found.
-func LoadAdminMeta(ghostDir string) *AdminMeta {
-	data, err := os.ReadFile(AdminMetaPath(ghostDir))
+func LoadAdminMeta(kayaDir string) *AdminMeta {
+	data, err := os.ReadFile(AdminMetaPath(kayaDir))
 	if err != nil {
 		return nil
 	}
@@ -49,12 +49,12 @@ func LoadAdminMeta(ghostDir string) *AdminMeta {
 }
 
 // saveAdminMeta writes admin metadata to disk atomically.
-func saveAdminMeta(ghostDir string, meta *AdminMeta) error {
+func saveAdminMeta(kayaDir string, meta *AdminMeta) error {
 	data, err := json.MarshalIndent(meta, "", "  ")
 	if err != nil {
 		return err
 	}
-	path := AdminMetaPath(ghostDir)
+	path := AdminMetaPath(kayaDir)
 	if err := os.MkdirAll(filepath.Dir(path), 0755); err != nil {
 		return err
 	}
@@ -79,8 +79,8 @@ func saveAdminMeta(ghostDir string, meta *AdminMeta) error {
 }
 
 // RecordAdminCreated records the initial creation time of the admin credential.
-func RecordAdminCreated(ghostDir string) error {
-	meta := LoadAdminMeta(ghostDir)
+func RecordAdminCreated(kayaDir string) error {
+	meta := LoadAdminMeta(kayaDir)
 	if meta == nil {
 		meta = &AdminMeta{}
 	}
@@ -89,12 +89,12 @@ func RecordAdminCreated(ghostDir string) error {
 		meta.CreatedAt = now
 	}
 	meta.LastChanged = now
-	return saveAdminMeta(ghostDir, meta)
+	return saveAdminMeta(kayaDir, meta)
 }
 
 // RecordPasswordChanged records when the admin password was last changed.
-func RecordPasswordChanged(ghostDir string) error {
-	meta := LoadAdminMeta(ghostDir)
+func RecordPasswordChanged(kayaDir string) error {
+	meta := LoadAdminMeta(kayaDir)
 	if meta == nil {
 		meta = &AdminMeta{}
 	}
@@ -102,14 +102,14 @@ func RecordPasswordChanged(ghostDir string) error {
 		meta.CreatedAt = time.Now().UTC()
 	}
 	meta.LastChanged = time.Now().UTC()
-	return saveAdminMeta(ghostDir, meta)
+	return saveAdminMeta(kayaDir, meta)
 }
 
 // SetAdminPassword validates, hashes the given password with bcrypt, and writes
 // it to the admin hash file. Records creation timestamp if this is the first
 // password set. The write is atomic (temp file + rename) so a crash never
 // leaves a truncated hash.
-func SetAdminPassword(ghostDir, password string) error {
+func SetAdminPassword(kayaDir, password string) error {
 	if err := ValidatePassword(password); err != nil {
 		return err
 	}
@@ -119,7 +119,7 @@ func SetAdminPassword(ghostDir, password string) error {
 		return err
 	}
 
-	path := AdminHashPath(ghostDir)
+	path := AdminHashPath(kayaDir)
 	if err := os.MkdirAll(filepath.Dir(path), 0755); err != nil {
 		return err
 	}
@@ -148,16 +148,16 @@ func SetAdminPassword(ghostDir, password string) error {
 	}
 
 	// Record timestamps: creation on first set, changed on subsequent sets.
-	if LoadAdminMeta(ghostDir) == nil {
-		return RecordAdminCreated(ghostDir)
+	if LoadAdminMeta(kayaDir) == nil {
+		return RecordAdminCreated(kayaDir)
 	}
-	return RecordPasswordChanged(ghostDir)
+	return RecordPasswordChanged(kayaDir)
 }
 
 // VerifyAdminPassword reports whether the given password matches the stored
 // admin hash. Returns false if no admin password has been configured yet.
-func VerifyAdminPassword(ghostDir, password string) (bool, error) {
-	path := AdminHashPath(ghostDir)
+func VerifyAdminPassword(kayaDir, password string) (bool, error) {
+	path := AdminHashPath(kayaDir)
 	hash, err := os.ReadFile(path)
 	if err != nil {
 		if os.IsNotExist(err) {
@@ -173,20 +173,20 @@ func VerifyAdminPassword(ghostDir, password string) (bool, error) {
 }
 
 // AdminConfigured reports whether an admin password hash exists on disk.
-func AdminConfigured(ghostDir string) bool {
-	_, err := os.Stat(AdminHashPath(ghostDir))
+func AdminConfigured(kayaDir string) bool {
+	_, err := os.Stat(AdminHashPath(kayaDir))
 	return err == nil
 }
 
 // RemoveAdminPassword deletes the admin credential and its metadata. It is
 // used to force a fresh setup (factory reset) or to clear a forgotten
 // password so the wizard can re-run. Returns nil if nothing was configured.
-func RemoveAdminPassword(ghostDir string) error {
-	errHash := os.Remove(AdminHashPath(ghostDir))
+func RemoveAdminPassword(kayaDir string) error {
+	errHash := os.Remove(AdminHashPath(kayaDir))
 	if errHash != nil && !os.IsNotExist(errHash) {
 		return errHash
 	}
-	errMeta := os.Remove(AdminMetaPath(ghostDir))
+	errMeta := os.Remove(AdminMetaPath(kayaDir))
 	if errMeta != nil && !os.IsNotExist(errMeta) {
 		return errMeta
 	}

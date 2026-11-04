@@ -122,7 +122,7 @@ func (m *Model) Report() Report {
 		subs[k] = v
 	}
 	overall := StateReady
-	summary := "Ghost is ready."
+	summary := "Kaya is ready."
 	for _, s := range subs {
 		// Per-integration detail keys don't drive the aggregate directly;
 		// the Integrations rollup does.
@@ -138,20 +138,20 @@ func (m *Model) Report() Report {
 			// degraded only via the integrations rollup, handled below.
 			if s.Name == Integrations {
 				overall = StateDegraded
-				summary = "Ghost is ready, with some integrations needing attention."
+				summary = "Kaya is ready, with some integrations needing attention."
 			}
 		case StateDegraded, StateTemporarilyUnavailable, StateOffline:
 			if overall == StateReady {
 				overall = StateDegraded
-				summary = "Ghost is running with reduced capability."
+				summary = "Kaya is running with reduced capability."
 			}
 		case StateActionRequired:
 			overall = StateActionRequired
-			summary = "Ghost needs your attention."
+			summary = "Kaya needs your attention."
 		default:
 			if overall == StateReady && s.State != StateUnknown {
 				overall = StateDegraded
-				summary = "Ghost is running with reduced capability."
+				summary = "Kaya is running with reduced capability."
 			}
 		}
 	}
@@ -159,7 +159,7 @@ func (m *Model) Report() Report {
 	for _, s := range subs {
 		if s.Severity == SeverityCritical {
 			overall = StateActionRequired
-			summary = "Ghost needs your attention."
+			summary = "Kaya needs your attention."
 			break
 		}
 	}

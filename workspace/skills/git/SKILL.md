@@ -2,10 +2,10 @@
 name: git
 description: Execute Git operations on repositories. Invoke when user asks to "check git status", "commit changes", "push to remote", "create a branch", "merge branch X into Y", "view git log", "diff changes", "stash", "reset", or any git workflow. Requires git binary installed.
 version: 1.1.0
-author: Ghost
+author: Kaya
 license: MIT
 metadata:
-  ghost:
+  kaya:
     tags: [git, version-control, repository, commit, branch]
 prerequisites:
   commands: [git]

@@ -18,7 +18,7 @@ func TestPrepareSpeechText(t *testing.T) {
 	}{
 		{"plain", "Hello there.", "Hello there."},
 		{"fence dropped", "Hi.\n```go\nfmt.Println()\n```\nBye.", "Hi.\n\nBye."},
-		{"inline code kept", "Run `ghost status` now.", "Run ghost status now."},
+		{"inline code kept", "Run `kaya status` now.", "Run kaya status now."},
 		{"link text kept", "See [the docs](https://x.test/y).", "See the docs."},
 		{"header stripped", "# Title\nBody here.", "Title\nBody here."},
 		{"emphasis stripped", "This is **bold** and *italic*.", "This is bold and italic."},

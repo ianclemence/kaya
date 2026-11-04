@@ -17,7 +17,7 @@ import (
 
 	"golang.org/x/oauth2"
 
-	"github.com/ianclemence/ghost/pkg/config"
+	"github.com/ianclemence/kaya/pkg/config"
 )
 
 // Proper Google OAuth 2.0 web-server flow for Calendar (product path).
@@ -26,27 +26,27 @@ import (
 // execution layer; this file is the product OAuth architecture. Answers
 // to the deployment questions:
 //
-//  1. Callback home: production = a Ghost-owned HTTPS callback service
+//  1. Callback home: production = a Kaya-owned HTTPS callback service
 //     (relay) that receives Google's redirect and forwards the code to the
-//     originating Ghost over the already-authenticated relay channel.
-//  2. LAN: when the browser is on the LAN, Ghost serves the callback
-//     directly at https://<ghost-lan>:<port>/oauth/calendar/callback.
-//  3. Behind the relay: remote browsers never reach the LAN Ghost, so the
+//     originating Kaya over the already-authenticated relay channel.
+//  2. LAN: when the browser is on the LAN, Kaya serves the callback
+//     directly at https://<kaya-lan>:<port>/oauth/calendar/callback.
+//  3. Behind the relay: remote browsers never reach the LAN Kaya, so the
 //     relay-hosted callback receives the code and relays it back.
 //  4. Remote users: same as (3) — relay callback, never direct LAN.
-//  5. A Ghost-owned relay callback service EXISTS (pkg/relay/server
+//  5. A Kaya-owned relay callback service EXISTS (pkg/relay/server
 //     handleOAuthCallback): GET /oauth/calendar/callback on the relay
-//     forwards allowlisted code/state to the Ghost over its
-//     already-authenticated device tunnel; the Ghost validates state and
+//     forwards allowlisted code/state to the Kaya over its
+//     already-authenticated device tunnel; the Kaya validates state and
 //     exchanges with its own secret. LAN-only setup can use the direct
-//     ghost-web callback without the relay.
+//     kaya-web callback without the relay.
 //  6. A local callback (http://localhost) is NOT viable as the product
-//     path: it runs in the user's browser, not on the Ghost machine, so
+//     path: it runs in the user's browser, not on the Kaya machine, so
 //     tokens would land on the wrong device.
 //  7. CSRF: cryptographically random 256-bit state, bound to the
 //     originating session + pending request, single-use, 10-minute expiry,
 //     constant-time comparison.
-//  8. Credentials: client secret never leaves the Ghost machine; refresh
+//  8. Credentials: client secret never leaves the Kaya machine; refresh
 //     tokens in a 0600 file outside backup roots; access tokens in memory
 //     only.
 //  9. Refresh tokens persist in the token file; restart reloads them.
@@ -58,14 +58,14 @@ import (
 //  14. Backup: token files are EXCLUDED from backups; restore requires
 //     reconnect (documented, never plaintext secrets in archives).
 //  15. Restore: integrations show needs_setup until reconnected.
-//  16. Multi-device: tokens belong to the owner's Ghost, not to a device;
+//  16. Multi-device: tokens belong to the owner's Kaya, not to a device;
 //     devices share the owner's integration state via authenticated APIs.
 //  17. No token/code/secret/state values in logs: Redacted() structs and
 //     no-value error paths (see below).
 //  18. Web Console and mobile both call Begin (server mints URL+state) and
 //     poll Status; neither ever sees secrets.
-//  19. Single Ghost OAuth client per deployment (BYO client ID/secret via
-//     settings); a Ghost-managed shared client is a future option once a
+//  19. Single Kaya OAuth client per deployment (BYO client ID/secret via
+//     settings); a Kaya-managed shared client is a future option once a
 //     relay callback service exists.
 //  20. Verification: readonly scope needs standard verification; the events
 //     (write) scope adds sensitive-scope review. Request the minimum scope
@@ -102,7 +102,7 @@ type CalendarOAuthConfig struct {
 }
 
 // googleEndpoint is Google's OAuth 2.0 web-server endpoint, defined
-// directly (stable documented URLs) so Ghost does not pull the
+// directly (stable documented URLs) so Kaya does not pull the
 // oauth2/google subpackage and its cloud-metadata dependency.
 func googleEndpoint() oauth2.Endpoint {
 	return oauth2.Endpoint{
@@ -149,13 +149,13 @@ var (
 )
 
 // CalendarTokenDir returns the secure token directory (overridable for
-// tests via GHOST_CREDENTIALS_DIR). Deliberately outside backup-walked
+// tests via KAYA_CREDENTIALS_DIR). Deliberately outside backup-walked
 // roots (config, data, workspace) so tokens are never archived.
 func CalendarTokenDir() string {
-	if d := strings.TrimSpace(os.Getenv("GHOST_CREDENTIALS_DIR")); d != "" {
+	if d := strings.TrimSpace(os.Getenv("KAYA_CREDENTIALS_DIR")); d != "" {
 		return d
 	}
-	return "/var/lib/ghost/.credentials"
+	return "/var/lib/kaya/.credentials"
 }
 
 // calendarTokenPath is the token file path.

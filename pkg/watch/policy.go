@@ -6,7 +6,7 @@ import (
 )
 
 // Policy is the deterministic gate in front of every watch creation. It
-// answers one question — may Ghost start watching this? — with a fixed
+// answers one question — may Kaya start watching this? — with a fixed
 // order of checks and a machine-readable reason. The model is never asked.
 type Policy struct {
 	// Enabled is PROACTIVE_PREFERENCES.Enabled. It gates AUTOMATIC
@@ -103,7 +103,7 @@ func (p Policy) ResolveSource(kind Kind) (string, bool) {
 // explicit, checked in this fixed order: provenance → entity → source →
 // time → duplicate → capacity → master switch. Explicit requests skip only
 // the master switch and the capacity cap — an owner's direct request is not
-// Ghost volunteering.
+// Kaya volunteering.
 func (p Policy) Allow(c Candidate, existing []Watch, now time.Time, source string) Verdict {
 	if p.MaxActive <= 0 {
 		p.MaxActive = DefaultMaxActive

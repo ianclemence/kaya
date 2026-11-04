@@ -15,8 +15,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-DEFAULT_WORKSPACE = Path(os.environ.get("GHOST_WORKSPACE", Path.cwd()))
-DEFAULT_SESSIONS_DIR = Path(os.environ.get("GHOST_SESSIONS_DIR", Path.home() / ".ghost" / "agents" / "main" / "sessions"))
+DEFAULT_WORKSPACE = Path(os.environ.get("KAYA_WORKSPACE", Path.cwd()))
+DEFAULT_SESSIONS_DIR = Path(os.environ.get("KAYA_SESSIONS_DIR", Path.home() / ".kaya" / "agents" / "main" / "sessions"))
 DEFAULT_SESSION_KEY = os.environ.get("SELF_IMPROVING_MAIN_SESSION_KEY", "")
 DEFAULT_BASE = DEFAULT_WORKSPACE / "learning" / "pipeline"
 DEFAULT_CONTEXT_DIR = Path(os.environ.get("SELF_IMPROVING_PIPELINE_CONTEXT_DIR", DEFAULT_WORKSPACE / "learning" / "pipeline" / "context"))

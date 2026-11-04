@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ianclemence/ghost/pkg/attention"
+	"github.com/ianclemence/kaya/pkg/attention"
 )
 
 // A due open thread joins the morning digest; a thread whose time has not

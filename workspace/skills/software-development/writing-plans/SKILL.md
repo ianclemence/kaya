@@ -2,10 +2,10 @@
 name: writing-plans
 description: Use when you have a spec or requirements for a multi-step task. Creates comprehensive implementation plans with bite-sized tasks, exact file paths, and complete code examples.
 version: 1.1.0
-author: Ghost
+author: Kaya
 license: MIT
 metadata:
-  ghost:
+  kaya:
     tags: [planning, design, implementation, workflow, documentation]
     related_skills:
       [
@@ -84,7 +84,7 @@ Every plan MUST start with:
 ```markdown
 # [Feature Name] Implementation Plan
 
-> **For Ghost:** Use subagent-driven-development skill to implement this plan task-by-task.
+> **For Kaya:** Use subagent-driven-development skill to implement this plan task-by-task.
 
 **Goal:** [One sentence describing what this builds]
 
@@ -156,7 +156,7 @@ Read and understand:
 
 ### Step 2: Explore the Codebase
 
-Use Ghost tools to understand the project:
+Use Kaya tools to understand the project:
 
 ```python
 # Understand project structure

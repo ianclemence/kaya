@@ -7,13 +7,13 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ianclemence/ghost/pkg/personalcontext"
+	"github.com/ianclemence/kaya/pkg/personalcontext"
 )
 
 // contextHandler implements /context: the user-facing, inspection-only view of
 // the current Personal Context. It reads the personalcontext.Store directly and
 // never calls an LLM, never searches conversations, never touches RAG, and
-// never consults MEMORY.md. Only what Ghost currently believes is shown:
+// never consults MEMORY.md. Only what Kaya currently believes is shown:
 // superseded, rejected, expired, and future-valid entries stay out of the
 // default view (they remain inspectable through the store's history queries).
 // Conflicting and uncertain entries are surfaced under "Unresolved" and are
@@ -98,7 +98,7 @@ func matchesContextFilter(e personalcontext.Entry, filter string) bool {
 }
 
 // isUnresolved reports whether an entry is a conflicting or uncertain belief:
-// it exists but Ghost has not selected one value as the current truth.
+// it exists but Kaya has not selected one value as the current truth.
 func isUnresolved(e personalcontext.Entry) bool {
 	return e.Status == personalcontext.StatusConflicting || e.Status == personalcontext.StatusUncertain
 }
@@ -134,7 +134,7 @@ func renderContext(current, unresolved []personalcontext.Entry, filter string, v
 		} else {
 			renderUnresolvedGroups(&sb, unresolved)
 		}
-		sb.WriteString("Ghost has not resolved these conflicts — no candidate is treated as a fact.\n")
+		sb.WriteString("Kaya has not resolved these conflicts — no candidate is treated as a fact.\n")
 	}
 
 	return strings.TrimRight(sb.String(), "\n")

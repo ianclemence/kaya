@@ -226,7 +226,7 @@ func TestStreamDropsLabelledCaveatFrameUnlessMaterial(t *testing.T) {
 		t.Fatalf("the attribution was lost: %q", got.String())
 	}
 
-	// Something the owner needs — a source Ghost could not read — is untouched.
+	// Something the owner needs — a source Kaya could not read — is untouched.
 	var got2 strings.Builder
 	emit2, flush2 := stampFilterStream(func(s string) { got2.WriteString(s) }, nil)
 	emit2("AP and Nation Thailand both report the flood order.\n\n")

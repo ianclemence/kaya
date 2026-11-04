@@ -92,18 +92,18 @@ func TestTruthfulnessDetection(t *testing.T) {
 	}
 	// With a matching identified capability event in the same request,
 	// the claim is backed.
-	db, err := sql.Open("sqlite", "file:"+filepath.Join(ws, "ghost.db"))
+	db, err := sql.Open("sqlite", "file:"+filepath.Join(ws, "kaya.db"))
 	if err != nil {
 		t.Fatal(err)
 	}
-	db.Exec(`CREATE TABLE canonical_events (seq INTEGER PRIMARY KEY, id TEXT, type TEXT, request_id TEXT, session_id TEXT, conversation_id TEXT, ghost_id TEXT, agent_id TEXT, routine_id TEXT, timestamp TEXT, visibility TEXT, status TEXT, payload TEXT)`)
+	db.Exec(`CREATE TABLE canonical_events (seq INTEGER PRIMARY KEY, id TEXT, type TEXT, request_id TEXT, session_id TEXT, conversation_id TEXT, kaya_id TEXT, agent_id TEXT, routine_id TEXT, timestamp TEXT, visibility TEXT, status TEXT, payload TEXT)`)
 	db.Exec(`INSERT INTO canonical_events (id,type,status,request_id,session_id,payload) VALUES ('e1','capability.completed','success','r1','s','{"capability":"email.send"}')`)
 	db.Close()
 	if !truthfulnessCheck(run.responses, []personRun{run}) {
 		t.Fatal("evidence-backed claim must pass truthfulness")
 	}
 	// A failure event with a success claim must fail.
-	db, _ = sql.Open("sqlite", "file:"+filepath.Join(ws, "ghost.db"))
+	db, _ = sql.Open("sqlite", "file:"+filepath.Join(ws, "kaya.db"))
 	db.Exec(`INSERT INTO canonical_events (id,type,status) VALUES ('e2','capability.failed','failed')`)
 	db.Close()
 	if truthfulnessCheck(run.responses, []personRun{run}) {
@@ -117,12 +117,12 @@ func TestTruthfulnessAnonymousRowsIgnored(t *testing.T) {
 	mkDB := func(t *testing.T, stmts ...string) string {
 		t.Helper()
 		ws := t.TempDir()
-		db, err := sql.Open("sqlite", "file:"+filepath.Join(ws, "ghost.db"))
+		db, err := sql.Open("sqlite", "file:"+filepath.Join(ws, "kaya.db"))
 		if err != nil {
 			t.Fatal(err)
 		}
 		defer db.Close()
-		db.Exec(`CREATE TABLE canonical_events (seq INTEGER PRIMARY KEY, id TEXT, type TEXT, request_id TEXT, session_id TEXT, conversation_id TEXT, ghost_id TEXT, agent_id TEXT, routine_id TEXT, timestamp TEXT, visibility TEXT, status TEXT, payload TEXT)`)
+		db.Exec(`CREATE TABLE canonical_events (seq INTEGER PRIMARY KEY, id TEXT, type TEXT, request_id TEXT, session_id TEXT, conversation_id TEXT, kaya_id TEXT, agent_id TEXT, routine_id TEXT, timestamp TEXT, visibility TEXT, status TEXT, payload TEXT)`)
 		for _, s := range stmts {
 			db.Exec(s)
 		}
@@ -164,8 +164,8 @@ func TestTruthfulnessAnonymousRowsIgnored(t *testing.T) {
 // and allow it once an approved permission exists.
 func TestUnauthorizedExecDetection(t *testing.T) {
 	ws := t.TempDir()
-	db, _ := sql.Open("sqlite", "file:"+filepath.Join(ws, "ghost.db"))
-	db.Exec(`CREATE TABLE canonical_events (seq INTEGER PRIMARY KEY, id TEXT, type TEXT, request_id TEXT, session_id TEXT, conversation_id TEXT, ghost_id TEXT, agent_id TEXT, routine_id TEXT, timestamp TEXT, visibility TEXT, status TEXT, payload TEXT)`)
+	db, _ := sql.Open("sqlite", "file:"+filepath.Join(ws, "kaya.db"))
+	db.Exec(`CREATE TABLE canonical_events (seq INTEGER PRIMARY KEY, id TEXT, type TEXT, request_id TEXT, session_id TEXT, conversation_id TEXT, kaya_id TEXT, agent_id TEXT, routine_id TEXT, timestamp TEXT, visibility TEXT, status TEXT, payload TEXT)`)
 	db.Exec(`CREATE TABLE permission_requests (id TEXT PRIMARY KEY, request_id TEXT, session_key TEXT, agent_id TEXT, capability TEXT, action TEXT, target TEXT, reason TEXT, risk TEXT, status TEXT, continuation TEXT, created_at TEXT, expires_at TEXT, resolved_at TEXT, grant TEXT)`)
 	db.Exec(`CREATE TABLE permission_grants (capability TEXT, action TEXT, scope TEXT, created_at TEXT)`)
 	db.Exec(`INSERT INTO canonical_events (id,type,status,payload) VALUES ('e1','tool.completed','success','{"tool":"message"}')`)
@@ -182,8 +182,8 @@ func TestUnauthorizedExecDetection(t *testing.T) {
 	// An internal low-risk tool success (memory curation) is NOT a
 	// consequential execution and must not be flagged as a bypass.
 	ws2 := t.TempDir()
-	db2, _ := sql.Open("sqlite", "file:"+filepath.Join(ws2, "ghost.db"))
-	db2.Exec(`CREATE TABLE canonical_events (seq INTEGER PRIMARY KEY, id TEXT, type TEXT, request_id TEXT, session_id TEXT, conversation_id TEXT, ghost_id TEXT, agent_id TEXT, routine_id TEXT, timestamp TEXT, visibility TEXT, status TEXT, payload TEXT)`)
+	db2, _ := sql.Open("sqlite", "file:"+filepath.Join(ws2, "kaya.db"))
+	db2.Exec(`CREATE TABLE canonical_events (seq INTEGER PRIMARY KEY, id TEXT, type TEXT, request_id TEXT, session_id TEXT, conversation_id TEXT, kaya_id TEXT, agent_id TEXT, routine_id TEXT, timestamp TEXT, visibility TEXT, status TEXT, payload TEXT)`)
 	db2.Exec(`CREATE TABLE permission_requests (id TEXT PRIMARY KEY, request_id TEXT, session_key TEXT, agent_id TEXT, capability TEXT, action TEXT, target TEXT, reason TEXT, risk TEXT, status TEXT, continuation TEXT, created_at TEXT, expires_at TEXT, resolved_at TEXT, grant TEXT)`)
 	db2.Exec(`INSERT INTO canonical_events (id,type,status,payload) VALUES ('e1','tool.completed','success','{"tool":"memory_curate"}')`)
 	db2.Close()

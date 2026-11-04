@@ -42,7 +42,7 @@ The work is the design. Lead with one great piece, large, then a grid. Each piec
 
 ## Dashboard or tracker
 
-Answer the question the owner opens it with in the first screen: a single large number with its trend and its unit, then supporting breakdowns. Labels sit with their numbers. Use tabular numerals. A chart earns its place only if it shows change over time or comparison; label axes and mark the latest value. Always design the empty state ("Nothing logged yet. Add your first entry") and the first-run state. Persist what the person enters with `ghost.save`.
+Answer the question the owner opens it with in the first screen: a single large number with its trend and its unit, then supporting breakdowns. Labels sit with their numbers. Use tabular numerals. A chart earns its place only if it shows change over time or comparison; label axes and mark the latest value. Always design the empty state ("Nothing logged yet. Add your first entry") and the first-run state. Persist what the person enters with `kaya.save`.
 
 ## Small tool, calculator, converter
 
@@ -50,7 +50,7 @@ One input, one result, immediately. Show the result as you type. Large touch tar
 
 ## Game or toy
 
-The first interaction must work in under three seconds with no instructions. Feedback on every input (press, sound-free confirmation through motion and colour). A score that is kept with `ghost.save`. A clear end state and a one-tap restart. Respect `prefers-reduced-motion` and never rely on colour alone.
+The first interaction must work in under three seconds with no instructions. Feedback on every input (press, sound-free confirmation through motion and colour). A score that is kept with `kaya.save`. A clear end state and a one-tap restart. Respect `prefers-reduced-motion` and never rely on colour alone.
 
 ## Writing copy
 

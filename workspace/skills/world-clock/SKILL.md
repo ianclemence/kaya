@@ -2,10 +2,10 @@
 name: world-clock
 description: Convert times between world timezones. Invoke when user asks "what time is 9am Bangkok in London", "convert 3pm Tokyo to Paris time", "what time is it in New York", "time difference between X and Y", or any timezone conversion. Fully offline, no API key required.
 version: 1.0.0
-author: Ghost
+author: Kaya
 license: MIT
 metadata:
-  ghost:
+  kaya:
     tags: [timezone, world-clock, time-conversion, zones]
 prerequisites:
   commands: [python]

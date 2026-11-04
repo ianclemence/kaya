@@ -86,7 +86,7 @@ other films. A quiet setting may deliberately remain still.
 | `anticipate(a,b,t,{back,hold,e})` | preparation against the direction of the main move |
 | `camKeys(c,tau,keys,{hand,seed})` | camera motion; handheld amount is optional and can be zero |
 | `breathe`, `drift` | small local motion; choose exposure to match the drawing |
-| `smear(c,n,span,draw)` | legacy transparent ghost trail |
+| `smear(c,n,span,draw)` | legacy transparent kaya trail |
 | `smearPose(points,direction,amount,pivot)` from studio | authored directional deformation for a smear drawing |
 
 Default ease-in/out at every numeric key creates a stop at every key. Use a

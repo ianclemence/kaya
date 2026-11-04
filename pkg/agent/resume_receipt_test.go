@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/ianclemence/ghost/pkg/tools"
+	"github.com/ianclemence/kaya/pkg/tools"
 )
 
 func TestResumeReceiptText(t *testing.T) {
@@ -25,7 +25,7 @@ func TestResumeReceiptText(t *testing.T) {
 }
 
 // A receipt that reaches the owner verbatim must stay readable: pasting a
-// payload at the owner as Ghost's words is the defect this bound exists
+// payload at the owner as Kaya's words is the defect this bound exists
 // to stop, so even the no-model fallback can never dump a page at them.
 func TestResumeReceiptBoundsPayload(t *testing.T) {
 	big := strings.Repeat(`{"@context":"https://schema.org"}`, 500)

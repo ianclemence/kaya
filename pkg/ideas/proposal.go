@@ -18,7 +18,7 @@ import (
 // Observations from the real subsystems and hands them in. Everything here
 // is deterministic and cheap — no model call decides whether to interrupt.
 
-// ObsKind classifies what Ghost observed.
+// ObsKind classifies what Kaya observed.
 type ObsKind string
 
 const (
@@ -340,7 +340,7 @@ func (o Observation) reason() string {
 }
 
 // effectivePriority folds actionability and urgency into the base priority so
-// the gate sees one number. An observation Ghost can actually act on is worth
+// the gate sees one number. An observation Kaya can actually act on is worth
 // more than one it can only mention; the runtime never inflates this from
 // model output.
 func (o Observation) effectivePriority() int {
@@ -391,7 +391,7 @@ func (g Gate) ShouldSurface(i Idea, now time.Time) (bool, string) {
 	}
 	min := g.MinPriority
 	if i.Plan == nil {
-		// Advice with no action must clear a higher bar: Ghost does not
+		// Advice with no action must clear a higher bar: Kaya does not
 		// interrupt to muse.
 		min = g.Informational
 	}

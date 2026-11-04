@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Google Workspace OAuth2 setup for Ghost.
+"""Google Workspace OAuth2 setup for Kaya.
 
 Fully non-interactive — designed to be driven by the agent via terminal commands.
 The agent mediates between this script and the user (works on CLI, Telegram, Discord, etc.)
@@ -28,10 +28,10 @@ import subprocess
 import sys
 from pathlib import Path
 
-GHOST_HOME = Path(os.getenv("GHOST_HOME", Path.home() / ".ghost"))
-TOKEN_PATH = GHOST_HOME / "google_token.json"
-CLIENT_SECRET_PATH = GHOST_HOME / "google_client_secret.json"
-PENDING_AUTH_PATH = GHOST_HOME / "google_oauth_pending.json"
+KAYA_HOME = Path(os.getenv("KAYA_HOME", Path.home() / ".kaya"))
+TOKEN_PATH = KAYA_HOME / "google_token.json"
+CLIENT_SECRET_PATH = KAYA_HOME / "google_client_secret.json"
+PENDING_AUTH_PATH = KAYA_HOME / "google_oauth_pending.json"
 
 SCOPES = [
     "https://www.googleapis.com/auth/gmail.readonly",
@@ -121,7 +121,7 @@ def check_auth():
 
 
 def store_client_secret(path: str):
-    """Copy and validate client_secret.json to the Ghost home."""
+    """Copy and validate client_secret.json to the Kaya home."""
     src = Path(path).expanduser().resolve()
     if not src.exists():
         print(f"ERROR: File not found: {src}")
@@ -287,7 +287,7 @@ def revoke():
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Google Workspace OAuth setup for Ghost")
+    parser = argparse.ArgumentParser(description="Google Workspace OAuth setup for Kaya")
     group = parser.add_mutually_exclusive_group(required=True)
     group.add_argument("--check", action="store_true", help="Check if auth is valid (exit 0=yes, 1=no)")
     group.add_argument("--client-secret", metavar="PATH", help="Store OAuth client_secret.json")

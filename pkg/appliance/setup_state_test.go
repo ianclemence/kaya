@@ -10,12 +10,12 @@ import (
 func TestNeedsSetup_NoFlagNoConfig(t *testing.T) {
 	tmpDir := t.TempDir()
 	fb := &SetupState{
-		GhostDir:   filepath.Join(tmpDir, "ghost"),
-		ConfigDir:  filepath.Join(tmpDir, "ghost", "config"),
-		DataDir:    filepath.Join(tmpDir, "ghost", "data"),
-		Workspace:  filepath.Join(tmpDir, "ghost", "workspace"),
-		ConfigPath: filepath.Join(tmpDir, "ghost", "config", "config.json"),
-		EnvPath:    filepath.Join(tmpDir, "ghost", ".env"),
+		KayaDir:   filepath.Join(tmpDir, "kaya"),
+		ConfigDir:  filepath.Join(tmpDir, "kaya", "config"),
+		DataDir:    filepath.Join(tmpDir, "kaya", "data"),
+		Workspace:  filepath.Join(tmpDir, "kaya", "workspace"),
+		ConfigPath: filepath.Join(tmpDir, "kaya", "config", "config.json"),
+		EnvPath:    filepath.Join(tmpDir, "kaya", ".env"),
 	}
 
 	if !fb.NeedsSetup() {
@@ -25,17 +25,17 @@ func TestNeedsSetup_NoFlagNoConfig(t *testing.T) {
 
 func TestNeedsSetup_WithFlag(t *testing.T) {
 	tmpDir := t.TempDir()
-	ghostDir := filepath.Join(tmpDir, "ghost")
-	os.MkdirAll(ghostDir, 0755)
-	os.WriteFile(filepath.Join(ghostDir, SetupCompleteFlag), []byte("done"), 0644)
+	kayaDir := filepath.Join(tmpDir, "kaya")
+	os.MkdirAll(kayaDir, 0755)
+	os.WriteFile(filepath.Join(kayaDir, SetupCompleteFlag), []byte("done"), 0644)
 
 	fb := &SetupState{
-		GhostDir:   ghostDir,
-		ConfigDir:  filepath.Join(ghostDir, "config"),
-		DataDir:    filepath.Join(ghostDir, "data"),
-		Workspace:  filepath.Join(ghostDir, "workspace"),
-		ConfigPath: filepath.Join(ghostDir, "config", "config.json"),
-		EnvPath:    filepath.Join(ghostDir, ".env"),
+		KayaDir:   kayaDir,
+		ConfigDir:  filepath.Join(kayaDir, "config"),
+		DataDir:    filepath.Join(kayaDir, "data"),
+		Workspace:  filepath.Join(kayaDir, "workspace"),
+		ConfigPath: filepath.Join(kayaDir, "config", "config.json"),
+		EnvPath:    filepath.Join(kayaDir, ".env"),
 	}
 
 	if fb.NeedsSetup() {
@@ -45,23 +45,23 @@ func TestNeedsSetup_WithFlag(t *testing.T) {
 
 func TestMarkSetupComplete(t *testing.T) {
 	tmpDir := t.TempDir()
-	ghostDir := filepath.Join(tmpDir, "ghost")
-	os.MkdirAll(ghostDir, 0755)
+	kayaDir := filepath.Join(tmpDir, "kaya")
+	os.MkdirAll(kayaDir, 0755)
 
 	fb := &SetupState{
-		GhostDir:   ghostDir,
-		ConfigDir:  filepath.Join(ghostDir, "config"),
-		DataDir:    filepath.Join(ghostDir, "data"),
-		Workspace:  filepath.Join(ghostDir, "workspace"),
-		ConfigPath: filepath.Join(ghostDir, "config", "config.json"),
-		EnvPath:    filepath.Join(ghostDir, ".env"),
+		KayaDir:   kayaDir,
+		ConfigDir:  filepath.Join(kayaDir, "config"),
+		DataDir:    filepath.Join(kayaDir, "data"),
+		Workspace:  filepath.Join(kayaDir, "workspace"),
+		ConfigPath: filepath.Join(kayaDir, "config", "config.json"),
+		EnvPath:    filepath.Join(kayaDir, ".env"),
 	}
 
 	if err := fb.MarkSetupComplete(); err != nil {
 		t.Fatalf("MarkSetupComplete failed: %v", err)
 	}
 
-	flagPath := filepath.Join(ghostDir, SetupCompleteFlag)
+	flagPath := filepath.Join(kayaDir, SetupCompleteFlag)
 	if _, err := os.Stat(flagPath); os.IsNotExist(err) {
 		t.Fatal("setup-complete flag was not created")
 	}
@@ -73,16 +73,16 @@ func TestMarkSetupComplete(t *testing.T) {
 
 func TestResetSetup(t *testing.T) {
 	tmpDir := t.TempDir()
-	ghostDir := filepath.Join(tmpDir, "ghost")
-	os.MkdirAll(ghostDir, 0755)
+	kayaDir := filepath.Join(tmpDir, "kaya")
+	os.MkdirAll(kayaDir, 0755)
 
 	fb := &SetupState{
-		GhostDir:   ghostDir,
-		ConfigDir:  filepath.Join(ghostDir, "config"),
-		DataDir:    filepath.Join(ghostDir, "data"),
-		Workspace:  filepath.Join(ghostDir, "workspace"),
-		ConfigPath: filepath.Join(ghostDir, "config", "config.json"),
-		EnvPath:    filepath.Join(ghostDir, ".env"),
+		KayaDir:   kayaDir,
+		ConfigDir:  filepath.Join(kayaDir, "config"),
+		DataDir:    filepath.Join(kayaDir, "data"),
+		Workspace:  filepath.Join(kayaDir, "workspace"),
+		ConfigPath: filepath.Join(kayaDir, "config", "config.json"),
+		EnvPath:    filepath.Join(kayaDir, ".env"),
 	}
 
 	fb.MarkSetupComplete()
@@ -98,15 +98,15 @@ func TestResetSetup(t *testing.T) {
 
 func TestEnsureDirectories(t *testing.T) {
 	tmpDir := t.TempDir()
-	ghostDir := filepath.Join(tmpDir, "ghost")
+	kayaDir := filepath.Join(tmpDir, "kaya")
 
 	fb := &SetupState{
-		GhostDir:   ghostDir,
-		ConfigDir:  filepath.Join(ghostDir, "config"),
-		DataDir:    filepath.Join(ghostDir, "data"),
-		Workspace:  filepath.Join(ghostDir, "workspace"),
-		ConfigPath: filepath.Join(ghostDir, "config", "config.json"),
-		EnvPath:    filepath.Join(ghostDir, ".env"),
+		KayaDir:   kayaDir,
+		ConfigDir:  filepath.Join(kayaDir, "config"),
+		DataDir:    filepath.Join(kayaDir, "data"),
+		Workspace:  filepath.Join(kayaDir, "workspace"),
+		ConfigPath: filepath.Join(kayaDir, "config", "config.json"),
+		EnvPath:    filepath.Join(kayaDir, ".env"),
 	}
 
 	if err := fb.EnsureDirectories(); err != nil {
@@ -114,12 +114,12 @@ func TestEnsureDirectories(t *testing.T) {
 	}
 
 	requiredDirs := []string{
-		ghostDir,
-		filepath.Join(ghostDir, "config"),
-		filepath.Join(ghostDir, "data"),
-		filepath.Join(ghostDir, "workspace"),
-		filepath.Join(ghostDir, "workspace", "skills"),
-		filepath.Join(ghostDir, "workspace", "memory"),
+		kayaDir,
+		filepath.Join(kayaDir, "config"),
+		filepath.Join(kayaDir, "data"),
+		filepath.Join(kayaDir, "workspace"),
+		filepath.Join(kayaDir, "workspace", "skills"),
+		filepath.Join(kayaDir, "workspace", "memory"),
 	}
 
 	for _, dir := range requiredDirs {
@@ -131,15 +131,15 @@ func TestEnsureDirectories(t *testing.T) {
 
 func TestSetupCompleteTransition(t *testing.T) {
 	tmpDir := t.TempDir()
-	ghostDir := filepath.Join(tmpDir, "ghost")
+	kayaDir := filepath.Join(tmpDir, "kaya")
 
 	fb := &SetupState{
-		GhostDir:   ghostDir,
-		ConfigDir:  filepath.Join(ghostDir, "config"),
-		DataDir:    filepath.Join(ghostDir, "data"),
-		Workspace:  filepath.Join(ghostDir, "workspace"),
-		ConfigPath: filepath.Join(ghostDir, "config", "config.json"),
-		EnvPath:    filepath.Join(ghostDir, ".env"),
+		KayaDir:   kayaDir,
+		ConfigDir:  filepath.Join(kayaDir, "config"),
+		DataDir:    filepath.Join(kayaDir, "data"),
+		Workspace:  filepath.Join(kayaDir, "workspace"),
+		ConfigPath: filepath.Join(kayaDir, "config", "config.json"),
+		EnvPath:    filepath.Join(kayaDir, ".env"),
 	}
 
 	fb.EnsureDirectories()
@@ -154,7 +154,7 @@ func TestSetupCompleteTransition(t *testing.T) {
 		t.Fatal("expected NOT setup after setup complete")
 	}
 
-	flagPath := filepath.Join(ghostDir, SetupCompleteFlag)
+	flagPath := filepath.Join(kayaDir, SetupCompleteFlag)
 	data, err := os.ReadFile(flagPath)
 	if err != nil {
 		t.Fatalf("failed to read flag: %v", err)
@@ -166,16 +166,16 @@ func TestSetupCompleteTransition(t *testing.T) {
 
 func TestSetupCompleteIdempotent(t *testing.T) {
 	tmpDir := t.TempDir()
-	ghostDir := filepath.Join(tmpDir, "ghost")
-	os.MkdirAll(ghostDir, 0755)
+	kayaDir := filepath.Join(tmpDir, "kaya")
+	os.MkdirAll(kayaDir, 0755)
 
 	fb := &SetupState{
-		GhostDir:   ghostDir,
-		ConfigDir:  filepath.Join(ghostDir, "config"),
-		DataDir:    filepath.Join(ghostDir, "data"),
-		Workspace:  filepath.Join(ghostDir, "workspace"),
-		ConfigPath: filepath.Join(ghostDir, "config", "config.json"),
-		EnvPath:    filepath.Join(ghostDir, ".env"),
+		KayaDir:   kayaDir,
+		ConfigDir:  filepath.Join(kayaDir, "config"),
+		DataDir:    filepath.Join(kayaDir, "data"),
+		Workspace:  filepath.Join(kayaDir, "workspace"),
+		ConfigPath: filepath.Join(kayaDir, "config", "config.json"),
+		EnvPath:    filepath.Join(kayaDir, ".env"),
 	}
 
 	fb.MarkSetupComplete()
@@ -187,7 +187,7 @@ func TestSetupCompleteIdempotent(t *testing.T) {
 }
 
 func TestSetupCodeLifecycle(t *testing.T) {
-	fb := &SetupState{GhostDir: t.TempDir()}
+	fb := &SetupState{KayaDir: t.TempDir()}
 
 	if fb.VerifySetupCode("000000") {
 		t.Fatal("no code file must never verify")
@@ -235,9 +235,9 @@ func TestSetupCodeOnTheBootPartition(t *testing.T) {
 	boot := filepath.Join(t.TempDir(), "firmware")
 	os.MkdirAll(boot, 0o755)
 	old := bootCodePaths
-	bootCodePaths = []string{filepath.Join(boot, "ghost-setup-code")}
+	bootCodePaths = []string{filepath.Join(boot, "kaya-setup-code")}
 	defer func() { bootCodePaths = old }()
-	fb := &SetupState{GhostDir: dir}
+	fb := &SetupState{KayaDir: dir}
 
 	// Generated: mirrored to the card, marked as generated, and replaced on restart.
 	code1, err := fb.RotateSetupCode()

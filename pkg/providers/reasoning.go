@@ -1,7 +1,7 @@
-// Ghost - Ultra-lightweight personal AI agent
+// Kaya - Ultra-lightweight personal AI agent
 // License: MIT
 //
-// Copyright (c) 2026 Ghost contributors
+// Copyright (c) 2026 Kaya contributors
 
 package providers
 
@@ -9,7 +9,7 @@ import "strings"
 
 // Reasoning isolation.
 //
-// Ghost never surfaces a model's chain-of-thought. Providers expose reasoning
+// Kaya never surfaces a model's chain-of-thought. Providers expose reasoning
 // on dedicated delta fields and/or inline tags; both are identified here and
 // discarded, so no caller (agent loop, TUI, SSE bridge, mobile app) can render
 // it. Thinking stays off by default elsewhere; this is the hard guarantee that

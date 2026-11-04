@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# GitHub environment detection helper for Ghost skills.
+# GitHub environment detection helper for Kaya skills.
 #
 # Usage (via terminal tool):
 #   source workspace/skills/github/github-auth/scripts/gh-env.sh
@@ -25,7 +25,7 @@ elif [ -n "$GITHUB_TOKEN" ]; then
     GH_AUTH_METHOD="curl"
 fi
 if [ "$GH_AUTH_METHOD" != "gh" ] && [ "$GH_AUTH_METHOD" != "curl" ]; then
-    echo "gh-env: no authentication (gh auth login or Ghost settings -> Integrations)" >&2
+    echo "gh-env: no authentication (gh auth login or Kaya settings -> Integrations)" >&2
 fi
 
 # Resolve username for curl method

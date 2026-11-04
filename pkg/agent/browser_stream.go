@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/ianclemence/ghost/pkg/browser"
+	"github.com/ianclemence/kaya/pkg/browser"
 )
 
 // browserStreamBroker is the per-loop screencast ticket broker. Per-loop

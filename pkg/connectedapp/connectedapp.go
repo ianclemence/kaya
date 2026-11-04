@@ -1,7 +1,7 @@
-// Package connectedapp is Ghost's runtime model of a user's authenticated
+// Package connectedapp is Kaya's runtime model of a user's authenticated
 // connection to an external system. A connected app is NOT a capability:
 // it is the authenticated identity + credential reference + scopes through
-// which one or more Ghost capabilities can be exercised. The model never
+// which one or more Kaya capabilities can be exercised. The model never
 // sees an app; the runtime uses the app to resolve a capability's
 // implementation.
 package connectedapp
@@ -35,7 +35,7 @@ type App struct {
 	CredentialID string
 	// Scopes are the granted external scopes.
 	Scopes []string
-	// Capabilities are the Ghost capabilities this app can fulfil.
+	// Capabilities are the Kaya capabilities this app can fulfil.
 	Capabilities []string
 	// Status is the connection lifecycle state.
 	Status Status

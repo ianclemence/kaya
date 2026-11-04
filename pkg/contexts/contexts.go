@@ -1,8 +1,8 @@
-// Package contexts defines scoped environments within ONE Ghost.
+// Package contexts defines scoped environments within ONE Kaya.
 //
 // A context (Personal, Work, Project, Home, Travel) scopes instructions,
 // memory, files, capabilities, permissions, conversations, and routines
-// — but never forks the Ghost. Isolation is explicit ownership/scope
+// — but never forks the Kaya. Isolation is explicit ownership/scope
 // metadata (no graph database): every check below is a pure function
 // over the context record and the resource's scope tags.
 package contexts
@@ -28,10 +28,10 @@ const (
 	KindProject  Kind = "project"
 )
 
-// Context is a scoped environment owned by a Ghost.
+// Context is a scoped environment owned by a Kaya.
 type Context struct {
 	ID              string    `json:"id"`
-	GhostID         string    `json:"ghost_id"`
+	KayaID         string    `json:"kaya_id"`
 	Kind            Kind      `json:"kind"`
 	Name            string    `json:"name"`
 	Instructions    string    `json:"instructions,omitempty"`
@@ -43,11 +43,11 @@ type Context struct {
 	UpdatedAt       time.Time `json:"updated_at"`
 }
 
-// Store is the file-backed context registry (one Ghost, many contexts).
+// Store is the file-backed context registry (one Kaya, many contexts).
 type Store struct {
 	mu       sync.RWMutex
 	path     string
-	ghostID  string
+	kayaID  string
 	contexts map[string]*Context
 	sessions map[string]string // sessionKey → contextID
 }
@@ -69,14 +69,14 @@ func (s *Store) persist() error {
 }
 
 // Open loads the registry, ensuring the default personal context.
-func Open(workspace, ghostID string) (*Store, error) {
-	s := &Store{path: filepath.Join(workspace, "state", "contexts.json"), ghostID: ghostID, contexts: map[string]*Context{}}
+func Open(workspace, kayaID string) (*Store, error) {
+	s := &Store{path: filepath.Join(workspace, "state", "contexts.json"), kayaID: kayaID, contexts: map[string]*Context{}}
 	s.loadSessions()
 	if data, err := os.ReadFile(s.path); err == nil {
 		var list []*Context
 		if json.Unmarshal(data, &list) == nil {
 			for _, c := range list {
-				if c != nil && c.ID != "" && c.GhostID == ghostID {
+				if c != nil && c.ID != "" && c.KayaID == kayaID {
 					s.contexts[c.ID] = c
 				}
 			}
@@ -84,7 +84,7 @@ func Open(workspace, ghostID string) (*Store, error) {
 	}
 	if _, ok := s.contexts["personal"]; !ok {
 		now := time.Now()
-		s.contexts["personal"] = &Context{ID: "personal", GhostID: ghostID, Kind: KindPersonal,
+		s.contexts["personal"] = &Context{ID: "personal", KayaID: kayaID, Kind: KindPersonal,
 			Name: "Personal", CreatedAt: now, UpdatedAt: now}
 		if err := os.MkdirAll(filepath.Dir(s.path), 0755); err != nil {
 			return nil, err
@@ -131,7 +131,7 @@ func (s *Store) Create(kind Kind, name string) (*Context, error) {
 		return nil, errors.New("context already exists")
 	}
 	now := time.Now()
-	c := &Context{ID: id, GhostID: s.ghostID, Kind: kind, Name: name, CreatedAt: now, UpdatedAt: now}
+	c := &Context{ID: id, KayaID: s.kayaID, Kind: kind, Name: name, CreatedAt: now, UpdatedAt: now}
 	s.contexts[id] = c
 	return c, s.persist()
 }

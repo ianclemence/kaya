@@ -9,7 +9,7 @@ import (
 
 // SeedHome records where the owner lives and their time zone from first-run
 // setup, as beliefs the owner declared. It never replaces a belief that
-// already exists, so re-running setup cannot overwrite what Ghost has since
+// already exists, so re-running setup cannot overwrite what Kaya has since
 // learned. A blank or unusable value is skipped, not an error: both fields are
 // optional in setup.
 func SeedHome(s *Store, city, timezone string) error {

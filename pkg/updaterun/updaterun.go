@@ -1,5 +1,5 @@
-// Package updaterun starts and observes a detached `ghost update`. It is a leaf
-// package (no Ghost imports) so both the agent tools and the console can use it.
+// Package updaterun starts and observes a detached `kaya update`. It is a leaf
+// package (no Kaya imports) so both the agent tools and the console can use it.
 package updaterun
 
 import (
@@ -14,8 +14,8 @@ import (
 
 // Detached update.
 //
-// The console and the agent both need to say "update Ghost", but neither can
-// do it in-process. ghost-web and ghost run inside a read-only systemd sandbox
+// The console and the agent both need to say "update Kaya", but neither can
+// do it in-process. kaya-web and kaya run inside a read-only systemd sandbox
 // (ProtectSystem=strict) that cannot write /usr/local/bin, and an update
 // restarts the very service that started it. So the update runs as its own
 // transient systemd unit, outside that sandbox and outliving the caller, and
@@ -23,18 +23,18 @@ import (
 
 // UpdateUnit is the transient unit name; a second update while one runs is
 // refused rather than queued.
-const UpdateUnit = "ghost-update-run"
+const UpdateUnit = "kaya-update-run"
 
 const (
 	updateDoneMarker   = "Update complete!"
-	updateFailedMarker = "GHOST_UPDATE_FAILED"
+	updateFailedMarker = "KAYA_UPDATE_FAILED"
 )
 
 // UpdateLogPath is where a detached update writes its output.
 func UpdateLogPath() string {
-	dir := os.Getenv("GHOST_DIR")
+	dir := os.Getenv("KAYA_DIR")
 	if dir == "" {
-		dir = "/var/ghost"
+		dir = "/var/kaya"
 	}
 	return filepath.Join(dir, "update.log")
 }
@@ -51,25 +51,25 @@ func systemdIsInit() bool {
 	return err == nil
 }
 
-func ghostBinaryPath() string {
-	if p := os.Getenv("GHOST_BIN"); p != "" {
+func kayaBinaryPath() string {
+	if p := os.Getenv("KAYA_BIN"); p != "" {
 		return p
 	}
-	for _, p := range []string{"/usr/local/bin/ghost", "/usr/bin/ghost"} {
+	for _, p := range []string{"/usr/local/bin/kaya", "/usr/bin/kaya"} {
 		if st, err := os.Stat(p); err == nil && !st.IsDir() {
 			return p
 		}
 	}
-	if p, err := exec.LookPath("ghost"); err == nil {
+	if p, err := exec.LookPath("kaya"); err == nil {
 		return p
 	}
-	return "ghost"
+	return "kaya"
 }
 
-// BinaryPath is the ghost executable this process is running from. Tools that
+// BinaryPath is the kaya executable this process is running from. Tools that
 // need to ask the CLI a read-only question (check for an update) use it rather
 // than guessing a path.
-func BinaryPath() string { return ghostBinaryPath() }
+func BinaryPath() string { return kayaBinaryPath() }
 
 // updateScript is the whole job: run the updater, then leave an unambiguous
 // marker either way, so a poller never has to guess from exit codes it can't see.
@@ -78,7 +78,7 @@ func updateScript(bin string) string {
 	return fmt.Sprintf(`%s update && echo %q || echo %s`, q, updateDoneMarker, updateFailedMarker)
 }
 
-// StartDetachedUpdate begins `ghost update` outside the caller's sandbox.
+// StartDetachedUpdate begins `kaya update` outside the caller's sandbox.
 func StartDetachedUpdate() error {
 	if p := DetachedUpdateStatus(); p.Running {
 		return errors.New("an update is already running")
@@ -90,7 +90,7 @@ func StartDetachedUpdate() error {
 	if err := os.WriteFile(log, []byte("Starting update...\n"), 0644); err != nil {
 		return err
 	}
-	script := updateScript(ghostBinaryPath())
+	script := updateScript(kayaBinaryPath())
 	if systemdIsInit() {
 		if _, err := exec.LookPath("systemd-run"); err == nil {
 			out, err := exec.Command("systemd-run", "--unit="+UpdateUnit, "--collect", "--quiet",
@@ -115,7 +115,7 @@ func startWithoutSystemd() error {
 	if err := os.WriteFile(log, []byte("Starting update...\n"), 0644); err != nil {
 		return err
 	}
-	script := updateScript(ghostBinaryPath())
+	script := updateScript(kayaBinaryPath())
 	f, err := os.OpenFile(log, os.O_APPEND|os.O_WRONLY, 0644)
 	if err != nil {
 		return err

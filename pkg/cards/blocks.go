@@ -63,7 +63,7 @@ type Block struct {
 	Multiline   bool   `json:"multiline,omitempty"`
 	// checklist: things to tick
 	Checks []Check `json:"checks,omitempty"`
-	// compare: which option Ghost recommends (0-based)
+	// compare: which option Kaya recommends (0-based)
 	Pick *int `json:"pick,omitempty"`
 	// chart: bar or line, and its points
 	Chart  string  `json:"chart,omitempty"`

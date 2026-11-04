@@ -125,7 +125,7 @@ func avail(fn func() bool) func() bool {
 	return fn
 }
 
-// RegisterDefaults registers Ghost's built-in capability→implementation map
+// RegisterDefaults registers Kaya's built-in capability→implementation map
 // on r. This is a registration change, never a model-facing change.
 func RegisterDefaults(r *Resolver, a Availability) {
 	// weather.get — Open-Meteo (keyless) primary; OpenWeather preferred when

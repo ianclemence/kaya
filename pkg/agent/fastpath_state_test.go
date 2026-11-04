@@ -5,12 +5,12 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ianclemence/ghost/pkg/cevents"
-	"github.com/ianclemence/ghost/pkg/commitments"
-	"github.com/ianclemence/ghost/pkg/ideas"
-	"github.com/ianclemence/ghost/pkg/permissions"
-	"github.com/ianclemence/ghost/pkg/scheduled"
-	"github.com/ianclemence/ghost/pkg/tools"
+	"github.com/ianclemence/kaya/pkg/cevents"
+	"github.com/ianclemence/kaya/pkg/commitments"
+	"github.com/ianclemence/kaya/pkg/ideas"
+	"github.com/ianclemence/kaya/pkg/permissions"
+	"github.com/ianclemence/kaya/pkg/scheduled"
+	"github.com/ianclemence/kaya/pkg/tools"
 )
 
 // The state fast path exists so authoritative answers skip the model. These
@@ -28,7 +28,7 @@ func TestStateQueryDispatch(t *testing.T) {
 		"is my morning routine okay?",
 		"what tasks are overdue?",
 		"what did you just do?",
-		"is Ghost healthy?",
+		"is Kaya healthy?",
 		"how much disk space is left?",
 		"what model are you using?",
 		"is proactive mode on?",
@@ -46,7 +46,7 @@ func TestStateQueryDispatch(t *testing.T) {
 	}
 
 	mustNotHandle := []string{
-		"hey Ghost",
+		"hey Kaya",
 		"what did I tell you about the deposit?",
 		"remind me about the chelsea game on 9 october at 9 am",
 		"send Alex those photos",
@@ -195,7 +195,7 @@ func TestActivityAnswerUsesRealEvents(t *testing.T) {
 	al, _, _ := newProactiveLoop(t)
 	al.governance.Events.Publish(&cevents.Event{
 		Type: cevents.CapabilityCompleted, SessionID: "main",
-		GhostID: "ghost-test", AgentID: "agent-test",
+		KayaID: "kaya-test", AgentID: "agent-test",
 		Payload: map[string]interface{}{"capability": "schedule.create"},
 	})
 	ans, ok := al.renderActivity()
@@ -244,7 +244,7 @@ func TestStateFastPathLeavesCompoundAsksToTheModel(t *testing.T) {
 	for _, q := range []string{
 		"how much free disk space do I have and how long has this machine been up? run the commands and tell me",
 		"what's my disk usage, then restart the service",
-		"show me system status and also update ghost",
+		"show me system status and also update kaya",
 	} {
 		if simpleStateQuestion(strings.ToLower(q)) {
 			t.Errorf("%q asks for more than one thing; it must not take the fast path", q)

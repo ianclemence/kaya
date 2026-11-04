@@ -4,10 +4,10 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/ianclemence/ghost/pkg/config"
+	"github.com/ianclemence/kaya/pkg/config"
 )
 
-// SupportedTarget returns whether a (provider, model) is a supported Ghost
+// SupportedTarget returns whether a (provider, model) is a supported Kaya
 // model target. Qwen is supported but intentionally NOT run on this dev
 // personal AI (too slow) — the architecture must permit selecting it later.
 type ModelInfo struct {
@@ -16,7 +16,7 @@ type ModelInfo struct {
 	Note      string `json:"note,omitempty"`
 }
 
-// DiscoverTargets lists every model Ghost can target from the given config
+// DiscoverTargets lists every model Kaya can target from the given config
 // directory. Provider availability reflects configured credentials, so a
 // model without a key is listed as available=false (NOT RUN on selection).
 func DiscoverTargets(configDir string) []ModelInfo {

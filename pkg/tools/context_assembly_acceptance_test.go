@@ -4,7 +4,7 @@ import "testing"
 
 // Acceptance criteria for "context assembly" (see the capability spec):
 //
-//  1. Given a question or task, Ghost gathers relevant material from every
+//  1. Given a question or task, Kaya gathers relevant material from every
 //     surface it has access to (memory, notes, files, the schedule, the
 //     web), and names what it pulled from.
 //  2. It reports what it could NOT reach. A relevant source outside its

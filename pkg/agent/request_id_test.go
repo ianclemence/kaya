@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/ianclemence/ghost/pkg/providers"
+	"github.com/ianclemence/kaya/pkg/providers"
 )
 
 // The phone's request id must reach the turn unchanged: the chat endpoint
@@ -23,7 +23,7 @@ func TestRequestIDTravelsWithTheTurn(t *testing.T) {
 	}
 }
 
-// "Yes, run it" means what Ghost just offered: its tools come from the offer.
+// "Yes, run it" means what Kaya just offered: its tools come from the offer.
 func TestShortReplyChoosesToolsFromTheOffer(t *testing.T) {
 	msgs := []providers.Message{
 		{Role: "assistant", Content: "Do you want me to run the Google Flights search for Mon 26 October now?"},

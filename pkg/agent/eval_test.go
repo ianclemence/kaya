@@ -4,10 +4,10 @@ import (
 	"context"
 	"testing"
 
-	"github.com/ianclemence/ghost/pkg/tools"
+	"github.com/ianclemence/kaya/pkg/tools"
 )
 
-// —— Evaluation harness: encodes the representative behaviours Ghost must meet —
+// —— Evaluation harness: encodes the representative behaviours Kaya must meet —
 // each scenario asserts a deterministic decision (effort tier / tool gating)
 // so regressions in routing are caught without needing a live model.
 

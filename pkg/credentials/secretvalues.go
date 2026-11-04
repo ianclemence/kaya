@@ -10,7 +10,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/ianclemence/ghost/pkg/config"
+	"github.com/ianclemence/kaya/pkg/config"
 )
 
 // minScrubLen is the shortest secret worth scrubbing by value. Shorter

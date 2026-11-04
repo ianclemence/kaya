@@ -1,7 +1,7 @@
 package archtest
 
 // Workspace semantic contract: the model-facing and human-facing files in
-// workspace/ must preserve Ghost's authority boundaries. These tests guard
+// workspace/ must preserve Kaya's authority boundaries. These tests guard
 // the revamp invariants — knowledge/memory/skill/routine prose must never
 // claim authority, reintroduce retired machinery, or handle raw secrets.
 
@@ -34,7 +34,7 @@ func workspaceExists(rel ...string) bool {
 // The behavioral contract must teach runtime authority, never model
 // sovereignty. SOUL and the identity record must agree.
 func TestWorkspaceContract_NoSovereigntyInModelPrompt(t *testing.T) {
-	for _, f := range [][]string{{"GHOST.md"}, {"SOUL.md"}, {"knowledge", "self", "identity.md"}} {
+	for _, f := range [][]string{{"KAYA.md"}, {"SOUL.md"}, {"knowledge", "self", "identity.md"}} {
 		if !workspaceExists(f...) {
 			continue
 		}
@@ -48,17 +48,17 @@ func TestWorkspaceContract_NoSovereigntyInModelPrompt(t *testing.T) {
 			}
 		}
 	}
-	main := string(readWorkspaceFile(t, "GHOST.md"))
+	main := string(readWorkspaceFile(t, "KAYA.md"))
 	if !strings.Contains(main, "not the authority") {
-		t.Error("workspace/GHOST.md must state the model is not the authority")
+		t.Error("workspace/KAYA.md must state the model is not the authority")
 	}
 }
 
 // No file may present cron as a live tool/system: one scheduler only.
 func TestWorkspaceContract_NoCronToolLanguage(t *testing.T) {
-	for _, f := range [][]string{{"GHOST.md"}, {"HEARTBEAT.md"}, {"README.md"}} {
+	for _, f := range [][]string{{"KAYA.md"}, {"HEARTBEAT.md"}, {"README.md"}} {
 		src := string(readWorkspaceFile(t, f...))
-		for _, banned := range []string{"`cron`", "ghost cron", "crontab -e"} {
+		for _, banned := range []string{"`cron`", "kaya cron", "crontab -e"} {
 			if strings.Contains(src, banned) {
 				t.Errorf("workspace/%s references %q: routines + scheduler only",
 					filepath.Join(f...), banned)
@@ -75,7 +75,7 @@ func TestWorkspaceContract_NoCronToolLanguage(t *testing.T) {
 			return nil
 		}
 		rel, _ := filepath.Rel(root, path)
-		for _, banned := range []string{"ghost cron", "crontab -e", "`cron`"} {
+		for _, banned := range []string{"kaya cron", "crontab -e", "`cron`"} {
 			if strings.Contains(string(src), banned) {
 				t.Errorf("%s references %q: routines + scheduler only", rel, banned)
 			}
@@ -149,7 +149,7 @@ func TestWorkspaceContract_KnowledgeTreeShape(t *testing.T) {
 		{"knowledge", "notes", "index.md"},
 		{"knowledge", "notes", "areas.md"},
 		{"knowledge", "self", "methodology.md"},
-		{"knowledge", "notes", "references", "ghost-os.md"},
+		{"knowledge", "notes", "references", "kaya-os.md"},
 		{"knowledge", "notes", "system-architecture.md"},
 	} {
 		if workspaceExists(f...) {
@@ -170,21 +170,21 @@ func TestWorkspaceContract_KnowledgeTreeShape(t *testing.T) {
 	}
 }
 
-// Phantom prompt files must not appear: only GHOST.md is the behavioral
+// Phantom prompt files must not appear: only KAYA.md is the behavioral
 // contract (case-sensitive), and no TOOLS.md is loaded by anything.
 func TestWorkspaceContract_NoPhantomPromptFiles(t *testing.T) {
-	for _, f := range [][]string{{"ghost.md"}, {"TOOLS.md"}} {
+	for _, f := range [][]string{{"kaya.md"}, {"TOOLS.md"}} {
 		if workspaceExists(f...) {
 			t.Errorf("workspace/%s exists: nothing loads it, remove to avoid a competing prompt", filepath.Join(f...))
 		}
 	}
-	if !workspaceExists([]string{"GHOST.md"}...) {
-		t.Fatal("workspace/GHOST.md missing: the model-facing behavioral contract")
+	if !workspaceExists([]string{"KAYA.md"}...) {
+		t.Fatal("workspace/KAYA.md missing: the model-facing behavioral contract")
 	}
 }
 
 func TestWorkspaceContract_AstraLearningsPresent(t *testing.T) {
-	main := string(readWorkspaceFile(t, "GHOST.md"))
+	main := string(readWorkspaceFile(t, "KAYA.md"))
 	for _, marker := range []string{
 		"never audition alternatives with contrastive framing",
 		"user's explicit words always outrank",
@@ -194,7 +194,7 @@ func TestWorkspaceContract_AstraLearningsPresent(t *testing.T) {
 		"what you learned, what remains uncertain",
 	} {
 		if !strings.Contains(main, marker) {
-			t.Errorf("workspace/GHOST.md missing Astra learning marker %q", marker)
+			t.Errorf("workspace/KAYA.md missing Astra learning marker %q", marker)
 		}
 	}
 }
@@ -204,7 +204,7 @@ func TestWorkspaceContract_AstraLearningsPresent(t *testing.T) {
 // These sentences are load-bearing voice rules; guards against silent
 // deletion during prompt edits.
 func TestWorkspaceContract_InteractionRulesPresent(t *testing.T) {
-	main := string(readWorkspaceFile(t, "GHOST.md"))
+	main := string(readWorkspaceFile(t, "KAYA.md"))
 	for _, marker := range []string{
 		"Narration is not a request",
 		"Answer the human first",
@@ -212,7 +212,7 @@ func TestWorkspaceContract_InteractionRulesPresent(t *testing.T) {
 		"Never end with a question unless the answer changes what you do next",
 	} {
 		if !strings.Contains(main, marker) {
-			t.Errorf("workspace/GHOST.md missing interaction marker %q", marker)
+			t.Errorf("workspace/KAYA.md missing interaction marker %q", marker)
 		}
 	}
 }

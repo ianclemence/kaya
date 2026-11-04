@@ -1,5 +1,5 @@
 // Package hass is the Home Assistant device-class capability: the
-// FIRST proof that Ghost → Device → Capability → Permission → Action →
+// FIRST proof that Kaya → Device → Capability → Permission → Action →
 // Event → Activity composes end to end.
 //
 // Provider decision: the Home Assistant REST API itself (single vendor
@@ -25,8 +25,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ianclemence/ghost/pkg/provider"
-	"github.com/ianclemence/ghost/pkg/providers/httpx"
+	"github.com/ianclemence/kaya/pkg/provider"
+	"github.com/ianclemence/kaya/pkg/providers/httpx"
 )
 
 // Entity is one validated HA state object.

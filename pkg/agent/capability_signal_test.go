@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/ianclemence/ghost/pkg/modes"
+	"github.com/ianclemence/kaya/pkg/modes"
 )
 
 // Offline capability is surfaced only when the runtime is actually degraded to

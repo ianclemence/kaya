@@ -2,7 +2,7 @@
 name: gif-search
 description: "Search and download GIFs from Tenor. Invoke when the user asks for a GIF, a reaction gif, or an animated image to send."
 version: 1.1.0
-author: Ghost
+author: Kaya
 license: MIT
 platforms: [linux, macos, windows]
 prerequisites:
@@ -20,7 +20,7 @@ Useful for finding reaction GIFs, creating visual content, and sending GIFs in c
 
 ## Setup
 
-Set your Tenor API key in your environment (add to `$HOME/.ghost/.env`):
+Set your Tenor API key in your environment (add to `$HOME/.kaya/.env`):
 
 ```bash
 TENOR_API_KEY=your_key_here

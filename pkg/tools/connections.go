@@ -7,12 +7,12 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ianclemence/ghost/pkg/connectedapp"
-	"github.com/ianclemence/ghost/pkg/credentials"
-	"github.com/ianclemence/ghost/pkg/skills"
+	"github.com/ianclemence/kaya/pkg/connectedapp"
+	"github.com/ianclemence/kaya/pkg/credentials"
+	"github.com/ianclemence/kaya/pkg/skills"
 )
 
-// ConnectionsTool reports which external apps Ghost can reach and the exact
+// ConnectionsTool reports which external apps Kaya can reach and the exact
 // next step to finish setup. Read-only: it never returns, stores, or asks for
 // secrets, and it never sends them through chat. The model uses it to answer
 // "is my Gmail connected?" and to do setup on web or phone, leaving the owner
@@ -100,11 +100,11 @@ func connectionEntries() []connEntry {
 func setupSteps(e connEntry) string {
 	switch e.setup {
 	case string(connectedapp.SetupConsoleOAuth):
-		return fmt.Sprintf("One step is yours: Apps → %s → Configure → finish the sign-in in the browser. Ghost handles the rest.", e.name)
+		return fmt.Sprintf("One step is yours: Apps → %s → Configure → finish the sign-in in the browser. Kaya handles the rest.", e.name)
 	case string(connectedapp.SetupPastePair):
-		return fmt.Sprintf("One step is yours: Apps → %s → Configure → enter the instance URL and its long-lived token. Ghost handles the rest.", e.name)
+		return fmt.Sprintf("One step is yours: Apps → %s → Configure → enter the instance URL and its long-lived token. Kaya handles the rest.", e.name)
 	default:
-		return fmt.Sprintf("One step is yours: Apps → %s → Configure → enter the key once. Ghost handles the rest.", e.name)
+		return fmt.Sprintf("One step is yours: Apps → %s → Configure → enter the key once. Kaya handles the rest.", e.name)
 	}
 }
 
@@ -132,7 +132,7 @@ func (t *ConnectionsTool) Execute(ctx context.Context, args map[string]interface
 	switch action {
 	case "", "list":
 		var sb strings.Builder
-		sb.WriteString("Connected apps (what you can ask Ghost to use):\n")
+		sb.WriteString("Connected apps (what you can ask Kaya to use):\n")
 		for _, e := range entries {
 			state := "not connected"
 			if e.connected {

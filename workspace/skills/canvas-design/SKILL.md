@@ -1,11 +1,11 @@
 ---
 name: canvas-design
-description: Design guidance for anything visual Ghost builds. Build it with the canvas tool (never publish_artifact, which needs an approval and shows nothing running): websites, landing pages, portfolios, pricing pages, dashboards, mock-ups, tools, games and animations. Invoke before building or restyling such a page, and when the owner says it looks plain, generic, dated, cramped or "AI-made". Covers layout, type, colour, states, motion and a pre-send checklist. Based on Emil Kowalski's design-engineering craft.
+description: Design guidance for anything visual Kaya builds. Build it with the canvas tool (never publish_artifact, which needs an approval and shows nothing running): websites, landing pages, portfolios, pricing pages, dashboards, mock-ups, tools, games and animations. Invoke before building or restyling such a page, and when the owner says it looks plain, generic, dated, cramped or "AI-made". Covers layout, type, colour, states, motion and a pre-send checklist. Based on Emil Kowalski's design-engineering craft.
 version: 1.0.0
-author: Ghost
+author: Kaya
 license: MIT
 metadata:
-  ghost:
+  kaya:
     tags: [design, canvas, website, landing-page, ui, css, animation, polish]
 ---
 
@@ -22,15 +22,15 @@ This file has what a good first build needs. Build from it, let the canvas check
 - **Landing page:** hero (what it is, for whom, one action) → one proof → what is offered (list or menu with prices, not three identical cards) → story or how it works → practical details (where, when, how to reach) → the action again.
 - **Pricing:** two or three tiers named by who they are for; the recommended one differs by weight and contrast; same price and action position in each; stack on a phone.
 - **Portfolio:** the work leads (one large piece, then a grid with title, year, one line); a short first-person about; one way to get in touch. Drawn placeholders with real aspect ratios, never hotlinked photos.
-- **Dashboard or tracker:** the answer the owner opens it for is the first thing on screen, as one large number with its unit and trend; breakdown below; real empty and first-run states; remember entries with `ghost.save`.
+- **Dashboard or tracker:** the answer the owner opens it for is the first thing on screen, as one large number with its unit and trend; breakdown below; real empty and first-run states; remember entries with `kaya.save`.
 - **Tool or calculator:** one input, one result, shown as you type, result in the largest type; remembers the last values.
-- **Game:** works in three seconds with no instructions; feedback on every input; score kept with `ghost.save`; one-tap restart.
+- **Game:** works in three seconds with no instructions; feedback on every input; score kept with `kaya.save`; one-tap restart.
 
 ## The five decisions, in order
 
 1. **Who is it for, and what is the one thing they should do?** One primary action per screen. Write it down before any markup.
 2. **What is the point of view?** Pick one memorable idea and commit: editorial and warm, instrument-panel precise, playful and tactile, quiet and premium. A coffee roaster is not a fintech app. Every later choice (type, colour, radius, motion) serves that idea.
-3. **What is real?** Use the owner's real name, place, products and numbers. Never lorem ipsum, "Your text here", "Feature 1", or invented testimonials and statistics presented as true. Build first: when you lack content, write honest, specific copy, say it is a draft, and ask for the real details after you have shown the page. Never hold the build back with questions. A page that needs the owner's own data (sleep, spending, habits) is still built now: fill it with clearly labelled sample data and give it inputs for the real entries, kept with `ghost.save`; never refuse to build because the data is not connected yet.
+3. **What is real?** Use the owner's real name, place, products and numbers. Never lorem ipsum, "Your text here", "Feature 1", or invented testimonials and statistics presented as true. Build first: when you lack content, write honest, specific copy, say it is a draft, and ask for the real details after you have shown the page. Never hold the build back with questions. A page that needs the owner's own data (sleep, spending, habits) is still built now: fill it with clearly labelled sample data and give it inputs for the real entries, kept with `kaya.save`; never refuse to build because the data is not connected yet.
 4. **What are the states?** Empty, loading, error, success, disabled, long text, one item, a hundred items. Design them, do not leave them to the browser.
 5. **What is the motion budget?** Decide what animates and why (see `references/motion.md`). Most things should not.
 
@@ -38,7 +38,7 @@ This file has what a good first build needs. Build from it, let the canvas check
 
 - It is one self-contained HTML document on a phone, about 360px wide in chat and full screen when opened. Design mobile first; add a `@media (min-width: 720px)` layout so it also holds up on a tablet or desktop.
 - The page is the window. Do not wrap everything in one outer card, and do not use `min-height: 100vh` centring. Use `min-height: 100dvh` only when the page genuinely fills the screen (a game, a tool).
-- No network calls, no `localStorage`. Keep state in memory, or call `ghost.save(value)` and read `ghost.saved` to remember between opens.
+- No network calls, no `localStorage`. Keep state in memory, or call `kaya.save(value)` and read `kaya.saved` to remember between opens.
 - Scripts and styles load only from cdnjs.cloudflare.com, cdn.jsdelivr.net, unpkg.com, fonts.googleapis.com. Prefer no libraries. Add one only when it earns its weight (Chart.js for a real chart, Three.js for real 3D).
 - Imagery: draw it. Inline SVG, CSS gradients, shapes and type make better, lighter, always-loading pictures than hotlinked photos. Use a photo only when the owner supplied its address.
 
@@ -86,7 +86,7 @@ If you change the ground to a light colour, set `color-scheme: light` and check 
 ## Components, finished
 
 - **Buttons:** a clear primary and a quiet secondary. Press feedback (`transform: scale(0.97)` on `:active`, 100–160ms). A visible `:focus-visible` ring. A disabled and a loading state.
-- **Forms:** a visible label above each field (placeholders are not labels), the right `type`/`inputmode`/`autocomplete`, an inline error that says how to fix it, a success state that confirms what happened. Since the canvas cannot submit anywhere, make the form do something real in the page (show the result, add to a list, keep it with `ghost.save`) rather than a dead button.
+- **Forms:** a visible label above each field (placeholders are not labels), the right `type`/`inputmode`/`autocomplete`, an inline error that says how to fix it, a success state that confirms what happened. Since the canvas cannot submit anywhere, make the form do something real in the page (show the result, add to a list, keep it with `kaya.save`) rather than a dead button.
 - **Lists and tables:** a real empty state with the next step, sensible truncation (`min-width: 0`, `text-overflow: ellipsis`, or wrapping), and a layout that survives a 40-character name and a 6-digit number.
 - **Navigation inside a single page:** anchor sections with `id` and in-page scrolling (`scroll-behavior: smooth`, respecting reduced motion). Links that go outside do not navigate in the canvas, so do not build a site whose pages are separate links; build sections or tabs in one document.
 

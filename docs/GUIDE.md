@@ -1,17 +1,17 @@
-# Using Ghost
+# Using Kaya
 
 Day-to-day use, in the order you are likely to need it. If you are still setting
 up, start with [Your Pod, from the box to your first conversation](POD-QUICKSTART.md).
 
-## Talking to Ghost
+## Talking to Kaya
 
-Ghost is one conversation that you can reach four ways.
+Kaya is one conversation that you can reach four ways.
 
 | Surface | Good for |
 |---|---|
-| **The Ghost app** | Daily use: talk, approve, see what Ghost is doing in its browser, browse memory and files. |
+| **The Kaya app** | Daily use: talk, approve, see what Kaya is doing in its browser, browse memory and files. |
 | **The web console** | The control plane: Apps, Channels, Devices, Memory, Files, Routines, System, Security. |
-| **The terminal** (`ghost`) | Fast and keyboard-first. `/memory`, `/activity`, `/devices`, `/files`, `/attach`. |
+| **The terminal** (`kaya`) | Fast and keyboard-first. `/memory`, `/activity`, `/devices`, `/files`, `/attach`. |
 | **Channels** | Telegram, Discord, Slack, WhatsApp and email, for the people you allow. |
 
 They are one conversation, not four. Send a message from the terminal and open
@@ -26,23 +26,23 @@ Three things that sound alike, and are different.
 |---|---|---|
 | **Reminder** | One time. "Remind me tomorrow at 9 to call Sam." | Delivered on time as plain text. No AI call, so it arrives even if the provider is down. If the Pod was off, it arrives late and says so. |
 | **Recurring reminder** | A reminder that repeats. "Every weekday at 8, remind me to take my vitamins." | The same deterministic delivery, on every occurrence. |
-| **Routine** | A job for Ghost that repeats. "Every Monday at 8, give me a brief of my week." | Ghost does the work each time (it may use tools) and reports the result, labelled as a routine. |
+| **Routine** | A job for Kaya that repeats. "Every Monday at 8, give me a brief of my week." | Kaya does the work each time (it may use tools) and reports the result, labelled as a routine. |
 
-Ghost understands recurrence in the way people say it: *every weekday*,
+Kaya understands recurrence in the way people say it: *every weekday*,
 *weekends*, *Mondays and Thursdays*, *every morning*, *8am every day*, *every
 other day*, *every 3 days*, *hourly*, *monthly on the 15th*. It always says the
 time back, including one it assumed (a bare "every day" is 9 AM), and asks for a
 yes before creating a routine. Manage them in **Routines** in the console or
-`ghost tasks` (pause, resume, cancel).
+`kaya tasks` (pause, resume, cancel).
 
 If the Pod was off when a recurring **routine** came due, it is skipped, not
-replayed hours late (a morning brief at nine at night is noise), and Ghost tells
+replayed hours late (a morning brief at nine at night is noise), and Kaya tells
 you it skipped it. A missed **reminder** is a commitment, so it is still delivered,
 with a note saying it was due earlier.
 
 ## Files and the workspace
 
-Ghost has a workspace of its own. It can create folders, write notes, tidy them
+Kaya has a workspace of its own. It can create folders, write notes, tidy them
 into place, move things, and delete what it made or what you ask it to remove.
 It cannot reach outside it, follow a link out of it, or touch its own foundations.
 
@@ -56,17 +56,17 @@ It cannot reach outside it, follow a link out of it, or touch its own foundation
 
 ## Connecting your apps
 
-Ghost works with your other apps in four ways. Each is set up in the console
+Kaya works with your other apps in four ways. Each is set up in the console
 under **Apps**, or in the app under **Connected apps**.
 
 **By key** (GitHub, Notion, weather and flight data). Paste the key. It is tried
-against the service before Ghost says "connected": a refused key is explained and
+against the service before Kaya says "connected": a refused key is explained and
 not saved, and a service that can't be reached is saved with an honest note.
 
 **By address and token** (Home Assistant).
 
 **By signing in** (Google Calendar, Gmail, Outlook, Spotify). These four only let
-an app you have registered with them sign in, and Ghost does not ship one, so the
+an app you have registered with them sign in, and Kaya does not ship one, so the
 first time you connect one the console walks you through registering your own.
 It takes a few minutes, is free, and is done once per provider (Google Calendar
 and Gmail share one). You paste the app's ID and secret, which are stored sealed
@@ -75,21 +75,21 @@ reached: that is expected, and it means the sign-in worked. Copy its address and
 paste it back into the console.
 
 Two things to know. With Google, choose *Publish app* on the consent screen, or
-Google disconnects Ghost every seven days. And a one-click sign-in, with none of
-this, needs a Ghost-owned app and a public address, which is what
-[Ghost Connect](CONNECT.md) is for.
+Google disconnects Kaya every seven days. And a one-click sign-in, with none of
+this, needs a Kaya-owned app and a public address, which is what
+[Kaya Connect](CONNECT.md) is for.
 
-**Logins.** Save a login once in the Vault (in the app) or under Apps (on the web). Ghost signs in with it without
+**Logins.** Save a login once in the Vault (in the app) or under Apps (on the web). Kaya signs in with it without
 the password passing through the model, and only to the site it belongs to. If a
 site asks for a human check (a CAPTCHA, "Verify you are human", a code sent to
-your phone), Ghost says so and stops; it does not try to get around it. Open its
+your phone), Kaya says so and stops; it does not try to get around it. Open its
 browser card in the app, tap **Take over and steer**, do that step yourself, and
-tap **Done**. Ghost carries on from where you left it.
+tap **Done**. Kaya carries on from where you left it.
 
 **Tool servers (MCP).** Add an outside server by address and key on the console's
 Apps page. The connection is tested before anything is saved, the key is sealed,
 and its tools appear at once with no restart. Servers that run a command on the
-Pod stay a terminal decision (`ghost mcp add`), because that is running code.
+Pod stay a terminal decision (`kaya mcp add`), because that is running code.
 
 **Channels.** Telegram, Discord, Slack, WhatsApp and email answer only the people
 you list under **Channels**. Empty means nobody.
@@ -97,53 +97,53 @@ you list under **Channels**. Empty means nobody.
 ## Away from home
 
 At home the phone talks straight to the Pod. Away from home you need a way in:
-Tailscale, your own relay, or **Ghost Connect**, the hosted relay, which is in
+Tailscale, your own relay, or **Kaya Connect**, the hosted relay, which is in
 early access. The reasoning, what is free, and what must be true before anyone is
 charged are in [docs/CONNECT.md](docs/CONNECT.md). Push notifications do not need
 any of it.
 
-**Ghost Connect, from the console.** Open **Devices**, and under **Away from home**
-choose **Link to Ghost Connect**. It shows a short code and an address: open the
+**Kaya Connect, from the console.** Open **Devices**, and under **Away from home**
+choose **Link to Kaya Connect**. It shows a short code and an address: open the
 address, sign in, check the code matches, and choose a plan. The Pod links itself and
 connects, with no restart. Then choose **Connect a phone for away from home** and scan
 the QR in the app. Everything a phone sends through the relay is sealed on the phone
 and opened only by your Pod, so the relay carries it and can't read it. If the plan
 ever lapses, only the relay stops; the Pod keeps working at home.
 
-The same from a terminal: `ghost relay link` (links), `ghost relay status`,
-`ghost relay pair` (a QR for a phone) and `ghost relay unlink`.
+The same from a terminal: `kaya relay link` (links), `kaya relay status`,
+`kaya relay pair` (a QR for a phone) and `kaya relay unlink`.
 
-## Looking after your Ghost
+## Looking after your Kaya
 
 ### Updating
 
 ```bash
-ghost update            # deploy the newest release
-ghost update --check    # installed, available, and what is actually running
-ghost update --notes    # what changed
+kaya update            # deploy the newest release
+kaya update --check    # installed, available, and what is actually running
+kaya update --notes    # what changed
 ```
 
-Ghost tells you when a new version is out and never installs one on its own. You
+Kaya tells you when a new version is out and never installs one on its own. You
 can also update from **Your Pod** in the app. A recovery snapshot is taken first,
 and if it can't be, the update stops and says why.
 
-`ghost update` installs the published release, whatever state your own copy of the
+`kaya update` installs the published release, whatever state your own copy of the
 source is in, so you never need to pull anything first. Each release carries a
 ready-made program that is checked against a checksum and a signature before it
 touches your Pod, and an update that fails either check is refused and changes
 nothing. A release with no ready-made program for your kind of machine is built
 from its tagged source instead, which needs `git` and `go`. Run
-`ghost update --force` to reinstall the current release.
+`kaya update --force` to reinstall the current release.
 
 ### Backups and a forgotten password
 
 ```bash
-ghost state backup                        # a recovery snapshot (the newest five are kept)
-GHOST_MASTER_KEY=<key> ghost state import <file>   # restore onto a fresh install
+kaya state backup                        # a recovery snapshot (the newest five are kept)
+KAYA_MASTER_KEY=<key> kaya state import <file>   # restore onto a fresh install
 ```
 
 A snapshot is made before every update. A backup on the Pod dies with the Pod,
-and it can only be opened with the Pod's key (`GHOST_MASTER_KEY`, in the Ghost
+and it can only be opened with the Pod's key (`KAYA_MASTER_KEY`, in the Kaya
 config directory). Copy both somewhere safe, separately. Details in
 [docs/USER.md](docs/USER.md).
 
@@ -153,13 +153,13 @@ On the sign-in page choose *Forgot your password?* and either:
 - get a one-time code in the app (**Your Pod**, then **Web console**) and enter it
   with a new password, or
 - take the SD card out, and on the `boot` drive create a text file named
-  `ghost-reset-password` with the new password on its first line.
+  `kaya-reset-password` with the new password on its first line.
 
-Or, with a terminal: `sudo ghost reset-password --force`. Your memory, files and
+Or, with a terminal: `sudo kaya reset-password --force`. Your memory, files and
 paired phones are never touched.
 
 ### Health
 
-Ghost watches its own Pod and tells you early: low storage or memory, a hot
+Kaya watches its own Pod and tells you early: low storage or memory, a hot
 processor, running from a memory card, a restart after a power cut. What it says
 and what to do is in [What a Pod needs](HARDWARE.md).

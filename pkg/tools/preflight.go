@@ -1,8 +1,8 @@
 package tools
 
 import (
-	"github.com/ianclemence/ghost/pkg/credentials"
-	"github.com/ianclemence/ghost/pkg/product"
+	"github.com/ianclemence/kaya/pkg/credentials"
+	"github.com/ianclemence/kaya/pkg/product"
 )
 
 // NotConfigured returns the product connect message for a tool whose

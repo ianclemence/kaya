@@ -10,16 +10,16 @@ A request to do something is not proof it happened. A tool returning is not
 proof it happened. Execution is the runtime's attempt; evidence is the runtime's
 proof.
 
-Ghost distinguishes:
+Kaya distinguishes:
 
 | Stage | Meaning |
 |---|---|
 | Request | The model asks for a capability operation |
 | Authorization | The broker decides allow / ask / deny |
-| Execution attempt | Ghost dispatches the authorized work |
+| Execution attempt | Kaya dispatches the authorized work |
 | Execution outcome | What the implementation reported |
 | Evidence | Runtime proof of what happened |
-| Completion | The product-level result Ghost tells the user |
+| Completion | The product-level result Kaya tells the user |
 
 Only the evidence validator may turn a consequential execution attempt into
 success. See [Evidence](EVIDENCE.md).
@@ -56,7 +56,7 @@ capability identity.
 ## Local execution
 
 Local capabilities — memory, files, artifacts, scheduling — run on the device
-under Ghost's control and confinement. Local writes that produce durable output
+under Kaya's control and confinement. Local writes that produce durable output
 carry evidence (for example, a file write records its path and hash).
 
 ## Browser and computer
@@ -68,8 +68,8 @@ Browser and computer are governed live surfaces:
 - **Control** (clicking, typing, pressing keys) is consequential and governed.
 
 Control may be **leased to the user** as a takeover: while the user holds
-control, Ghost is paused on that surface. Releasing control does not blindly
-resume Ghost; the surface pauses and resumes only through revalidation. User
+control, Kaya is paused on that surface. Releasing control does not blindly
+resume Kaya; the surface pauses and resumes only through revalidation. User
 control leases expire, so a dead connection cannot leave a permanent owner.
 
 A successful control operation without runtime evidence is treated as
@@ -105,10 +105,10 @@ The scheduler is an execution mechanism. It does not become an authority
 because execution originated from a routine. See
 [Memory, Activity, Routines & Artifacts](MEMORY-ACTIVITY-ROUTINES-ARTIFACTS.md).
 
-A turn Ghost starts on its own (a routine, a promise, an idea it acted on)
+A turn Kaya starts on its own (a routine, a promise, an idea it acted on)
 also runs under a wall-clock limit, because nobody is there to notice a hung
 page or a provider that never answers. The default is 20 minutes;
-`GHOST_UNATTENDED_TIMEOUT` takes a Go duration (`45m`), and `0` removes it.
+`KAYA_UNATTENDED_TIMEOUT` takes a Go duration (`45m`), and `0` removes it.
 The tool-call cap still bounds how much such a turn does.
 
 ## Artifacts
@@ -137,10 +137,10 @@ available implementation.
 
 ## What executed code can reach on the network
 
-Commands Ghost runs (`exec`, `sandbox`) run in a bubblewrap sandbox. By default
+Commands Kaya runs (`exec`, `sandbox`) run in a bubblewrap sandbox. By default
 the sandbox shares the Pod's network, so a command can reach the internet and
 also the Pod's own services, the router and every device on the LAN. Set
-`GHOST_EXEC_EGRESS` to narrow that:
+`KAYA_EXEC_EGRESS` to narrow that:
 
 | Mode | What a sandboxed command can reach |
 |------|------------------------------------|
@@ -149,10 +149,10 @@ also the Pod's own services, the router and every device on the LAN. Set
 | `allowlist` | Only hosts named in the allow file. |
 
 In `guard` and `allowlist` the sandbox has no network of its own. Its only way
-out is a proxy Ghost runs, which resolves each name itself, judges the address
+out is a proxy Kaya runs, which resolves each name itself, judges the address
 it actually dials (so a public name pointing at a private address is refused),
-and logs every allow and block. Hosts go in `$GHOST_DIR/egress-allow.txt`
-(`GHOST_EXEC_EGRESS_ALLOW` overrides the path), one per line: an exact host,
+and logs every allow and block. Hosts go in `$KAYA_DIR/egress-allow.txt`
+(`KAYA_EXEC_EGRESS_ALLOW` overrides the path), one per line: an exact host,
 `*.example.com`, or an IP. In `guard` an entry also opens that one private host,
 which is how a single LAN device is reached. The file sits beside the
 configuration, not in the workspace, so code the agent runs cannot edit it.
@@ -168,9 +168,9 @@ slows and is killed before it can starve the Pod or SSH.
 
 ## Leaks and faults
 
-Ghost's instructions carry a private marker that is meaningless outside them.
+Kaya's instructions carry a private marker that is meaningless outside them.
 If it appears in the arguments of any tool call, the call is refused and
-logged: something Ghost read has steered it into copying its context out.
+logged: something Kaya read has steered it into copying its context out.
 
 Each turn also records what it ran on (release, model, a fingerprint of the
 instructions, the tool set) and, when a reply looks like a fault (stray
@@ -180,12 +180,12 @@ changed on that basis.
 
 ## Hand-drawn films and drawings
 
-Ghost makes animations, cartoons and drawings by writing them: every drawing is
+Kaya makes animations, cartoons and drawings by writing them: every drawing is
 a set of strokes in JavaScript and every frame is one of those drawings. The
 `film` tool sets a project up under `films/<name>/` (the engine and a template
 from the `hand-drawn-animation` skill), loads the film in the Pod's own headless
 browser, and reports script errors with their message and line, blank frames
-and the running time. It writes preview sheets Ghost then looks at with the
+and the running time. It writes preview sheets Kaya then looks at with the
 vision tool, renders stills as pictures into the chat, and renders the whole
 film to an MP4 in the background (one at a time, up to 180 seconds; the sound
 comes from the film's own score when it has one). The finished video is decoded
@@ -199,22 +199,22 @@ drawing request is drawn in code.
 
 ## Self-check and updating from a conversation
 
-Ghost can check itself and update itself when asked in chat.
+Kaya can check itself and update itself when asked in chat.
 
 - `self_check` runs the same health check as the console (`/v1/doctor`):
   database, model, tools, browser, skills, storage, routines and connected
-  services. It is read-only and offered when the owner asks Ghost to check
+  services. It is read-only and offered when the owner asks Kaya to check
   itself.
 - `update` installs the latest verified release, after the broker's approval,
   as its own systemd unit, because it restarts the process that asked. Before
   starting, it leaves a note (the release it was on and the conversation it
   came from). When the new release is up, it waits 20 seconds, runs the
   self-check and tells that conversation whether the update took and whether
-  Ghost is healthy; if the release did not start and the previous one was put
+  Kaya is healthy; if the release did not start and the previous one was put
   back, it says that instead. The report relies on the release that comes up
   containing this code, so an update from an older release is not reported.
-- `ghost-architecture` is a skill that loads only when the owner asks how Ghost
-  works. It is the one place Ghost's description of its own design lives, so it
+- `kaya-architecture` is a skill that loads only when the owner asks how Kaya
+  works. It is the one place Kaya's description of its own design lives, so it
   is kept in step with the code.
 
 ## Secrets never reach the model
@@ -231,10 +231,10 @@ carry one out. This is by exact value, on top of the shape-based masking in
 ## Files the owner sends
 
 An attachment is stored as an upload in the workspace (`uploads/<id>/<name>`)
-with its type detected from the bytes, never from the sender's claim. Ghost
+with its type detected from the bytes, never from the sender's claim. Kaya
 opens it with the ordinary workspace-confined tools (`doc_parser` for
 documents and spreadsheets, `read_file` for text, `video_frames` for video,
-the model itself for images); files Ghost cannot open are declared unreadable
+the model itself for images); files Kaya cannot open are declared unreadable
 rather than guessed at. Uploads are listable and deletable from every surface
 and leave on their own after 30 days. Raw voice audio is never stored.
 

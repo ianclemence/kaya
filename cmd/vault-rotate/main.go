@@ -3,10 +3,10 @@
 // Prints NO key material: success is "rotation ok", anything else fails
 // loudly with the old files untouched.
 //
-// Usage (as root): go run ./cmd/vault-rotate /var/ghost/config
+// Usage (as root): go run ./cmd/vault-rotate /var/kaya/config
 // Check mode (proves the on-disk key is dead after cleanup):
 //
-//	go run ./cmd/vault-rotate check /var/ghost/config
+//	go run ./cmd/vault-rotate check /var/kaya/config
 //
 // prints "old key rejected: ok" when the file key does not unseal the
 // vault, "old key file absent: ok" when it is gone, and fails otherwise.
@@ -20,7 +20,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/ianclemence/ghost/pkg/config"
+	"github.com/ianclemence/kaya/pkg/config"
 )
 
 func main() {
@@ -53,8 +53,8 @@ func main() {
 		// Refuse to rotate when the key comes from the environment: that
 		// would mean the on-disk key is already out of the loop or the
 		// operator pointed at the wrong vault.
-		if v := os.Getenv("GHOST_MASTER_KEY"); v != "" {
-			fmt.Fprintln(os.Stderr, "GHOST_MASTER_KEY is set; unset it to rotate from the on-disk key")
+		if v := os.Getenv("KAYA_MASTER_KEY"); v != "" {
+			fmt.Fprintln(os.Stderr, "KAYA_MASTER_KEY is set; unset it to rotate from the on-disk key")
 			os.Exit(1)
 		}
 		plain, err = config.Unseal(oldKey, blob)
@@ -104,7 +104,7 @@ func main() {
 		fmt.Fprintln(os.Stderr, "install:", err)
 		os.Exit(1)
 	}
-	envBody := "GHOST_MASTER_KEY=" + base64.StdEncoding.EncodeToString(raw) + "\n"
+	envBody := "KAYA_MASTER_KEY=" + base64.StdEncoding.EncodeToString(raw) + "\n"
 	if err := os.WriteFile(envPath, []byte(envBody), 0600); err != nil {
 		fmt.Fprintln(os.Stderr, "write env file (vault already re-sealed; old key still valid):", err)
 		os.Exit(1)

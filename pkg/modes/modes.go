@@ -1,4 +1,4 @@
-// Package modes is Ghost's single user-facing intelligence control.
+// Package modes is Kaya's single user-facing intelligence control.
 //
 // Instead of model names, routing tables, temperatures, and provider
 // knobs, the owner chooses an outcome:
@@ -11,7 +11,7 @@
 // The mode governs the BRAIN only. Governance (permissions, credentials,
 // identity, events) is identical in every mode: "cloud-assisted" never
 // means "cloud-authorized". Resolution: explicit setting (state file,
-// then GHOST_INTELLIGENCE_MODE) wins; otherwise derived (any cloud key
+// then KAYA_INTELLIGENCE_MODE) wins; otherwise derived (any cloud key
 // configured → hybrid, else local).
 package modes
 
@@ -38,11 +38,11 @@ func Valid(m Mode) bool { return m == Local || m == Hybrid || m == Cloud }
 func Describe(m Mode) string {
 	switch m {
 	case Local:
-		return "Local — Ghost thinks on your machine only. Cloud is never used."
+		return "Local — Kaya thinks on your machine only. Cloud is never used."
 	case Cloud:
-		return "Cloud — Ghost prefers cloud reasoning. Memory, permissions, and control stay on your machine."
+		return "Cloud — Kaya prefers cloud reasoning. Memory, permissions, and control stay on your machine."
 	default:
-		return "Hybrid — Ghost thinks locally first and uses cloud reasoning when useful."
+		return "Hybrid — Kaya thinks locally first and uses cloud reasoning when useful."
 	}
 }
 
@@ -54,7 +54,7 @@ func Resolve(workspace string, cloudConfigured bool) Mode {
 			return m
 		}
 	}
-	if env := strings.TrimSpace(strings.ToLower(os.Getenv("GHOST_INTELLIGENCE_MODE"))); env != "" {
+	if env := strings.TrimSpace(strings.ToLower(os.Getenv("KAYA_INTELLIGENCE_MODE"))); env != "" {
 		if m := Mode(env); Valid(m) {
 			return m
 		}

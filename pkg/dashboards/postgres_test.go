@@ -7,17 +7,17 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ianclemence/ghost/pkg/credentials"
+	"github.com/ianclemence/kaya/pkg/credentials"
 )
 
 // TestAConnectedPostgres runs against a real database when one is given
-// (GHOST_PG_TEST_URL); it is skipped otherwise.
+// (KAYA_PG_TEST_URL); it is skipped otherwise.
 func TestAConnectedPostgres(t *testing.T) {
-	url := os.Getenv("GHOST_PG_TEST_URL")
+	url := os.Getenv("KAYA_PG_TEST_URL")
 	if url == "" {
-		t.Skip("set GHOST_PG_TEST_URL to test against a real Postgres")
+		t.Skip("set KAYA_PG_TEST_URL to test against a real Postgres")
 	}
-	t.Setenv("GHOST_CONFIG_DIR", t.TempDir())
+	t.Setenv("KAYA_CONFIG_DIR", t.TempDir())
 	if err := credentials.SaveDatabase(credentials.Database{Name: "shop", URL: url}); err != nil {
 		t.Fatal(err)
 	}

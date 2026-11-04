@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ianclemence/ghost/pkg/product"
+	"github.com/ianclemence/kaya/pkg/product"
 	_ "modernc.org/sqlite"
 )
 
@@ -27,7 +27,7 @@ func TestOrderingAcrossFullTrace(t *testing.T) {
 	s := openTestStream(t)
 	types := []Type{MessageReceived, CapabilityStarted, PermissionRequested, PermissionApproved, CapabilityCompleted}
 	for _, typ := range types {
-		s.Publish(&Event{Type: typ, RequestID: "req-1", GhostID: "g1", Payload: map[string]interface{}{"t": string(typ)}})
+		s.Publish(&Event{Type: typ, RequestID: "req-1", KayaID: "g1", Payload: map[string]interface{}{"t": string(typ)}})
 	}
 	got := s.ByRequest("req-1")
 	if len(got) != len(types) {
@@ -85,7 +85,7 @@ func TestListenerIsolation(t *testing.T) {
 	var hits int
 	s.Subscribe(Filter{}, func(e *Event) { hits++ })
 	s.Subscribe(Filter{}, func(e *Event) { panic("bad listener") })
-	s.Publish(&Event{Type: GhostReady, GhostID: "g"})
+	s.Publish(&Event{Type: KayaReady, KayaID: "g"})
 	if hits != 1 {
 		t.Fatal("panicking listener must not break delivery")
 	}
@@ -93,21 +93,21 @@ func TestListenerIsolation(t *testing.T) {
 
 func TestOwnerIsolation(t *testing.T) {
 	s := openTestStream(t)
-	s.Publish(&Event{Type: MessageCreated, GhostID: "ghost-a"})
-	s.Publish(&Event{Type: MessageCreated, GhostID: "ghost-b"})
+	s.Publish(&Event{Type: MessageCreated, KayaID: "kaya-a"})
+	s.Publish(&Event{Type: MessageCreated, KayaID: "kaya-b"})
 	var seen []string
-	unsub := s.Subscribe(Filter{GhostID: "ghost-a"}, func(e *Event) { seen = append(seen, e.GhostID) })
+	unsub := s.Subscribe(Filter{KayaID: "kaya-a"}, func(e *Event) { seen = append(seen, e.KayaID) })
 	defer unsub()
-	s.Publish(&Event{Type: MessageCreated, GhostID: "ghost-a"})
-	s.Publish(&Event{Type: MessageCreated, GhostID: "ghost-b"})
+	s.Publish(&Event{Type: MessageCreated, KayaID: "kaya-a"})
+	s.Publish(&Event{Type: MessageCreated, KayaID: "kaya-b"})
 	for _, g := range seen {
-		if g != "ghost-a" {
-			t.Fatal("cross-ghost leak in subscription")
+		if g != "kaya-a" {
+			t.Fatal("cross-kaya leak in subscription")
 		}
 	}
-	got := s.Recent(10, Filter{GhostID: "ghost-b", UserVisibleOnly: true})
+	got := s.Recent(10, Filter{KayaID: "kaya-b", UserVisibleOnly: true})
 	for _, e := range got {
-		if e.GhostID != "ghost-b" || !e.Visibility.UserVisible() {
+		if e.KayaID != "kaya-b" || !e.Visibility.UserVisible() {
 			t.Fatal("filtered query leaked")
 		}
 	}
@@ -134,10 +134,10 @@ func TestPrune(t *testing.T) {
 
 func TestSinceResume(t *testing.T) {
 	s := openTestStream(t)
-	s.Publish(&Event{Type: MessageCreated, RequestID: "a", GhostID: "g"})
-	s.Publish(&Event{Type: MessageCreated, RequestID: "b", GhostID: "g"})
-	s.Publish(&Event{Type: MessageCreated, RequestID: "c", GhostID: "g"})
-	all := s.Recent(10, Filter{GhostID: "g"})
+	s.Publish(&Event{Type: MessageCreated, RequestID: "a", KayaID: "g"})
+	s.Publish(&Event{Type: MessageCreated, RequestID: "b", KayaID: "g"})
+	s.Publish(&Event{Type: MessageCreated, RequestID: "c", KayaID: "g"})
+	all := s.Recent(10, Filter{KayaID: "g"})
 	if len(all) != 3 {
 		t.Fatalf("expected 3, got %d", len(all))
 	}
@@ -148,12 +148,12 @@ func TestSinceResume(t *testing.T) {
 			cursor = e.Seq
 		}
 	}
-	got := s.Since(cursor, 10, Filter{GhostID: "g"})
+	got := s.Since(cursor, 10, Filter{KayaID: "g"})
 	if len(got) != 1 || got[0].RequestID != "c" {
 		t.Fatalf("resume must return only newer: %+v", got)
 	}
-	// Unknown ghost sees nothing.
-	if got := s.Since(0, 10, Filter{GhostID: "other"}); len(got) != 0 {
+	// Unknown kaya sees nothing.
+	if got := s.Since(0, 10, Filter{KayaID: "other"}); len(got) != 0 {
 		t.Fatal("cross-owner resume must be empty")
 	}
 }
@@ -161,14 +161,14 @@ func TestSinceResume(t *testing.T) {
 func TestSinceHonorsConversationFilter(t *testing.T) {
 	s := openTestStream(t)
 	mk := func(id string, conv string) {
-		s.Publish(&Event{Type: CapabilityCompleted, GhostID: "g1", ConversationID: conv,
+		s.Publish(&Event{Type: CapabilityCompleted, KayaID: "g1", ConversationID: conv,
 			Status: "success", Payload: map[string]interface{}{"capability": "weather.current"}})
 		_ = id
 	}
 	mk("1", "c1")
 	mk("2", "c1")
 	mk("3", "c2")
-	only := s.Since(0, 10, Filter{GhostID: "g1", ConversationID: "c1"})
+	only := s.Since(0, 10, Filter{KayaID: "g1", ConversationID: "c1"})
 	if len(only) != 2 {
 		t.Fatalf("Since with conversation filter: got %d events want 2", len(only))
 	}
@@ -180,7 +180,7 @@ func TestSinceHonorsConversationFilter(t *testing.T) {
 			t.Fatal("Since results must carry seq")
 		}
 	}
-	all := s.Since(0, 10, Filter{GhostID: "g1"})
+	all := s.Since(0, 10, Filter{KayaID: "g1"})
 	if len(all) != 3 {
 		t.Fatalf("Since without conversation filter: got %d events want 3", len(all))
 	}
@@ -236,9 +236,9 @@ func TestWatchLifecycleVisibility(t *testing.T) {
 func TestRecentReturnsNewestFirst(t *testing.T) {
 	s := openTestStream(t)
 	for _, id := range []string{"a", "b", "c", "d", "e"} {
-		s.Publish(&Event{Type: MessageCreated, RequestID: id, GhostID: "g"})
+		s.Publish(&Event{Type: MessageCreated, RequestID: id, KayaID: "g"})
 	}
-	all := s.Recent(10, Filter{GhostID: "g"})
+	all := s.Recent(10, Filter{KayaID: "g"})
 	if len(all) != 5 {
 		t.Fatalf("got %d events, want 5", len(all))
 	}
@@ -248,7 +248,7 @@ func TestRecentReturnsNewestFirst(t *testing.T) {
 			t.Fatalf("position %d: got %q want %q (Recent must be newest first)", i, all[i].RequestID, id)
 		}
 	}
-	latest := s.Recent(2, Filter{GhostID: "g"})
+	latest := s.Recent(2, Filter{KayaID: "g"})
 	if len(latest) != 2 {
 		t.Fatalf("limited read: got %d events, want 2", len(latest))
 	}

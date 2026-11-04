@@ -5,10 +5,10 @@ import (
 	"testing"
 )
 
-func TestDetectConfigShadowNoInstalledGhost(t *testing.T) {
-	_, ok := DetectConfigShadow("/home/dev/ghost/config/config.json", false, nil)
+func TestDetectConfigShadowNoInstalledKaya(t *testing.T) {
+	_, ok := DetectConfigShadow("/home/dev/kaya/config/config.json", false, nil)
 	if ok {
-		t.Fatal("no installed Ghost means nothing to warn about")
+		t.Fatal("no installed Kaya means nothing to warn about")
 	}
 }
 
@@ -29,7 +29,7 @@ func TestDetectConfigShadowReportsWhenDifferent(t *testing.T) {
 		return ""
 	})
 	if !ok {
-		t.Fatal("a checkout config shadowing an installed Ghost must be reported")
+		t.Fatal("a checkout config shadowing an installed Kaya must be reported")
 	}
 	if sh.ResolvedPath != "/home/dev/checkout/config/config.json" {
 		t.Errorf("resolved path wrong: %q", sh.ResolvedPath)
@@ -42,7 +42,7 @@ func TestDetectConfigShadowReportsWhenDifferent(t *testing.T) {
 func TestDetectConfigShadowInstalledWithoutSecret(t *testing.T) {
 	sh, ok := DetectConfigShadow("/home/dev/checkout/config/config.json", true, func(string) string { return "" })
 	if !ok {
-		t.Fatal("installed Ghost exists, so the mismatch is still worth reporting")
+		t.Fatal("installed Kaya exists, so the mismatch is still worth reporting")
 	}
 	if sh.InstalledHasSecret {
 		t.Errorf("installed config has no key; shadow must not claim it does")

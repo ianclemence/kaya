@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ianclemence/ghost/pkg/browser"
+	"github.com/ianclemence/kaya/pkg/browser"
 )
 
 // newEnforcedTool builds a REAL BrowserTool on the enforced path: gate
@@ -176,7 +176,7 @@ func TestEnforcedObserveExecutesAndEvidences(t *testing.T) {
 // Allowed act executes exactly once and records evidence. The ref loop
 // is enforced end to end: snapshot first (opens the epoch), then click
 // on a live ref. A click on a never-observed ref is refused and never
-// reaches the executor as a click — but Ghost does look at the page for
+// reaches the executor as a click — but Kaya does look at the page for
 // the model, so the refusal comes back with the page as it is now.
 func TestEnforcedActExecutesWithPermission(t *testing.T) {
 	bt, sessions := newEnforcedTool(t, "click")

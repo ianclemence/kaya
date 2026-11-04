@@ -10,7 +10,7 @@ import (
 )
 
 // "Forget my dentist" after a correction: both versions are retracted and
-// Ghost's own notes stop carrying either, while unrelated lines survive.
+// Kaya's own notes stop carrying either, while unrelated lines survive.
 func TestForgetPipelineForgetsEverywhere(t *testing.T) {
 	ws := t.TempDir()
 	s := mustOpen(t, ws)
@@ -157,7 +157,7 @@ func TestFoldDuplicates(t *testing.T) {
 	src := []Source{{Type: SourceConversation, Kind: SourceInferred, Ref: "m", Timestamp: time.Now()}}
 	for i := 0; i < 2; i++ {
 		if _, err := s.Create(Entry{ID: newEntryID(), Kind: KindProject, Subject: "user", Predicate: "project/current", Status: StatusCurrent,
-			Value: json.RawMessage(`"Is designing a Ghost Pod"`), Confidence: 0.9, Sources: src}); err != nil {
+			Value: json.RawMessage(`"Is designing a Kaya Pod"`), Confidence: 0.9, Sources: src}); err != nil {
 			t.Fatal(err)
 		}
 	}
@@ -170,7 +170,7 @@ func TestFoldDuplicates(t *testing.T) {
 }
 
 // A line written after the forget (the turn's own journal summary) is kept
-// out, and telling Ghost again brings the fact back into notes.
+// out, and telling Kaya again brings the fact back into notes.
 func TestDropForgottenAndRelearn(t *testing.T) {
 	ws := t.TempDir()
 	s := mustOpen(t, ws)

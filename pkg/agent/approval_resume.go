@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/ianclemence/ghost/pkg/logger"
-	"github.com/ianclemence/ghost/pkg/permissions"
-	"github.com/ianclemence/ghost/pkg/tools"
-	"github.com/ianclemence/ghost/pkg/turnlog"
+	"github.com/ianclemence/kaya/pkg/logger"
+	"github.com/ianclemence/kaya/pkg/permissions"
+	"github.com/ianclemence/kaya/pkg/tools"
+	"github.com/ianclemence/kaya/pkg/turnlog"
 )
 
 // resumeApproval runs the paused call behind an approval the owner has
@@ -47,7 +47,7 @@ func (al *AgentLoop) resumeApproval(ctx context.Context, resume ResumeOutcome, s
 		al.governance.ToolRan(requestID, sessionKey, resume.Tool, turnlog.TrajectoryIDFromContext(ctx), toolResult.IsError, toolResult.Obs)
 	}
 	al.governance.CapabilityDone(requestID, sessionKey, resume.Capability, turnlog.TrajectoryIDFromContext(ctx), toolResult.IsError)
-	// The resumed result is evidence for the model, never Ghost's own
+	// The resumed result is evidence for the model, never Kaya's own
 	// words. Piping a page or a command's stdout straight into the reply is
 	// what turned "approve it and I'll give you the rundown" into a wall of
 	// markup: raw payload is context, not an answer. Hand it back for one
@@ -76,8 +76,8 @@ func (al *AgentLoop) resumeApproval(ctx context.Context, resume ResumeOutcome, s
 	// No model turn available (or it failed): the receipt must still reach
 	// the live transcript, not just storage — a resumed approval that
 	// reports only to the database shows the owner "(no response)" while
-	// Ghost claims it acted. It is bounded so a payload can never be pasted
-	// at the owner as Ghost's words.
+	// Kaya claims it acted. It is bounded so a payload can never be pasted
+	// at the owner as Kaya's words.
 	text := resumeReceiptText(toolResult)
 	if onChunk != nil && text != "" {
 		onChunk(text)

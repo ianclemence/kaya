@@ -9,7 +9,7 @@ import (
 	"unicode"
 	"unicode/utf8"
 
-	"github.com/ianclemence/ghost/pkg/tools"
+	"github.com/ianclemence/kaya/pkg/tools"
 )
 
 // Quality problems on a long-lived appliance rarely announce themselves: a
@@ -126,7 +126,7 @@ func hashOf(parts ...string) string {
 }
 
 // buildVersion is the running release, set once at startup so every turn can
-// say which Ghost produced it.
+// say which Kaya produced it.
 var buildVersion = "dev"
 
 // SetBuildVersion records the running release for turn traces.

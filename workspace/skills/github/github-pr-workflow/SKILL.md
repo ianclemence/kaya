@@ -2,10 +2,10 @@
 name: github-pr-workflow
 description: Full pull request lifecycle — create branches, commit changes, open PRs, monitor CI status, auto-fix failures, and merge. Works with gh CLI or falls back to git + GitHub REST API via curl.
 version: 1.1.0
-author: Ghost
+author: Kaya
 license: MIT
 metadata:
-  ghost:
+  kaya:
     tags: [GitHub, Pull-Requests, CI/CD, Git, Automation, Merge]
     related_skills: [github-auth, github-code-review]
 ---
@@ -27,11 +27,11 @@ if command -v gh &>/dev/null && gh auth status &>/dev/null; then
   AUTH="gh"
 else
   AUTH="git"
-  # No token available: stop and point at setup (Ghost settings →
+  # No token available: stop and point at setup (Kaya settings →
   # Integrations, or `gh auth login`). Never scrape stored credentials
   # out of ~/.git-credentials or any other secret store.
   if [ -z "$GITHUB_TOKEN" ]; then
-    echo "Need authentication first (gh auth login or Ghost settings → Integrations)"
+    echo "Need authentication first (gh auth login or Kaya settings → Integrations)"
     exit 1
   fi
 fi

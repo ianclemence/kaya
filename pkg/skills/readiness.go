@@ -2,7 +2,7 @@ package skills
 
 import (
 	"fmt"
-	"github.com/ianclemence/ghost/pkg/credentials"
+	"github.com/ianclemence/kaya/pkg/credentials"
 	"os"
 	"path/filepath"
 	"strings"
@@ -52,7 +52,7 @@ func CheckReadiness(skillName, workspace string, providedInputs map[string]strin
 			return SkillReadiness{
 				Status:      StatusUnavailable,
 				Requirement: "skill_disabled",
-				Message:     fmt.Sprintf("The %s skill is currently disabled. Enable it in Ghost's Skills settings to use it.", skillName),
+				Message:     fmt.Sprintf("The %s skill is currently disabled. Enable it in Kaya's Skills settings to use it.", skillName),
 				UserAction:  "enable_skill",
 			}
 		}
@@ -73,7 +73,7 @@ func CheckReadiness(skillName, workspace string, providedInputs map[string]strin
 				Status:      StatusNeedsConfiguration,
 				Requirement: "calendar_connection",
 				Question:    "Calendar access isn't connected yet. Connect your calendar to let me check your schedule?",
-				Message:     "Calendar access isn't connected yet. Connect your calendar in Ghost settings under Integrations to view your schedule.",
+				Message:     "Calendar access isn't connected yet. Connect your calendar in Kaya settings under Integrations to view your schedule.",
 				UserAction:  "connect_calendar",
 			}
 		}
@@ -83,7 +83,7 @@ func CheckReadiness(skillName, workspace string, providedInputs map[string]strin
 			return SkillReadiness{
 				Status:      StatusNeedsConfiguration,
 				Requirement: "homeassistant_connection",
-				Message:     "Home Assistant isn't connected yet. Add your Home Assistant URL and token in Ghost settings under Integrations to control devices.",
+				Message:     "Home Assistant isn't connected yet. Add your Home Assistant URL and token in Kaya settings under Integrations to control devices.",
 				UserAction:  "connect_homeassistant",
 			}
 		}
@@ -108,7 +108,7 @@ func CheckReadiness(skillName, workspace string, providedInputs map[string]strin
 		return SkillReadiness{
 			Status:      StatusNeedsConfiguration,
 			Requirement: "android_device",
-			Message:     "To control your phone, pair an Android device with USB debugging enabled. See Ghost settings under Integrations.",
+			Message:     "To control your phone, pair an Android device with USB debugging enabled. See Kaya settings under Integrations.",
 			UserAction:  "pair_android_device",
 		}
 	}
@@ -119,7 +119,7 @@ func CheckReadiness(skillName, workspace string, providedInputs map[string]strin
 		return SkillReadiness{
 			Status:      StatusNeedsConfiguration,
 			Requirement: "spotify_account",
-			Message:     "Spotify control needs your Spotify account connected. See Ghost settings under Connected Apps.",
+			Message:     "Spotify control needs your Spotify account connected. See Kaya settings under Connected Apps.",
 			UserAction:  "connect_spotify",
 		}
 	}
@@ -138,7 +138,7 @@ func CheckReadiness(skillName, workspace string, providedInputs map[string]strin
 			return SkillReadiness{
 				Status:      StatusNeedsConfiguration,
 				Requirement: "camera_device",
-				Message:     "No camera was detected on this Ghost device. Connect a camera to use this skill.",
+				Message:     "No camera was detected on this Kaya device. Connect a camera to use this skill.",
 				UserAction:  "connect_camera",
 			}
 		}
@@ -153,7 +153,7 @@ func CheckReadiness(skillName, workspace string, providedInputs map[string]strin
 				return SkillReadiness{
 					Status:      StatusNeedsConfiguration,
 					Requirement: "missing_binary:" + cmd,
-					Message:     fmt.Sprintf("The %s skill needs `%s` installed. Run `ghost doctor` for setup instructions.", skillName, cmd),
+					Message:     fmt.Sprintf("The %s skill needs `%s` installed. Run `kaya doctor` for setup instructions.", skillName, cmd),
 					UserAction:  "install_" + cmd,
 				}
 			}
@@ -174,7 +174,7 @@ func CheckReadiness(skillName, workspace string, providedInputs map[string]strin
 				Status:      StatusNeedsConfiguration,
 				Requirement: "calendar_connection",
 				Question:    "Calendar access isn't connected yet. Connect your calendar to let me check your schedule?",
-				Message:     "Calendar access isn't connected yet. Connect your calendar in Ghost's settings to view your schedule.",
+				Message:     "Calendar access isn't connected yet. Connect your calendar in Kaya's settings to view your schedule.",
 				UserAction:  "connect_calendar",
 			}
 		}
@@ -186,7 +186,7 @@ func CheckReadiness(skillName, workspace string, providedInputs map[string]strin
 			return SkillReadiness{
 				Status:      StatusNeedsConfiguration,
 				Requirement: "flight_provider",
-				Message:     "Flight tracking isn't connected yet. Add your flight data key in Ghost settings under Integrations, then try again.",
+				Message:     "Flight tracking isn't connected yet. Add your flight data key in Kaya settings under Integrations, then try again.",
 				UserAction:  "connect_flight_provider",
 			}
 		}
@@ -265,7 +265,7 @@ func IsBareUtterance(lower, phrase string) bool {
 	phrase = strings.ToLower(strings.TrimSpace(phrase))
 	for {
 		cut := false
-		for _, pre := range []string{"the ", "my ", "a ", "an ", "whats ", "what's ", "what ", "check ", "show ", "read ", "use ", "open ", "is ", "hey ghost ", "ghost "} {
+		for _, pre := range []string{"the ", "my ", "a ", "an ", "whats ", "what's ", "what ", "check ", "show ", "read ", "use ", "open ", "is ", "hey kaya ", "kaya "} {
 			if strings.HasPrefix(s, pre) && len(s) > len(pre) {
 				s = strings.TrimSpace(s[len(pre):])
 				cut = true

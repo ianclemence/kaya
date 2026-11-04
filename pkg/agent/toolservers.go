@@ -4,13 +4,13 @@ import (
 	"context"
 	"sync"
 
-	"github.com/ianclemence/ghost/pkg/config"
-	"github.com/ianclemence/ghost/pkg/mcp"
-	"github.com/ianclemence/ghost/pkg/tools"
+	"github.com/ianclemence/kaya/pkg/config"
+	"github.com/ianclemence/kaya/pkg/mcp"
+	"github.com/ianclemence/kaya/pkg/tools"
 )
 
-// Tool servers are outside services (MCP) that give Ghost more tools. They can
-// be added and removed while Ghost is running: the connection is made first,
+// Tool servers are outside services (MCP) that give Kaya more tools. They can
+// be added and removed while Kaya is running: the connection is made first,
 // the tools appear at once, and nothing needs a restart.
 
 var (
@@ -63,7 +63,7 @@ func (al *AgentLoop) DisconnectToolServer(name string) {
 }
 
 // ToolServerStatus reports whether a server is connected and how many tools it
-// gave Ghost.
+// gave Kaya.
 func (al *AgentLoop) ToolServerStatus(name string) (connected bool, toolCount int, lastError string) {
 	m := sharedMCPManager()
 	if h, ok := m.GetServerHealth(name); ok {

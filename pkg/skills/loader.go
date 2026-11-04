@@ -25,9 +25,9 @@ type SkillMetadata struct {
 	// `requires_env: [...]`). Preferred-path tools check their own
 	// credentials at runtime; these gate only the fallback.
 	RequiresEnv []string `json:"requires_env,omitempty"`
-	// RequiresCapabilities lists the Ghost capabilities the skill needs
+	// RequiresCapabilities lists the Kaya capabilities the skill needs
 	// (`requires: [calendar.read, web.search]`). This is a REQUEST, never a
-	// grant: Ghost's normal capability/permission system still decides
+	// grant: Kaya's normal capability/permission system still decides
 	// whether each capability may be used. A skill cannot grant authority.
 	RequiresCapabilities []string `json:"requires_capabilities,omitempty"`
 }
@@ -46,7 +46,7 @@ type SkillInfo struct {
 type SkillsLoader struct {
 	workspace       string
 	workspaceSkills string // workspace skills (é¡¹ç›®çº§åˆ«)
-	globalSkills    string // å…¨å±€ skills (~/.GHOST/skills)
+	globalSkills    string // å…¨å±€ skills (~/.KAYA/skills)
 	builtinSkills   string // å†…ç½® skills
 }
 
@@ -54,7 +54,7 @@ func NewSkillsLoader(workspace string, globalSkills string, builtinSkills string
 	return &SkillsLoader{
 		workspace:       workspace,
 		workspaceSkills: filepath.Join(workspace, "skills"),
-		globalSkills:    globalSkills, // ~/.GHOST/skills
+		globalSkills:    globalSkills, // ~/.KAYA/skills
 		builtinSkills:   builtinSkills,
 	}
 }
@@ -123,7 +123,7 @@ func (sl *SkillsLoader) ListSkills() []SkillInfo {
 		}
 	}
 
-	// å…¨å±€ skills (~/.GHOST/skills) - è¢« workspace skills è¦†ç›–
+	// å…¨å±€ skills (~/.KAYA/skills) - è¢« workspace skills è¦†ç›–
 	if sl.globalSkills != "" {
 		if dirs, err := os.ReadDir(sl.globalSkills); err == nil {
 			for _, dir := range dirs {
@@ -217,7 +217,7 @@ func (sl *SkillsLoader) LoadSkill(name string) (string, bool) {
 		}
 	}
 
-	// 2. å…¶æ¬¡ä»Žå…¨å±€ skills åŠ è½½ (~/.GHOST/skills)
+	// 2. å…¶æ¬¡ä»Žå…¨å±€ skills åŠ è½½ (~/.KAYA/skills)
 	if sl.globalSkills != "" {
 		skillFile := filepath.Join(sl.globalSkills, name, "SKILL.md")
 		if content, err := os.ReadFile(skillFile); err == nil {
@@ -294,7 +294,7 @@ func (sl *SkillsLoader) BuildSkillsSummaryBudget(maxChars int) string {
 			block = append(block, fmt.Sprintf("    <fallback>%s</fallback>", escapeXML(note)))
 		}
 		// Declared capability requirements are a REQUEST, not a grant:
-		// Ghost's normal capability/permission system still authorizes each
+		// Kaya's normal capability/permission system still authorizes each
 		// one. Surfaced so the model knows what the skill needs.
 		if len(s.RequiresCapabilities) > 0 {
 			block = append(block, fmt.Sprintf("    <requires>%s</requires>", escapeXML(strings.Join(s.RequiresCapabilities, ", "))))

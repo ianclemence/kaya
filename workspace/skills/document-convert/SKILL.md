@@ -2,10 +2,10 @@
 name: document-convert
 description: Convert office and text documents to clean Markdown the agent can read — Word, PowerPoint, Excel, OpenDocument, RTF, EPUB, CSV, and PDF. Invoke when the user shares or points at a document and asks to "read this", "summarize this file", "extract the text", "what's in this PDF", or "turn this into notes". Uses anydoc (Python) — free, on-device, no API key.
 version: 1.0.0
-author: Ghost
+author: Kaya
 license: MIT
 metadata:
-  ghost:
+  kaya:
     tags: [documents, pdf, docx, pptx, xlsx, convert, markdown]
 prerequisites:
   commands: [python]

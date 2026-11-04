@@ -1,12 +1,12 @@
-// Package life is what Ghost knows about the owner's life beyond the
+// Package life is what Kaya knows about the owner's life beyond the
 // conversation: the people in it, the documents that matter (a passport, a
 // lease, a warranty), and their finances (what they spend, what renews, what is
 // due). It is not memory: memory holds facts in the owner's words; these are
-// structured records Ghost can count, date and remind from. Every record says
+// structured records Kaya can count, date and remind from. Every record says
 // where it came from (the conversation, a photo, an email, an import), and the
 // owner can see, change and forget any of it.
 //
-// Each store is one JSON file under the workspace's data/ folder (which Ghost
+// Each store is one JSON file under the workspace's data/ folder (which Kaya
 // State carries as the owner's own data), written atomically, guarded by a
 // mutex, and small enough to read whole.
 package life

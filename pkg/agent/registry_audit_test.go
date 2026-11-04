@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/ianclemence/ghost/pkg/tools"
+	"github.com/ianclemence/kaya/pkg/tools"
 )
 
 // Every tool name reachable in a live agent turn must be classified by the
@@ -24,7 +24,7 @@ func TestRegistryGovernanceAudit(t *testing.T) {
 	al := newTestAgentLoop(t, t.TempDir())
 	names := al.tools.RegisteredNames()
 	// schedule is appended to the live loop registry by the gateway
-	// (cmd/ghost), not by NewAgentLoop; it is still model-reachable so the
+	// (cmd/kaya), not by NewAgentLoop; it is still model-reachable so the
 	// audit must cover it.
 	names = append(names, "schedule")
 	sort.Strings(names)
@@ -59,8 +59,8 @@ func TestRegistryGovernanceAudit(t *testing.T) {
 //     file access can never bypass context memory isolation — memory is
 //     reached only through the scope-filtered memory tools.
 //   - context_get, session_search, memory_recall, memory_curate, remember:
-//     read/write Ghost's own memory/context. Memory writes are low-risk,
-//     user-invoked, and bounded to Ghost's durable memory stores (never an
+//     read/write Kaya's own memory/context. Memory writes are low-risk,
+//     user-invoked, and bounded to Kaya's durable memory stores (never an
 //     external/privileged side effect). Durable-memory truthfulness is
 //     asserted separately by memory_present / RequireMemoryPersist.
 //   - web_search, web_fetch: read-only external retrieval (GET / search
@@ -115,9 +115,9 @@ var allowedCoreAudit = map[string]bool{
 	// read / retrieval
 	"read_file": true, "list_dir": true, "search_files": true, "context_get": true, "session_state": true, "find_tools": true, "pipeline": true,
 	"session_search": true, "memory_recall": true, "memory_curate": true, "remember": true,
-	// memory_correct: changes one of Ghost's own beliefs about the owner. It
+	// memory_correct: changes one of Kaya's own beliefs about the owner. It
 	// writes nothing without confirmed=true, keeps the old value in history
-	// (supersede, never delete), and never reaches outside Ghost's memory.
+	// (supersede, never delete), and never reaches outside Kaya's memory.
 	"memory_correct": true,
 	"oracle":         true, // read-only workspace context bundling
 	"web_search":     true, "web_fetch": true, "networking": true,

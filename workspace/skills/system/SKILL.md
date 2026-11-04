@@ -2,10 +2,10 @@
 name: system
 description: Control local or remote machine hardware — volume, mute, screen brightness, lock, shutdown, restart. Invoke when user says "volume up", "mute my PC", "lock the screen", "shutdown", "restart", "turn off monitor", or "speak this aloud". Supports targeting specific devices via SSH.
 version: 1.1.0
-author: Ghost
+author: Kaya
 license: MIT
 metadata:
-  ghost:
+  kaya:
     tags: [system, hardware-control, volume, shutdown, lock, SSH]
 prerequisites:
   commands: []
@@ -17,7 +17,7 @@ Controls hardware functions locally or on remote devices via SSH.
 
 ## Dynamic Targeting
 
-Ghost can control any SSH-enabled device.
+Kaya can control any SSH-enabled device.
 
 1.  **Add a Device**: "Remember that my gaming PC is at 192.168.1.50"
 2.  **Control it**: "Turn up volume on my gaming PC"
@@ -25,7 +25,7 @@ Ghost can control any SSH-enabled device.
 **Prerequisites**:
 
 - The target device must have **OpenSSH Server** running.
-- The Pi (Ghost) must have its public key in the target's `authorized_keys`.
+- The Pi (Kaya) must have its public key in the target's `authorized_keys`.
 - The default SSH user is assumed to be the same as `REMOTE_PC_USER` in `.env`, or you can specify `user@host` in the memory.
 
 ## Commands
@@ -58,7 +58,7 @@ Ensure `nircmd.exe` is in your PATH or in `C:\Tools\nircmd\nircmd.exe`.
 - **Shutdown**: `shutdown /s /t 0`
 - **Restart**: `shutdown /r /t 0`
 - **Screenshot**: `cmd /c "where nircmd && nircmd savescreenshot \"C:\temp\screenshot.png\" || C:\Tools\nircmd\nircmd.exe savescreenshot \"C:\temp\screenshot.png\""`
-- **Speak (TTS)**: `PowerShell -Command "Add-Type -AssemblyName System.Speech; (New-Object System.Speech.Synthesis.SpeechSynthesizer).Speak('Hello Ghost')"`
+- **Speak (TTS)**: `PowerShell -Command "Add-Type -AssemblyName System.Speech; (New-Object System.Speech.Synthesis.SpeechSynthesizer).Speak('Hello Kaya')"`
 
 #### Windows (Fallback: PowerShell)
 

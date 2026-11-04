@@ -1,8 +1,8 @@
-// Room climate reader for Ghost.
+// Room climate reader for Kaya.
 //
 // Reads a DHT11 and prints one JSON line per reading to the serial port at
 // 9600 baud. The bridge on the Pod (room-climate-bridge.py) turns those
-// lines into a latest-reading file and into Ghost's sensor inbox.
+// lines into a latest-reading file and into Kaya's sensor inbox.
 //
 // The data pin is not assumed: at boot the sketch walks the safe digital
 // pins looking for a responding DHT11 and locks onto the first one that

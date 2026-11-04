@@ -12,7 +12,7 @@ import (
 // cache boundary so the stable prefix stays byte-identical across turns.
 func TestSystemPromptCacheBoundary(t *testing.T) {
 	ws := t.TempDir()
-	if err := os.WriteFile(filepath.Join(ws, "GHOST.md"), []byte("# Ghost\nBe helpful.\n"), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(ws, "KAYA.md"), []byte("# Kaya\nBe helpful.\n"), 0644); err != nil {
 		t.Fatal(err)
 	}
 	cb := NewContextBuilder(ws)
@@ -28,7 +28,7 @@ func TestSystemPromptCacheBoundary(t *testing.T) {
 	}
 	prefix, suffix := sys[:idx], sys[idx:]
 	_ = prefix
-	for _, stable := range []string{"# Skills", "GHOST.md"} {
+	for _, stable := range []string{"# Skills", "KAYA.md"} {
 		if strings.Contains(suffix, stable) {
 			t.Fatalf("stable section %q must stay above the boundary", stable)
 		}

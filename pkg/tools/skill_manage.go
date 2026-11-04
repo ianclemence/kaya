@@ -9,14 +9,14 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/ianclemence/ghost/pkg/logger"
-	"github.com/ianclemence/ghost/pkg/skills"
+	"github.com/ianclemence/kaya/pkg/logger"
+	"github.com/ianclemence/kaya/pkg/skills"
 )
 
 // SkillManageTool allows the agent to autonomously create, update, and delete
 // skills — turning successful approaches into reusable procedural knowledge.
 type SkillManageTool struct {
-	workspace string // Ghost workspace root (contains skills/ directory)
+	workspace string // Kaya workspace root (contains skills/ directory)
 }
 
 func NewSkillManageTool(workspace string) *SkillManageTool {
@@ -215,7 +215,7 @@ func (t *SkillManageTool) setSkillEnabled(name string, enabled bool) *ToolResult
 			}
 			return ErrorResult(fmt.Sprintf("Skill '%s' not found.", name))
 		}
-		// Refuse to disable if it would leave Ghost with no visible skills?
+		// Refuse to disable if it would leave Kaya with no visible skills?
 		// No — the user explicitly asked; honor it.
 		if err := os.Rename(src, dst); err != nil {
 			return ErrorResult(fmt.Sprintf("Failed to disable skill: %v", err))

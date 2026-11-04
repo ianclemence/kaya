@@ -3,7 +3,7 @@ package session
 import (
 	"testing"
 
-	"github.com/ianclemence/ghost/pkg/db"
+	"github.com/ianclemence/kaya/pkg/db"
 )
 
 // The write boundary must never store a model-written history label: a

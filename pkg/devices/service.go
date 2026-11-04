@@ -5,12 +5,12 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/ianclemence/ghost/pkg/bus"
-	"github.com/ianclemence/ghost/pkg/constants"
-	"github.com/ianclemence/ghost/pkg/devices/events"
-	"github.com/ianclemence/ghost/pkg/devices/sources"
-	"github.com/ianclemence/ghost/pkg/logger"
-	"github.com/ianclemence/ghost/pkg/state"
+	"github.com/ianclemence/kaya/pkg/bus"
+	"github.com/ianclemence/kaya/pkg/constants"
+	"github.com/ianclemence/kaya/pkg/devices/events"
+	"github.com/ianclemence/kaya/pkg/devices/sources"
+	"github.com/ianclemence/kaya/pkg/logger"
+	"github.com/ianclemence/kaya/pkg/state"
 )
 
 type Service struct {

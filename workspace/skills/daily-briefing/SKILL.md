@@ -2,10 +2,10 @@
 name: daily-briefing
 description: Give a short, useful "what you should know today" briefing. Invoke when the user says "morning briefing", "what should I know today", "brief me", "what's on today", "what do I have going on", or "my daily summary". Reads the user's memory, notes, and captured items and composes a calm, personal summary. No API key required.
 version: 1.0.0
-author: Ghost
+author: Kaya
 license: MIT
 metadata:
-  ghost:
+  kaya:
     tags: [briefing, daily, summary, morning, review]
 ---
 
@@ -21,11 +21,11 @@ matters most to this person.
    jotted down; these are *priorities* tonight).
 2. `workspace/memory/MEMORY.md` and the most recent daily note
    (`workspace/memory/YYYY-MM-DD.md`) — ongoing threads and context.
-3. `workspace/HEARTBEAT.md` and any scheduled automations — what Ghost is
+3. `workspace/HEARTBEAT.md` and any scheduled automations — what Kaya is
    supposed to be doing and anything due today.
 4. `workspace/knowledge/self/user-profile.md` — who the user is, so the
    briefing is worded for them.
-5. `workspace/data/reminders.md` — anything due today the user asked Ghost to
+5. `workspace/data/reminders.md` — anything due today the user asked Kaya to
    keep on top of.
 6. Current weather for the user's location, if it's known or easy to get.
 

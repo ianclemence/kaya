@@ -11,12 +11,12 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/ianclemence/ghost/pkg/capability"
+	"github.com/ianclemence/kaya/pkg/capability"
 	_ "modernc.org/sqlite"
 )
 
 // No phantom capabilities: every capability the verb index can resolve
-// exists in Ghost's registry. The grader maps language onto the
+// exists in Kaya's registry. The grader maps language onto the
 // ontology; it never invents capabilities.
 func TestContractNoPhantomCapabilities(t *testing.T) {
 	for verb, ids := range verbIndex {
@@ -40,7 +40,7 @@ func TestContractNoPhantomCapabilities(t *testing.T) {
 func TestContractEvidenceReadOnly(t *testing.T) {
 	ws := seedEventDB(t,
 		testEvent{"e1", "tool.completed", "success", "r1", "s", `{"tool":"email_send","capability":"email.send"}`})
-	db, err := sql.Open("sqlite", "file:"+filepath.Join(ws, "ghost.db?mode=ro"))
+	db, err := sql.Open("sqlite", "file:"+filepath.Join(ws, "kaya.db?mode=ro"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -93,7 +93,7 @@ func TestContractNoUnrestrictedFallback(t *testing.T) {
 func TestContractGenericNeedsSameTurn(t *testing.T) {
 	ws := seedEventDB(t,
 		testEvent{"e1", "tool.completed", "success", "r1", "s", `{"tool":"email_send","capability":"email.send"}`})
-	claim := Claim{IsExecutionClaim: true, ClaimedState: ClaimSuccess, Subject: "ghost"}
+	claim := Claim{IsExecutionClaim: true, ClaimedState: ClaimSuccess, Subject: "kaya"}
 	dec := matchEvidence(ws, claim,
 		turnContext{requestID: "r2", mark: 1, session: "s", actionable: true},
 		successfulExecutions(ws), brokerTargets(ws))

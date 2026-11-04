@@ -1,4 +1,4 @@
-// Package credentials is Ghost's centralized credential vault.
+// Package credentials is Kaya's centralized credential vault.
 //
 // The repository already has credential/security work (AES-GCM
 // credential store, secrets file, per-integration key readers). This
@@ -22,8 +22,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/ianclemence/ghost/pkg/config"
-	"github.com/ianclemence/ghost/pkg/utils"
+	"github.com/ianclemence/kaya/pkg/config"
+	"github.com/ianclemence/kaya/pkg/utils"
 )
 
 // Calendar credential hooks. The calendar integration lives in pkg/skills;
@@ -176,7 +176,7 @@ func (v *Vault) secretValue(id string) string {
 	if v.configDir != "" {
 		dirs = append(dirs, v.configDir)
 	}
-	if d := strings.TrimSpace(os.Getenv("GHOST_CONFIG_DIR")); d != "" {
+	if d := strings.TrimSpace(os.Getenv("KAYA_CONFIG_DIR")); d != "" {
 		dirs = append(dirs, d)
 	}
 	for _, d := range dirs {
@@ -418,7 +418,7 @@ func (v *Vault) secretDirs() []string {
 	if v.configDir != "" {
 		dirs = append(dirs, v.configDir)
 	}
-	if d := strings.TrimSpace(os.Getenv("GHOST_CONFIG_DIR")); d != "" {
+	if d := strings.TrimSpace(os.Getenv("KAYA_CONFIG_DIR")); d != "" {
 		dirs = append(dirs, d)
 	}
 	return dirs
@@ -426,7 +426,7 @@ func (v *Vault) secretDirs() []string {
 
 func defaultConfigDir() string {
 	if home, err := os.UserHomeDir(); err == nil && home != "" {
-		return filepath.Join(home, ".config", "ghost")
+		return filepath.Join(home, ".config", "kaya")
 	}
 	return "./config"
 }

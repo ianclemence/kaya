@@ -4,7 +4,7 @@
 // reconnecting integrations (documented product behavior), which is
 // always safer than archiving credentials.
 //
-// All backup walkers (Web Console tar.gz, ghoststate export) must
+// All backup walkers (Web Console tar.gz, kayastate export) must
 // consult ShouldExclude. Rules are tested against a synthetic tree so
 // new credential locations cannot slip in by convention alone.
 package backup

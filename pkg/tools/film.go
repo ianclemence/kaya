@@ -11,11 +11,11 @@ import (
 	"sync"
 	"time"
 
-	"github.com/ianclemence/ghost/pkg/artifacts"
-	"github.com/ianclemence/ghost/pkg/film"
+	"github.com/ianclemence/kaya/pkg/artifacts"
+	"github.com/ianclemence/kaya/pkg/film"
 )
 
-// FilmTool is Ghost's animation studio for hand-drawn films and drawings. A
+// FilmTool is Kaya's animation studio for hand-drawn films and drawings. A
 // film is one HTML file whose every frame is drawn with JavaScript strokes (the
 // hand-drawn-animation skill explains how to author one). The tool sets a
 // project up, looks at it in the Pod's own browser, and renders it to an MP4,
@@ -177,7 +177,7 @@ const maxResultImageBytes = 1 << 20
 
 func (t *FilmTool) options(args map[string]interface{}, action string) film.Options {
 	o := film.Options{AR: strings.TrimSpace(sarg(args, "ar")), Look: strings.TrimSpace(sarg(args, "look"))}
-	// Ghost lives on a phone. A still that defaults to a landscape frame is a
+	// Kaya lives on a phone. A still that defaults to a landscape frame is a
 	// mismatch with the surface it arrives on, so a drawing is portrait unless
 	// the film or the owner says otherwise.
 	if o.AR == "" && action == "still" {

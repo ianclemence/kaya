@@ -8,8 +8,8 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/ianclemence/ghost/pkg/relay/proto"
-	"github.com/ianclemence/ghost/pkg/relaycrypto"
+	"github.com/ianclemence/kaya/pkg/relay/proto"
+	"github.com/ianclemence/kaya/pkg/relaycrypto"
 )
 
 // sealedChunk is how much of a sealed request is forwarded at a time. It stays
@@ -54,10 +54,10 @@ func (s *Server) handleSealed(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, `{"error":"method not allowed"}`, http.StatusMethodNotAllowed)
 		return
 	}
-	deviceID := r.Header.Get("X-Ghost-Client-Id")
-	clientToken := r.Header.Get("X-Ghost-Client-Token")
+	deviceID := r.Header.Get("X-Kaya-Client-Id")
+	clientToken := r.Header.Get("X-Kaya-Client-Token")
 	if deviceID == "" || clientToken == "" {
-		http.Error(w, `{"error":"ghost and token required"}`, http.StatusUnauthorized)
+		http.Error(w, `{"error":"kaya and token required"}`, http.StatusUnauthorized)
 		return
 	}
 	if !s.tunnels.AuthClient(deviceID, clientToken) {
@@ -155,7 +155,7 @@ func (s *Server) handleSealed(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/octet-stream")
 	w.Header().Set("Cache-Control", "no-store")
-	w.Header().Set("X-Ghost-Relay", "sealed")
+	w.Header().Set("X-Kaya-Relay", "sealed")
 	w.WriteHeader(http.StatusOK)
 	flusher, canFlush := w.(http.Flusher)
 	for {

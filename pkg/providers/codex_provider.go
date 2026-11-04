@@ -12,8 +12,8 @@ import (
 	"github.com/openai/openai-go/v3/responses"
 	"github.com/openai/openai-go/v3/shared"
 
-	"github.com/ianclemence/ghost/pkg/auth"
-	"github.com/ianclemence/ghost/pkg/logger"
+	"github.com/ianclemence/kaya/pkg/auth"
+	"github.com/ianclemence/kaya/pkg/logger"
 )
 
 const (
@@ -477,7 +477,7 @@ func createCodexTokenSource() func() (string, string, error) {
 			return "", "", fmt.Errorf("loading auth credentials: %w", err)
 		}
 		if cred == nil {
-			return "", "", fmt.Errorf("no credentials for openai. Run: GHOST auth login --provider openai")
+			return "", "", fmt.Errorf("no credentials for openai. Run: KAYA auth login --provider openai")
 		}
 
 		if cred.AuthMethod == "oauth" && cred.NeedsRefresh() && cred.RefreshToken != "" {

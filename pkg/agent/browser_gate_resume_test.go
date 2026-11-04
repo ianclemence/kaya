@@ -4,9 +4,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/ianclemence/ghost/pkg/cevents"
-	"github.com/ianclemence/ghost/pkg/contexts"
-	"github.com/ianclemence/ghost/pkg/permissions"
+	"github.com/ianclemence/kaya/pkg/cevents"
+	"github.com/ianclemence/kaya/pkg/contexts"
+	"github.com/ianclemence/kaya/pkg/permissions"
 )
 
 // approveOnce drives a click through wait → chat approval → resume args,
@@ -44,7 +44,7 @@ func TestGateApprovalResumesSameWork(t *testing.T) {
 	if refuse != nil {
 		t.Fatalf("resume refused: %s", refuse.ForLLM)
 	}
-	if call.Owner != h.ghostID || call.TaskID != "sess-r" || call.SessionID == "" || call.Permission != "once" {
+	if call.Owner != h.kayaID || call.TaskID != "sess-r" || call.SessionID == "" || call.Permission != "once" {
 		t.Fatalf("resume binding wrong: %+v", call)
 	}
 	res := al.runBrowserTool(h.toolCtx(), call, resume.Tool, resume.Args, "test", "chat-1", "sess-r")
@@ -189,7 +189,7 @@ func TestGateOwnerMismatchRefuses(t *testing.T) {
 	h := newGateHarness(t)
 	al := h.loop
 	resume := approveOnce(t, h, "req-f-1", "sess-f")
-	resume.Args[contOwner] = "ghost-impostor"
+	resume.Args[contOwner] = "kaya-impostor"
 	_, refuse := al.resumeBrowserCall(resume, "sess-f", "req-f-1")
 	if refuse == nil || !strings.Contains(refuse.ForLLM, "Owner mismatch") {
 		t.Fatalf("must refuse on owner mismatch, got %+v", refuse)
@@ -238,7 +238,7 @@ func TestGateForgedArgsIgnored(t *testing.T) {
 		t.Fatalf("observe must allow, got %s", d.decision)
 	}
 	wantCtx := h.contexts.SessionContext("sess-j")
-	if d.call.Owner != h.ghostID || d.call.ContextID != wantCtx || d.call.TaskID != "sess-j" || d.call.SessionID != "" || d.call.Generation != "" {
+	if d.call.Owner != h.kayaID || d.call.ContextID != wantCtx || d.call.TaskID != "sess-j" || d.call.SessionID != "" || d.call.Generation != "" {
 		t.Fatalf("forged args leaked into binding: %+v", d.call)
 	}
 	for _, forged := range []string{"mallory", "evil", "task-evil", "sess-evil", "gen-evil"} {

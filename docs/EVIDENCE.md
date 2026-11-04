@@ -2,28 +2,28 @@
 
 Evidence is runtime-produced proof about what an execution actually did.
 
-The model can say something happened. Ghost needs to know whether it actually
-did. Evidence is how Ghost knows.
+The model can say something happened. Kaya needs to know whether it actually
+did. Evidence is how Kaya knows.
 
 ## Why evidence exists
 
 Language models produce fluent, confident, and sometimes false statements.
 An agent that trusts those statements will report success for actions that
-never occurred. Ghost refuses to do that:
+never occurred. Kaya refuses to do that:
 
-> Ghost must not claim successful consequential execution without sufficient
+> Kaya must not claim successful consequential execution without sufficient
 > runtime evidence.
 
 ## Revelation: evidence the owner can see
 
 Evidence protects the owner even when they never read it. But an owner who
-cannot see why Ghost acted cannot fully trust it, so the same facts are
+cannot see why Kaya acted cannot fully trust it, so the same facts are
 surfaced in owner language on the Activity feed:
 
 - **why an approval was asked** — derived from the broker's own risk class,
-  never model prose ("Consequential action, so Ghost asked first.");
+  never model prose ("Consequential action, so Kaya asked first.");
 - **what a decision meant** — an approval, a denial, or an expiry, each with
-  the consequence stated honestly ("You declined this action, so Ghost did
+  the consequence stated honestly ("You declined this action, so Kaya did
   not do it.");
 - **that consequential work ran under approval** — and, on failure, that
   nothing was changed.
@@ -46,7 +46,7 @@ not supply evidence.
 
 ## Capability-specific evidence
 
-Different operations require different proof. Ghost's evidence kinds are:
+Different operations require different proof. Kaya's evidence kinds are:
 
 | Kind | Used for | Required shape |
 |---|---|---|
@@ -97,7 +97,7 @@ actual runtime semantics. It is never silently collapsed into success.
 
 ## Evidence strength and user-facing language
 
-Evidence has a shape, and Ghost records that shape separately from the prose it
+Evidence has a shape, and Kaya records that shape separately from the prose it
 writes. What was read, whether a page was read through or only listed, which
 publications stand behind an answer, and whether a source the owner asked for
 could be read are all facts the runtime keeps — for audit, activity, replay and
@@ -113,7 +113,7 @@ deterministic:
 | `material` | the owner asked for a source that could not be read; sources disagree; an action ran but its outcome is unconfirmed | the limitation stated plainly, in the sentence it matters to |
 | `blocking` | the action failed, or no usable evidence exists | the honest statement of what could not be done, and why |
 
-The policy lives in `pkg/product` (the package that owns Ghost's
+The policy lives in `pkg/product` (the package that owns Kaya's
 LLM-independent user-facing language) and the prompt states the same rule
 verbatim, so the model's prose and the runtime's decision cannot drift apart.
 
@@ -125,7 +125,7 @@ whether a page was a listing — are never part of an answer, and tools record
 them as structured facts rather than as prose the model can relay.
 
 A closing question is not a caveat either, but it has the same cost: it spends
-the owner's attention on Ghost's willingness to continue rather than on what
+the owner's attention on Kaya's willingness to continue rather than on what
 was asked. The runtime drops a purely conversational closing offer at the
 output boundary unless a tool failed, in which case "want me to retry?" is
 information.

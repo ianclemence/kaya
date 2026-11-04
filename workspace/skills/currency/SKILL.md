@@ -2,10 +2,10 @@
 name: currency
 description: Convert amounts between currencies using real-time exchange rates. Invoke for any money-conversion or exchange-rate question, including "convert X to Y", "how much is X in Y", "$100 in euros", "500 baht to dollars", "USD to EUR", "what is X worth in Y", or "exchange rate". No API key required.
 version: 1.1.0
-author: Ghost
+author: Kaya
 license: MIT
 metadata:
-  ghost:
+  kaya:
     tags: [currency, conversion, exchange-rate, finance]
 prerequisites:
   commands: [python]

@@ -7,7 +7,7 @@ import (
 
 func TestDerivation(t *testing.T) {
 	ws := t.TempDir()
-	t.Setenv("GHOST_INTELLIGENCE_MODE", "")
+	t.Setenv("KAYA_INTELLIGENCE_MODE", "")
 	if got := Resolve(ws, false); got != Local {
 		t.Fatalf("no cloud → local, got %s", got)
 	}
@@ -27,7 +27,7 @@ func TestDerivation(t *testing.T) {
 
 func TestEnvOverride(t *testing.T) {
 	ws := t.TempDir()
-	t.Setenv("GHOST_INTELLIGENCE_MODE", "local")
+	t.Setenv("KAYA_INTELLIGENCE_MODE", "local")
 	if got := Resolve(ws, true); got != Local {
 		t.Fatal("env must win over derivation")
 	}

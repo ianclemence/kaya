@@ -1,7 +1,7 @@
-// Package tasks provides a durable, resumable job store for Ghost. Schedules
+// Package tasks provides a durable, resumable job store for Kaya. Schedules
 // (cron) are not the same thing as durable work: a job can be checkpointed,
 // retried, cancelled, and resumed after a provider failure or process restart.
-// It is SQLite-backed and part of Ghost State, not a separate service.
+// It is SQLite-backed and part of Kaya State, not a separate service.
 package tasks
 
 import (
@@ -10,7 +10,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/ianclemence/ghost/pkg/cevents"
+	"github.com/ianclemence/kaya/pkg/cevents"
 )
 
 // Status is a job's lifecycle state.
@@ -66,7 +66,7 @@ type Job struct {
 	StartedAt   *int64                 `json:"started_at,omitempty"`
 	FinishedAt  *int64                 `json:"finished_at,omitempty"`
 	UpdatedAt   int64                  `json:"updated_at"`
-	// Owner scopes the work to one Ghost principal; ContextID binds it to
+	// Owner scopes the work to one Kaya principal; ContextID binds it to
 	// one context (personal/work/...) so work never leaks across contexts.
 	Owner     string `json:"owner,omitempty"`
 	ContextID string `json:"context_id,omitempty"`

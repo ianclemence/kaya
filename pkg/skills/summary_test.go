@@ -103,7 +103,7 @@ func TestParseListField(t *testing.T) {
 // one whose requirements are satisfied does not.
 func TestRequirementGatingNote(t *testing.T) {
 	present := "sh"
-	absent := "ghost-definitely-not-a-real-binary-xyz"
+	absent := "kaya-definitely-not-a-real-binary-xyz"
 
 	okInfo := SkillInfo{Name: "ok", RequiresBins: []string{present}}
 	if note := requirementNote(okInfo); note != "" {
@@ -128,7 +128,7 @@ func TestMetadataParsesPrerequisites(t *testing.T) {
 	if err := os.MkdirAll(dir, 0755); err != nil {
 		t.Fatal(err)
 	}
-	body := "---\nname: needsbin\ndescription: x\nprerequisites:\n  commands: [ghost-nope-binary]\nrequires_env: [GHOST_TEST_ENV_VAR]\n---\n\n# x\n"
+	body := "---\nname: needsbin\ndescription: x\nprerequisites:\n  commands: [kaya-nope-binary]\nrequires_env: [KAYA_TEST_ENV_VAR]\n---\n\n# x\n"
 	if err := os.WriteFile(filepath.Join(dir, "SKILL.md"), []byte(body), 0644); err != nil {
 		t.Fatal(err)
 	}
@@ -137,15 +137,15 @@ func TestMetadataParsesPrerequisites(t *testing.T) {
 	if len(infos) != 1 {
 		t.Fatalf("expected 1 skill, got %d", len(infos))
 	}
-	if len(infos[0].RequiresBins) != 1 || infos[0].RequiresBins[0] != "ghost-nope-binary" {
+	if len(infos[0].RequiresBins) != 1 || infos[0].RequiresBins[0] != "kaya-nope-binary" {
 		t.Fatalf("requires bins not parsed: %+v", infos[0].RequiresBins)
 	}
-	if len(infos[0].RequiresEnv) != 1 || infos[0].RequiresEnv[0] != "GHOST_TEST_ENV_VAR" {
+	if len(infos[0].RequiresEnv) != 1 || infos[0].RequiresEnv[0] != "KAYA_TEST_ENV_VAR" {
 		t.Fatalf("requires env not parsed: %+v", infos[0].RequiresEnv)
 	}
 	// And the note renders through the summary.
 	summary := sl.BuildSkillsSummaryBudget(0)
-	if !strings.Contains(summary, "<fallback>") || !strings.Contains(summary, "ghost-nope-binary") {
+	if !strings.Contains(summary, "<fallback>") || !strings.Contains(summary, "kaya-nope-binary") {
 		t.Fatalf("summary must carry the fallback note: %q", summary)
 	}
 }

@@ -34,7 +34,7 @@ func NewAnthropicProviderWithBaseURL(token, apiBase string) *AnthropicProvider {
 // NewAnthropicAPIKeyProvider is the native Messages API provider for an API
 // key: prompt caching, native tool_use, refusal and cache-usage reporting —
 // none of which the OpenAI-compatibility endpoint carries. Retries are kept
-// to one so a dead provider hands over to Ghost's fallback chain quickly
+// to one so a dead provider hands over to Kaya's fallback chain quickly
 // instead of spending the turn in SDK backoff.
 func NewAnthropicAPIKeyProvider(apiKey, apiBase, proxy string) (*AnthropicProvider, error) {
 	opts := []option.RequestOption{option.WithAPIKey(apiKey), option.WithMaxRetries(1)}
@@ -54,7 +54,7 @@ func NewAnthropicAPIKeyProvider(apiKey, apiBase, proxy string) (*AnthropicProvid
 }
 
 // normalizeAnthropicBase turns a configured API base into the SDK's base
-// URL. Ghost's config has always stored "https://api.anthropic.com/v1" (the
+// URL. Kaya's config has always stored "https://api.anthropic.com/v1" (the
 // shape the OpenAI-compatible path needed); the SDK appends "v1/messages"
 // itself, so a trailing /v1 would double it.
 func normalizeAnthropicBase(apiBase string) string {
@@ -176,7 +176,7 @@ func (p *AnthropicProvider) GetDefaultModel() string {
 	return DefaultAnthropicModel
 }
 
-// buildAnthropicMessages renders Ghost's provider-neutral transcript in the
+// buildAnthropicMessages renders Kaya's provider-neutral transcript in the
 // Messages API shape. Three rules the API enforces (each a 400 otherwise):
 // an assistant turn that called tools must carry those tool_use blocks, every
 // tool_result must answer a tool_use in the turn before it, and text blocks
@@ -184,7 +184,7 @@ func (p *AnthropicProvider) GetDefaultModel() string {
 // splitting them across turns also teaches the model to stop calling tools in
 // parallel.
 //
-// Thinking blocks are deliberately not replayed. Ghost rebuilds the system
+// Thinking blocks are deliberately not replayed. Kaya rebuilds the system
 // prompt each turn (memory, time, capability state), and models with
 // preserved thinking reject a replayed block whose prefix has changed; the
 // API documents stripping as the valid alternative.
@@ -260,7 +260,7 @@ func systemBlocks(msg Message) []anthropic.TextBlockParam {
 	return out
 }
 
-// toolCallNameAndInput reads a tool call in either of Ghost's two shapes
+// toolCallNameAndInput reads a tool call in either of Kaya's two shapes
 // (flat Name/Arguments, or OpenAI-style Function with a JSON string).
 // The input is always a JSON object: the API rejects anything else.
 func toolCallNameAndInput(tc ToolCall) (string, map[string]interface{}) {
@@ -502,7 +502,7 @@ func anthropicTraitsFor(model string) anthropicTraits {
 	return t
 }
 
-// applyThinkingOff expresses Ghost's default "no deliberate thinking" in the
+// applyThinkingOff expresses Kaya's default "no deliberate thinking" in the
 // form the model accepts.
 func applyThinkingOff(params *anthropic.MessageNewParams, t anthropicTraits) {
 	switch t.offMode {

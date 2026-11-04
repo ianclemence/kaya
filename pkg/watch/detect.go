@@ -5,7 +5,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ianclemence/ghost/pkg/commitments"
+	"github.com/ianclemence/kaya/pkg/commitments"
 )
 
 // Detection turns one owner message into zero or more watch candidates.
@@ -23,7 +23,7 @@ import (
 //     comes from the runtime parser (never model arithmetic), and the
 //     provenance quote is a verbatim span of what the owner wrote.
 //
-// The guards are deliberately conservative — Ghost would rather miss a
+// The guards are deliberately conservative — Kaya would rather miss a
 // watch than watch the wrong person's flight, or fork a reminder into a
 // second durable record the owner never asked for.
 
@@ -44,7 +44,7 @@ type Candidate struct {
 	Rule *PageRule
 }
 
-// travelRE is the context a bare flight number needs before Ghost may read
+// travelRE is the context a bare flight number needs before Kaya may read
 // it as travel. Without it, "BA123" in any other sentence stays a string.
 var travelRE = regexp.MustCompile(`(?i)\b(?:flight|flights|fly|flying|flew|boarding|board|depart(?:ing|ure)?|arriv(?:ing|al)|plane|airplane|airport|airline|takeoff|landing|airfare)\b`)
 
@@ -53,7 +53,7 @@ var travelRE = regexp.MustCompile(`(?i)\b(?:flight|flights|fly|flying|flew|board
 // read as airline codes.
 var flightNumberRE = regexp.MustCompile(`\b([A-Z]{2})\s?(\d{1,4})\b`)
 
-// explicitRE matches the owner asking Ghost to watch something by name.
+// explicitRE matches the owner asking Kaya to watch something by name.
 var explicitRE = regexp.MustCompile(`(?i)\b(?:track|watch|follow|monitor|keep\s+(?:me\s+)?(?:an\s+)?eye\s+on|stay\s+on\s+top\s+of|check\s+up\s+on|let\s+me\s+know\s+(?:about|if|when))\b`)
 
 // reminderGuardRE rejects turns the scheduler already owns. A reminder must
@@ -69,7 +69,7 @@ var routineGuardRE = regexp.MustCompile(`(?i)\b(?:every|each|daily|weekly|biweek
 
 // thirdPersonRE matches language about somebody else. A watch is the
 // owner's observation of their own affair: a friend's flight is not
-// Ghost's to interrupt them about.
+// Kaya's to interrupt them about.
 var thirdPersonRE = regexp.MustCompile(`(?i)\b(?:his|her|their)\b|\bmy\s+(?:friend|brother|sister|mom|mum|mother|dad|father|wife|husband|partner|spouse|colleague|boss|client|son|daughter|kid|child|children|parents?|roommate|neighbor|neighbour|cousin|uncle|aunt|grandma|grandfather|team)'s\b`)
 
 // appointmentRE matches the shapes of an appointment the owner has.
@@ -268,7 +268,7 @@ func (c Candidate) ToWatch(session, msgID string, now time.Time) Watch {
 	}
 	if c.Kind == KindPage {
 		// A page has no event to end on: it is watched for a month, then
-		// Ghost says it stopped.
+		// Kaya says it stopped.
 		end := now.Add(PageHorizon)
 		w.ExpiresAt = &end
 	}

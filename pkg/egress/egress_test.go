@@ -29,8 +29,8 @@ func TestAllowFileOpensOneLANHostInGuardMode(t *testing.T) {
 	dir := t.TempDir()
 	f := filepath.Join(dir, "allow.txt")
 	os.WriteFile(f, []byte("# my devices\n192.168.1.50\n*.home.example # nas\n"), 0o600)
-	t.Setenv("GHOST_EXEC_EGRESS", "guard")
-	t.Setenv("GHOST_EXEC_EGRESS_ALLOW", f)
+	t.Setenv("KAYA_EXEC_EGRESS", "guard")
+	t.Setenv("KAYA_EXEC_EGRESS_ALLOW", f)
 	p := FromEnv()
 	if !p.Enforced() || p.Mode != Guard {
 		t.Fatalf("policy %+v", p)
@@ -60,7 +60,7 @@ func TestAllowlistModeRefusesUnlistedNames(t *testing.T) {
 }
 
 func TestDefaultIsOpen(t *testing.T) {
-	t.Setenv("GHOST_EXEC_EGRESS", "")
+	t.Setenv("KAYA_EXEC_EGRESS", "")
 	if FromEnv().Enforced() {
 		t.Fatal("egress must be off unless the owner turns it on")
 	}

@@ -10,7 +10,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ianclemence/ghost/pkg/browser/native"
+	"github.com/ianclemence/kaya/pkg/browser/native"
 )
 
 // FPS is the frame rate a motion renders at.
@@ -35,7 +35,7 @@ func Render(ctx context.Context, s Spec, out string, progress Progress) error {
 		return errors.New("ffmpeg is not installed on this Pod, so it can't make videos")
 	}
 	w, h := s.Frame()
-	dir, err := os.MkdirTemp("", "ghost-motion-")
+	dir, err := os.MkdirTemp("", "kaya-motion-")
 	if err != nil {
 		return err
 	}
@@ -62,7 +62,7 @@ func Render(ctx context.Context, s Spec, out string, progress Progress) error {
 	if err := sess.Open(ctx, "file://"+page, 30*time.Second); err != nil {
 		return err
 	}
-	if err := sess.Eval(ctx, "ghostMotion.ready.then(function(){return true})"); err != nil {
+	if err := sess.Eval(ctx, "kayaMotion.ready.then(function(){return true})"); err != nil {
 		return err
 	}
 
@@ -93,7 +93,7 @@ func Render(ctx context.Context, s Spec, out string, progress Progress) error {
 				return err
 			}
 			t := float64(i) / FPS
-			if err := sess.Eval(ctx, fmt.Sprintf("ghostMotion.seek(%.5f)", t)); err != nil {
+			if err := sess.Eval(ctx, fmt.Sprintf("kayaMotion.seek(%.5f)", t)); err != nil {
 				return err
 			}
 			img, err := sess.CaptureJPEG(ctx, 92)

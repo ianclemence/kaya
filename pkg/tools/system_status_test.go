@@ -101,7 +101,7 @@ func TestHumanBytes(t *testing.T) {
 }
 
 // The offer path is intent-gated: a registered tool that never reaches the
-// model's offered list is a question Ghost will refuse to answer. Status
+// model's offered list is a question Kaya will refuse to answer. Status
 // phrasings vary too much to keyword-match, so system_status must be in the
 // always-offered core set — verified through the real turn filter.
 func TestSystemStatusIsOfferedEveryTurn(t *testing.T) {

@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ianclemence/ghost/pkg/personalcontext"
+	"github.com/ianclemence/kaya/pkg/personalcontext"
 )
 
 func newContextGetTestStore(t *testing.T) *personalcontext.Store {

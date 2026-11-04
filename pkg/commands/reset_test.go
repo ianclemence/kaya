@@ -7,11 +7,11 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/ianclemence/ghost/pkg/config"
+	"github.com/ianclemence/kaya/pkg/config"
 )
 
 // resetFixture builds an isolated workspace + config dir and points
-// GHOST_CONFIG_DIR at it so the handler can never touch the real repo.
+// KAYA_CONFIG_DIR at it so the handler can never touch the real repo.
 func resetFixture(t *testing.T) (ws, cfgDir string) {
 	t.Helper()
 	ws = t.TempDir()
@@ -19,7 +19,7 @@ func resetFixture(t *testing.T) (ws, cfgDir string) {
 	if err := os.MkdirAll(cfgDir, 0700); err != nil {
 		t.Fatal(err)
 	}
-	t.Setenv("GHOST_CONFIG_DIR", cfgDir)
+	t.Setenv("KAYA_CONFIG_DIR", cfgDir)
 
 	cfg := config.DefaultConfig()
 	cfg.Agents.Defaults.Provider = "deepseek"

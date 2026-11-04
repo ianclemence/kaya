@@ -8,7 +8,7 @@ import (
 
 // Browser child processes (the agent-browser CLI and the Chrome it launches)
 // need somewhere writable to put their sockets, daemon files, and profile.
-// Ghost's service runs with the home directory sealed off (ProtectHome) and a
+// Kaya's service runs with the home directory sealed off (ProtectHome) and a
 // read-only filesystem, so the CLI's default location failed with "Failed to
 // create socket directory: Read-only file system" and every browser action
 // died in milliseconds. The resolution lives here, in one place, so the tool
@@ -20,13 +20,13 @@ import (
 // StateRoot is where the browser may keep its sockets and state when the
 // user's home directory can't be written.
 func StateRoot() string {
-	if d := strings.TrimSpace(os.Getenv("GHOST_DIR")); d != "" {
+	if d := strings.TrimSpace(os.Getenv("KAYA_DIR")); d != "" {
 		return filepath.Join(d, "browser-home")
 	}
-	if st, err := os.Stat("/var/ghost"); err == nil && st.IsDir() {
-		return "/var/ghost/browser-home"
+	if st, err := os.Stat("/var/kaya"); err == nil && st.IsDir() {
+		return "/var/kaya/browser-home"
 	}
-	return filepath.Join(os.TempDir(), "ghost-browser-home")
+	return filepath.Join(os.TempDir(), "kaya-browser-home")
 }
 
 // WritableDir reports whether files can be created under dir.

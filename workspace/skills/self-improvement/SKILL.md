@@ -2,14 +2,14 @@
 name: self-improvement
 description: "Turn verified mistakes and non-obvious fixes into durable learning. Use after a failure, a correction from the user, a recurring procedure, or when asked to learn from something and improve. Keeps a learnings ledger and promotes proven workflows into skills."
 version: 1.0.0
-author: Ghost
+author: Kaya
 license: MIT
 platforms: [linux, macos, windows]
 ---
 
 # Self-Improvement
 
-Ghost gets better by remembering what actually worked. This skill is the loop:
+Kaya gets better by remembering what actually worked. This skill is the loop:
 notice → verify → generalize → promote → never repeat the same failure.
 
 Use it after a mistake, a user correction, a non-obvious fix, or a repeated

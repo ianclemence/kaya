@@ -514,7 +514,7 @@ class FeedbackBuffer:
 |--------|--------|---------------|
 | Infinite zoom tunnel | `decay=0.8, blend="screen", transform="zoom", transform_amt=0.015` | Expanding ring patterns |
 | Rainbow trails | `decay=0.7, blend="screen", transform="zoom", transform_amt=0.01, hue_shift=0.02` | Psychedelic color trails |
-| Ghostly echo | `decay=0.9, blend="add", opacity=0.15, transform="shift_up", transform_amt=0.01` | Faint upward smearing |
+| Kayaly echo | `decay=0.9, blend="add", opacity=0.15, transform="shift_up", transform_amt=0.01` | Faint upward smearing |
 | Kaleidoscopic recursion | `decay=0.75, blend="screen", transform="rotate_cw", transform_amt=0.005, hue_shift=0.01` | Rotating mandala feedback |
 | Color evolution | `decay=0.8, blend="difference", opacity=0.4, hue_shift=0.03` | Frame-to-frame color XOR |
 | Rising heat haze | `decay=0.5, blend="add", opacity=0.2, transform="shift_up", transform_amt=0.02` | Hot air shimmer |

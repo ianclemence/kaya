@@ -3,7 +3,7 @@ package agent
 import (
 	"testing"
 
-	"github.com/ianclemence/ghost/pkg/providers"
+	"github.com/ianclemence/kaya/pkg/providers"
 )
 
 func readSkillCall(path string) providers.Message {
@@ -53,7 +53,7 @@ func TestCommittedSkillNoUserMessage(t *testing.T) {
 	}
 }
 
-// The live failure: while writing a Go test Ghost read the MCP SDK's examples,
+// The live failure: while writing a Go test Kaya read the MCP SDK's examples,
 // which say Name: "greet". The turn was committed to a skill called greet, and
 // every later exec was rated high-impact under it and held for approval.
 func TestSourceCodeThatSaysNameDoesNotCommitASkill(t *testing.T) {

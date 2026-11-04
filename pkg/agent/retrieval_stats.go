@@ -3,7 +3,7 @@ package agent
 import (
 	"sync"
 
-	"github.com/ianclemence/ghost/pkg/doctor"
+	"github.com/ianclemence/kaya/pkg/doctor"
 )
 
 // retrievalStat aggregates observed retrieval latencies for one retrieval
@@ -81,7 +81,7 @@ func (r *retrievalRecorder) snapshot() doctor.RetrievalStats {
 }
 
 // latencyScale turns observed retrieval latency into a depth multiplier. Slow
-// retrieval means the device is busy or the index is large, so Ghost fetches
+// retrieval means the device is busy or the index is large, so Kaya fetches
 // less context rather than stalling: 1.0 under 250ms, 0.5 under 1s, 0.25
 // beyond. No observations = 1.0 (never penalize an unmeasured path).
 func (r *retrievalRecorder) latencyScale() float64 {

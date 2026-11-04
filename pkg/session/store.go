@@ -1,6 +1,6 @@
 package session
 
-import "github.com/ianclemence/ghost/pkg/providers"
+import "github.com/ianclemence/kaya/pkg/providers"
 
 type Store interface {
 	EnsureSession(key string)

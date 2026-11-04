@@ -13,9 +13,9 @@ import (
 // (never an external website). Exercises navigation, observation, typing,
 // clicking, submission, and post-submit observation.
 
-const browserPageHTML = `<!doctype html><html><head><title>Ghost Browser Test</title></head>
+const browserPageHTML = `<!doctype html><html><head><title>Kaya Browser Test</title></head>
 <body>
-<h1>Ghost Browser Test</h1>
+<h1>Kaya Browser Test</h1>
 <p>Please enter your name below and press the Continue button.</p>
 <p>Name: <input id="name" type="text"></p>
 <button id="continue">Continue</button>
@@ -42,16 +42,16 @@ var (
 // ensureBrowserPage starts the local deterministic page server once per
 // process. Idempotent; safe to call from fixtures and tests.
 //
-// It also allowlists the fixture endpoint (GHOST_FIXTURE_ALLOW) so the
+// It also allowlists the fixture endpoint (KAYA_FIXTURE_ALLOW) so the
 // REAL browser guard admits exactly this host:port. Production never sets
 // the variable, so the SSRF guard is unchanged outside golden runs.
 func ensureBrowserPage() error {
 	browserPageOnce.Do(func() {
 		allow := fmt.Sprintf("127.0.0.1:%d", browserPagePort)
-		if cur := strings.TrimSpace(os.Getenv("GHOST_FIXTURE_ALLOW")); cur == "" {
-			_ = os.Setenv("GHOST_FIXTURE_ALLOW", allow)
+		if cur := strings.TrimSpace(os.Getenv("KAYA_FIXTURE_ALLOW")); cur == "" {
+			_ = os.Setenv("KAYA_FIXTURE_ALLOW", allow)
 		} else if !strings.Contains(cur, allow) {
-			_ = os.Setenv("GHOST_FIXTURE_ALLOW", cur+","+allow)
+			_ = os.Setenv("KAYA_FIXTURE_ALLOW", cur+","+allow)
 		}
 		// Reuse an already-listening server (e.g. a previous run or an
 		// externally started one on the same port).

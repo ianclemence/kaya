@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Google Workspace API CLI for Ghost.
+"""Google Workspace API CLI for Kaya.
 
 A thin CLI wrapper around Google's Python client libraries.
 Authenticates using the token stored by setup.py.
@@ -28,8 +28,8 @@ from datetime import datetime, timedelta, timezone
 from email.mime.text import MIMEText
 from pathlib import Path
 
-GHOST_HOME = Path(os.getenv("GHOST_HOME", Path.home() / ".ghost"))
-TOKEN_PATH = GHOST_HOME / "google_token.json"
+KAYA_HOME = Path(os.getenv("KAYA_HOME", Path.home() / ".kaya"))
+TOKEN_PATH = KAYA_HOME / "google_token.json"
 
 SCOPES = [
     "https://www.googleapis.com/auth/gmail.readonly",
@@ -366,7 +366,7 @@ def docs_get(args):
 # =========================================================================
 
 def main():
-    parser = argparse.ArgumentParser(description="Google Workspace API for Ghost")
+    parser = argparse.ArgumentParser(description="Google Workspace API for Kaya")
     sub = parser.add_subparsers(dest="service", required=True)
 
     # --- Gmail ---

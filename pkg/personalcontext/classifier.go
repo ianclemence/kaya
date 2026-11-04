@@ -134,7 +134,7 @@ type ClassificationOutput struct {
 type MemoryItem struct {
 	// About is who or what the memory concerns: "user", or a named person,
 	// pet, place or organisation. Topic is a short key for the specific thing
-	// ("home-city", "jas", "ghost"): the same topic updates in place, a
+	// ("home-city", "jas", "kaya"): the same topic updates in place, a
 	// different topic coexists. Lasting is "lasting", "dated" or "temporary";
 	// ValidUntil is the date a dated or temporary memory stops being true.
 	About      string  `json:"about,omitempty"`
@@ -192,14 +192,14 @@ const ClassificationSchema = `{
     },
     "summary": {
       "type": "string",
-      "description": "A natural language summary of what Ghost should remember"
+      "description": "A natural language summary of what Kaya should remember"
     }
   },
   "required": ["should_remember", "kind", "domain", "confidence"]
 }`
 
 // ClassificationPrompt is the system prompt for the classifier.
-const ClassificationPrompt = `You are a memory classifier for Ghost, a personal AI that learns its owner over time.
+const ClassificationPrompt = `You are a memory classifier for Kaya, a personal AI that learns its owner over time.
 
 Your job is to analyze a user message and determine:
 1. Whether it contains something worth remembering about the user

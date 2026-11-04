@@ -22,11 +22,11 @@ func enableSkill(t *testing.T, ws, name string) {
 // not six rows.
 func TestConnectedServicesAllMissing(t *testing.T) {
 	for _, kv := range [][2]string{
-		{"GHOST_GOOGLE_CLIENT_ID", ""}, {"GHOST_GOOGLE_CLIENT_SECRET", ""},
-		{"GHOST_CALENDAR_REDIRECT_URL", ""}, {"GHOST_GMAIL_REDIRECT_URL", ""},
-		{"GHOST_OUTLOOK_CLIENT_ID", ""}, {"GHOST_OUTLOOK_CLIENT_SECRET", ""},
-		{"GHOST_OUTLOOK_REDIRECT_URL", ""}, {"GHOST_SPOTIFY_CLIENT_ID", ""},
-		{"GHOST_SPOTIFY_CLIENT_SECRET", ""}, {"GHOST_SPOTIFY_REDIRECT_URL", ""},
+		{"KAYA_GOOGLE_CLIENT_ID", ""}, {"KAYA_GOOGLE_CLIENT_SECRET", ""},
+		{"KAYA_CALENDAR_REDIRECT_URL", ""}, {"KAYA_GMAIL_REDIRECT_URL", ""},
+		{"KAYA_OUTLOOK_CLIENT_ID", ""}, {"KAYA_OUTLOOK_CLIENT_SECRET", ""},
+		{"KAYA_OUTLOOK_REDIRECT_URL", ""}, {"KAYA_SPOTIFY_CLIENT_ID", ""},
+		{"KAYA_SPOTIFY_CLIENT_SECRET", ""}, {"KAYA_SPOTIFY_REDIRECT_URL", ""},
 	} {
 		t.Setenv(kv[0], kv[1])
 	}
@@ -52,9 +52,9 @@ func TestConnectedServicesAllMissing(t *testing.T) {
 // A misconfigured service (malformed redirect) escalates the aggregate to
 // error instead of hiding behind a warning.
 func TestConnectedServicesErrorPropagates(t *testing.T) {
-	t.Setenv("GHOST_GOOGLE_CLIENT_ID", "x.apps.googleusercontent.com")
-	t.Setenv("GHOST_GOOGLE_CLIENT_SECRET", "s")
-	t.Setenv("GHOST_CALENDAR_REDIRECT_URL", "://bad-url")
+	t.Setenv("KAYA_GOOGLE_CLIENT_ID", "x.apps.googleusercontent.com")
+	t.Setenv("KAYA_GOOGLE_CLIENT_SECRET", "s")
+	t.Setenv("KAYA_CALENDAR_REDIRECT_URL", "://bad-url")
 	ws := t.TempDir()
 	enableSkill(t, ws, "calendar")
 	d := &Doctor{workspace: ws}

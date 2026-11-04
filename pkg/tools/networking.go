@@ -25,7 +25,7 @@ func (t *NetworkingTool) Name() string {
 }
 
 func (t *NetworkingTool) Description() string {
-	return "Check networking status, Tailscale IP, Bonjour services, or discover other Ghost agents on the local network."
+	return "Check networking status, Tailscale IP, Bonjour services, or discover other Kaya agents on the local network."
 }
 
 func (t *NetworkingTool) Parameters() map[string]interface{} {

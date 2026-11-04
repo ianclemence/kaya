@@ -1,4 +1,4 @@
-// Package routinefeed is Ghost's single product-facing model for the owner's
+// Package routinefeed is Kaya's single product-facing model for the owner's
 // Routines. It is deliberately NOT a new storage layer.
 //
 // The domain already has exactly one scheduler authority (pkg/scheduled):
@@ -20,11 +20,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ianclemence/ghost/pkg/routines"
-	"github.com/ianclemence/ghost/pkg/scheduled"
+	"github.com/ianclemence/kaya/pkg/routines"
+	"github.com/ianclemence/kaya/pkg/scheduled"
 )
 
-// Kind is the user-facing shape of a Item. Owners never choose it; Ghost
+// Kind is the user-facing shape of a Item. Owners never choose it; Kaya
 // infers it from what the Item actually is.
 type Kind string
 
@@ -69,7 +69,7 @@ type Item struct {
 	Source    string     `json:"source"`               // "routine" | "user" | "system" | ... (provenance, not navigation)
 	CreatedAt time.Time  `json:"created_at"`
 	UpdatedAt time.Time  `json:"updated_at"`
-	// Inference explains why Ghost chose this Kind. It is diagnostic
+	// Inference explains why Kaya chose this Kind. It is diagnostic
 	// metadata, not something the owner must act on.
 	KindReason string `json:"kind_reason,omitempty"`
 }

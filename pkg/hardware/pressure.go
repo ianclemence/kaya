@@ -6,7 +6,7 @@ import (
 	"strings"
 )
 
-// Pressure classifies resource headroom. Ghost should degrade gracefully
+// Pressure classifies resource headroom. Kaya should degrade gracefully
 // rather than collapse: under pressure it retrieves less, caches less, and
 // avoids loading extra models — while never touching canonical data.
 type Pressure string

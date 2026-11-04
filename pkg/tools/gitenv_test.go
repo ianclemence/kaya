@@ -31,7 +31,7 @@ func TestGitIdentityIsCreatedOnceAndNeverReplaced(t *testing.T) {
 	ensureGitIdentity(ws)
 	path := filepath.Join(ws, "tmp", ".gitconfig")
 	b, err := os.ReadFile(path)
-	if err != nil || !strings.Contains(string(b), "name = Ghost") {
+	if err != nil || !strings.Contains(string(b), "name = Kaya") {
 		t.Fatalf("no starting identity written: %v %q", err, b)
 	}
 	if err := os.WriteFile(path, []byte("[user]\n\tname = Someone Else\n"), 0o644); err != nil {
@@ -43,7 +43,7 @@ func TestGitIdentityIsCreatedOnceAndNeverReplaced(t *testing.T) {
 	}
 }
 
-// What the live Ghost would have met on its first commit: a repo that belongs to
+// What the live Kaya would have met on its first commit: a repo that belongs to
 // someone else (the service is root, the folders are the owner's), no identity,
 // and no credentials. Needs git, the sandbox and root, so it only runs there.
 func TestGitWorksInTheSandboxForARepoSomeoneElseOwns(t *testing.T) {
@@ -75,8 +75,8 @@ func TestGitWorksInTheSandboxForARepoSomeoneElseOwns(t *testing.T) {
 		t.Fatalf("git refused a repo the owner owns: %s", res.ForLLM)
 	}
 	res := run("echo more >> notes.txt && git add -A && git commit -q -m second && git log -1 --format='%an <%ae>'")
-	if res.IsError || !strings.Contains(res.ForLLM, "Ghost <ghost@ghost.local>") {
-		t.Fatalf("a commit needs an identity Ghost supplies: %+v", res)
+	if res.IsError || !strings.Contains(res.ForLLM, "Kaya <kaya@kaya.local>") {
+		t.Fatalf("a commit needs an identity Kaya supplies: %+v", res)
 	}
 	res = run("git remote add origin https://github.com/example/none.git && git push origin HEAD 2>&1; true")
 	if !strings.Contains(res.ForLLM, "terminal prompts disabled") && !strings.Contains(res.ForLLM, "Could not resolve") && !strings.Contains(res.ForLLM, "could not read") {

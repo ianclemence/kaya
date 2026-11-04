@@ -16,7 +16,7 @@ import (
 //	{"device":"loft-esp32","kind":"temperature","value":31.5,"unit":"C","at":"..."}
 //	{"device":"kitchen-esp32","kind":"leak","value":1,"at":"..."}
 //
-// Ghost is a runtime, not a chatbot: these files are the physical boundary
+// Kaya is a runtime, not a chatbot: these files are the physical boundary
 // of the system. Reading is bounded (20 newest files, 64KiB each) and stale
 // events (>24h) are ignored so a dead sensor never pages the owner forever.
 // Consumers delete files they acted on; the scanner never deletes.

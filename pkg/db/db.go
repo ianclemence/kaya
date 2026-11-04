@@ -44,7 +44,7 @@ type MemoryChunk struct {
 
 // NewDB creates or opens the SQLite database
 func NewDB(workspace string) (*DB, error) {
-	dbPath := filepath.Join(workspace, "ghost.db")
+	dbPath := filepath.Join(workspace, "kaya.db")
 
 	// Ensure workspace exists
 	if err := os.MkdirAll(workspace, 0755); err != nil {

@@ -8,7 +8,7 @@ const (
 )
 
 // UntrustedOutput is implemented by tools whose results carry text written
-// by someone other than the owner or Ghost, such as third-party connectors
+// by someone other than the owner or Kaya, such as third-party connectors
 // and external tool servers.
 type UntrustedOutput interface {
 	UntrustedOutput() bool

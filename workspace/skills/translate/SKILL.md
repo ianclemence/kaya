@@ -2,10 +2,10 @@
 name: translate
 description: Translate short phrases between any two languages. Invoke when user asks "translate X to French", "how do you say X in Spanish", "translate hello to Japanese", "what is X in German", or any short-phrase translation between any languages worldwide. Uses free MyMemory API, no API key required.
 version: 1.0.0
-author: Ghost
+author: Kaya
 license: MIT
 metadata:
-  ghost:
+  kaya:
     tags: [translate, translation, language, multilingual]
 prerequisites:
   commands: [curl]

@@ -36,7 +36,7 @@ type Tombstone struct {
 	ValueHash string    `json:"value_hash"`
 	Reason    string    `json:"reason,omitempty"`
 	At        time.Time `json:"at"`
-	// Names and Whole let Ghost keep a forgotten fact out of its notes without
+	// Names and Whole let Kaya keep a forgotten fact out of its notes without
 	// keeping the fact: salted hashes of the words that identify it, never the
 	// words. A line is matched by hashing its own words the same way.
 	Names []string `json:"names,omitempty"`
@@ -197,7 +197,7 @@ func ForgetPipelineWith(store *Store, workspace, id, reason string) (ForgetRepor
 	report.At = time.Now().Unix()
 	report.Forgotten = true
 	report.Tombstoned = true
-	// Every copy Ghost made of it goes too: its own notes, and (through the
+	// Every copy Kaya made of it goes too: its own notes, and (through the
 	// runtime hook) the search index. The conversation itself is kept: it is
 	// the record of what was said, not a belief.
 	resetUserDoc(workspace, chain)

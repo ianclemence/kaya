@@ -1,6 +1,6 @@
 ---
 name: proactive-agent-lite
-description: "Help Ghost act ahead of the owner: memory habits, reverse prompting and self-checks. Invoke when the user asks Ghost to be more proactive, to anticipate needs, or to review how it follows up."
+description: "Help Kaya act ahead of the owner: memory habits, reverse prompting and self-checks. Invoke when the user asks Kaya to be more proactive, to anticipate needs, or to review how it follows up."
 ---
 
 # Proactive Agent Lite

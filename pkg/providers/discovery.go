@@ -15,8 +15,8 @@ import (
 	"github.com/anthropics/anthropic-sdk-go"
 	"github.com/anthropics/anthropic-sdk-go/option"
 
-	"github.com/ianclemence/ghost/pkg/auth"
-	"github.com/ianclemence/ghost/pkg/config"
+	"github.com/ianclemence/kaya/pkg/auth"
+	"github.com/ianclemence/kaya/pkg/config"
 )
 
 // Model discovery: every configured provider is asked which models it
@@ -26,7 +26,7 @@ import (
 //
 // Discovery is a read of provider metadata: no prompt, no user data, no
 // cost. Results are cached per provider (live lists for discoveryTTL,
-// failures for discoveryFailTTL so an offline Ghost doesn't re-dial on every
+// failures for discoveryFailTTL so an offline Kaya doesn't re-dial on every
 // picker open) and every list says where it came from.
 
 const (

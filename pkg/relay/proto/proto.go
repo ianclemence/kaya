@@ -1,7 +1,7 @@
-// Package proto defines the binary frame protocol for the Ghost relay tunnel.
+// Package proto defines the binary frame protocol for the Kaya relay tunnel.
 //
 // The relay tunnel multiplexes HTTP request/response streams and WebSocket
-// push streams over a single persistent WebSocket connection between a Ghost
+// push streams over a single persistent WebSocket connection between a Kaya
 // device and the relay server.
 //
 // Frame layout (13-byte header + payload):

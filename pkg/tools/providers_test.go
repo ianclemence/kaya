@@ -9,13 +9,13 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ianclemence/ghost/pkg/providers/aqi"
-	"github.com/ianclemence/ghost/pkg/providers/crypto"
-	"github.com/ianclemence/ghost/pkg/providers/currency"
-	"github.com/ianclemence/ghost/pkg/providers/flight"
-	"github.com/ianclemence/ghost/pkg/providers/hass"
-	"github.com/ianclemence/ghost/pkg/providers/nearby"
-	"github.com/ianclemence/ghost/pkg/providers/weather"
+	"github.com/ianclemence/kaya/pkg/providers/aqi"
+	"github.com/ianclemence/kaya/pkg/providers/crypto"
+	"github.com/ianclemence/kaya/pkg/providers/currency"
+	"github.com/ianclemence/kaya/pkg/providers/flight"
+	"github.com/ianclemence/kaya/pkg/providers/hass"
+	"github.com/ianclemence/kaya/pkg/providers/nearby"
+	"github.com/ianclemence/kaya/pkg/providers/weather"
 )
 
 func fakeServer(body string, status int) *httptest.Server {
@@ -220,7 +220,7 @@ func TestHassToolList(t *testing.T) {
 func TestHassToolUnconfigured(t *testing.T) {
 	t.Setenv("HASS_URL", "")
 	t.Setenv("HASS_TOKEN", "")
-	t.Setenv("GHOST_CONFIG_DIR", t.TempDir())
+	t.Setenv("KAYA_CONFIG_DIR", t.TempDir())
 	tool := NewHassTool()
 	res := tool.Execute(context.Background(), map[string]interface{}{"action": "list"})
 	if !res.IsError {

@@ -21,7 +21,7 @@ type Answer struct {
 // Backend evaluates one typed question against state. Implementations:
 // RuleBackend (on-Pod, default), LLM-backed adapters (optional, injected).
 // There is deliberately NO Jev client in this package: Jev is used offline
-// to tune wording/thresholds, never at Ghost runtime.
+// to tune wording/thresholds, never at Kaya runtime.
 type Backend interface {
 	Evaluate(ctx context.Context, state map[string]interface{}, q Question) (Answer, error)
 }

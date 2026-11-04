@@ -6,14 +6,14 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ianclemence/ghost/pkg/credentials"
-	"github.com/ianclemence/ghost/pkg/product"
-	githubprov "github.com/ianclemence/ghost/pkg/providers/github"
+	"github.com/ianclemence/kaya/pkg/credentials"
+	"github.com/ianclemence/kaya/pkg/product"
+	githubprov "github.com/ianclemence/kaya/pkg/providers/github"
 )
 
 // CodeSearchTool searches code across repositories the connected GitHub
 // account can see. Read-only: no evidence required. Trust-user model —
-// Ghost documents read-only PAT scopes; the token's own scopes govern.
+// Kaya documents read-only PAT scopes; the token's own scopes govern.
 type CodeSearchTool struct {
 	cfg *githubprov.Config
 }

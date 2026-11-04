@@ -64,7 +64,7 @@ func AddPhoto(ctx context.Context, workspace, project, src, name string, o Photo
 	if o.Tol <= 0 {
 		o.Tol = 34
 	}
-	tmp, err := os.MkdirTemp("", "ghost-photo-")
+	tmp, err := os.MkdirTemp("", "kaya-photo-")
 	if err != nil {
 		return "", 0, 0, err
 	}

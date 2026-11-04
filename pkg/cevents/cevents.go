@@ -1,10 +1,10 @@
-// Package cevents is Ghost's canonical event stream — the architectural
+// Package cevents is Kaya's canonical event stream — the architectural
 // backbone everything meaningful flows through.
 //
 // Borrowed pattern (OpenMausBot harness bus): one fan-in bus; every
 // event redacted at the boundary BEFORE persistence/fan-out; per-day
 // NDJSON log (0600); write-failure marker that never recurses; a faulty
-// listener never breaks publish. Ghost adapts it local-first: SQLite is
+// listener never breaks publish. Kaya adapts it local-first: SQLite is
 // the durable store, the relay only transports, and projections (SSE,
 // activity, diagnostics) derive from the same canonical rows.
 //
@@ -27,8 +27,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/ianclemence/ghost/pkg/product"
-	"github.com/ianclemence/ghost/pkg/redact"
+	"github.com/ianclemence/kaya/pkg/product"
+	"github.com/ianclemence/kaya/pkg/redact"
 )
 
 // Type is the canonical event taxonomy (deliberately small).
@@ -86,16 +86,16 @@ const (
 	SkillEnabled   Type = "skill.enabled"
 	SkillDisabled  Type = "skill.disabled"
 	SkillRemoved   Type = "skill.removed"
-	// Artifacts (things Ghost made and handed over; emitted by the trusted
+	// Artifacts (things Kaya made and handed over; emitted by the trusted
 	// runtime, never by a skill or the model). Deletion is owner-driven and
 	// recorded so clients can retract what the shelf has dropped.
 	ArtifactDeleted Type = "artifact.deleted"
 	// System
-	GhostStarted    Type = "ghost.started"
-	GhostReady      Type = "ghost.ready"
-	GhostDegraded   Type = "ghost.degraded"
-	GhostOffline    Type = "ghost.offline"
-	GhostRecovering Type = "ghost.recovering"
+	KayaStarted    Type = "kaya.started"
+	KayaReady      Type = "kaya.ready"
+	KayaDegraded   Type = "kaya.degraded"
+	KayaOffline    Type = "kaya.offline"
+	KayaRecovering Type = "kaya.recovering"
 	// Errors
 	OperationFailed Type = "operation.failed"
 	// Verification (world-state confirmation of mutating tool calls;
@@ -122,7 +122,7 @@ const (
 	TaskInterrupted  Type = "task.interrupted"
 	// Proactive opportunities: the NOTICE → PROPOSE → APPROVE → ACT → VERIFY
 	// lifecycle. Marked durable because the proposal record is the audit trail
-	// of why Ghost interrupted the owner, what the owner decided, what actually
+	// of why Kaya interrupted the owner, what the owner decided, what actually
 	// executed, and what evidence proved it. "candidate" is internal trace;
 	// everything from "presented" on is owner-visible.
 	ProactiveCandidate  Type = "proactive.candidate"
@@ -136,14 +136,14 @@ const (
 	ProactiveCompleted  Type = "proactive.completed"
 	ProactiveFailed     Type = "proactive.failed"
 	// Commitments: durable obligations the owner stated, and what happened to
-	// them. The lifecycle is durable because it is the record of whether Ghost
+	// them. The lifecycle is durable because it is the record of whether Kaya
 	// kept its side of a promise it noticed.
 	CommitmentCreated   Type = "commitment.created"
 	CommitmentCompleted Type = "commitment.completed"
 	CommitmentFailed    Type = "commitment.failed"
 	CommitmentBlocked   Type = "commitment.blocked"
 	// Watches: durable observations of external mutable state. The
-	// lifecycle is durable because it is the record of what Ghost decided
+	// lifecycle is durable because it is the record of what Kaya decided
 	// to watch (and why — Provenance cites the owner's own words), what
 	// changed in the world, what reached the owner, and what was held
 	// back. "checked" stays a logger line: it would otherwise flood the
@@ -156,7 +156,7 @@ const (
 	WatchExpired    Type = "watch.expired"
 	WatchCancelled  Type = "watch.cancelled"
 	// Reminders: what the scheduler actually did with one the owner asked
-	// for. Delivered means it reached the conversation; missed means Ghost
+	// for. Delivered means it reached the conversation; missed means Kaya
 	// was off past its time and it did not fire. Without these a reminder
 	// left no trace in Activity once it went off.
 	ReminderDelivered Type = "reminder.delivered"
@@ -165,7 +165,7 @@ const (
 	ReminderDone      Type = "reminder.done"
 	ReminderSnoozed   Type = "reminder.snoozed"
 	ReminderDismissed Type = "reminder.dismissed"
-	// The attention layer's morning message: what Ghost bundled for the
+	// The attention layer's morning message: what Kaya bundled for the
 	// owner instead of sending each thing on its own.
 	DigestDelivered Type = "digest.delivered"
 	// Effort / routing decisions (observability for why a turn was cheap or deep)
@@ -204,7 +204,7 @@ func (t Type) DefaultVisibility() product.Visibility {
 		RoutineCreated, RoutineWaiting, RoutineCompleted, RoutineFailed,
 		SkillInstalled, SkillUpdated, SkillEnabled, SkillDisabled, SkillRemoved,
 		ArtifactDeleted,
-		GhostReady, GhostDegraded, GhostOffline, GhostRecovering,
+		KayaReady, KayaDegraded, KayaOffline, KayaRecovering,
 		ProactivePresented, ProactiveApproved, ProactiveDenied, ProactiveDismissed,
 		ProactiveSnoozed, ProactiveExpired, ProactiveSuperseded,
 		ProactiveCompleted, ProactiveFailed,
@@ -228,7 +228,7 @@ type Event struct {
 	RequestID      string                 `json:"request_id,omitempty"`
 	SessionID      string                 `json:"session_id,omitempty"`
 	ConversationID string                 `json:"conversation_id,omitempty"`
-	GhostID        string                 `json:"ghost_id,omitempty"`
+	KayaID        string                 `json:"kaya_id,omitempty"`
 	AgentID        string                 `json:"agent_id,omitempty"`
 	RoutineID      string                 `json:"routine_id,omitempty"`
 	TrajectoryID   string                 `json:"trajectory_id,omitempty"`
@@ -249,7 +249,7 @@ func newID() string {
 
 // Filter scopes subscriptions and queries.
 type Filter struct {
-	GhostID         string
+	KayaID         string
 	RequestID       string
 	SessionID       string
 	ConversationID  string
@@ -260,7 +260,7 @@ type Filter struct {
 }
 
 func (f Filter) matches(e *Event) bool {
-	if f.GhostID != "" && e.GhostID != f.GhostID {
+	if f.KayaID != "" && e.KayaID != f.KayaID {
 		return false
 	}
 	if f.RequestID != "" && e.RequestID != f.RequestID {
@@ -315,13 +315,13 @@ func Open(db *sql.DB, logDir string) (*Stream, error) {
 		`CREATE TABLE IF NOT EXISTS canonical_events (
 			seq INTEGER PRIMARY KEY AUTOINCREMENT,
 			id TEXT UNIQUE, type TEXT, request_id TEXT, session_id TEXT,
-			conversation_id TEXT, ghost_id TEXT, agent_id TEXT, routine_id TEXT,
+			conversation_id TEXT, kaya_id TEXT, agent_id TEXT, routine_id TEXT,
 			timestamp TEXT, visibility TEXT, status TEXT, payload TEXT,
 			trajectory_id TEXT
 		)`,
 		`CREATE INDEX IF NOT EXISTS idx_cevents_request ON canonical_events(request_id, seq)`,
 		`CREATE INDEX IF NOT EXISTS idx_cevents_conversation ON canonical_events(conversation_id, seq)`,
-		`CREATE INDEX IF NOT EXISTS idx_cevents_ghost ON canonical_events(ghost_id, seq)`,
+		`CREATE INDEX IF NOT EXISTS idx_cevents_kaya ON canonical_events(kaya_id, seq)`,
 		`CREATE INDEX IF NOT EXISTS idx_cevents_trajectory ON canonical_events(trajectory_id, seq)`,
 		`CREATE INDEX IF NOT EXISTS idx_cevents_time ON canonical_events(timestamp)`,
 	}
@@ -400,7 +400,7 @@ func (s *Stream) Publish(e *Event) *Event {
 			// the NDJSON marker records the gap without recursion.
 			s.appendLog(map[string]interface{}{
 				"type":    "runtime.error",
-				"message": "Canonical event history is incomplete: Ghost could not write one or more events to disk. Live updates will continue.",
+				"message": "Canonical event history is incomplete: Kaya could not write one or more events to disk. Live updates will continue.",
 			})
 		}
 	}
@@ -416,7 +416,7 @@ func eventToLog(e *Event) map[string]interface{} {
 	}
 	for k, v := range map[string]string{
 		"request_id": e.RequestID, "session_id": e.SessionID,
-		"conversation_id": e.ConversationID, "ghost_id": e.GhostID,
+		"conversation_id": e.ConversationID, "kaya_id": e.KayaID,
 		"agent_id": e.AgentID, "routine_id": e.RoutineID, "status": e.Status,
 		"trajectory_id": e.TrajectoryID,
 	} {
@@ -433,10 +433,10 @@ func eventToLog(e *Event) map[string]interface{} {
 func (s *Stream) insert(e *Event) error {
 	payload, _ := json.Marshal(e.Payload)
 	res, err := s.db.Exec(`INSERT OR IGNORE INTO canonical_events
-		(id, type, request_id, session_id, conversation_id, ghost_id, agent_id, routine_id, timestamp, visibility, status, payload, trajectory_id)
+		(id, type, request_id, session_id, conversation_id, kaya_id, agent_id, routine_id, timestamp, visibility, status, payload, trajectory_id)
 		VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)`,
 		e.ID, string(e.Type), e.RequestID, e.SessionID, e.ConversationID,
-		e.GhostID, e.AgentID, e.RoutineID, e.Timestamp.Format(time.RFC3339),
+		e.KayaID, e.AgentID, e.RoutineID, e.Timestamp.Format(time.RFC3339),
 		string(e.Visibility), e.Status, string(payload), e.TrajectoryID)
 	if err != nil {
 		return err
@@ -512,7 +512,7 @@ func (s *Stream) Subscribe(f Filter, fn func(*Event)) func() {
 // turn → model → tool → verification record that lets Doctor answer why a
 // task failed instead of reporting that something went wrong.
 func (s *Stream) ByTrajectory(trajectoryID string) []*Event {
-	rows, err := s.db.Query(`SELECT seq, id, type, request_id, session_id, conversation_id, ghost_id, agent_id, routine_id, timestamp, visibility, status, payload, trajectory_id
+	rows, err := s.db.Query(`SELECT seq, id, type, request_id, session_id, conversation_id, kaya_id, agent_id, routine_id, timestamp, visibility, status, payload, trajectory_id
 		FROM canonical_events WHERE trajectory_id=? ORDER BY seq`, trajectoryID)
 	if err != nil {
 		return nil
@@ -524,7 +524,7 @@ func (s *Stream) ByTrajectory(trajectoryID string) []*Event {
 // ByRequest returns a request's events in deterministic order — the full
 // message→capability→permission→execution→result trace without guessing.
 func (s *Stream) ByRequest(requestID string) []*Event {
-	rows, err := s.db.Query(`SELECT seq, id, type, request_id, session_id, conversation_id, ghost_id, agent_id, routine_id, timestamp, visibility, status, payload, trajectory_id
+	rows, err := s.db.Query(`SELECT seq, id, type, request_id, session_id, conversation_id, kaya_id, agent_id, routine_id, timestamp, visibility, status, payload, trajectory_id
 		FROM canonical_events WHERE request_id=? ORDER BY seq`, requestID)
 	if err != nil {
 		return nil
@@ -540,9 +540,9 @@ func (s *Stream) Recent(limit int, f Filter) []*Event {
 	}
 	clauses := []string{}
 	args := []interface{}{}
-	if f.GhostID != "" {
-		clauses = append(clauses, "ghost_id=?")
-		args = append(args, f.GhostID)
+	if f.KayaID != "" {
+		clauses = append(clauses, "kaya_id=?")
+		args = append(args, f.KayaID)
 	}
 	if f.ConversationID != "" {
 		clauses = append(clauses, "conversation_id=?")
@@ -555,7 +555,7 @@ func (s *Stream) Recent(limit int, f Filter) []*Event {
 	if f.UserVisibleOnly {
 		clauses = append(clauses, "(visibility='user_visible_message' OR visibility='user_visible_error')")
 	}
-	q := `SELECT seq, id, type, request_id, session_id, conversation_id, ghost_id, agent_id, routine_id, timestamp, visibility, status, payload, trajectory_id FROM canonical_events`
+	q := `SELECT seq, id, type, request_id, session_id, conversation_id, kaya_id, agent_id, routine_id, timestamp, visibility, status, payload, trajectory_id FROM canonical_events`
 	if len(clauses) > 0 {
 		q += " WHERE " + strings.Join(clauses, " AND ")
 	}
@@ -583,9 +583,9 @@ func (s *Stream) Since(seq int64, limit int, f Filter) []*Event {
 	}
 	clauses := []string{"seq > ?"}
 	args := []interface{}{seq}
-	if f.GhostID != "" {
-		clauses = append(clauses, "ghost_id=?")
-		args = append(args, f.GhostID)
+	if f.KayaID != "" {
+		clauses = append(clauses, "kaya_id=?")
+		args = append(args, f.KayaID)
 	}
 	if f.ConversationID != "" {
 		clauses = append(clauses, "conversation_id=?")
@@ -598,7 +598,7 @@ func (s *Stream) Since(seq int64, limit int, f Filter) []*Event {
 	if f.UserVisibleOnly {
 		clauses = append(clauses, "(visibility='user_visible_message' OR visibility='user_visible_error')")
 	}
-	q := `SELECT seq, id, type, request_id, session_id, conversation_id, ghost_id, agent_id, routine_id, timestamp, visibility, status, payload, trajectory_id FROM canonical_events WHERE ` +
+	q := `SELECT seq, id, type, request_id, session_id, conversation_id, kaya_id, agent_id, routine_id, timestamp, visibility, status, payload, trajectory_id FROM canonical_events WHERE ` +
 		strings.Join(clauses, " AND ") + ` ORDER BY seq ASC LIMIT ?`
 	args = append(args, limit)
 	rows, err := s.db.Query(q, args...)
@@ -640,7 +640,7 @@ func scanAll(rows *sql.Rows) []*Event {
 		var typ, vis, ts, payload string
 		var trj sql.NullString
 		if err := rows.Scan(&e.Seq, &e.ID, &typ, &e.RequestID, &e.SessionID,
-			&e.ConversationID, &e.GhostID, &e.AgentID, &e.RoutineID, &ts, &vis, &e.Status, &payload, &trj); err != nil {
+			&e.ConversationID, &e.KayaID, &e.AgentID, &e.RoutineID, &ts, &vis, &e.Status, &payload, &trj); err != nil {
 			continue
 		}
 		e.TrajectoryID = trj.String

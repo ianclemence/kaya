@@ -7,33 +7,33 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/ianclemence/ghost/pkg/config"
+	"github.com/ianclemence/kaya/pkg/config"
 )
 
 // DefaultWorkspaceDir is where a personal AI keeps its runtime workspace.
 // It lives outside the install tree so user data never mixes with the
 // deployment and never interferes with git pulls in checkout layouts.
-const DefaultWorkspaceDir = "/var/lib/ghost/workspace"
+const DefaultWorkspaceDir = "/var/lib/kaya/workspace"
 
 // ResolveWorkspaceDir returns the runtime workspace location. The
-// GHOST_WORKSPACE_DIR environment variable wins (set by the systemd units);
-// otherwise the legacy <ghostDir>/workspace location is used, which keeps
+// KAYA_WORKSPACE_DIR environment variable wins (set by the systemd units);
+// otherwise the legacy <kayaDir>/workspace location is used, which keeps
 // manual and dev runs working unchanged.
-func ResolveWorkspaceDir(ghostDir string) string {
-	if d := os.Getenv("GHOST_WORKSPACE_DIR"); d != "" {
+func ResolveWorkspaceDir(kayaDir string) string {
+	if d := os.Getenv("KAYA_WORKSPACE_DIR"); d != "" {
 		return d
 	}
-	if ghostDir != "" {
-		return filepath.Join(ghostDir, "workspace")
+	if kayaDir != "" {
+		return filepath.Join(kayaDir, "workspace")
 	}
 	return DefaultWorkspaceDir
 }
 
-// WorkspaceMigrationPlan describes moving the Ghost workspace from the
-// legacy <ghostDir>/workspace location inside the install tree to
+// WorkspaceMigrationPlan describes moving the Kaya workspace from the
+// legacy <kayaDir>/workspace location inside the install tree to
 // DefaultWorkspaceDir.
 type WorkspaceMigrationPlan struct {
-	GhostDir        string
+	KayaDir        string
 	LegacyDir       string
 	TargetDir       string
 	ConfigPath      string
@@ -74,11 +74,11 @@ func PlanWorkspaceMigration(currentWorkspace, legacyDir, targetDir string) *Work
 }
 
 // MigrationTarget returns where a migration should move the workspace to:
-// the GHOST_WORKSPACE_DIR override when set (the systemd units), otherwise
+// the KAYA_WORKSPACE_DIR override when set (the systemd units), otherwise
 // the default runtime location. Unlike ResolveWorkspaceDir it never falls
 // back to the install tree, since migration exists precisely to escape it.
-func MigrationTarget(ghostDir string) string {
-	if d := os.Getenv("GHOST_WORKSPACE_DIR"); d != "" {
+func MigrationTarget(kayaDir string) string {
+	if d := os.Getenv("KAYA_WORKSPACE_DIR"); d != "" {
 		return d
 	}
 	return DefaultWorkspaceDir
@@ -86,17 +86,17 @@ func MigrationTarget(ghostDir string) string {
 
 // PlanWorkspaceMigrationFromDisk builds a full plan from the current on-disk
 // state: the configured workspace, the environment file, and the target.
-func PlanWorkspaceMigrationFromDisk(ghostDir, targetDir string) (*WorkspaceMigrationPlan, error) {
-	legacyDir := filepath.Join(ghostDir, "workspace")
+func PlanWorkspaceMigrationFromDisk(kayaDir, targetDir string) (*WorkspaceMigrationPlan, error) {
+	legacyDir := filepath.Join(kayaDir, "workspace")
 	if targetDir == "" {
-		targetDir = MigrationTarget(ghostDir)
+		targetDir = MigrationTarget(kayaDir)
 	}
 	plan := &WorkspaceMigrationPlan{
-		GhostDir:   ghostDir,
+		KayaDir:   kayaDir,
 		LegacyDir:  legacyDir,
 		TargetDir:  targetDir,
-		ConfigPath: filepath.Join(ghostDir, "config", "config.json"),
-		EnvPath:    filepath.Join(ghostDir, ".env"),
+		ConfigPath: filepath.Join(kayaDir, "config", "config.json"),
+		EnvPath:    filepath.Join(kayaDir, ".env"),
 	}
 	if _, err := os.Stat(plan.ConfigPath); err == nil {
 		cfg, err := config.LoadConfig(plan.ConfigPath)
@@ -113,14 +113,14 @@ func PlanWorkspaceMigrationFromDisk(ghostDir, targetDir string) (*WorkspaceMigra
 	return plan, nil
 }
 
-// MigrateWorkspaceIfNeeded moves the Ghost workspace from the legacy
-// <ghostDir>/workspace location to the runtime location when needed. It is
+// MigrateWorkspaceIfNeeded moves the Kaya workspace from the legacy
+// <kayaDir>/workspace location to the runtime location when needed. It is
 // safe to call on every gateway start and during updates: it only acts when
 // the configured workspace is exactly the legacy layout, and it refuses to
 // overwrite a non-empty target. Returns the new workspace path when a
 // migration happened, or an empty string otherwise.
-func MigrateWorkspaceIfNeeded(ghostDir string) (string, error) {
-	plan, err := PlanWorkspaceMigrationFromDisk(ghostDir, "")
+func MigrateWorkspaceIfNeeded(kayaDir string) (string, error) {
+	plan, err := PlanWorkspaceMigrationFromDisk(kayaDir, "")
 	if err != nil {
 		return "", err
 	}
@@ -247,7 +247,7 @@ func rewriteConfigWorkspace(configPath, targetDir string) error {
 }
 
 // rewriteEnvWorkspace rewrites values that point into the legacy workspace
-// (GHOST_DB_PATH, MEMORY_DIR, etc.) to the target location. Missing files or
+// (KAYA_DB_PATH, MEMORY_DIR, etc.) to the target location. Missing files or
 // files with no matching values are left untouched.
 func rewriteEnvWorkspace(envPath, legacyDir, targetDir string) error {
 	b, err := os.ReadFile(envPath)
