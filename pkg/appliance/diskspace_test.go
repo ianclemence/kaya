@@ -20,7 +20,7 @@ func TestEnsureDiskSpaceReportsFullDisk(t *testing.T) {
 		st.Bavail = 256 // 1 MB
 		return nil
 	}
-	err := EnsureDiskSpace("/var/lib/ghost", 64<<20)
+	err := EnsureDiskSpace("/var/lib/kaya", 64<<20)
 	if err == nil {
 		t.Fatal("a full disk must be reported, never silently ignored")
 	}
@@ -34,7 +34,7 @@ func TestEnsureDiskSpaceReportsFullDisk(t *testing.T) {
 		st.Bavail = 1 << 20 // 4 GB
 		return nil
 	}
-	if err := EnsureDiskSpace("/var/lib/ghost", 64<<20); err != nil {
+	if err := EnsureDiskSpace("/var/lib/kaya", 64<<20); err != nil {
 		t.Fatalf("ample space should pass: %v", err)
 	}
 }
@@ -49,7 +49,7 @@ func TestAtomicInstallNeverLeavesATruncatedBinary(t *testing.T) {
 	if err := os.MkdirAll(dstDir, 0o755); err != nil {
 		t.Fatal(err)
 	}
-	dst := filepath.Join(dstDir, "ghost")
+	dst := filepath.Join(dstDir, "kaya")
 	if err := os.WriteFile(dst, []byte("old-binary"), 0o755); err != nil {
 		t.Fatal(err)
 	}

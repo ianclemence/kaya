@@ -64,7 +64,7 @@ func fakeSite(t *testing.T) *httptest.Server {
 			http.Error(w, "no", 400)
 			return
 		}
-		json.NewEncoder(w).Encode(StartResult{UserCode: "GHOST-ABCD", VerifyURL: "https://x/connect?code=GHOST-ABCD", PollToken: "poll", ExpiresIn: 600})
+		json.NewEncoder(w).Encode(StartResult{UserCode: "KAYA-ABCD", VerifyURL: "https://x/connect?code=KAYA-ABCD", PollToken: "poll", ExpiresIn: 600})
 	})
 	mux.HandleFunc("/api/connect/poll", func(w http.ResponseWriter, r *http.Request) {
 		polls++
@@ -100,7 +100,7 @@ func TestLinkFlow(t *testing.T) {
 	c := NewClient(fakeSite(t).URL + "/")
 	ctx := context.Background()
 	st, err := c.Start(ctx, "pod-1", "Kitchen")
-	if err != nil || st.UserCode != "GHOST-ABCD" || st.Interval != 3 {
+	if err != nil || st.UserCode != "KAYA-ABCD" || st.Interval != 3 {
 		t.Fatalf("start: %+v %v", st, err)
 	}
 	for i, want := range []error{ErrPending, ErrNoSubscription, ErrExpired} {

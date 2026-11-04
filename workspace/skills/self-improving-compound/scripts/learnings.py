@@ -29,7 +29,7 @@ Commands:
   export          Export entries as markdown
 
 Global options:
-  --root PATH              Workspace root (default: GHOST_WORKSPACE env, else cwd)
+  --root PATH              Workspace root (default: KAYA_WORKSPACE env, else cwd)
   --learning-root PATH     Learning store root (default: <workspace>/learning)
 """
 
@@ -136,7 +136,7 @@ def check_volatile_patterns(text: str) -> List[str]:
 def get_workspace_root(args_root: Optional[str]) -> Path:
     if args_root:
         return Path(args_root).expanduser().resolve()
-    env_root = os.environ.get("GHOST_WORKSPACE")
+    env_root = os.environ.get("KAYA_WORKSPACE")
     if env_root:
         return Path(env_root).expanduser().resolve()
     return Path.cwd().resolve()
@@ -1944,7 +1944,7 @@ def build_parser() -> argparse.ArgumentParser:
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Environment:
-  GHOST_WORKSPACE              Default workspace root if --root is not provided.
+  KAYA_WORKSPACE              Default workspace root if --root is not provided.
   SELF_IMPROVING_LEARNING_ROOT    Shared learning store directory. When set,
                                   SQLite/index/queue files live here instead of
                                   <workspace>/learning.
@@ -1963,7 +1963,7 @@ Examples:
     parser.add_argument(
         "--root",
         default=None,
-        help="Workspace root (default: GHOST_WORKSPACE env, else current directory)",
+        help="Workspace root (default: KAYA_WORKSPACE env, else current directory)",
     )
     parser.add_argument(
         "--learning-root",

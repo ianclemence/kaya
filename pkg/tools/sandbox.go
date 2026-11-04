@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ianclemence/ghost/pkg/logger"
+	"github.com/ianclemence/kaya/pkg/logger"
 )
 
 // SandboxTool allows the agent to run code in a restricted, sandboxed environment.

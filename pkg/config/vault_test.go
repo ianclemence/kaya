@@ -57,7 +57,7 @@ func TestVaultRejectsWrongKeyAndTamper(t *testing.T) {
 
 func TestMasterKeyFileGeneratedOnce(t *testing.T) {
 	dir := t.TempDir()
-	t.Setenv("GHOST_MASTER_KEY", "")
+	t.Setenv("KAYA_MASTER_KEY", "")
 	k1, err := MasterKeyFor(filepath.Join(dir, ".secrets.json"))
 	if err != nil {
 		t.Fatal(err)
@@ -82,7 +82,7 @@ func TestMasterKeyFileGeneratedOnce(t *testing.T) {
 }
 
 func TestMasterKeyEnvPassphrase(t *testing.T) {
-	t.Setenv("GHOST_MASTER_KEY", "test-passphrase-for-unit-tests")
+	t.Setenv("KAYA_MASTER_KEY", "test-passphrase-for-unit-tests")
 	k1, err := MasterKeyFor("/nonexistent/.secrets.json")
 	if err != nil {
 		t.Fatal(err)
@@ -98,7 +98,7 @@ func TestMasterKeyEnvPassphrase(t *testing.T) {
 
 func TestSecretsSealedAtRestAndMigration(t *testing.T) {
 	dir := t.TempDir()
-	t.Setenv("GHOST_MASTER_KEY", "")
+	t.Setenv("KAYA_MASTER_KEY", "")
 	path := filepath.Join(dir, ".secrets.json")
 
 	s := &Secrets{ProviderAPIKeys: map[string]string{"openai": "sk-live"}, TelegramToken: "tok"}
@@ -146,7 +146,7 @@ func TestSecretsSealedAtRestAndMigration(t *testing.T) {
 
 func TestSecretsWrongKeyFailsLoud(t *testing.T) {
 	dir := t.TempDir()
-	t.Setenv("GHOST_MASTER_KEY", "correct-key-for-this-test-1234")
+	t.Setenv("KAYA_MASTER_KEY", "correct-key-for-this-test-1234")
 	path := filepath.Join(dir, ".secrets.json")
 	if err := SaveSecrets(path, &Secrets{TelegramToken: "x"}); err != nil {
 		t.Fatal(err)
@@ -158,7 +158,7 @@ func TestSecretsWrongKeyFailsLoud(t *testing.T) {
 	if err := os.WriteFile(path2, raw, 0600); err != nil {
 		t.Fatal(err)
 	}
-	t.Setenv("GHOST_MASTER_KEY", "wrong-key-for-this-test-12345678")
+	t.Setenv("KAYA_MASTER_KEY", "wrong-key-for-this-test-12345678")
 	if _, err := LoadSecrets(path2); err == nil {
 		t.Fatal("wrong master key must fail loudly, never silently boot keyless")
 	}
@@ -183,12 +183,12 @@ func TestResolvePrecedence(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if err := os.WriteFile(filepath.Join(dir, ".master-env"), []byte("GHOST_MASTER_KEY=ghost-passphrase\n"), 0600); err != nil {
+	if err := os.WriteFile(filepath.Join(dir, ".master-env"), []byte("KAYA_MASTER_KEY=kaya-passphrase\n"), 0600); err != nil {
 		t.Fatal(err)
 	}
 	// Without env, the personal AI file wins over the legacy file. Prove
 	// it by sealing under the personal AI key and resolving without env.
-	t.Setenv("GHOST_MASTER_KEY", "")
+	t.Setenv("KAYA_MASTER_KEY", "")
 	got, err := ResolveMasterKey(secrets)
 	if err != nil {
 		t.Fatal(err)
@@ -197,14 +197,14 @@ func TestResolvePrecedence(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if _, err := Unseal(deriveKey("ghost-passphrase"), sealed); err != nil {
+	if _, err := Unseal(deriveKey("kaya-passphrase"), sealed); err != nil {
 		t.Fatal("key file must win over legacy .master-key")
 	}
 	if string(got) == string(legacy) {
 		t.Fatal("resolved key must be the personal AI key, not the legacy one")
 	}
 	// Env wins over everything.
-	t.Setenv("GHOST_MASTER_KEY", "env-passphrase")
+	t.Setenv("KAYA_MASTER_KEY", "env-passphrase")
 	got, err = ResolveMasterKey(secrets)
 	if err != nil {
 		t.Fatal(err)
@@ -218,7 +218,7 @@ func TestResolvePrecedence(t *testing.T) {
 // bug: resolving a missing key must error without creating key files.
 func TestResolveNeverMints(t *testing.T) {
 	dir := t.TempDir()
-	t.Setenv("GHOST_MASTER_KEY", "")
+	t.Setenv("KAYA_MASTER_KEY", "")
 	if _, err := ResolveMasterKey(filepath.Join(dir, ".secrets.json")); err == nil {
 		t.Fatal("missing key must be a hard error")
 	} else if !isNoKeyError(err) {
@@ -237,7 +237,7 @@ func TestResolveNeverMints(t *testing.T) {
 // no key material exists anywhere.
 func TestEnsureGeneratesOnlyWhenBare(t *testing.T) {
 	dir := t.TempDir()
-	t.Setenv("GHOST_MASTER_KEY", "")
+	t.Setenv("KAYA_MASTER_KEY", "")
 	k, err := EnsureMasterKey(filepath.Join(dir, ".secrets.json"))
 	if err != nil || len(k) != 32 {
 		t.Fatalf("ensure must generate on bare dir: %v", err)
@@ -247,7 +247,7 @@ func TestEnsureGeneratesOnlyWhenBare(t *testing.T) {
 		_ = err
 	}
 	cdir := t.TempDir()
-	t.Setenv("GHOST_MASTER_KEY", "")
+	t.Setenv("KAYA_MASTER_KEY", "")
 	if err := os.WriteFile(filepath.Join(cdir, ".master-key"), []byte("too-short"), 0600); err != nil {
 		t.Fatal(err)
 	}
@@ -257,11 +257,11 @@ func TestEnsureGeneratesOnlyWhenBare(t *testing.T) {
 }
 
 // TestApplianceEnvWithoutEntryFailsClosed: a .master-env that holds no
-// GHOST_MASTER_KEY entry must error, not silently fall through to an
+// KAYA_MASTER_KEY entry must error, not silently fall through to an
 // older key that would fail auth with a misleading message.
 func TestApplianceEnvWithoutEntryFailsClosed(t *testing.T) {
 	dir := t.TempDir()
-	t.Setenv("GHOST_MASTER_KEY", "")
+	t.Setenv("KAYA_MASTER_KEY", "")
 	if err := os.WriteFile(filepath.Join(dir, ".master-env"), []byte("# rotated out\nOTHER=1\n"), 0600); err != nil {
 		t.Fatal(err)
 	}
@@ -271,14 +271,14 @@ func TestApplianceEnvWithoutEntryFailsClosed(t *testing.T) {
 }
 
 func TestEnvFileValue(t *testing.T) {
-	data := []byte("# comment\n\nexport GHOST_MASTER_KEY=\"quoted value\"\nOTHER=1\nGHOST_MASTER_KEY=second\n")
-	if got := envFileValue(data, "GHOST_MASTER_KEY"); got != "quoted value" {
+	data := []byte("# comment\n\nexport KAYA_MASTER_KEY=\"quoted value\"\nOTHER=1\nKAYA_MASTER_KEY=second\n")
+	if got := envFileValue(data, "KAYA_MASTER_KEY"); got != "quoted value" {
 		t.Fatalf("got %q, want first-match unquoted value", got)
 	}
-	if got := envFileValue([]byte("GHOST_MASTER_KEY=plain\n"), "GHOST_MASTER_KEY"); got != "plain" {
+	if got := envFileValue([]byte("KAYA_MASTER_KEY=plain\n"), "KAYA_MASTER_KEY"); got != "plain" {
 		t.Fatalf("got %q", got)
 	}
-	if got := envFileValue([]byte("OTHER=1\n"), "GHOST_MASTER_KEY"); got != "" {
+	if got := envFileValue([]byte("OTHER=1\n"), "KAYA_MASTER_KEY"); got != "" {
 		t.Fatalf("got %q, want empty", got)
 	}
 }

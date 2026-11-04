@@ -1,0 +1,14 @@
+# Copies the relay's device registry. Without it, a lost disk means every Pod has
+# to link again. Installed with kaya-relay-backup.timer.
+[Unit]
+Description=Back up the Kaya relay registry
+
+[Service]
+Type=oneshot
+User=kaya-relay
+ExecStart=/bin/sh -c 'set -e; d=/var/backups/kaya-relay; mkdir -p "$d"; cp /var/lib/kaya-relay/registry.json "$d/registry-$(date +%%Y%%m%%d-%%H%%M).json"; ls -1t "$d"/registry-*.json | tail -n +61 | xargs -r rm --'
+ReadWritePaths=/var/backups/kaya-relay
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+NoNewPrivileges=true

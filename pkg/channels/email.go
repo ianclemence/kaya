@@ -7,9 +7,9 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/ianclemence/ghost/pkg/bus"
-	"github.com/ianclemence/ghost/pkg/config"
-	"github.com/ianclemence/ghost/pkg/logger"
+	"github.com/ianclemence/kaya/pkg/bus"
+	"github.com/ianclemence/kaya/pkg/config"
+	"github.com/ianclemence/kaya/pkg/logger"
 )
 
 type EmailChannel struct {
@@ -44,9 +44,9 @@ func (c *EmailChannel) Send(ctx context.Context, msg bus.OutboundMessage) error 
 		return fmt.Errorf("email channel not running")
 	}
 	addr := c.config.SMTPHost + ":" + strconv.Itoa(c.config.SMTPPort)
-	subject := "Ghost Response"
+	subject := "Kaya Response"
 	if msg.ChatID != "" {
-		subject = "Ghost Response [" + msg.ChatID + "]"
+		subject = "Kaya Response [" + msg.ChatID + "]"
 	}
 	body := "From channel: " + msg.Channel + "\n\n" + msg.Content
 	raw := "From: " + c.config.From + "\r\n" +

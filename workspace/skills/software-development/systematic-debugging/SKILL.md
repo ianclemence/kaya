@@ -2,10 +2,10 @@
 name: systematic-debugging
 description: Use when encountering any bug, test failure, or unexpected behavior. 4-phase root cause investigation — NO fixes without understanding the problem first.
 version: 1.1.0
-author: Ghost (adapted from obra/superpowers)
+author: Kaya (adapted from obra/superpowers)
 license: MIT
 metadata:
-  ghost:
+  kaya:
     tags:
       [debugging, troubleshooting, problem-solving, root-cause, investigation]
     related_skills:
@@ -323,11 +323,11 @@ If you catch yourself thinking:
 | **3. Hypothesis**     | Form theory, test minimally, one variable at a time                     | Confirmed or new hypothesis  |
 | **4. Implementation** | Create regression test, fix root cause, verify                          | Bug resolved, all tests pass |
 
-## Ghost Integration
+## Kaya Integration
 
 ### Investigation Tools
 
-Use these Ghost tools during Phase 1:
+Use these Kaya tools during Phase 1:
 
 - **`search_files`** — Find error strings, trace function calls, locate patterns
 - **`read_file`** — Read source code with line numbers for precise analysis

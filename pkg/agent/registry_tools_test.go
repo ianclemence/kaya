@@ -7,8 +7,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/ianclemence/ghost/pkg/bus"
-	"github.com/ianclemence/ghost/pkg/config"
+	"github.com/ianclemence/kaya/pkg/bus"
+	"github.com/ianclemence/kaya/pkg/config"
 )
 
 // The registry the agent loop builds must contain every provider-backed
@@ -43,7 +43,7 @@ func TestCreateToolRegistryFileToolsRestrictToWorkspace(t *testing.T) {
 	ctx := context.Background()
 
 	// A file outside the workspace, its project root, and media temp.
-	escape := filepath.Join(os.TempDir(), "ghost-registry-escape.txt")
+	escape := filepath.Join(os.TempDir(), "kaya-registry-escape.txt")
 	defer os.Remove(escape)
 
 	w, ok := registry.Get("write_file")

@@ -2,10 +2,10 @@
 name: internet-reading
 description: Read and search the web cleanly without API keys or accounts. Invoke when the user asks to "read this link", "what's on this page", "summarize this website", "what does this YouTube video say", "transcribe this video", "search YouTube", "what's new in this RSS feed", or "check this feed". Uses Jina Reader, yt-dlp, and feedparser — all free, no API keys, no logins.
 version: 1.0.0
-author: Ghost
+author: Kaya
 license: MIT
 metadata:
-  ghost:
+  kaya:
     tags: [web, reading, search, youtube, rss, transcript]
 prerequisites:
   commands: [curl, yt-dlp]

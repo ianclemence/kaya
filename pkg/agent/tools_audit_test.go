@@ -3,8 +3,8 @@ package agent
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/ianclemence/ghost/pkg/capability"
-	"github.com/ianclemence/ghost/pkg/tools"
+	"github.com/ianclemence/kaya/pkg/capability"
+	"github.com/ianclemence/kaya/pkg/tools"
 	"os"
 	"sort"
 	"strings"
@@ -13,7 +13,7 @@ import (
 
 // TestToolInventoryIsSound audits every tool the runtime actually registers:
 // a real schema, a description a model can act on, required fields that exist,
-// and no two tools with the same name. GHOST_TOOL_AUDIT=1 also writes the
+// and no two tools with the same name. KAYA_TOOL_AUDIT=1 also writes the
 // inventory for a human to read.
 func TestToolInventoryIsSound(t *testing.T) {
 	al := newTestAgentLoop(t, t.TempDir())
@@ -64,16 +64,16 @@ func TestToolInventoryIsSound(t *testing.T) {
 		sort.Strings(keys)
 		report = append(report, fmt.Sprintf("%-22s %3d chars desc, %d params (%s)", name, len(desc), len(props), strings.Join(keys, ",")))
 	}
-	if os.Getenv("GHOST_TOOL_AUDIT") != "" {
+	if os.Getenv("KAYA_TOOL_AUDIT") != "" {
 		sort.Strings(report)
 		b, _ := json.MarshalIndent(report, "", " ")
-		os.WriteFile(os.Getenv("GHOST_TOOL_AUDIT"), b, 0644)
+		os.WriteFile(os.Getenv("KAYA_TOOL_AUDIT"), b, 0644)
 	}
 }
 
 // reviewedUngoverned are the registered tools that sit outside every
 // governance table on purpose. Each was read and judged to have no external
-// side effect beyond Ghost's own state: they read local state, answer a
+// side effect beyond Kaya's own state: they read local state, answer a
 // question, or render to the owner's own screen. A NEW tool that is not
 // governed and not on this list fails the test, so adding a tool forces the
 // question "does this need approval?" to be answered in review.
@@ -84,32 +84,32 @@ var reviewedUngoverned = map[string]string{
 	"doc_parser":          "reads a workspace-confined file",
 	"memory_explain":      "reads memory provenance",
 	"present_card":        "renders a validated block card to the owner's own screen; every field is checked against a fixed catalog and nothing in it can run, open or style anything",
-	"memory_correct":      "changes one of Ghost's own beliefs only with confirmed=true; old values stay in history; no external effect",
+	"memory_correct":      "changes one of Kaya's own beliefs only with confirmed=true; old values stay in history; no external effect",
 	"networking":          "status/tailscale/bonjour info, read-only",
 	"oracle":              "workspace-confined files to the configured model, same egress as a turn",
 	"spawn":               "delegate; the subagent's own tools stay governed",
 	"subagent":            "delegate; the subagent's own tools stay governed",
-	"switch_lane":         "changes Ghost's own routing lane",
+	"switch_lane":         "changes Kaya's own routing lane",
 	"system_status":       "read-only health",
-	"todo":                "Ghost's own task list",
-	"self_check":          "runs Ghost's own health check and reports it: read-only, it looks and never repairs, and nothing leaves the Pod",
+	"todo":                "Kaya's own task list",
+	"self_check":          "runs Kaya's own health check and reports it: read-only, it looks and never repairs, and nothing leaves the Pod",
 	"think":               "a scratchpad: records nothing, fetches nothing, changes nothing, sends nothing; offered on deep turns only",
 	"tts":                 "speech synthesis of given text",
 	"video_frames":        "workspace-confined ffmpeg frame extraction",
 	"vision":              "workspace-confined image or a safety-checked URL",
-	"voice_wake":          "toggles Ghost's own wake listener",
-	"move_file":           "renames inside the workspace only, never overwrites, refuses Ghost's default files and folders",
+	"voice_wake":          "toggles Kaya's own wake listener",
+	"move_file":           "renames inside the workspace only, never overwrites, refuses Kaya's default files and folders",
 	"draft":               "shows a draft (email, event, text) on the owner's own screen; it never sends: sending is the owner's tap on the card, carried out by the Pod's card handler, not by the model",
 	"document":            "writes a document into the workspace and lays it out as a PDF locally (no network while printing); shown on the owner's own screen",
 	"people":              "the owner's own records of the people in their life, on the Pod; forgetting needs confirmed=true",
 	"vault":               "the owner's own records of their documents, on the Pod; reads only workspace files; forgetting needs confirmed=true",
-	"vault_items":         "reads the owner's own Vault records on the Pod and returns only what Ghost may see: no password, card number, security code or key value; nothing leaves the Pod",
+	"vault_items":         "reads the owner's own Vault records on the Pod and returns only what Kaya may see: no password, card number, security code or key value; nothing leaves the Pod",
 	"request_credentials": "renders a private sign-in form on the owner's own screen; the owner fills it and the form sends the secret straight to the Vault, so the model never sees it; the tool publishes a card and changes nothing else",
 	"finances":            "the owner's own spending records on the Pod; imports a workspace file; no bank, no payment; forgetting needs confirmed=true",
 	"trips":               "the owner's own trip records on the Pod; no booking, no payment; forgetting needs confirmed=true",
 	"knowledge":           "the owner's own reading and study records on the Pod; nothing leaves it; forgetting needs confirmed=true",
-	"film":                "writes Ghost's own film projects under films/ and renders them on the Pod in a local browser (no network: every non-file request is refused) and ffmpeg; the owner's chat shows the result; nothing is sent",
-	"motion":              "writes Ghost's own motion files and renders them to video on the Pod with a local browser and ffmpeg; nothing is sent",
+	"film":                "writes Kaya's own film projects under films/ and renders them on the Pod in a local browser (no network: every non-file request is refused) and ffmpeg; the owner's chat shows the result; nothing is sent",
+	"motion":              "writes Kaya's own motion files and renders them to video on the Pod with a local browser and ffmpeg; nothing is sent",
 	"dashboard":           "reads only: one checked SELECT over the owner's own data in a private in-memory copy, or inside a read-only transaction with a time limit on a database the owner connected; credentials never reach the model",
 	"pipeline":            "runs a short recipe of read-only lookups and line filters and returns only the last result; it refuses any tool that is not read-only, cannot call itself or delegate, and its result is fenced as outside content",
 	"find_tools":          "offers the model other tools for this turn after reading only tool names and descriptions; each tool it offers is governed on its own",

@@ -5,10 +5,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ianclemence/ghost/pkg/life"
+	"github.com/ianclemence/kaya/pkg/life"
 )
 
-// When no notification is found, Ghost says why as precisely as the phone
+// When no notification is found, Kaya says why as precisely as the phone
 // lets it know, instead of guessing between "nothing came" and "it's off".
 func TestNoNotesSaysWhy(t *testing.T) {
 	loc := time.UTC

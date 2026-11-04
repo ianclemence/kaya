@@ -6,7 +6,7 @@ import (
 	"testing"
 )
 
-// A user-local ghost binary means user scope: no root needed.
+// A user-local kaya binary means user scope: no root needed.
 func TestDetectScopeUserBinary(t *testing.T) {
 	home := t.TempDir()
 	t.Setenv("HOME", home)
@@ -14,13 +14,13 @@ func TestDetectScopeUserBinary(t *testing.T) {
 	if err := os.MkdirAll(bin, 0o755); err != nil {
 		t.Fatal(err)
 	}
-	if err := os.WriteFile(filepath.Join(bin, "ghost"), []byte("x"), 0o755); err != nil {
+	if err := os.WriteFile(filepath.Join(bin, "kaya"), []byte("x"), 0o755); err != nil {
 		t.Fatal(err)
 	}
 	t.Setenv("PATH", "") // ensure no systemctl discovery interferes
 	// Isolate from any real /usr/local/bin install on the test machine: a
 	// system binary now (correctly) outranks a lone user binary.
-	t.Setenv("GHOST_SYSTEM_BIN_DIR", t.TempDir())
+	t.Setenv("KAYA_SYSTEM_BIN_DIR", t.TempDir())
 
 	p := DetectScope()
 	if p.Scope != ScopeUser {
@@ -41,7 +41,7 @@ func TestDetectScopeFreshDefaultsToUser(t *testing.T) {
 	t.Setenv("PATH", "")
 	// Point the system-bin probe at an empty dir so a real /usr/local/bin
 	// install on the test machine does not force system scope.
-	t.Setenv("GHOST_SYSTEM_BIN_DIR", t.TempDir())
+	t.Setenv("KAYA_SYSTEM_BIN_DIR", t.TempDir())
 
 	p := DetectScope()
 	if p.Scope != ScopeUser {
@@ -50,7 +50,7 @@ func TestDetectScopeFreshDefaultsToUser(t *testing.T) {
 	if p.NeedsRoot() {
 		t.Fatal("fresh install must not need root")
 	}
-	if p.UserUnitPath() != filepath.Join(home, ".config", "systemd", "user", "ghost.service") {
+	if p.UserUnitPath() != filepath.Join(home, ".config", "systemd", "user", "kaya.service") {
 		t.Fatalf("user unit path wrong: %s", p.UserUnitPath())
 	}
 }
@@ -60,14 +60,14 @@ func TestScopeNeedsRootAndPaths(t *testing.T) {
 	if !p.NeedsRoot() {
 		t.Fatal("system scope must need root")
 	}
-	if p.SystemBinaryPath() != "/usr/local/bin/ghost" {
+	if p.SystemBinaryPath() != "/usr/local/bin/kaya" {
 		t.Fatalf("system bin path: %s", p.SystemBinaryPath())
 	}
 	u := ScopePaths{Scope: ScopeUser, UserBinDir: "/home/u/.local/bin", Home: "/home/u"}
 	if u.NeedsRoot() {
 		t.Fatal("user scope must not need root")
 	}
-	if u.UserBinaryPath() != "/home/u/.local/bin/ghost" {
+	if u.UserBinaryPath() != "/home/u/.local/bin/kaya" {
 		t.Fatalf("user bin path: %s", u.UserBinaryPath())
 	}
 	if u.Scope.String() != "user" || p.Scope.String() != "system" {
@@ -75,8 +75,8 @@ func TestScopeNeedsRootAndPaths(t *testing.T) {
 	}
 }
 
-// The bug: a system service serves Ghost from /usr/local/bin, but a stray
-// ~/.local/bin/ghost (created by an earlier user-scope update) made every
+// The bug: a system service serves Kaya from /usr/local/bin, but a stray
+// ~/.local/bin/kaya (created by an earlier user-scope update) made every
 // later update land in the wrong place. The serving daemon must win.
 func TestDecideScopeServingDaemonWins(t *testing.T) {
 	cases := []struct {

@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/ianclemence/ghost/pkg/credentials"
+	"github.com/ianclemence/kaya/pkg/credentials"
 )
 
 // A look-up must never open an approval card: listing schedules is a

@@ -2,10 +2,10 @@
 name: homeassistant
 description: Control smart home devices via Home Assistant REST API — lights, switches, climate, media players, sensors, and scenes. Invoke when user asks to "turn on the lights", "set thermostat to 72", "is the front door locked", "trigger scene movie mode", "check temperature", "play music on Sonos", or any smart home command. Requires HASS_URL and HASS_TOKEN env vars.
 version: 1.1.0
-author: Ghost
+author: Kaya
 license: MIT
 metadata:
-  ghost:
+  kaya:
     tags: [homeassistant, smart-home, IoT, automation, sensors]
 prerequisites:
   commands: [curl]
@@ -13,9 +13,9 @@ prerequisites:
 
 # Smart Home Bridge (Home Assistant)
 
-Controls devices via the Home Assistant REST API. Requires `HASS_URL` and `HASS_TOKEN` in `.env` (or Ghost settings → Integrations).
+Controls devices via the Home Assistant REST API. Requires `HASS_URL` and `HASS_TOKEN` in `.env` (or Kaya settings → Integrations).
 
-> **Preferred path:** Call the `hass` tool (`list`, `state`, `turn_on`, `turn_off` with `entity_id`). Device control is consequential: Ghost asks for approval first unless you've allowed it. Only use the `curl` commands below if the tool reports it is unavailable.
+> **Preferred path:** Call the `hass` tool (`list`, `state`, `turn_on`, `turn_off` with `entity_id`). Device control is consequential: Kaya asks for approval first unless you've allowed it. Only use the `curl` commands below if the tool reports it is unavailable.
 
 ## Quick Reference
 

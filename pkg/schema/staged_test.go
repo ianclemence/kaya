@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/ianclemence/ghost/pkg/migrations"
+	"github.com/ianclemence/kaya/pkg/migrations"
 	_ "modernc.org/sqlite"
 )
 
@@ -77,7 +77,7 @@ func TestV2ToV3StagedUpgrade(t *testing.T) {
 // A database file that is not SQLite (or is corrupt) fails loudly at
 // migration time instead of being silently treated as empty.
 func TestMalformedDBFailsLoudly(t *testing.T) {
-	bad := filepath.Join(t.TempDir(), "ghost.db")
+	bad := filepath.Join(t.TempDir(), "kaya.db")
 	if err := os.WriteFile(bad, []byte("this is not a sqlite database at all"), 0644); err != nil {
 		t.Fatal(err)
 	}

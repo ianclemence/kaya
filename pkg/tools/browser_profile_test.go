@@ -4,17 +4,17 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/ianclemence/ghost/pkg/browser"
+	"github.com/ianclemence/kaya/pkg/browser"
 )
 
 // The persistent profile reaches the browser launch: without it, cookies and
 // logins die with the process.
 func TestBrowserEnvironmentCarriesPersistentProfile(t *testing.T) {
 	t.Setenv(browser.ProfileEnv, "")
-	env := browserEnvironment("/var/lib/ghost/workspace/state/browser-profiles/personal/default")
+	env := browserEnvironment("/var/lib/kaya/workspace/state/browser-profiles/personal/default")
 	found := false
 	for _, e := range env {
-		if strings.HasPrefix(e, browser.ProfileEnv+"=/var/lib/ghost/workspace/state/browser-profiles/personal/default") {
+		if strings.HasPrefix(e, browser.ProfileEnv+"=/var/lib/kaya/workspace/state/browser-profiles/personal/default") {
 			found = true
 		}
 	}

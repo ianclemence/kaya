@@ -1,9 +1,9 @@
 @echo off
 setlocal EnableDelayedExpansion
-title Ghost Setup (Windows)
+title Kaya Setup (Windows)
 
 echo ===================================================
-echo   Ghost: Your Sovereign Intelligence (Windows Setup)
+echo   Kaya: Your Sovereign Intelligence (Windows Setup)
 echo ===================================================
 echo.
 
@@ -50,38 +50,38 @@ if "%BRIDGE_SECRET%"=="" (
 
 :: 2. Install Skills (PowerShell Wrapper)
 echo.
-echo [2/3] Installing Ghost Skills (Camera, System, Calendar, Local LLM)...
+echo [2/3] Installing Kaya Skills (Camera, System, Calendar, Local LLM)...
 echo This may ask for Administrator permissions to install tools via Winget.
-powershell -ExecutionPolicy Bypass -File "%~dp0setup_ghost_skills.ps1"
+powershell -ExecutionPolicy Bypass -File "%~dp0setup_kaya_skills.ps1"
 if %errorlevel% neq 0 (
     echo [WARNING] Skill installation had issues. Some features might not work.
 ) else (
     echo [OK] Skills installed.
 )
 
-:: 3. Build Ghost
+:: 3. Build Kaya
 echo.
-echo [3/3] Building Ghost binary...
-if exist "ghost.exe" (
-    del /f /q "ghost.exe"
+echo [3/3] Building Kaya binary...
+if exist "kaya.exe" (
+    del /f /q "kaya.exe"
 )
-go build -o ghost.exe ./cmd/ghost
+go build -o kaya.exe ./cmd/kaya
 if %errorlevel% neq 0 (
     echo [ERROR] Build failed. Check the error messages above.
     pause
     exit /b 1
 )
-echo [OK] Build successful: ghost.exe
+echo [OK] Build successful: kaya.exe
 
 echo.
 echo ===================================================
 echo   Setup Complete!
 echo ===================================================
 echo.
-set /p RUN_NOW="Do you want to start Ghost now? (Y/N): "
+set /p RUN_NOW="Do you want to start Kaya now? (Y/N): "
 if /i "%RUN_NOW%"=="Y" (
     cls
-    .\ghost.exe gateway --debug
+    .\kaya.exe gateway --debug
 )
 
 pause

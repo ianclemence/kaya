@@ -12,10 +12,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ianclemence/ghost/pkg/artifacts"
-	"github.com/ianclemence/ghost/pkg/cevents"
-	"github.com/ianclemence/ghost/pkg/tasks"
-	"github.com/ianclemence/ghost/pkg/turnlog"
+	"github.com/ianclemence/kaya/pkg/artifacts"
+	"github.com/ianclemence/kaya/pkg/cevents"
+	"github.com/ianclemence/kaya/pkg/tasks"
+	"github.com/ianclemence/kaya/pkg/turnlog"
 )
 
 // Policy bounds. Generous for user history, tight for telemetry.

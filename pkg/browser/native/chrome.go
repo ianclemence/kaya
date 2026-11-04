@@ -18,7 +18,7 @@ import (
 // caller may always set an explicit binary, which is what a Pod with a pinned
 // Chrome-for-Testing install does.
 func chromeBinary() (string, error) {
-	if p := strings.TrimSpace(os.Getenv("GHOST_CHROME")); p != "" {
+	if p := strings.TrimSpace(os.Getenv("KAYA_CHROME")); p != "" {
 		if _, err := os.Stat(p); err == nil {
 			return p, nil
 		}
@@ -41,7 +41,7 @@ func chromeBinary() (string, error) {
 			return p, nil
 		}
 	}
-	return "", fmt.Errorf("no Chrome/Chromium found; set GHOST_CHROME to its path")
+	return "", fmt.Errorf("no Chrome/Chromium found; set KAYA_CHROME to its path")
 }
 
 // launchOptions configures a Chrome process.
@@ -98,7 +98,7 @@ func readDevToolsPort(profile string) (int, string, error) {
 // launchChrome starts a Chrome process with a remote debugging port and returns
 // a handle to it. The launcher passes the same conservative, automation-friendly
 // flags the upstream project uses: no first-run, mock keychain, and a
-// non-automation user agent is a caller concern (Ghost sets that separately).
+// non-automation user agent is a caller concern (Kaya sets that separately).
 func launchChrome(ctx context.Context, opts launchOptions) (*chromeProcess, error) {
 	bin := opts.Binary
 	if bin == "" {
@@ -110,7 +110,7 @@ func launchChrome(ctx context.Context, opts launchOptions) (*chromeProcess, erro
 	profile := opts.Profile
 	cleanup := func() {}
 	if profile == "" {
-		dir, err := os.MkdirTemp("", "ghost-chrome-*")
+		dir, err := os.MkdirTemp("", "kaya-chrome-*")
 		if err != nil {
 			return nil, err
 		}
@@ -138,7 +138,7 @@ func launchChrome(ctx context.Context, opts launchOptions) (*chromeProcess, erro
 	}
 	// A sandboxed container (the Pod) needs --no-sandbox; a normal desktop does
 	// not. Honor an explicit choice, else infer from running as root.
-	if os.Getenv("GHOST_CHROME_NO_SANDBOX") == "1" || os.Geteuid() == 0 {
+	if os.Getenv("KAYA_CHROME_NO_SANDBOX") == "1" || os.Geteuid() == 0 {
 		args = append(args, "--no-sandbox")
 	}
 	if opts.StartURL != "" {

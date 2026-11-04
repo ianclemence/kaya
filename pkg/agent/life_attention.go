@@ -5,9 +5,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ianclemence/ghost/pkg/attention"
-	"github.com/ianclemence/ghost/pkg/jobs"
-	"github.com/ianclemence/ghost/pkg/life"
+	"github.com/ianclemence/kaya/pkg/attention"
+	"github.com/ianclemence/kaya/pkg/jobs"
+	"github.com/ianclemence/kaya/pkg/life"
 )
 
 // offerLife brings up what the owner's own records say is coming: a birthday,
@@ -220,7 +220,7 @@ func firstNonEmpty(a, b string) string {
 	return b
 }
 
-// OwnerLocation is the owner's own time zone (from what they told Ghost), for
+// OwnerLocation is the owner's own time zone (from what they told Kaya), for
 // anything that counts days: a birthday, an expiry, a bill.
 func (al *AgentLoop) OwnerLocation() *time.Location {
 	if al == nil {

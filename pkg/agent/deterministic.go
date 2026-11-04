@@ -9,17 +9,17 @@ import (
 	"time"
 	"unicode"
 
-	"github.com/ianclemence/ghost/pkg/credentials"
-	"github.com/ianclemence/ghost/pkg/logger"
-	"github.com/ianclemence/ghost/pkg/personalcontext"
-	"github.com/ianclemence/ghost/pkg/skills"
+	"github.com/ianclemence/kaya/pkg/credentials"
+	"github.com/ianclemence/kaya/pkg/logger"
+	"github.com/ianclemence/kaya/pkg/personalcontext"
+	"github.com/ianclemence/kaya/pkg/skills"
 )
 
 // askFiller is the politeness and sentence scaffolding that may surround a
 // command without changing what it asks.
 var askFiller = map[string]bool{
 	"please": true, "pls": true, "can": true, "could": true, "would": true, "will": true,
-	"you": true, "hey": true, "hi": true, "hello": true, "ghost": true, "me": true,
+	"you": true, "hey": true, "hi": true, "hello": true, "kaya": true, "me": true,
 	"tell": true, "show": true, "give": true, "thanks": true, "thank": true,
 	"the": true, "a": true, "an": true, "are": true, "is": true, "there": true,
 	"do": true, "does": true, "i": true, "we": true, "have": true, "got": true,
@@ -391,7 +391,7 @@ func (al *AgentLoop) tryDisabledSkillFastPath(msg, session string) (string, bool
 		if r.Message != "" {
 			return r.Message, true
 		}
-		return "The " + name + " skill is currently disabled. Enable it in Ghost's Skills settings to use it.", true
+		return "The " + name + " skill is currently disabled. Enable it in Kaya's Skills settings to use it.", true
 	}
 	return "", false
 }
@@ -429,7 +429,7 @@ func (al *AgentLoop) tryReadinessFastPath(msg, session string, metadata map[stri
 		}
 		// Aviation key check is generic (no per-skill env branches elsewhere).
 		if credentials.AviationKey(nil) == "" {
-			return "Flight tracking isn't connected yet. Add your flight data key in Ghost settings under Integrations, then try again — I won't guess flight data.", true
+			return "Flight tracking isn't connected yet. Add your flight data key in Kaya settings under Integrations, then try again — I won't guess flight data.", true
 		}
 		return "", false
 	}
@@ -673,7 +673,7 @@ func locationRefersBack(msg string) bool {
 
 // knownLocation returns the user's stored city/place (personal context,
 // current, in-scope), or "". It lets "here" resolve without another
-// round-trip: the user already told Ghost where they are.
+// round-trip: the user already told Kaya where they are.
 func (al *AgentLoop) knownLocation(session string) string {
 	if al == nil || al.pcStore == nil {
 		return ""
@@ -764,7 +764,7 @@ func (al *AgentLoop) locationWithMemoryFallback(msg, session string, inputs map[
 
 var flightNumberRE = regexp.MustCompile(`\b([A-Za-z]{2}\d{1,4}|[A-Z]{2}\s\d{1,4})\b`)
 
-// futureIntentWords mark forecast-style asks. Ghost's provider-backed
+// futureIntentWords mark forecast-style asks. Kaya's provider-backed
 // capability is CURRENT conditions; a forecast ask must never be answered
 // with fabricated numbers, so it returns an honest product limitation.
 var futureIntentWords = []string{"tomorrow", "forecast", "next week", "this weekend", "weekend", "on friday", "on saturday", "on sunday", "on monday", "later today", "tonight"}
@@ -846,7 +846,7 @@ func (al *AgentLoop) tryDeterministicNetworkDispatch(msg, session string, metada
 			return "", false // readiness fast-path owns the ask
 		}
 		if credentials.AviationKey(nil) == "" && credentials.AeroDataBoxKey() == "" {
-			return "Flight tracking isn't connected yet. Add your flight data key in Ghost settings under Integrations, then try again — I won't guess flight data.", true
+			return "Flight tracking isn't connected yet. Add your flight data key in Kaya settings under Integrations, then try again — I won't guess flight data.", true
 		}
 		ans, handled := al.execDeterministicTool("flight_status", map[string]interface{}{"flight_number": fn}, session)
 		if handled {
@@ -1065,7 +1065,7 @@ func isSingleAsk(lower string) bool {
 
 // statedByOwnerAndDiffers reports whether a current belief on the same subject
 // and predicate was declared or corrected by the owner and holds a different
-// value than the entry Ghost just inferred.
+// value than the entry Kaya just inferred.
 func statedByOwnerAndDiffers(current []personalcontext.Entry, entry personalcontext.Entry) bool {
 	for _, ce := range current {
 		if ce.Subject != entry.Subject || ce.Predicate != entry.Predicate || ce.Status != personalcontext.StatusCurrent {

@@ -5,9 +5,9 @@ version: 1.0.0
 author: Nous Research
 license: MIT
 metadata:
-  ghost:
+  kaya:
     tags: [Google, Gmail, Calendar, Drive, Sheets, Docs, Contacts, Email, OAuth]
-    homepage: https://github.com/NousResearch/ghost-agent
+    homepage: https://github.com/NousResearch/kaya-agent
     related_skills: [himalaya]
 prerequisites:
   commands: [python]
@@ -122,10 +122,10 @@ Should print `AUTHENTICATED`. Setup is complete — token refreshes automaticall
 
 ### Notes
 
-- Token is stored at `~/.ghost/google_token.json` and auto-refreshes.
-- Pending OAuth session state/verifier are stored temporarily at `~/.ghost/google_oauth_pending.json` until exchange completes.
-- Note: this skill-local token storage predates Ghost's credential vault.
-  For new connections prefer Ghost settings (Integrations); do not copy
+- Token is stored at `~/.kaya/google_token.json` and auto-refreshes.
+- Pending OAuth session state/verifier are stored temporarily at `~/.kaya/google_oauth_pending.json` until exchange completes.
+- Note: this skill-local token storage predates Kaya's credential vault.
+  For new connections prefer Kaya settings (Integrations); do not copy
   tokens out of these files into chat, logs, or other tools.
 - To revoke: `$GSETUP --revoke`
 

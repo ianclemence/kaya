@@ -8,11 +8,11 @@ import (
 	"sync"
 	"time"
 
-	"github.com/ianclemence/ghost/pkg/artifacts"
-	"github.com/ianclemence/ghost/pkg/motion"
+	"github.com/ianclemence/kaya/pkg/artifacts"
+	"github.com/ianclemence/kaya/pkg/motion"
 )
 
-// MotionTool lets Ghost turn a report, numbers or a walkthrough into a short
+// MotionTool lets Kaya turn a report, numbers or a walkthrough into a short
 // animated explainer: a spec of scenes the phone plays and the Pod renders to
 // an MP4. Each change is the next version, so the owner can change any word,
 // number or timing and make the video again.

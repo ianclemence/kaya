@@ -57,7 +57,7 @@ func TestTrajectoryFilter(t *testing.T) {
 // exactly what Publish wrote before trajectories existed) must still scan.
 func TestLegacyNullTrajectoryScans(t *testing.T) {
 	s := openTestStream(t)
-	if _, err := s.db.Exec(`INSERT INTO canonical_events (id, type, request_id, session_id, conversation_id, ghost_id, agent_id, routine_id, timestamp, visibility, status, payload)
+	if _, err := s.db.Exec(`INSERT INTO canonical_events (id, type, request_id, session_id, conversation_id, kaya_id, agent_id, routine_id, timestamp, visibility, status, payload)
 		VALUES ('legacy-1', 'message.received', 'req-0', '', '', '', '', '', '2026-01-01T00:00:00Z', 'internal_trace', '', '{}')`); err != nil {
 		t.Fatal(err)
 	}

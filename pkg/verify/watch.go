@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/ianclemence/ghost/pkg/watch"
+	"github.com/ianclemence/kaya/pkg/watch"
 )
 
 // Selective proactive watch lifecycle: the deterministic guarantees that keep
-// Ghost from watching the wrong thing, from watching it twice, and from
+// Kaya from watching the wrong thing, from watching it twice, and from
 // claiming it noticed when it could not. This check runs on a scratch
 // workspace with no model and no network — it is the creation/diff/budget
 // contract, not the execution path (probing through real and sandbox sources
@@ -20,7 +20,7 @@ func checkWatchLifecycle(e *Env) Check {
 	}
 	now := time.Now().UTC()
 
-	// Provenance is mandatory: a watch Ghost cannot show the origin of is
+	// Provenance is mandatory: a watch Kaya cannot show the origin of is
 	// one it may not run.
 	if _, err := store.Create(watch.Watch{Kind: watch.KindFlight, Entity: "BA123"}); err == nil {
 		return fail("Watches", "provenance required", "a watch without the owner's words was accepted", true)
@@ -93,7 +93,7 @@ func checkWatchLifecycle(e *Env) Check {
 	if v := pol.Allow(good[0], []watch.Watch{w}, now, "sandbox"); v.Allow || v.Reason != watch.ReasonDuplicate {
 		return fail("Watches", "duplicates are refused", "a second watch of a live entity was allowed", true)
 	}
-	// The master switch gates Ghost volunteering, never an owner's request.
+	// The master switch gates Kaya volunteering, never an owner's request.
 	off := watch.Default()
 	off.Sources = []string{"sandbox"}
 	off.Enabled = false

@@ -12,7 +12,7 @@ import (
 )
 
 // MDNSAdvertiser handles mDNS/Bonjour service advertisement.
-// This allows Ghost to be discovered on the local network as "ghost.local".
+// This allows Kaya to be discovered on the local network as "kaya.local".
 type MDNSAdvertiser struct {
 	Hostname string
 	Port     int
@@ -27,7 +27,7 @@ type MDNSAdvertiser struct {
 func NewMDNSAdvertiser(port int, version string) *MDNSAdvertiser {
 	hostname, _ := os.Hostname()
 	if hostname == "" {
-		hostname = "ghost"
+		hostname = "kaya"
 	}
 
 	return &MDNSAdvertiser{
@@ -44,7 +44,7 @@ func (m *MDNSAdvertiser) Available() error {
 	return m.checkAvahi()
 }
 
-// Advertise registers the Ghost service via mDNS.
+// Advertise registers the Kaya service via mDNS.
 // On Linux, this uses avahi-daemon. On other platforms, it's a no-op.
 func (m *MDNSAdvertiser) Advertise() error {
 	// Check if avahi-publish is available (Linux)
@@ -56,7 +56,7 @@ func (m *MDNSAdvertiser) Advertise() error {
 	// Register via avahi-publish
 	go m.registerAvahi()
 
-	// Also try to resolve ghost.local to verify it works
+	// Also try to resolve kaya.local to verify it works
 	go m.verifyResolution()
 
 	return nil
@@ -81,7 +81,7 @@ func (m *MDNSAdvertiser) checkAvahi() error {
 
 func (m *MDNSAdvertiser) registerAvahi() {
 	// Build service type
-	serviceType := "_ghost._tcp"
+	serviceType := "_kaya._tcp"
 
 	// avahi-publish expects each TXT record as its own key=value argument; one
 	// space-joined string is a single opaque record that no client can parse.
@@ -134,15 +134,15 @@ func (m *MDNSAdvertiser) verifyResolution() {
 	// Wait a moment for mDNS to register
 	time.Sleep(2 * time.Second)
 
-	// Try to resolve ghost.local
-	addrs, err := net.LookupHost("ghost.local")
+	// Try to resolve kaya.local
+	addrs, err := net.LookupHost("kaya.local")
 	if err != nil {
-		log.Printf("mDNS: ghost.local resolution failed (expected if avahi not running): %v", err)
+		log.Printf("mDNS: kaya.local resolution failed (expected if avahi not running): %v", err)
 		return
 	}
 
 	if len(addrs) > 0 {
-		log.Printf("mDNS: ghost.local resolves to %s", strings.Join(addrs, ", "))
+		log.Printf("mDNS: kaya.local resolves to %s", strings.Join(addrs, ", "))
 	}
 }
 

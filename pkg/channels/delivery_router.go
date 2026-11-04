@@ -3,7 +3,7 @@ package channels
 import (
 	"strings"
 
-	"github.com/ianclemence/ghost/pkg/bus"
+	"github.com/ianclemence/kaya/pkg/bus"
 )
 
 type ActiveSessionProvider interface {

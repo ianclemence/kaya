@@ -2,10 +2,10 @@
 name: quick-capture
 description: Capture a note, idea, or reminder-to-self quickly and reliably. Invoke when the user says "remember this", "note that down", "add a note", "capture this", "write that down", "save this for later", or asks you to jot something down. Appends to a single plain file so it is never lost, no matter the channel.
 version: 1.0.0
-author: Ghost
+author: Kaya
 license: MIT
 metadata:
-  ghost:
+  kaya:
     tags: [capture, notes, remember, quick, inbox]
 ---
 
@@ -51,6 +51,6 @@ it with `write_file` first (same path), then append.
   saying so explicitly.
 - Never capture private/sensitive facts (passwords, PINs, financial details).
 - If a capture is really a *preference* or a fact about the user ("I prefer
-  concise answers"), also suggest the user let Ghost remember it — but still
+  concise answers"), also suggest the user let Kaya remember it — but still
   capture the raw line.
 - After saving, confirm in one short line: "Saved."

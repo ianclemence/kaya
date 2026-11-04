@@ -1,5 +1,5 @@
 // Package dashboards answers questions about the owner's data with SQL and
-// keeps the answers as live dashboards: each chart is a query Ghost wrote,
+// keeps the answers as live dashboards: each chart is a query Kaya wrote,
 // shown with that query, re-run whenever the dashboard is looked at. The data
 // is read-only by construction. The owner's own records on the Pod and the
 // spreadsheets they sent are loaded into a private in-memory database built
@@ -21,9 +21,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ianclemence/ghost/pkg/credentials"
-	"github.com/ianclemence/ghost/pkg/life"
-	"github.com/ianclemence/ghost/pkg/uploads"
+	"github.com/ianclemence/kaya/pkg/credentials"
+	"github.com/ianclemence/kaya/pkg/life"
+	"github.com/ianclemence/kaya/pkg/uploads"
 
 	_ "modernc.org/sqlite"
 )
@@ -327,7 +327,7 @@ func nz(v int) interface{} {
 }
 
 // Sources lists every place a dashboard can draw from, with its tables, so
-// Ghost can write a query that fits. A database that can't be reached says so.
+// Kaya can write a query that fits. A database that can't be reached says so.
 func Sources(ctx context.Context, workspace string) []Source {
 	out := []Source{}
 	db, tables, err := podDB(ctx, workspace)

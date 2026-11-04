@@ -4,15 +4,15 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ianclemence/ghost/pkg/bus"
-	"github.com/ianclemence/ghost/pkg/cevents"
-	"github.com/ianclemence/ghost/pkg/live"
+	"github.com/ianclemence/kaya/pkg/bus"
+	"github.com/ianclemence/kaya/pkg/cevents"
+	"github.com/ianclemence/kaya/pkg/live"
 )
 
 func settleHarness(t *testing.T) (*gateHarness, *bus.MessageBus) {
 	t.Helper()
 	h := newGateHarness(t)
-	h.loop.SetLivePlane(live.NewRegistry(h.ghostID))
+	h.loop.SetLivePlane(live.NewRegistry(h.kayaID))
 	b := bus.NewMessageBus()
 	h.loop.bus = b
 	return h, b
@@ -106,7 +106,7 @@ func TestTakeoverReleaseResumeChain(t *testing.T) {
 	before := h.stubs["browser_snapshot"].calls
 	h.loop.maybeRunBrowserTool(h.toolCtx(), h.loop.tools, tc, h.opts("sess-chain"), nil)
 	if h.stubs["browser_snapshot"].calls != before {
-		t.Fatalf("Ghost must be refused while the user holds control")
+		t.Fatalf("Kaya must be refused while the user holds control")
 	}
 	if err := h.loop.livePlane.Release(surfaceID, "dev-1", false); err != nil {
 		t.Fatalf("release: %v", err)
@@ -116,11 +116,11 @@ func TestTakeoverReleaseResumeChain(t *testing.T) {
 	}
 	res, _, _ := h.loop.maybeRunBrowserTool(h.toolCtx(), h.loop.tools, tc, h.opts("sess-chain"), nil)
 	if res.IsError {
-		t.Fatalf("resumed Ghost must execute: %s", res.ForLLM)
+		t.Fatalf("resumed Kaya must execute: %s", res.ForLLM)
 	}
 	s, _ := h.loop.livePlane.Snapshot(surfaceID)
-	if s.Control != live.OwnerGhost || s.State != live.StateActive {
-		t.Fatalf("surface must be Ghost-active after resume: %+v", s)
+	if s.Control != live.OwnerKaya || s.State != live.StateActive {
+		t.Fatalf("surface must be Kaya-active after resume: %+v", s)
 	}
 	// Evidence reached the canonical stream: the run is proven, not claimed.
 	found := false
@@ -169,8 +169,8 @@ func TestExpiredLeaseFailsClosed(t *testing.T) {
 		t.Fatalf("takeover: %v", err)
 	}
 	time.Sleep(5 * time.Millisecond)
-	if ok, _ := h.loop.livePlane.GhostMayAct("sess-exp"); ok {
-		t.Fatalf("expired lease must not authorize Ghost")
+	if ok, _ := h.loop.livePlane.KayaMayAct("sess-exp"); ok {
+		t.Fatalf("expired lease must not authorize Kaya")
 	}
 	// Lazy expiry already cleared control: there is nothing to release,
 	// and a release attempt correctly reports that.
@@ -181,8 +181,8 @@ func TestExpiredLeaseFailsClosed(t *testing.T) {
 		t.Fatalf("resume after expiry: %v", err)
 	}
 	s, _ := h.loop.livePlane.Snapshot("sess-exp")
-	if s.Control != live.OwnerGhost {
-		t.Fatalf("control must return to Ghost, got %+v", s)
+	if s.Control != live.OwnerKaya {
+		t.Fatalf("control must return to Kaya, got %+v", s)
 	}
 }
 
@@ -208,7 +208,7 @@ func TestStaleSurfaceControlRefused(t *testing.T) {
 }
 
 // When a turn ends, the owner's devices hear about it. The phone's card used
-// to say "Ghost is working…" under the finished reply because the settle was
+// to say "Kaya is working…" under the finished reply because the settle was
 // silent.
 func TestSettleAnnouncesEachSettledSurface(t *testing.T) {
 	h, b := settleHarness(t)
@@ -239,7 +239,7 @@ func TestSettleAnnouncesEachSettledSurface(t *testing.T) {
 	}
 }
 
-// The card says what Ghost is doing during a step, and keeps the page it knows
+// The card says what Kaya is doing during a step, and keeps the page it knows
 // when a later step reports less.
 func TestBrowserSurfaceCarriesSessionStepAndPage(t *testing.T) {
 	h, _ := settleHarness(t)

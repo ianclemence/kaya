@@ -1,8 +1,8 @@
-// Ghost - Ultra-lightweight personal AI agent
-// Inspired by and based on GHOST: https://github.com/ianclemence/ghost
+// Kaya - Ultra-lightweight personal AI agent
+// Inspired by and based on KAYA: https://github.com/ianclemence/kaya
 // License: MIT
 //
-// Copyright (c) 2026 Ghost contributors
+// Copyright (c) 2026 Kaya contributors
 
 package agent
 
@@ -17,7 +17,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ianclemence/ghost/pkg/personalcontext"
+	"github.com/ianclemence/kaya/pkg/personalcontext"
 )
 
 // MemoryStore manages persistent memory for the agent.

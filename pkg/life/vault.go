@@ -8,10 +8,10 @@ import (
 	"time"
 )
 
-// Paper is one of the owner's important documents, as Ghost keeps it: what it
+// Paper is one of the owner's important documents, as Kaya keeps it: what it
 // is, whose it is, the facts on it worth having to hand (a passport number,
 // a policy's insurer), when it expires or renews, and the photo or file it was
-// read from. Ghost reads the facts off the document; it never makes them up.
+// read from. Kaya reads the facts off the document; it never makes them up.
 type Paper struct {
 	ID     string `json:"id"`
 	Kind   string `json:"kind"`

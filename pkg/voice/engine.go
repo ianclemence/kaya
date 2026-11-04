@@ -1,7 +1,7 @@
 package voice
 
 // Engine is the minimal push-to-talk voice stack: transcription in,
-// synthesis out, one Ghost runtime between them. No audio is stored by
+// synthesis out, one Kaya runtime between them. No audio is stored by
 // default; unavailable providers produce honest errors, never silence.
 
 import (
@@ -61,7 +61,7 @@ func edgeTTSSpeak(ctx context.Context, text string) ([]byte, string, error) {
 	if len(text) > 5000 {
 		text = text[:5000]
 	}
-	f, err := os.CreateTemp("", "ghost-tts-*.mp3")
+	f, err := os.CreateTemp("", "kaya-tts-*.mp3")
 	if err != nil {
 		return nil, "", err
 	}

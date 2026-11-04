@@ -32,10 +32,10 @@ SCRIPT_DIR = Path(__file__).parent
 TEMPLATES_FILE = SCRIPT_DIR / "templates.json"
 # The skills tree is mounted read-only inside the execution sandbox, so the
 # fetch cache lives under the writable scratch/HOME area (HOME points there),
-# never beside the script. Override with GHOST_MEME_CACHE_DIR if needed.
+# never beside the script. Override with KAYA_MEME_CACHE_DIR if needed.
 CACHE_DIR = Path(
-    os.environ.get("GHOST_MEME_CACHE_DIR")
-    or (Path.home() / ".cache" / "ghost-meme-generation")
+    os.environ.get("KAYA_MEME_CACHE_DIR")
+    or (Path.home() / ".cache" / "kaya-meme-generation")
 )
 IMGFLIP_API = "https://api.imgflip.com/get_memes"
 IMGFLIP_CACHE_FILE = CACHE_DIR / "imgflip_memes.json"

@@ -3,7 +3,7 @@ package tools
 import (
 	"testing"
 
-	"github.com/ianclemence/ghost/pkg/film"
+	"github.com/ianclemence/kaya/pkg/film"
 )
 
 func TestFilmIsOfferedForAnAnimationRequest(t *testing.T) {

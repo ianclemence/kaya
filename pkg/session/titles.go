@@ -17,9 +17,9 @@ func GenerateTitle(firstUserMessage string) string {
 
 	// Strip common prefixes people use when starting a chat.
 	for _, prefix := range []string{
-		"hey ghost, ", "hey ghost,  ", "hey ghost! ", "hey ghost!  ",
-		"hi ghost, ", "hi ghost,  ", "hi ghost! ", "hi ghost!  ",
-		"hello ghost, ", "hello ghost,  ", "hello ghost! ", "hello ghost!  ",
+		"hey kaya, ", "hey kaya,  ", "hey kaya! ", "hey kaya!  ",
+		"hi kaya, ", "hi kaya,  ", "hi kaya! ", "hi kaya!  ",
+		"hello kaya, ", "hello kaya,  ", "hello kaya! ", "hello kaya!  ",
 		"hey ", "hi ", "hello ",
 	} {
 		if strings.HasPrefix(strings.ToLower(text), prefix) {

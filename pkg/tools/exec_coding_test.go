@@ -9,8 +9,8 @@ import (
 	"time"
 )
 
-// What the live Ghost ran while trying to build a Go project, and was refused
-// for. None of it touches Ghost's estate.
+// What the live Kaya ran while trying to build a Go project, and was refused
+// for. None of it touches Kaya's estate.
 func TestGuardLetsCodingWorkThrough(t *testing.T) {
 	home, ws := projectsHome(t)
 	proj := filepath.Join(home, "projects", "scout")
@@ -35,14 +35,14 @@ func TestGuardStillRefusesTheEstate(t *testing.T) {
 	proj := filepath.Join(home, "projects", "scout")
 	cases := []struct{ name, cmd, cwd string }{
 		{"remove the skills by absolute path from a project", "rm -rf " + ws + "/skills", proj},
-		{"overwrite the contract from a project", "echo x > " + ws + "/GHOST.md", proj},
+		{"overwrite the contract from a project", "echo x > " + ws + "/KAYA.md", proj},
 		{"move the memory digest from a project", "mv " + ws + "/memory/MEMORY.md /tmp/x", proj},
 		{"remove the workspace itself", "rm -rf " + ws, proj},
-		{"overwrite the installed binary", "cp ./ghost /usr/local/bin/ghost", proj},
+		{"overwrite the installed binary", "cp ./kaya /usr/local/bin/kaya", proj},
 		{"bare name from the workspace", "echo x > MEMORY.md", ws},
 		{"bare name with a discarded stderr", "rm -rf skills 2>/dev/null", ws},
 		{"scratch path does not excuse a real target", "cp " + ws + "/tmp/a " + ws + "/state/x", ws},
-		{"the database", "cat ghost.db", proj},
+		{"the database", "cat kaya.db", proj},
 	}
 	for _, c := range cases {
 		if _, denied := execDeniedPrimaryFiles(c.cmd, c.cwd, ws); !denied {
@@ -117,11 +117,11 @@ func TestACancelledCallerIsNotReportedAsATimeout(t *testing.T) {
 	}
 }
 
-// Everything Ghost's service starts runs in a sandbox that ends with the
+// Everything Kaya's service starts runs in a sandbox that ends with the
 // command, so a build run with & never finishes; the description says not to.
 func TestExecDescriptionWarnsAgainstBackgrounding(t *testing.T) {
 	d := NewExecTool(t.TempDir(), true).Description()
-	for _, want := range []string{"timeout_seconds", "never background", "1800", "not bash", "made as Ghost"} {
+	for _, want := range []string{"timeout_seconds", "never background", "1800", "not bash", "made as Kaya"} {
 		if !strings.Contains(strings.ToLower(d), strings.ToLower(want)) {
 			t.Errorf("exec description must mention %q", want)
 		}

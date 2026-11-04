@@ -1,6 +1,6 @@
-// Package server implements the Ghost relay server.
+// Package server implements the Kaya relay server.
 //
-// The relay accepts persistent outbound WebSocket connections from Ghost
+// The relay accepts persistent outbound WebSocket connections from Kaya
 // devices and HTTP/WebSocket connections from paired mobile apps. It routes
 // traffic between them using a binary multiplexed frame protocol.
 //
@@ -29,8 +29,8 @@ import (
 	"time"
 
 	"github.com/gorilla/websocket"
-	"github.com/ianclemence/ghost/pkg/entitlement"
-	"github.com/ianclemence/ghost/pkg/relay/proto"
+	"github.com/ianclemence/kaya/pkg/entitlement"
+	"github.com/ianclemence/kaya/pkg/relay/proto"
 )
 
 // RegistryEntry is a single device in the registry file.
@@ -376,7 +376,7 @@ type Config struct {
 	RegistryPath string // path to registry.json
 	AdminSecret  string // optional admin token for enrollment
 
-	// EntitlementKeys are the public keys the Ghost site signs entitlements
+	// EntitlementKeys are the public keys the Kaya site signs entitlements
 	// with. When set, the relay serves only Pods that present a valid
 	// entitlement, and a Pod may enroll itself with one. Empty means a
 	// self-hosted relay that trusts its registry alone.
@@ -468,10 +468,10 @@ var hopByHopRequestHeaders = map[string]bool{
 	"proxy-authorization": true,
 	"host":                true,
 	// Relay auth headers are also stripped: the device-side relay client
-	// injects X-Ghost-Secret locally; the relay never forwards credentials.
-	"x-ghost-client-id":    true,
-	"x-ghost-client-token": true,
-	"x-ghost-secret":       true,
+	// injects X-Kaya-Secret locally; the relay never forwards credentials.
+	"x-kaya-client-id":    true,
+	"x-kaya-client-token": true,
+	"x-kaya-secret":       true,
 }
 
 // hopByHopResponseHeaders are stripped from device responses before writing
@@ -517,14 +517,14 @@ func (s *Server) handleHealth(w http.ResponseWriter, r *http.Request) {
 		"status":  "ok",
 		"version": proto.Version,
 		// Whether this relay serves only Pods with an entitlement. A Pod
-		// reads it to know whether to ask the Ghost site for one.
+		// reads it to know whether to ask the Kaya site for one.
 		"metered": len(s.cfg.EntitlementKeys) > 0,
 	})
 }
 
 // handleEnroll registers a device. Two things can authorise it: the operator's
-// admin token (self-hosted relays), or an entitlement signed by the Ghost site
-// for exactly this device (Ghost Connect), in which case the Pod enrolls
+// admin token (self-hosted relays), or an entitlement signed by the Kaya site
+// for exactly this device (Kaya Connect), in which case the Pod enrolls
 // itself and the relay never needs a channel to the site.
 func (s *Server) handleEnroll(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
@@ -609,12 +609,12 @@ func entitlementReason(err error) string {
 	}
 }
 
-// handleDeviceTunnel accepts a WebSocket connection from a Ghost device.
+// handleDeviceTunnel accepts a WebSocket connection from a Kaya device.
 // Credentials are accepted ONLY via headers — never query parameters, which
 // leak into proxy and access logs.
 func (s *Server) handleDeviceTunnel(w http.ResponseWriter, r *http.Request) {
-	deviceID := r.Header.Get("X-Ghost-Device")
-	deviceSecret := r.Header.Get("X-Ghost-Device-Secret")
+	deviceID := r.Header.Get("X-Kaya-Device")
+	deviceSecret := r.Header.Get("X-Kaya-Device-Secret")
 	if deviceID == "" || deviceSecret == "" {
 		http.Error(w, `{"error":"device credentials required"}`, http.StatusUnauthorized)
 		return
@@ -632,7 +632,7 @@ func (s *Server) handleDeviceTunnel(w http.ResponseWriter, r *http.Request) {
 	var expires int64
 	var account string
 	if len(s.cfg.EntitlementKeys) > 0 {
-		c, err := entitlement.VerifyForPod(r.Header.Get("X-Ghost-Entitlement"), deviceID, s.cfg.EntitlementKeys, s.cfg.now())
+		c, err := entitlement.VerifyForPod(r.Header.Get("X-Kaya-Entitlement"), deviceID, s.cfg.EntitlementKeys, s.cfg.now())
 		if err != nil {
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusPaymentRequired)
@@ -906,10 +906,10 @@ func (l *oauthRateLimit) allow(addr string) bool {
 
 // handleOAuthCallback is the relay-hosted OAuth callback for remote setup.
 //
-// A remote browser cannot reach the LAN Ghost, so Google redirects here:
-// GET /oauth/calendar/callback?ghost=<deviceID>&code=..&state=..[&error=..]
+// A remote browser cannot reach the LAN Kaya, so Google redirects here:
+// GET /oauth/calendar/callback?kaya=<deviceID>&code=..&state=..[&error=..]
 // The relay forwards ONLY the allowlisted query params (code, state, error)
-// to the Ghost device's own callback handler over the already-authenticated
+// to the Kaya device's own callback handler over the already-authenticated
 // device tunnel. The device validates state (single-use, session-bound,
 // 10-min TTL) and exchanges the code with its own client secret.
 //
@@ -922,8 +922,8 @@ func (l *oauthRateLimit) allow(addr string) bool {
 //     the device's JSON response carries product status, never secrets.
 //   - Path and query are allowlisted; device ID format is validated; the
 //     endpoint is rate-limited per client address.
-//   - If the Ghost is offline, the callback fails honestly (503) and the
-//     user retries once Ghost is back — nothing is marked connected.
+//   - If the Kaya is offline, the callback fails honestly (503) and the
+//     user retries once Kaya is back — nothing is marked connected.
 func (s *Server) handleOAuthCallback(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		http.Error(w, `{"error":"method not allowed"}`, http.StatusMethodNotAllowed)
@@ -946,9 +946,9 @@ func (s *Server) handleOAuthCallback(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	q := r.URL.Query()
-	deviceID := q.Get("ghost")
+	deviceID := q.Get("kaya")
 	if deviceID == "" || len(deviceID) > 128 || strings.ContainsAny(deviceID, "/\\?#%@ \t\n") {
-		http.Error(w, `{"error":"ghost required"}`, http.StatusBadRequest)
+		http.Error(w, `{"error":"kaya required"}`, http.StatusBadRequest)
 		return
 	}
 	// Forward only the OAuth callback params; drop everything else so a
@@ -985,10 +985,10 @@ func min(a, b int) int {
 // App credentials are accepted ONLY via headers — never query parameters.
 func (s *Server) handleAppRequest(w http.ResponseWriter, r *http.Request) {
 	// Authenticate app via client token
-	deviceID := r.Header.Get("X-Ghost-Client-Id")
-	clientToken := r.Header.Get("X-Ghost-Client-Token")
+	deviceID := r.Header.Get("X-Kaya-Client-Id")
+	clientToken := r.Header.Get("X-Kaya-Client-Token")
 	if deviceID == "" || clientToken == "" {
-		http.Error(w, `{"error":"ghost and token required"}`, http.StatusUnauthorized)
+		http.Error(w, `{"error":"kaya and token required"}`, http.StatusUnauthorized)
 		return
 	}
 	scope, ok := s.tunnels.AuthClientScope(deviceID, clientToken)
@@ -1132,7 +1132,7 @@ loop:
 			w.Header().Add(k, v)
 		}
 	}
-	w.Header().Set("X-Ghost-Relay", "true")
+	w.Header().Set("X-Kaya-Relay", "true")
 	w.WriteHeader(respMeta.Status)
 
 	// Stream response body from device DATA frames

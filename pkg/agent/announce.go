@@ -8,16 +8,16 @@ import (
 	"sync"
 	"time"
 
-	"github.com/ianclemence/ghost/pkg/bus"
-	"github.com/ianclemence/ghost/pkg/constants"
-	"github.com/ianclemence/ghost/pkg/logger"
-	"github.com/ianclemence/ghost/pkg/provider"
+	"github.com/ianclemence/kaya/pkg/bus"
+	"github.com/ianclemence/kaya/pkg/constants"
+	"github.com/ianclemence/kaya/pkg/logger"
+	"github.com/ianclemence/kaya/pkg/provider"
 )
 
-// Announcements are how Ghost tells its owner something without being asked:
+// Announcements are how Kaya tells its owner something without being asked:
 // a part of itself stopped working, something unusual is touching its network,
 // the room got uncomfortable, a new version is out. Each has a key and a
-// cooldown, remembered across restarts, so Ghost says a thing once and does not
+// cooldown, remembered across restarts, so Kaya says a thing once and does not
 // repeat it every time it wakes.
 
 var announceMu sync.Mutex
@@ -61,7 +61,7 @@ func (al *AgentLoop) Announce(key, text string, cooldown time.Duration, urgent b
 	}
 	announceMu.Unlock()
 
-	// Say it where the owner last talked to Ghost; the shared conversation
+	// Say it where the owner last talked to Kaya; the shared conversation
 	// (and so the app) always gets it.
 	channel, chatID := "mobile", "default"
 	if al.state != nil {
@@ -74,7 +74,7 @@ func (al *AgentLoop) Announce(key, text string, cooldown time.Duration, urgent b
 	return true
 }
 
-// ResolveNotice retracts an alert whose condition has cleared. The words Ghost
+// ResolveNotice retracts an alert whose condition has cleared. The words Kaya
 // said stay in the conversation, marked resolved so every surface can show them
 // as settled, and every connected surface is told at once. The key's cooldown
 // is forgotten, so the same condition coming back is announced again. It
@@ -108,7 +108,7 @@ func (al *AgentLoop) ResolveNotice(key string) bool {
 	return true
 }
 
-// KeyOlderNotices gives the alerts Ghost wrote before alerts carried a key
+// KeyOlderNotices gives the alerts Kaya wrote before alerts carried a key
 // their key, by the fixed opening of their words, so the ones whose condition
 // has since cleared can be resolved. Idempotent.
 func (al *AgentLoop) KeyOlderNotices(openings map[string]string) {
@@ -122,7 +122,7 @@ func (al *AgentLoop) KeyOlderNotices(openings map[string]string) {
 
 // noteModelFailure is called when a model call fails. If the cause is
 // something only the owner can fix (an empty balance, a rejected key) and the
-// failing work was Ghost's own (a background job, a routine), nobody was
+// failing work was Kaya's own (a background job, a routine), nobody was
 // waiting to be told, so tell them. Turns the owner started already show them
 // the error.
 func (al *AgentLoop) noteModelFailure(sessionKey string, err error) {

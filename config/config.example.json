@@ -1,7 +1,7 @@
 {
   "agents": {
     "defaults": {
-      "workspace": "~/ghost/workspace",
+      "workspace": "~/kaya/workspace",
       "provider": "anthropic",
       "model": "claude-3.5-sonnet",
       "embedding_model": "embeddinggemma",

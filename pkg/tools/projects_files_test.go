@@ -21,7 +21,7 @@ func projectWithSkillsPackage(t *testing.T) (home, ws string) {
 	return home, ws
 }
 
-// The live Ghost called read_file("projects/scout/pkg/mcpclient/client.go") and
+// The live Kaya called read_file("projects/scout/pkg/mcpclient/client.go") and
 // was told the file did not exist, because projects/ lives beside the workspace.
 func TestFileToolsReachProjectFiles(t *testing.T) {
 	_, ws := projectWithSkillsPackage(t)
@@ -39,7 +39,7 @@ func TestFileToolsReachProjectFiles(t *testing.T) {
 
 // scout has a package called skills. The estate guard judged by folder name and
 // refused edits to it as "the skills estate".
-func TestProjectFoldersNamedLikeGhostsAreTheProjectsOwn(t *testing.T) {
+func TestProjectFoldersNamedLikeKayasAreTheProjectsOwn(t *testing.T) {
 	home, ws := projectWithSkillsPackage(t)
 	ctx := context.Background()
 	target := filepath.Join(home, "projects", "scout", "pkg", "skills", "skills.go")
@@ -64,11 +64,11 @@ func TestProjectFoldersNamedLikeGhostsAreTheProjectsOwn(t *testing.T) {
 	}
 }
 
-// None of that loosens Ghost's own estate.
-func TestProjectAccessDoesNotLoosenGhostsEstate(t *testing.T) {
+// None of that loosens Kaya's own estate.
+func TestProjectAccessDoesNotLoosenKayasEstate(t *testing.T) {
 	home, ws := projectWithSkillsPackage(t)
 	ctx := context.Background()
-	for _, p := range []string{"skills/x/SKILL.md", "GHOST.md", "memory/MEMORY.md", "state/x.json", "sessions/x"} {
+	for _, p := range []string{"skills/x/SKILL.md", "KAYA.md", "memory/MEMORY.md", "state/x.json", "sessions/x"} {
 		res := NewWriteFileTool(ws, true).Execute(ctx, map[string]interface{}{"path": p, "content": "x"})
 		if !res.IsError {
 			t.Errorf("write_file must still refuse %s", p)

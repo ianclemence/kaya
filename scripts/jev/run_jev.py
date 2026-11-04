@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Run the synthetic JEV calibration fixtures against an external evaluator.
 
-JEV is an external evaluator, never a Ghost runtime dependency. This script
+JEV is an external evaluator, never a Kaya runtime dependency. This script
 reads ONLY synthetic/sanitized fixtures from fixtures.json; it never sends real
 conversations, memories, or credentials.
 

@@ -7,8 +7,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/ianclemence/ghost/pkg/skills"
-	"github.com/ianclemence/ghost/pkg/tools"
+	"github.com/ianclemence/kaya/pkg/skills"
+	"github.com/ianclemence/kaya/pkg/tools"
 )
 
 // The deterministic fast paths exist to save an LLM call on an unambiguous

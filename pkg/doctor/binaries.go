@@ -8,19 +8,19 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ianclemence/ghost/pkg/appliance"
+	"github.com/ianclemence/kaya/pkg/appliance"
 )
 
-// checkBinaries warns when a stale `ghost` binary earlier in PATH shadows the
+// checkBinaries warns when a stale `kaya` binary earlier in PATH shadows the
 // one that was actually installed. This is a real, recurring failure here:
-// `ghost update` installs to /usr/local/bin, but ~/.local/bin usually comes
+// `kaya update` installs to /usr/local/bin, but ~/.local/bin usually comes
 // first in PATH, so a stale copy there keeps running the old build after an
 // update. The check makes that visible instead of leaving the operator to
 // wonder why an update "didn't take".
 func (d *Doctor) checkBinaries(ctx context.Context) CheckResult {
 	start := time.Now()
 	pathEnv := os.Getenv("PATH")
-	bins := appliance.FindGhostBinaries(pathEnv, findExecutable)
+	bins := appliance.FindKayaBinaries(pathEnv, findExecutable)
 	if len(bins) < 2 {
 		// One binary is the normal case: report nothing rather than a
 		// permanent "inventory" row (diagnostics is health, not inventory).
@@ -28,7 +28,7 @@ func (d *Doctor) checkBinaries(ctx context.Context) CheckResult {
 	}
 
 	shadow, ok := appliance.DetectBinaryShadow(bins, func(p string) string {
-		return ghostVersionAt(ctx, p)
+		return kayaVersionAt(ctx, p)
 	})
 	if !ok {
 		// Matching duplicates are harmless; say nothing.
@@ -39,11 +39,11 @@ func (d *Doctor) checkBinaries(ctx context.Context) CheckResult {
 		Name:   "binaries",
 		Label:  "Troubleshooting",
 		Status: "warning",
-		Message: "An out-of-date Ghost is shadowing the installed one: " +
+		Message: "An out-of-date Kaya is shadowing the installed one: " +
 			shadow.Wins + " (" + shadow.WinsVersion + ") runs instead of " +
 			shadow.Shadows + " (" + shadow.ShadowsVersion + "). " +
-			"There should be exactly one `ghost`, at " + appliance.DefaultBinDir + ". " +
-			"Fix it now with `sudo ghost update` (which removes the stale copy) or " +
+			"There should be exactly one `kaya`, at " + appliance.DefaultBinDir + ". " +
+			"Fix it now with `sudo kaya update` (which removes the stale copy) or " +
 			"`sudo rm " + shadow.Wins + "`.",
 		Latency: time.Since(start).Milliseconds(),
 	}
@@ -64,10 +64,10 @@ func findExecutable(dir, name string) (string, bool) {
 	return p, true
 }
 
-// ghostVersionAt runs `<path> version` and extracts the version token. It is
+// kayaVersionAt runs `<path> version` and extracts the version token. It is
 // bounded and best-effort: an unreadable or hung binary yields "" (unknown),
 // which Detects a shadow only when there is a real difference.
-func ghostVersionAt(ctx context.Context, path string) string {
+func kayaVersionAt(ctx context.Context, path string) string {
 	cctx, cancel := context.WithTimeout(ctx, 3*time.Second)
 	defer cancel()
 	out, err := exec.CommandContext(cctx, path, "version").Output()
@@ -76,8 +76,8 @@ func ghostVersionAt(ctx context.Context, path string) string {
 	}
 	for _, line := range strings.Split(string(out), "\n") {
 		line = strings.TrimSpace(line)
-		if strings.HasPrefix(line, "👻 Ghost ") {
-			v := strings.TrimSpace(strings.TrimPrefix(line, "👻 Ghost "))
+		if strings.HasPrefix(line, "👻 Kaya ") {
+			v := strings.TrimSpace(strings.TrimPrefix(line, "👻 Kaya "))
 			// "vX.Y.Z (git: abc1234)" -> keep the version, drop the parenthetical
 			// for a readable message; the full string still differs between builds.
 			if i := strings.Index(v, " ("); i > 0 {

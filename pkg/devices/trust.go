@@ -1,7 +1,7 @@
 package devices
 
 // Device trust model: future computers, phones, Home Assistant boxes,
-// NAS units, and smart devices expose CAPABILITIES through Ghost —
+// NAS units, and smart devices expose CAPABILITIES through Kaya —
 // never unrestricted execution endpoints.
 //
 // A device has identity, trust state, declared capabilities, connection
@@ -45,10 +45,10 @@ const (
 	ClassSensor   DeviceClass = "sensor"
 )
 
-// Device is a controllable endpoint owned by a Ghost.
+// Device is a controllable endpoint owned by a Kaya.
 type Device struct {
 	ID           string            `json:"id"`
-	GhostID      string            `json:"ghost_id"`
+	KayaID      string            `json:"kaya_id"`
 	Class        DeviceClass       `json:"class"`
 	DisplayName  string            `json:"display_name"`
 	Trust        TrustState        `json:"trust"`
@@ -60,9 +60,9 @@ type Device struct {
 
 // Register validates a new device record. Trust starts at paired —
 // NEVER trusted by default, and unrestricted shell is never granted.
-func Register(ghostID string, class DeviceClass, displayName string, capabilities []string) (*Device, error) {
-	if strings.TrimSpace(ghostID) == "" || strings.TrimSpace(displayName) == "" {
-		return nil, errors.New("ghost and display name required")
+func Register(kayaID string, class DeviceClass, displayName string, capabilities []string) (*Device, error) {
+	if strings.TrimSpace(kayaID) == "" || strings.TrimSpace(displayName) == "" {
+		return nil, errors.New("kaya and display name required")
 	}
 	switch class {
 	case ClassComputer, ClassPhone, ClassHub, ClassServer, ClassSensor:
@@ -80,7 +80,7 @@ func Register(ghostID string, class DeviceClass, displayName string, capabilitie
 		}
 	}
 	return &Device{
-		GhostID: ghostID, Class: class, DisplayName: displayName,
+		KayaID: kayaID, Class: class, DisplayName: displayName,
 		Trust: TrustPaired, Connection: ConnOffline, Capabilities: capabilities,
 	}, nil
 }

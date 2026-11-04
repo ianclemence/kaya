@@ -40,7 +40,7 @@ func TestGenerateHealthyRoutineSilent(t *testing.T) {
 
 func TestGenerateGoalCheckins(t *testing.T) {
 	now := time.Now().UTC()
-	mem := []MemoryFact{{ID: "m1", Predicate: "goal/primary", Value: "launch Ghost", UpdatedAt: now}}
+	mem := []MemoryFact{{ID: "m1", Predicate: "goal/primary", Value: "launch Kaya", UpdatedAt: now}}
 	got := Generate(Signals{Memories: mem, Now: now}, nil)
 	if len(got) != 1 || got[0].Action != "" {
 		t.Fatalf("goal idea must propose without automating, got %+v", got)
@@ -114,7 +114,7 @@ func TestVerifyDraftResolvesAndStrips(t *testing.T) {
 }
 
 func TestVerifyDraftUnresolvableMarksUnverified(t *testing.T) {
-	idea := VerifyDraft(Draft{Title: "X", Body: "You prefer tea [memory:ghost]."}, Evidence{}, time.Now().UTC())
+	idea := VerifyDraft(Draft{Title: "X", Body: "You prefer tea [memory:kaya]."}, Evidence{}, time.Now().UTC())
 	if !idea.Unverified {
 		t.Fatalf("phantom citations must mark unverified: %+v", idea)
 	}

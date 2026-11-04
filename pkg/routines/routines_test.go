@@ -6,8 +6,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ianclemence/ghost/pkg/product"
-	"github.com/ianclemence/ghost/pkg/scheduled"
+	"github.com/ianclemence/kaya/pkg/product"
+	"github.com/ianclemence/kaya/pkg/scheduled"
 	_ "modernc.org/sqlite"
 )
 
@@ -34,7 +34,7 @@ func openTestService(t *testing.T) *Service {
 
 func TestCreateGetList(t *testing.T) {
 	svc := openTestService(t)
-	r, err := svc.Create("ghost-1", "owner-1", "Weekly Brief", "prepare my weekly brief", "Asia/Bangkok",
+	r, err := svc.Create("kaya-1", "owner-1", "Weekly Brief", "prepare my weekly brief", "Asia/Bangkok",
 		scheduled.Schedule{Kind: scheduled.ScheduleCron, Expr: "0 9 * * MON"}, []string{"calendar.read"})
 	if err != nil {
 		t.Fatal(err)
@@ -43,15 +43,15 @@ func TestCreateGetList(t *testing.T) {
 		t.Fatalf("bad routine: %+v", r)
 	}
 	got, err := svc.Get(r.ID)
-	if err != nil || got.Instruction != "prepare my weekly brief" || got.GhostID != "ghost-1" {
+	if err != nil || got.Instruction != "prepare my weekly brief" || got.KayaID != "kaya-1" {
 		t.Fatalf("get wrong: %+v %v", got, err)
 	}
-	list := svc.List("ghost-1", 10)
+	list := svc.List("kaya-1", 10)
 	if len(list) != 1 {
 		t.Fatal("list must return the routine")
 	}
-	if len(svc.List("ghost-2", 10)) != 0 {
-		t.Fatal("routines are ghost-scoped")
+	if len(svc.List("kaya-2", 10)) != 0 {
+		t.Fatal("routines are kaya-scoped")
 	}
 }
 

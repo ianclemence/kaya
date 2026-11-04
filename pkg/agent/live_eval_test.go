@@ -2,7 +2,7 @@ package agent
 
 // Live conversational-intelligence evaluation: real model on the real
 // production turn path (ProcessDirectWithChannel), scratch workspace copy,
-// scratch sessions. Gated: GHOST_LIVE_EVAL=1, otherwise skipped so CI and
+// scratch sessions. Gated: KAYA_LIVE_EVAL=1, otherwise skipped so CI and
 // normal runs never touch the network or the model.
 
 import (
@@ -15,23 +15,23 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ianclemence/ghost/pkg/bus"
-	"github.com/ianclemence/ghost/pkg/config"
-	"github.com/ianclemence/ghost/pkg/providers"
+	"github.com/ianclemence/kaya/pkg/bus"
+	"github.com/ianclemence/kaya/pkg/config"
+	"github.com/ianclemence/kaya/pkg/providers"
 )
 
 func liveEvalGate(t *testing.T) {
 	t.Helper()
-	if os.Getenv("GHOST_LIVE_EVAL") != "1" {
-		t.Skip("live eval needs GHOST_LIVE_EVAL=1 (real model, real cost)")
+	if os.Getenv("KAYA_LIVE_EVAL") != "1" {
+		t.Skip("live eval needs KAYA_LIVE_EVAL=1 (real model, real cost)")
 	}
 }
 
 func liveEvalConfigDir() string {
-	if d := os.Getenv("GHOST_CONFIG_DIR"); d != "" {
+	if d := os.Getenv("KAYA_CONFIG_DIR"); d != "" {
 		return d
 	}
-	return "/var/ghost/config"
+	return "/var/kaya/config"
 }
 
 func copyDir(t *testing.T, src, dst string) {
@@ -99,7 +99,7 @@ func TestLiveEvalRun(t *testing.T) {
 	if err := os.MkdirAll(wsCopy, 0o755); err != nil {
 		t.Fatal(err)
 	}
-	copyDir(t, "/var/lib/ghost/workspace", wsCopy)
+	copyDir(t, "/var/lib/kaya/workspace", wsCopy)
 
 	cfg, err := config.LoadConfig(filepath.Join(liveEvalConfigDir(), "config.json"))
 	if err != nil {

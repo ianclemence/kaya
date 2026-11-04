@@ -1,0 +1,1722 @@
+package main
+
+import (
+	"context"
+	"crypto/rand"
+	"embed"
+	"encoding/hex"
+	"encoding/json"
+	"errors"
+	"flag"
+	"fmt"
+	"io/fs"
+	"log"
+	"net"
+	"net/http"
+	"os"
+	"os/exec"
+	"path/filepath"
+	"sort"
+	"strings"
+	"sync"
+	"syscall"
+	"time"
+
+	"github.com/ianclemence/kaya/pkg/appliance"
+	"github.com/ianclemence/kaya/pkg/config"
+	"github.com/ianclemence/kaya/pkg/kayastate"
+	"github.com/ianclemence/kaya/pkg/localtrust"
+	"github.com/ianclemence/kaya/pkg/personalcontext"
+	"github.com/ianclemence/kaya/pkg/providers"
+	"github.com/ianclemence/kaya/pkg/skills"
+)
+
+//go:embed all:web
+var webFiles embed.FS
+
+var (
+	version = "dev"
+	fb      *appliance.SetupState
+	// waitingOnSystemd is true when running in -wait mode under the
+	// kaya-web.service unit, whose ExecStartPost starts the kaya
+	// service. When false, handleConfigure must start kaya itself.
+	waitingOnSystemd bool
+	// forceMode is true when the wizard was launched with -force, meaning
+	// re-running setup is permitted after authentication.
+	forceMode bool
+	// boundPort is the port the wizard actually bound to (may differ from the
+	// requested -port when it fell back, e.g. 80 -> 8080).
+	boundPort int
+	// portRequested is the -port flag value the bound port is compared
+	// against for the fallback banner. portOccupant names the process
+	// holding the requested port when determinable, else "".
+	portRequested int
+	portOccupant  string
+	// mdnsActive reports whether kaya.local advertisement is running.
+	mdnsActive bool
+	// sessions tracks authenticated admin sessions for wizard re-runs.
+	sessions = newSessionStore()
+	// loginThrottle tracks consecutive failed login attempts per client IP.
+	loginThrottle = newLoginThrottle()
+	// setupThrottle limits wrong setup-code attempts per client IP, so the
+	// first-run claim cannot be brute-forced from the LAN.
+	setupThrottle = newLoginThrottle()
+)
+
+// sessionRecord stores everything we know about an active admin session so
+// the Security section can list them, identify "this device", and let the
+// owner sign out other sessions.
+type sessionRecord struct {
+	ID        string
+	Token     string
+	IssuedAt  time.Time
+	ExpiresAt time.Time
+	LastSeen  time.Time
+	IP        string
+	UserAgent string
+}
+
+// sessionStore keeps issued admin session tokens with their expiry and
+// enough metadata to render a meaningful sessions list.
+type sessionStore struct {
+	mu      sync.Mutex
+	tokens  map[string]time.Time
+	records map[string]*sessionRecord
+}
+
+const sessionTTL = 30 * time.Minute
+const rememberMeTTL = 7 * 24 * time.Hour
+
+// loginThrottle limits failed login attempts per client IP to slow brute-force.
+// Cooldowns escalate with repeated failures (10m, 30m, 1h, 2h cap); a full
+// day without failures decays the count. State persists on disk so a service
+// restart does not clear an active attacker's cooldown.
+type loginThrottler struct {
+	mu            sync.Mutex
+	failures      map[string]time.Time
+	attemptCounts map[string]int
+	lockedUntil   map[string]time.Time
+	persistPath   string
+}
+
+const (
+	maxLoginAttempts = 5
+	// staleDecayPeriod resets an IP's counter after a full quiet day.
+	staleDecayPeriod = 24 * time.Hour
+)
+
+// loginCooldownLadder escalates per 5-failure tier, capped at the last rung.
+var loginCooldownLadder = []time.Duration{
+	10 * time.Minute,
+	30 * time.Minute,
+	time.Hour,
+	2 * time.Hour,
+}
+
+func newLoginThrottle() *loginThrottler {
+	return &loginThrottler{
+		failures:      make(map[string]time.Time),
+		attemptCounts: make(map[string]int),
+		lockedUntil:   make(map[string]time.Time),
+	}
+}
+
+// allowed reports whether ip may attempt a login and the remaining wait.
+func (t *loginThrottler) allowed(ip string) (bool, time.Duration) {
+	t.mu.Lock()
+	defer t.mu.Unlock()
+	now := time.Now()
+	if until, ok := t.lockedUntil[ip]; ok {
+		if now.Before(until) {
+			return false, until.Sub(now)
+		}
+		delete(t.lockedUntil, ip)
+	}
+	if first, ok := t.failures[ip]; ok && now.Sub(first) > staleDecayPeriod {
+		delete(t.failures, ip)
+		delete(t.attemptCounts, ip)
+	}
+	return true, 0
+}
+
+func (t *loginThrottler) recordFailure(ip string) {
+	t.mu.Lock()
+	now := time.Now()
+	if _, ok := t.failures[ip]; !ok {
+		t.failures[ip] = now
+	}
+	t.attemptCounts[ip]++
+	if t.attemptCounts[ip]%maxLoginAttempts == 0 {
+		tier := t.attemptCounts[ip]/maxLoginAttempts - 1
+		if tier >= len(loginCooldownLadder) {
+			tier = len(loginCooldownLadder) - 1
+		}
+		t.lockedUntil[ip] = now.Add(loginCooldownLadder[tier])
+	}
+	path := t.persistPath
+	t.mu.Unlock()
+	if path != "" {
+		t.persist(path)
+	}
+}
+
+func (t *loginThrottler) recordSuccess(ip string) {
+	t.mu.Lock()
+	delete(t.failures, ip)
+	delete(t.attemptCounts, ip)
+	delete(t.lockedUntil, ip)
+	path := t.persistPath
+	t.mu.Unlock()
+	if path != "" {
+		t.persist(path)
+	}
+}
+
+// throttleSnapshot is the on-disk form. IPs of failed logins are security
+// telemetry, stored 0600 alongside the admin hash, never logged.
+type throttleSnapshot struct {
+	Failures map[string]time.Time `json:"failures"`
+	Counts   map[string]int       `json:"counts"`
+	Locked   map[string]time.Time `json:"locked_until"`
+}
+
+func (t *loginThrottler) persist(path string) {
+	t.mu.Lock()
+	snap := throttleSnapshot{
+		Failures: make(map[string]time.Time, len(t.failures)),
+		Counts:   make(map[string]int, len(t.attemptCounts)),
+		Locked:   make(map[string]time.Time, len(t.lockedUntil)),
+	}
+	for k, v := range t.failures {
+		snap.Failures[k] = v
+	}
+	for k, v := range t.attemptCounts {
+		snap.Counts[k] = v
+	}
+	for k, v := range t.lockedUntil {
+		snap.Locked[k] = v
+	}
+	t.mu.Unlock()
+	data, err := json.Marshal(snap)
+	if err != nil {
+		return
+	}
+	tmp, err := os.CreateTemp(filepath.Dir(path), ".throttle-*")
+	if err != nil {
+		log.Printf("throttle persist: %v", err)
+		return
+	}
+	tmpName := tmp.Name()
+	if _, err := tmp.Write(data); err != nil {
+		tmp.Close()
+		os.Remove(tmpName)
+		return
+	}
+	if err := tmp.Chmod(0600); err != nil {
+		tmp.Close()
+		os.Remove(tmpName)
+		return
+	}
+	if err := tmp.Close(); err != nil {
+		os.Remove(tmpName)
+		return
+	}
+	if err := os.Rename(tmpName, path); err != nil {
+		os.Remove(tmpName)
+		log.Printf("throttle persist: %v", err)
+	}
+}
+
+// loadThrottle restores cooldown state written by persist. Corrupt or
+// missing files fail open to an empty throttle (fail-closed would lock
+// out the owner on disk errors; the live throttle re-learns attackers).
+func (t *loginThrottler) load(path string) {
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return
+	}
+	var snap throttleSnapshot
+	if err := json.Unmarshal(data, &snap); err != nil {
+		log.Printf("throttle load: ignoring corrupt state: %v", err)
+		return
+	}
+	now := time.Now()
+	t.mu.Lock()
+	defer t.mu.Unlock()
+	for ip, first := range snap.Failures {
+		if now.Sub(first) <= staleDecayPeriod {
+			t.failures[ip] = first
+		}
+	}
+	for ip, n := range snap.Counts {
+		if _, ok := t.failures[ip]; ok && n > 0 {
+			t.attemptCounts[ip] = n
+		}
+	}
+	for ip, until := range snap.Locked {
+		if now.Before(until) {
+			if _, ok := t.failures[ip]; ok {
+				t.lockedUntil[ip] = until
+			}
+		}
+	}
+	t.persistPath = path
+}
+
+func (t *loginThrottler) attempts(ip string) int {
+	t.mu.Lock()
+	defer t.mu.Unlock()
+	return t.attemptCounts[ip]
+}
+
+// failedLogin tracks recent failed login attempts for dashboard visibility.
+type failedLogin struct {
+	IP        string    `json:"ip"`
+	Timestamp time.Time `json:"time"`
+}
+
+var (
+	recentFailedLoginsMu sync.Mutex
+	recentFailedLogins   []failedLogin
+	maxRecentLogins      = 20
+)
+
+func recordFailedLogin(ip string) {
+	recentFailedLoginsMu.Lock()
+	defer recentFailedLoginsMu.Unlock()
+	recentFailedLogins = append(recentFailedLogins, failedLogin{IP: ip, Timestamp: time.Now().UTC()})
+	if len(recentFailedLogins) > maxRecentLogins {
+		recentFailedLogins = recentFailedLogins[len(recentFailedLogins)-maxRecentLogins:]
+	}
+}
+
+func getRecentFailedLogins() []failedLogin {
+	recentFailedLoginsMu.Lock()
+	defer recentFailedLoginsMu.Unlock()
+	out := make([]failedLogin, len(recentFailedLogins))
+	copy(out, recentFailedLogins)
+	return out
+}
+
+func clearRecentFailedLogins() {
+	recentFailedLoginsMu.Lock()
+	defer recentFailedLoginsMu.Unlock()
+	recentFailedLogins = nil
+}
+
+func clientIP(r *http.Request) string {
+	host, _, err := net.SplitHostPort(r.RemoteAddr)
+	if err != nil {
+		return r.RemoteAddr
+	}
+	return host
+}
+
+func newSessionStore() *sessionStore {
+	return &sessionStore{
+		tokens:  make(map[string]time.Time),
+		records: make(map[string]*sessionRecord),
+	}
+}
+
+// issue creates a new random session token valid for sessionTTL.
+// rememberMe extends the lifetime to rememberMeTTL.
+func (s *sessionStore) issue(ip, userAgent string, rememberMe bool) (string, error) {
+	b := make([]byte, 24)
+	if _, err := rand.Read(b); err != nil {
+		return "", err
+	}
+	token := hex.EncodeToString(b)
+	idb := make([]byte, 4)
+	if _, err := rand.Read(idb); err != nil {
+		return "", err
+	}
+
+	ttl := sessionTTL
+	if rememberMe {
+		ttl = rememberMeTTL
+	}
+	now := time.Now()
+
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	// Prune expired tokens opportunistically.
+	for k, exp := range s.tokens {
+		if time.Now().After(exp) {
+			delete(s.tokens, k)
+			delete(s.records, k)
+		}
+	}
+	s.tokens[token] = now.Add(ttl)
+	s.records[token] = &sessionRecord{
+		ID:        hex.EncodeToString(idb),
+		Token:     token,
+		IssuedAt:  now,
+		ExpiresAt: now.Add(ttl),
+		LastSeen:  now,
+		IP:        ip,
+		UserAgent: userAgent,
+	}
+	return token, nil
+}
+
+// findByID locates a session by its public ID (tokens themselves are
+// never exposed outside the owning cookie).
+func (s *sessionStore) findByID(id string) (string, bool) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	for token, rec := range s.records {
+		if rec.ID == id {
+			if exp, ok := s.tokens[token]; ok && time.Now().Before(exp) {
+				return token, true
+			}
+			return "", false
+		}
+	}
+	return "", false
+}
+
+// touch updates the last-seen time for a session, keeping the metadata.
+func (s *sessionStore) touch(token string) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if rec, ok := s.records[token]; ok {
+		rec.LastSeen = time.Now()
+	}
+}
+
+// revoke deletes a single session by token.
+func (s *sessionStore) revoke(token string) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	delete(s.tokens, token)
+	delete(s.records, token)
+}
+
+// list returns a snapshot of all active sessions, oldest last.
+func (s *sessionStore) list() []*sessionRecord {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	out := make([]*sessionRecord, 0, len(s.records))
+	for k, exp := range s.tokens {
+		if time.Now().After(exp) {
+			delete(s.tokens, k)
+			delete(s.records, k)
+			continue
+		}
+		if rec, ok := s.records[k]; ok {
+			cp := *rec
+			out = append(out, &cp)
+		}
+	}
+	// Stable order: oldest first.
+	sort.Slice(out, func(i, j int) bool { return out[i].IssuedAt.Before(out[j].IssuedAt) })
+	return out
+}
+
+// valid reports whether the given token is currently valid.
+func (s *sessionStore) valid(token string) bool {
+	if token == "" {
+		return false
+	}
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	exp, ok := s.tokens[token]
+	if !ok {
+		return false
+	}
+	if time.Now().After(exp) {
+		delete(s.tokens, token)
+		delete(s.records, token)
+		return false
+	}
+	return true
+}
+
+// revokeAll invalidates every session (e.g. after setup completes).
+func (s *sessionStore) revokeAll() {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.tokens = make(map[string]time.Time)
+	s.records = make(map[string]*sessionRecord)
+}
+
+// sessionToken reads the admin session token from the request cookie.
+func sessionToken(r *http.Request) string {
+	c, err := r.Cookie("kaya_admin_session")
+	if err != nil {
+		return ""
+	}
+	return c.Value
+}
+
+func main() {
+	port := flag.Int("port", 80, "HTTP port for setup wizard")
+	kayaDir := flag.String("dir", "/var/kaya", "Kaya installation directory")
+	waitMode := flag.Bool("wait", false, "Block until setup is complete (for oneshot systemd)")
+	forceFlag := flag.Bool("force", false, "Re-run setup even if already complete")
+	flag.Parse()
+
+	forceMode = *forceFlag
+	fb = appliance.NewSetupState()
+	fb.KayaDir = *kayaDir
+	fb.ConfigDir = filepath.Join(*kayaDir, "config")
+	fb.DataDir = filepath.Join(*kayaDir, "data")
+	fb.Workspace = appliance.ResolveWorkspaceDir(*kayaDir)
+	fb.ConfigPath = filepath.Join(*kayaDir, "config", "config.json")
+	fb.EnvPath = filepath.Join(*kayaDir, ".env")
+
+	// Check if setup is needed
+	if !*forceFlag && !fb.NeedsSetup() {
+		flagPath := filepath.Join(fb.KayaDir, appliance.SetupCompleteFlag)
+		log.Println("Setup already complete. The wizard only runs before setup.")
+		log.Println("To re-open the wizard, run with -force, or remove " + flagPath + " and restart the kaya-web service.")
+		os.Exit(0)
+	}
+
+	log.Printf("Kaya Web Console v%s", version)
+	log.Printf("Starting setup wizard on port %d...", *port)
+
+	// Ensure directories exist
+	if err := fb.EnsureDirectories(); err != nil {
+		log.Fatalf("Failed to create directories: %v", err)
+	}
+
+	// Restore brute-force throttle state so a restart does not clear an
+	// attacker's cooldown. Best-effort: a corrupt file fails open and the
+	// live throttle re-learns.
+	loginThrottle.load(filepath.Join(fb.DataDir, "login-throttle.json"))
+
+	// First-run claim protection: while Kaya is unconfigured, mint a fresh
+	// setup code and print it to the console/journal. The first configure must
+	// present it, so a remote LAN host cannot claim an unconfigured Kaya.
+	if fb.NeedsSetup() {
+		if code, cerr := fb.RotateSetupCode(); cerr != nil {
+			log.Printf("WARNING: could not create setup code: %v", cerr)
+		} else {
+			log.Printf("Setup code: %s — enter this to claim this Kaya (journalctl -u kaya-web | grep 'Setup code')", code)
+		}
+	}
+
+	// Reconcile bundled skills against the runtime workspace. On a fresh
+	// checkout layout this seeds the wizard's skills tab; on every start it
+	// refreshes unchanged bundled skills and always preserves user edits. On
+	// installed layouts there is no bundled source here — the gateway seeds
+	// from its embedded copy on first start instead.
+	if src := bundledSkillsSourceDir(); src != "" {
+		if report, err := skills.SyncBundled(src, filepath.Join(fb.Workspace, "skills")); err == nil {
+			if len(report.Seeded) > 0 {
+				log.Printf("Seeded bundled skills: %s", strings.Join(report.Seeded, ", "))
+			}
+			if len(report.Updated) > 0 {
+				log.Printf("Updated bundled skills: %s", strings.Join(report.Updated, ", "))
+			}
+			if len(report.UserModified) > 0 {
+				log.Printf("Preserved user-modified skills: %s", strings.Join(report.UserModified, ", "))
+			}
+		}
+	}
+
+	// Start the wizard server
+	mux := http.NewServeMux()
+
+	// Serve static assets (CSS, JS, fonts) from the embedded web directory.
+	// Assets are revalidated every time (no-cache) so a freshly updated Kaya is
+	// always served, never a stale copy held from an old console version.
+	assetsFS, err := fs.Sub(webFiles, "web")
+	if err != nil {
+		log.Fatalf("Failed to load embedded assets: %v", err)
+	}
+	assetsHandler := http.StripPrefix("/assets/", http.FileServer(http.FS(assetsFS)))
+	mux.Handle("/assets/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Assets never change between builds without the bundle changing, yet the
+		// embedded FS carries no modtime (and thus no ETag/Last-Modified) for the
+		// browser to revalidate against. "no-cache" without a validator lets some
+		// browsers serve a stale copy forever — the classic cause of "the UI won't
+		// update". Force an always-fresh fetch of these small local files instead.
+		w.Header().Set("Cache-Control", "no-store")
+		assetsHandler.ServeHTTP(w, r)
+	}))
+
+	mux.HandleFunc("/", handleWizardIndex)
+	mux.HandleFunc("/api/scan-wifi", handleScanWiFi)
+	mux.HandleFunc("/api/connect-wifi", handleConnectWiFi)
+	mux.HandleFunc("/api/status", handleStatus)
+	mux.HandleFunc("/api/login", handleLogin)
+	mux.HandleFunc("/api/logout", handleLogout)
+	mux.HandleFunc("/api/password/reset", handlePasswordReset)
+	mux.HandleFunc("/api/configure", handleConfigure)
+	mux.HandleFunc("/api/ollama/models", handleOllamaModels)
+	mux.HandleFunc("/api/ollama/pull", handleOllamaPull)
+	mux.HandleFunc("/api/ollama/delete", handleOllamaDelete)
+
+	// Admin dashboard API (Phase 1-4)
+	mux.HandleFunc("/api/admin/status", handleSystemStatus)
+	mux.HandleFunc("/api/admin/doctor", handleDoctor)
+	mux.HandleFunc("/api/admin/update", handleUpdateStart)
+	mux.HandleFunc("/api/admin/update/status", handleUpdateStatus)
+	mux.HandleFunc("/api/admin/config", handleConfigGet)
+	mux.HandleFunc("/api/admin/config/save", handleConfigSet)
+	mux.HandleFunc("/api/admin/providers/models", handleProviderModels)
+	mux.HandleFunc("/api/admin/providers/test", handleProviderTest)
+	mux.HandleFunc("/api/admin/channels", handleChannelsGet)
+	mux.HandleFunc("/api/admin/channels/save", handleChannelsSet)
+	mux.HandleFunc("/api/admin/network", handleNetworkStatus)
+	mux.HandleFunc("/api/admin/hostname", handleSetHostname)
+	mux.HandleFunc("/api/admin/backup", handleBackup)
+	mux.HandleFunc("/api/admin/restore/validate", handleRestoreValidate)
+	mux.HandleFunc("/api/admin/restore/apply", handleRestoreApply)
+	mux.HandleFunc("/api/admin/restore/status", handleRestoreStatus)
+	mux.HandleFunc("/api/admin/reboot", handleReboot)
+	mux.HandleFunc("/api/admin/kaya/restart", handleRestartKaya)
+	mux.HandleFunc("/api/admin/password", handleChangePassword)
+	mux.HandleFunc("/api/admin/skills", handleSkillsList)
+	mux.HandleFunc("/api/admin/skills/install", handleSkillInstall)
+	mux.HandleFunc("/api/admin/skills/remove", handleSkillRemove)
+	mux.HandleFunc("/api/admin/skills/toggle", handleSkillToggle)
+	mux.HandleFunc("/api/admin/skills/sync", handleSkillsSync)
+	mux.HandleFunc("/api/admin/skills/read", handleSkillRead)
+	mux.HandleFunc("/api/admin/skills/save", handleSkillSave)
+	mux.HandleFunc("/api/admin/skills/clawhub/search", handleClawHubSearch)
+	mux.HandleFunc("/api/admin/skills/clawhub/install", handleClawHubInstall)
+	mux.HandleFunc("/api/admin/tools", handleToolsGet)
+	mux.HandleFunc("/api/admin/tools/save", handleToolsSet)
+	mux.HandleFunc("/api/admin/gateway", handleGatewayGet)
+	mux.HandleFunc("/api/admin/gateway/save", handleGatewaySet)
+	mux.HandleFunc("/api/admin/advanced", handleAdvancedGet)
+	mux.HandleFunc("/api/admin/advanced/save", handleAdvancedSet)
+	mux.HandleFunc("/api/admin/personality", handlePersonalityGet)
+	mux.HandleFunc("/api/admin/personality/save", handlePersonalitySet)
+	mux.HandleFunc("/api/admin/personality/create", handlePersonalityCreate)
+	mux.HandleFunc("/api/admin/personality/delete", handlePersonalityDelete)
+	mux.HandleFunc("/api/admin/logs", handleLogs)
+	mux.HandleFunc("/api/admin/toolsets", handleToolsetsGet)
+	mux.HandleFunc("/api/admin/toolsets/save", handleToolsetsSet)
+	mux.HandleFunc("/api/admin/auth/meta", handleAdminMeta)
+	mux.HandleFunc("/api/admin/identity", handleAdminIdentity)
+	mux.HandleFunc("/api/admin/sessions", handleAdminSessions)
+	mux.HandleFunc("/api/admin/sessions/revoke", handleAdminSessionRevoke)
+	mux.HandleFunc("/api/admin/auth/check", handleAuthCheck)
+	mux.HandleFunc("/api/admin/auth/failed-logins", handleFailedLogins)
+	mux.HandleFunc("/api/admin/integrations/status", handleIntegrationsStatus)
+	mux.HandleFunc("/api/admin/integrations/calendar/start", handleIntegrationsCalendarStart)
+	mux.HandleFunc("/api/admin/integrations/calendar/disconnect", handleIntegrationsCalendarDisconnect)
+	mux.HandleFunc("/api/admin/integrations/flight/save", handleIntegrationsFlightSave)
+	mux.HandleFunc("/api/admin/integrations/homeassistant/save", handleIntegrationsHassSave)
+	mux.HandleFunc("/api/admin/integrations/calendar/oauth/start", handleIntegrationsCalendarOAuthStart)
+	mux.HandleFunc("/api/admin/integrations/oauth-setup", handleOAuthSetup)
+	mux.HandleFunc("/api/admin/integrations/oauth/paste", handleOAuthPaste)
+	mux.HandleFunc("/api/admin/integrations/calendar/verify-packet", handleCalendarVerifyPacket)
+	mux.HandleFunc("/oauth/calendar/callback", handleCalendarOAuthCallback)
+	mux.HandleFunc("/api/admin/integrations/gmail/oauth/start", handleIntegrationsGmailOAuthStart)
+	mux.HandleFunc("/api/admin/integrations/gmail/disconnect", handleIntegrationsGmailDisconnect)
+	mux.HandleFunc("/oauth/gmail/callback", handleGmailOAuthCallback)
+	mux.HandleFunc("/api/admin/integrations/outlook/oauth/start", handleIntegrationsOutlookOAuthStart)
+	mux.HandleFunc("/api/admin/integrations/outlook/disconnect", handleIntegrationsOutlookDisconnect)
+	mux.HandleFunc("/oauth/outlook/callback", handleOutlookOAuthCallback)
+	mux.HandleFunc("/api/admin/integrations/spotify/oauth/start", handleIntegrationsSpotifyOAuthStart)
+	mux.HandleFunc("/api/admin/integrations/spotify/disconnect", handleIntegrationsSpotifyDisconnect)
+	mux.HandleFunc("/oauth/spotify/callback", handleSpotifyOAuthCallback)
+	mux.HandleFunc("/api/admin/integrations/github/save", handleIntegrationsGithubSave)
+	mux.HandleFunc("/api/admin/integrations/github/disconnect", handleIntegrationsGithubDisconnect)
+	mux.HandleFunc("/api/admin/integrations/notion/save", handleIntegrationsNotionSave)
+	mux.HandleFunc("/api/admin/integrations/notion/disconnect", handleIntegrationsNotionDisconnect)
+	mux.HandleFunc("/api/admin/health", handleHealth)
+
+	// Gateway API proxy — forwards requests to the Kaya gateway (port 8766)
+	mux.HandleFunc("/api/proxy/", handleGatewayProxy)
+
+	// Try ports in order: -port first (return to it once free), then the
+	// sticky pick (no flapping while a conflict persists), then fallbacks.
+	portRequested = *port
+	ports := consolePortOrder(portRequested, readStickyConsolePort(fb.KayaDir))
+
+	var listener net.Listener
+	for _, p := range ports {
+		addr := fmt.Sprintf("0.0.0.0:%d", p)
+		ln, err := net.Listen("tcp", addr)
+		if err != nil {
+			// Distinguish the real failure so users aren't misled.
+			switch {
+			case errors.Is(err, syscall.EADDRINUSE):
+				log.Printf("Port %d is already in use by another process, trying next...", p)
+				if p == portRequested {
+					portOccupant = portOccupantName(p)
+				}
+			case errors.Is(err, syscall.EACCES) || errors.Is(err, syscall.EPERM):
+				if p < 1024 {
+					log.Printf("Cannot bind port %d: permission denied. Ports below 1024 require root.", p)
+					log.Printf("Run as root (sudo kaya-web -force), or use -port 8080 / another unprivileged port.")
+				} else {
+					log.Printf("Cannot bind port %d: permission denied (%v)", p, err)
+				}
+			default:
+				log.Printf("Cannot bind port %d: %v", p, err)
+			}
+			continue
+		}
+		listener = ln
+		boundPort = p
+		// Remember the pick so the next start tries it first. A fallback
+		// caused by a transient conflict must not permanently move the
+		// console — but while the conflict persists, neither should the
+		// address flap between restarts.
+		writeStickyConsolePort(fb.KayaDir, boundPort)
+		// Open the firewall for the port we actually bound (may differ from
+		// -port when port 80 fell back). Best-effort.
+		openFirewallPort(boundPort)
+		if boundPort != portRequested {
+			who := portOccupant
+			if who == "" {
+				who = "another process"
+			}
+			log.Printf("WARNING: console running on :%d instead of requested :%d (%s is using it). Pass -port %d to make it permanent, or free port %d. This sticks until port %d is free at startup.",
+				boundPort, portRequested, who, boundPort, portRequested, portRequested)
+		}
+		log.Printf("Setup wizard running at http://kaya.local:%d", boundPort)
+		log.Printf("Also available at http://<your-pi-ip>:%d", boundPort)
+		break
+	}
+
+	if listener == nil {
+		log.Fatalf("All ports failed to bind: %v", ports)
+	}
+
+	// Advertise kaya.local with the port actually bound (not requested).
+	// Absent avahi only logs; discovery degrades to the LAN IP, never a
+	// startup failure.
+	if adv := appliance.NewMDNSAdvertiser(boundPort, version); adv != nil {
+		// Discovery metadata for phones: the stable pod id, the transport,
+		// both ports (setup console + gateway), and whether setup is needed.
+		// Without this a phone has no way to find an unconfigured Kaya.
+		podID, _ := kayastate.GetPodID(fb.Workspace)
+		setupState := "needed"
+		if !fb.NeedsSetup() {
+			setupState = "done"
+		}
+		adv.TXT = map[string]string{
+			"pod_id":       podID,
+			"transport":    "lan",
+			"console_port": fmt.Sprintf("%d", boundPort),
+			"api_port":     fmt.Sprintf("%d", defaultGatewayPort),
+			"setup":        setupState,
+		}
+		if aerr := adv.Available(); aerr != nil {
+			log.Printf("mDNS: kaya.local unavailable (%v) — install avahi-daemon, or use the LAN IP below.", aerr)
+		} else if aerr := adv.Advertise(); aerr != nil {
+			log.Printf("mDNS: advertisement failed: %v", aerr)
+		} else {
+			mdnsActive = true
+		}
+	}
+
+	// Remember how we're running so handleConfigure knows whether systemd's
+	// ExecStartPost will start the kaya service (wait mode) or whether we
+	// must do it ourselves (manual -force runs).
+	waitingOnSystemd = *waitMode
+
+	// A password-reset file left on the SD card is applied while the console runs.
+	watchBootReset()
+
+	if *waitMode {
+		// In wait mode, run the server in a goroutine and block until setup completes.
+		// This is used by the oneshot systemd service to ensure setup finishes before
+		// the main Kaya service starts.
+		go func() {
+			if err := http.Serve(listener, mux); err != nil {
+				log.Printf("Wizard server error: %v", err)
+			}
+		}()
+
+		log.Println("Waiting for setup to complete...")
+		waitForSetupComplete()
+		log.Println("Setup complete, exiting.")
+	} else {
+		if err := http.Serve(listener, mux); err != nil {
+			log.Fatalf("Server failed: %v", err)
+		}
+	}
+}
+
+// consolePortFileName persists the bound console port so restarts return to
+// it instead of flapping across the fallback chain.
+const consolePortFileName = ".console-port"
+
+// consolePortOrder builds the bind attempt order: the requested port first
+// (so the console returns to it the moment it is free), then the sticky
+// pick (stability while the conflict persists), then the standard
+// fallbacks. Deduped.
+func consolePortOrder(requested, sticky int) []int {
+	seen := map[int]bool{}
+	out := []int{}
+	push := func(p int) {
+		if p < 1 || p > 65535 || seen[p] {
+			return
+		}
+		seen[p] = true
+		out = append(out, p)
+	}
+	push(requested)
+	push(sticky)
+	push(80)
+	push(8080)
+	push(8888)
+	push(9090)
+	return out
+}
+
+func readStickyConsolePort(dir string) int {
+	if dir == "" {
+		return 0
+	}
+	raw, err := os.ReadFile(filepath.Join(dir, consolePortFileName))
+	if err != nil {
+		return 0
+	}
+	port := 0
+	if _, err := fmt.Sscanf(strings.TrimSpace(string(raw)), "%d", &port); err != nil {
+		return 0
+	}
+	if port < 1 || port > 65535 {
+		return 0
+	}
+	return port
+}
+
+func writeStickyConsolePort(dir string, port int) {
+	if dir == "" || port < 1 || port > 65535 {
+		return
+	}
+	// Best-effort: a missing sticky file only costs address stability.
+	if err := os.WriteFile(filepath.Join(dir, consolePortFileName), []byte(fmt.Sprintf("%d\n", port)), 0600); err != nil {
+		log.Printf("Could not remember console port: %v", err)
+	}
+}
+
+// portOccupantName best-effort names the process listening on a port ("nginx
+// (pid 123)") for the fallback banner. Empty when indeterminable.
+func portOccupantName(port int) string {
+	out, err := exec.Command("ss", "-ltnp").Output()
+	if err != nil {
+		return ""
+	}
+	want := fmt.Sprintf(":%d", port)
+	for _, line := range strings.Split(string(out), "\n") {
+		fields := strings.Fields(line)
+		if len(fields) < 5 || !strings.HasSuffix(fields[3], want) {
+			continue
+		}
+		for _, f := range fields {
+			if strings.HasPrefix(f, `users:(("`) {
+				name := strings.TrimPrefix(f, `users:(("`)
+				if i := strings.Index(name, `",`); i >= 0 {
+					name = name[:i]
+				}
+				pid := ""
+				if j := strings.Index(f, "pid="); j >= 0 {
+					pid = f[j:]
+					if k := strings.Index(pid, ","); k >= 0 {
+						pid = pid[:k]
+					}
+					pid = strings.TrimSuffix(pid, ")")
+					pid = strings.TrimSuffix(pid, `"`)
+				}
+				if pid != "" {
+					return fmt.Sprintf("%s (%s)", name, pid)
+				}
+				return name
+			}
+		}
+	}
+	return ""
+}
+
+// waitForSetupComplete polls for the .setup-complete flag file.
+func waitForSetupComplete() {
+	flagPath := filepath.Join(fb.KayaDir, appliance.SetupCompleteFlag)
+	ticker := time.NewTicker(2 * time.Second)
+	defer ticker.Stop()
+
+	for range ticker.C {
+		if _, err := os.Stat(flagPath); err == nil {
+			return
+		}
+	}
+}
+
+func handleWizardIndex(w http.ResponseWriter, r *http.Request) {
+	path := r.URL.Path
+	// Serve index.html for SPA routes (non-API, non-asset paths)
+	if path == "/" || (!strings.HasPrefix(path, "/api/") && !strings.HasPrefix(path, "/assets/")) {
+		w.Header().Set("Content-Type", "text/html; charset=utf-8")
+		data, err := webFiles.ReadFile("web/index.html")
+		if err != nil {
+			http.Error(w, "Failed to load wizard", http.StatusInternalServerError)
+			return
+		}
+		w.Write(data)
+		return
+	}
+	http.NotFound(w, r)
+}
+
+// handleGatewayProxy forwards requests to the Kaya gateway API on localhost:8766.
+// The gateway is a network-facing surface on the LAN, so this proxy — like any
+// LAN client — is gated by session auth, and proxied calls carry a valid owner
+// session cookie.
+func handleGatewayProxy(w http.ResponseWriter, r *http.Request) {
+	if !requireSession(w, r) {
+		return
+	}
+	// Load config to get gateway port
+	cfgPath := filepath.Join(fb.KayaDir, "config", "config.json")
+	cfg, err := config.LoadConfig(cfgPath)
+	if err != nil {
+		http.Error(w, `{"error":"failed to load config"}`, http.StatusInternalServerError)
+		return
+	}
+
+	gatewayPort := cfg.Gateway.Port
+	if gatewayPort == 0 {
+		gatewayPort = 8766
+	}
+
+	// Strip /api/proxy prefix to get the gateway path
+	gatewayPath := strings.TrimPrefix(r.URL.Path, "/api/proxy")
+	if gatewayPath == "" {
+		gatewayPath = "/"
+	}
+	if r.URL.RawQuery != "" {
+		gatewayPath += "?" + r.URL.RawQuery
+	}
+
+	gatewayURL := fmt.Sprintf("http://127.0.0.1:%d%s", gatewayPort, gatewayPath)
+
+	// Create the proxied request
+	proxyReq, err := http.NewRequestWithContext(r.Context(), r.Method, gatewayURL, r.Body)
+	if err != nil {
+		http.Error(w, `{"error":"failed to create proxy request"}`, http.StatusInternalServerError)
+		return
+	}
+
+	// Copy headers from original request, minus the browser context. The
+	// owner's session was verified above; the gateway trusts this hop as a
+	// local program and refuses loopback requests that look like a foreign
+	// web page (cross-site Origin / Sec-Fetch-Site), which the console's
+	// own page would when reached by a name the gateway doesn't know
+	// (an mDNS alias, a remote-access domain). The console cookie is
+	// meaningless to the gateway and is not passed on.
+	for key, values := range r.Header {
+		if proxyDropsHeader(key) {
+			continue
+		}
+		for _, v := range values {
+			proxyReq.Header.Add(key, v)
+		}
+	}
+
+	// The owner's session was verified above, so this hop may carry the local
+	// token that the gateway asks for on routes that grant authority.
+	localtrust.Apply(proxyReq, filepath.Join(fb.KayaDir, "config"))
+
+	// Execute the request
+	client := &http.Client{Timeout: 30 * time.Second}
+	resp, err := client.Do(proxyReq)
+	if err != nil {
+		http.Error(w, `{"error":"gateway unreachable"}`, http.StatusBadGateway)
+		return
+	}
+	defer resp.Body.Close()
+
+	// Copy response headers
+	for key, values := range resp.Header {
+		for _, v := range values {
+			w.Header().Add(key, v)
+		}
+	}
+	w.WriteHeader(resp.StatusCode)
+
+	// Stream response body (supports SSE)
+	buf := make([]byte, 4096)
+	for {
+		n, readErr := resp.Body.Read(buf)
+		if n > 0 {
+			w.Write(buf[:n])
+			if f, ok := w.(http.Flusher); ok {
+				f.Flush()
+			}
+		}
+		if readErr != nil {
+			break
+		}
+	}
+}
+
+// proxyDropsHeader reports headers the gateway proxy must not forward.
+func proxyDropsHeader(key string) bool {
+	k := http.CanonicalHeaderKey(key)
+	switch k {
+	case "Origin", "Referer", "Cookie":
+		return true
+	}
+	return strings.HasPrefix(k, "Sec-Fetch-")
+}
+
+func handleScanWiFi(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	// Scan for WiFi networks
+	networks, err := scanWiFiNetworks()
+	if err != nil {
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"ok":       false,
+			"error":    err.Error(),
+			"networks": []WiFiNetwork{},
+		})
+		return
+	}
+
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"ok":       true,
+		"networks": networks,
+	})
+}
+
+func handleConnectWiFi(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	var req struct {
+		SSID     string `json:"ssid"`
+		Password string `json:"password"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, `{"ok":false,"error":"invalid request"}`, http.StatusBadRequest)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+
+	if err := connectToWiFi(req.SSID, req.Password); err != nil {
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"ok":    false,
+			"error": err.Error(),
+		})
+		return
+	}
+
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"ok": true,
+	})
+}
+
+// defaultGatewayPort is the port the kaya gateway binds to once setup is
+// complete. The console advertises it so a phone can discover both the
+// setup surface (this console) and the API surface (the gateway).
+const defaultGatewayPort = 8766
+
+func handleStatus(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	// pod_id is the stable pairing identifier; best-effort, empty if the
+	// workspace is not writable yet. It is already broadcast via mDNS, so
+	// exposing it here is not a new disclosure.
+	podID, _ := kayastate.GetPodID(fb.Workspace)
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"needs_setup":            fb.NeedsSetup(),
+		"setup_complete":         !fb.NeedsSetup(),
+		"setup_code_required":    fb.NeedsSetup(),
+		"admin_configured":       appliance.AdminConfigured(fb.KayaDir),
+		"pod_id":                 podID,
+		"gateway_port":           defaultGatewayPort,
+		"transport":              "lan",
+		"force":                  forceMode,
+		"version":                version,
+		"console_port":           boundPort,
+		"console_port_requested": portRequested,
+		"console_port_occupant":  portOccupant,
+		"mdns":                   mdnsActive,
+	})
+}
+
+func handleLogin(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	var req struct {
+		Password   string `json:"password"`
+		RememberMe bool   `json:"remember_me"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, `{"ok":false,"error":"invalid request"}`, http.StatusBadRequest)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+
+	ip := clientIP(r)
+	if ok, wait := loginThrottle.allowed(ip); !ok {
+		w.WriteHeader(http.StatusTooManyRequests)
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"ok":       false,
+			"error":    fmt.Sprintf("too many failed attempts, try again in %d seconds", int(wait.Seconds())+1),
+			"retry_in": int(wait.Seconds()) + 1,
+		})
+		return
+	}
+
+	ok, err := appliance.VerifyAdminPassword(fb.KayaDir, req.Password)
+	if err != nil {
+		http.Error(w, `{"ok":false,"error":"failed to verify password"}`, http.StatusInternalServerError)
+		return
+	}
+	if !ok {
+		loginThrottle.recordFailure(ip)
+		recordFailedLogin(ip)
+		log.Printf("Failed login attempt from %s", ip)
+		w.WriteHeader(http.StatusUnauthorized)
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"ok":    false,
+			"error": "invalid password",
+		})
+		return
+	}
+
+	loginThrottle.recordSuccess(ip)
+	clearRecentFailedLogins()
+	token, err := sessions.issue(ip, r.UserAgent(), req.RememberMe)
+	if err != nil {
+		http.Error(w, `{"ok":false,"error":"failed to create session"}`, http.StatusInternalServerError)
+		return
+	}
+
+	maxAge := int(sessionTTL.Seconds())
+	if req.RememberMe {
+		maxAge = int(rememberMeTTL.Seconds())
+	}
+	http.SetCookie(w, &http.Cookie{
+		Name:     "kaya_admin_session",
+		Value:    token,
+		Path:     "/",
+		HttpOnly: true,
+		// Secure only over TLS: the console is plain HTTP on the LAN by
+		// design, where a Secure flag would break login entirely. When
+		// served over HTTPS the cookie is never sent in the clear.
+		Secure:   r.TLS != nil,
+		SameSite: http.SameSiteLaxMode,
+		MaxAge:   maxAge,
+	})
+
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"ok":      true,
+		"message": "Logged in",
+	})
+}
+
+// handleLogout revokes the caller's own session server-side and clears
+// the cookie, so "Lock" actually locks instead of merely hiding the UI.
+func handleLogout(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	if tok := sessionToken(r); tok != "" {
+		sessions.revoke(tok)
+	}
+	http.SetCookie(w, &http.Cookie{
+		Name:     "kaya_admin_session",
+		Value:    "",
+		Path:     "/",
+		HttpOnly: true,
+		SameSite: http.SameSiteLaxMode,
+		MaxAge:   -1,
+	})
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"ok":      true,
+		"message": "Signed out",
+	})
+}
+
+func handleConfigure(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	var req struct {
+		AdminPassword   string `json:"admin_password"`
+		CurrentPassword string `json:"current_password"`
+		SetupCode       string `json:"setup_code"`
+		OwnerName       string `json:"owner_name"`
+		KayaName       string `json:"kaya_name"`
+		// City and Timezone are optional first-run answers ("where are you?").
+		// They become beliefs so "the weather here" and reminder times work
+		// from the first message.
+		City      string `json:"city"`
+		Timezone  string `json:"timezone"`
+		Model     string `json:"model"`
+		Provider  string `json:"provider"`
+		OllamaURL string `json:"ollama_url"`
+		// APIKey is the chosen cloud provider's key, saved in the same call
+		// that claims the Pod so setup never passes through a state where
+		// Kaya has no way to think.
+		APIKey string `json:"api_key"`
+		// Pair asks the console to mint a one-time pairing invitation after a
+		// successful fresh setup, so a phone that drove setup can pair without
+		// a second visit to the console.
+		Pair bool `json:"pair"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, `{"ok":false,"error":"invalid request"}`, http.StatusBadRequest)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+
+	// Captured before any password is set: fresh setup always validates
+	// the resulting AI configuration below.
+	setupWasConfigured := appliance.AdminConfigured(fb.KayaDir)
+
+	// If an admin password already exists, re-running setup requires an
+	// authenticated session AND the current password. Fresh setup runs
+	// (or a migration with no password yet) only need the new password.
+	if appliance.AdminConfigured(fb.KayaDir) {
+		if !sessions.valid(sessionToken(r)) {
+			http.Error(w, `{"ok":false,"error":"session expired, please log in"}`, http.StatusUnauthorized)
+			return
+		}
+
+		ok, err := appliance.VerifyAdminPassword(fb.KayaDir, req.CurrentPassword)
+		if err != nil {
+			http.Error(w, `{"ok":false,"error":"failed to verify current password"}`, http.StatusInternalServerError)
+			return
+		}
+		if !ok {
+			json.NewEncoder(w).Encode(map[string]interface{}{
+				"ok":    false,
+				"error": "current password is incorrect",
+			})
+			return
+		}
+
+		// Optional: set a new password during a re-run.
+		if req.AdminPassword != "" {
+			if err := appliance.SetAdminPassword(fb.KayaDir, req.AdminPassword); err != nil {
+				json.NewEncoder(w).Encode(map[string]interface{}{
+					"ok":    false,
+					"error": "failed to update admin password: " + err.Error(),
+				})
+				return
+			}
+		}
+	} else {
+		// First-run claim: require the setup code printed on the device. This
+		// is the local-presence proof that stops a LAN host from claiming an
+		// unconfigured Kaya. Throttled per IP like login.
+		ip := clientIP(r)
+		if ok, wait := setupThrottle.allowed(ip); !ok {
+			json.NewEncoder(w).Encode(map[string]interface{}{
+				"ok":    false,
+				"error": fmt.Sprintf("too many attempts — try again in %s", wait.Round(time.Second)),
+			})
+			return
+		}
+		if !fb.VerifySetupCode(req.SetupCode) {
+			setupThrottle.recordFailure(ip)
+			json.NewEncoder(w).Encode(map[string]interface{}{
+				"ok":    false,
+				"error": "setup code is missing or incorrect — enter the code shown in the Kaya console output on the device",
+			})
+			return
+		}
+		setupThrottle.recordSuccess(ip)
+		if req.AdminPassword == "" {
+			json.NewEncoder(w).Encode(map[string]interface{}{
+				"ok":    false,
+				"error": "admin password is required",
+			})
+			return
+		}
+		if err := appliance.SetAdminPassword(fb.KayaDir, req.AdminPassword); err != nil {
+			json.NewEncoder(w).Encode(map[string]interface{}{
+				"ok":    false,
+				"error": "failed to save admin password: " + err.Error(),
+			})
+			return
+		}
+	}
+
+	// A refused first-run claim must leave nothing behind. Without this the
+	// password stays set while setup is incomplete, and the owner's retry is
+	// then treated as a re-run that needs a session they can't have.
+	rollback := func() {
+		if !setupWasConfigured {
+			_ = os.Remove(appliance.AdminHashPath(fb.KayaDir))
+		}
+	}
+
+	// Generate config
+	if err := generateConfig(req.Model, req.Provider, req.OllamaURL, req.APIKey); err != nil {
+		rollback()
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"ok":    false,
+			"error": err.Error(),
+		})
+		return
+	}
+
+	// Refuse to complete setup into a configuration the gateway cannot
+	// start with: a cloud provider without a key crash-loops Kaya on
+	// every boot with no way back except a terminal. This validates with
+	// the exact constructor the gateway uses, so the two can never
+	// disagree. Only enforced on fresh setup or when AI settings are
+	// explicitly changed here; password-only re-runs pass through
+	// untouched.
+	if !setupWasConfigured || req.Model != "" || req.Provider != "" || req.OllamaURL != "" {
+		if effCfg, lerr := config.LoadConfig(fb.ConfigPath); lerr != nil {
+			rollback()
+			json.NewEncoder(w).Encode(map[string]interface{}{
+				"ok":    false,
+				"error": "could not verify AI configuration: " + lerr.Error(),
+			})
+			return
+		} else if _, perr := providers.CreateProvider(effCfg); perr != nil {
+			rollback()
+			json.NewEncoder(w).Encode(map[string]interface{}{
+				"ok":    false,
+				"error": "Kaya can't start with this AI setup (" + perr.Error() + "). Pick a local model or add a cloud key first.",
+			})
+			return
+		}
+	}
+
+	// A mistyped key is the most likely first-run failure, and it would
+	// otherwise surface as a silent error on the owner's first message. Ask the
+	// provider once. Only a definite rejection (HTTP 401/403) refuses: a Pod
+	// that is offline during setup, or a provider having a bad minute, must not
+	// block the owner.
+	if !setupWasConfigured && strings.TrimSpace(req.APIKey) != "" && req.Provider != "" && req.Provider != "ollama" {
+		if effCfg, lerr := config.LoadConfig(fb.ConfigPath); lerr == nil {
+			ctx, cancel := context.WithTimeout(r.Context(), 8*time.Second)
+			pm := providers.DiscoverModels(ctx, effCfg, req.Provider)
+			cancel()
+			if pm.Source != providers.ModelSourceLive && (strings.Contains(pm.Error, "HTTP 401") || strings.Contains(pm.Error, "HTTP 403")) {
+				rollback()
+				json.NewEncoder(w).Encode(map[string]interface{}{
+					"ok":    false,
+					"error": "That API key was rejected by the provider. Check it and paste it again.",
+				})
+				return
+			}
+		}
+	}
+
+	// Mark setup complete
+	if err := fb.MarkSetupComplete(); err != nil {
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"ok":    false,
+			"error": "failed to mark setup complete: " + err.Error(),
+		})
+		return
+	}
+
+	// The claim is complete: the setup code is spent and must not linger as a
+	// reusable secret.
+	fb.ClearSetupCode()
+
+	// Persist the identity names the wizard collected. These were previously
+	// dropped on the floor, so owner/Kaya names only ever came from defaults.
+	// Empty fields are ignored (existing values preserved) so a password-only
+	// re-run can never wipe the names.
+	if strings.TrimSpace(req.OwnerName) != "" || strings.TrimSpace(req.KayaName) != "" {
+		owner, kaya := strings.TrimSpace(req.OwnerName), strings.TrimSpace(req.KayaName)
+		if id, ierr := kayastate.LoadIdentity(fb.Workspace); ierr == nil && id != nil {
+			if owner == "" {
+				owner = id.OwnerName
+			}
+			if kaya == "" {
+				kaya = id.KayaName
+			}
+		}
+		if serr := kayastate.SetIdentityNames(fb.Workspace, owner, kaya); serr != nil {
+			// Setup itself succeeded; a failed identity write must not fail it.
+			log.Printf("setup: could not save identity names: %v", serr)
+		}
+	}
+
+	if !setupWasConfigured && (strings.TrimSpace(req.City) != "" || strings.TrimSpace(req.Timezone) != "") {
+		if pcs, perr := personalcontext.Open(fb.Workspace); perr == nil {
+			if serr := personalcontext.SeedHome(pcs, req.City, req.Timezone); serr != nil {
+				log.Printf("setup: could not save location: %v", serr)
+			}
+		}
+	}
+
+	// Invalidate all admin sessions: the configuration has changed.
+	sessions.revokeAll()
+
+	// Clean up the wizard firewall rule only in wait mode, where the oneshot
+	// service exits after setup. In -force mode the wizard stays running as
+	// an always-available login/management screen, so port 80 must stay open.
+	if waitingOnSystemd {
+		cleanupFirewall()
+	}
+
+	// Under systemd (wait mode), the kaya-web service's ExecStartPost
+	// is responsible for starting kaya after setup. When running in
+	// foreground / -force mode there is no ExecStartPost, so start it here.
+	if !waitingOnSystemd {
+		restartKayaService()
+	}
+
+	resp := map[string]interface{}{
+		"ok":      true,
+		"message": "Setup complete! Kaya will start shortly.",
+	}
+	if podID, perr := kayastate.GetPodID(fb.Workspace); perr == nil {
+		resp["pod_id"] = podID
+	}
+	// A phone that drove setup gets a pairing invitation minted by the now
+	// starting gateway (loopback is trusted), so it can pair in one pass. If
+	// the gateway is slow to come up, say so honestly and let the caller fall
+	// back to the console QR.
+	if req.Pair && !setupWasConfigured {
+		if inv, perr := mintPairingInvitation(); perr == nil {
+			resp["pairing"] = inv
+		} else {
+			resp["pairing_pending"] = true
+		}
+	}
+	json.NewEncoder(w).Encode(resp)
+}
+
+// mintPairingInvitation asks the local gateway for a one-time pairing
+// invitation, retrying briefly while the gateway starts after setup. The
+// gateway trusts loopback, so no credential is needed. It returns the raw
+// invitation JSON (token, host, port, transport) for the caller to hand to a
+// phone.
+func mintPairingInvitation() (map[string]interface{}, error) {
+	url := fmt.Sprintf("http://127.0.0.1:%d/v1/pairing/invitations", defaultGatewayPort)
+	client := &http.Client{Timeout: 3 * time.Second}
+	deadline := time.Now().Add(12 * time.Second)
+	var lastErr error
+	for time.Now().Before(deadline) {
+		req, err := http.NewRequest(http.MethodPost, url, strings.NewReader("{}"))
+		if err != nil {
+			return nil, err
+		}
+		req.Header.Set("Content-Type", "application/json")
+		localtrust.Apply(req, filepath.Join(fb.KayaDir, "config"))
+		resp, err := client.Do(req)
+		if err == nil {
+			if resp.StatusCode == http.StatusOK {
+				var inv map[string]interface{}
+				derr := json.NewDecoder(resp.Body).Decode(&inv)
+				resp.Body.Close()
+				if derr == nil {
+					return inv, nil
+				}
+				lastErr = derr
+			} else {
+				resp.Body.Close()
+				lastErr = fmt.Errorf("gateway status %d", resp.StatusCode)
+			}
+		} else {
+			lastErr = err
+		}
+		time.Sleep(500 * time.Millisecond)
+	}
+	return nil, lastErr
+}
+
+func handleOllamaModels(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	models, err := listOllamaModels()
+	if err != nil {
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"ok":     false,
+			"error":  err.Error(),
+			"models": []string{},
+		})
+		return
+	}
+
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"ok":     true,
+		"models": models,
+	})
+}
+
+func handleOllamaPull(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	var req struct {
+		Model string `json:"model"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, `{"ok":false,"error":"invalid request"}`, http.StatusBadRequest)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+
+	// Pull model in background
+	go pullOllamaModel(req.Model)
+
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"ok":      true,
+		"message": "Download started",
+	})
+}
+
+// generateConfig creates the .env and config.json files. The admin password
+// is never written here; it lives only as a bcrypt hash in data/admin.hash.
+func generateConfig(model, provider, ollamaURL, apiKey string) error {
+	// Generate .env
+	envContent := fmt.Sprintf(`# Kaya configuration
+# Generated by setup wizard
+
+# API Server
+KAYA_API_PORT=8766
+
+# Data Paths
+KAYA_DB_PATH=%s/kaya.db
+MEMORY_DIR=%s/memory
+
+# Timezone
+TZ=UTC
+`, fb.Workspace, fb.Workspace)
+
+	if err := os.WriteFile(fb.EnvPath, []byte(envContent), 0600); err != nil {
+		return fmt.Errorf("failed to write .env: %w", err)
+	}
+
+	// Load default config and customize
+	cfg := config.DefaultConfig()
+
+	// Set model configuration
+	if model != "" {
+		cfg.Agents.Defaults.Model = model
+	} else if strings.Contains(provider, "ollama") {
+		cfg.Agents.Defaults.Model = "qwen3:0.6b"
+	}
+	if provider != "" {
+		cfg.Agents.Defaults.Provider = provider
+		// A cloud provider chosen without a model gets its own recommended
+		// default, never the previous provider's model name.
+		if model == "" && provider != "ollama" {
+			if known := providers.KnownProviderModels[provider]; len(known) > 0 {
+				cfg.Agents.Defaults.Model = known[0]
+			}
+		}
+		if key := strings.TrimSpace(apiKey); key != "" {
+			if pc := getProviderConfig(cfg, provider); pc != nil {
+				pc.APIKey = key
+			}
+		}
+	}
+
+	// Set workspace
+	cfg.Agents.Defaults.Workspace = fb.Workspace
+
+	// Configure Ollama
+	if ollamaURL != "" {
+		cfg.Providers.Ollama.APIBase = ollamaURL
+	} else {
+		cfg.Providers.Ollama.APIBase = "http://localhost:11434"
+	}
+
+	cfg.Gateway.Port = 8766
+
+	// Enable heartbeat
+	cfg.Heartbeat.Enabled = true
+	cfg.Heartbeat.Interval = 30
+
+	// Enable RAG
+	cfg.RAG.Enabled = true
+
+	// Save config. SaveConfig splits secrets into
+	// .secrets.json at 0600 and writes config.json atomically at 0600.
+	if err := config.SaveConfig(fb.ConfigPath, cfg); err != nil {
+		return fmt.Errorf("failed to write config.json: %w", err)
+	}
+
+	return nil
+}
+
+// WiFiNetwork represents a scanned WiFi network.
+type WiFiNetwork struct {
+	SSID      string `json:"ssid"`
+	Signal    int    `json:"signal"`
+	Encrypted bool   `json:"encrypted"`
+}
+
+// scanWiFiNetworks scans for available WiFi networks.
+func scanWiFiNetworks() ([]WiFiNetwork, error) {
+	// Try iwlist scan
+	out, err := exec.Command("iwlist", "wlan0", "scan").CombinedOutput()
+	if err != nil {
+		// Try nmcli as fallback
+		return scanWiFiNmcli()
+	}
+
+	return parseIwlistOutput(string(out)), nil
+}
+
+func scanWiFiNmcli() ([]WiFiNetwork, error) {
+	out, err := exec.Command("nmcli", "-t", "-f", "SSID,SIGNAL,SECURITY", "dev", "wifi", "list").CombinedOutput()
+	if err != nil {
+		return nil, fmt.Errorf("failed to scan WiFi: %w", err)
+	}
+
+	var networks []WiFiNetwork
+	lines := strings.Split(string(out), "\n")
+	for _, line := range lines {
+		parts := strings.SplitN(line, ":", 3)
+		if len(parts) < 2 {
+			continue
+		}
+		ssid := parts[0]
+		if ssid == "" {
+			continue
+		}
+		signal := 0
+		fmt.Sscanf(parts[1], "%d", &signal)
+		encrypted := len(parts) > 2 && parts[2] != ""
+		networks = append(networks, WiFiNetwork{
+			SSID:      ssid,
+			Signal:    signal,
+			Encrypted: encrypted,
+		})
+	}
+	return networks, nil
+}
+
+func parseIwlistOutput(output string) []WiFiNetwork {
+	var networks []WiFiNetwork
+	seen := make(map[string]bool)
+
+	lines := strings.Split(output, "\n")
+	for _, line := range lines {
+		line = strings.TrimSpace(line)
+		if strings.Contains(line, "ESSID:") {
+			ssid := strings.TrimPrefix(line, "ESSID:\"")
+			ssid = strings.TrimSuffix(ssid, "\"")
+			if ssid != "" && !seen[ssid] {
+				seen[ssid] = true
+				networks = append(networks, WiFiNetwork{
+					SSID:      ssid,
+					Signal:    70, // Default signal strength
+					Encrypted: true,
+				})
+			}
+		}
+	}
+	return networks
+}
+
+// connectToWiFi connects to a WiFi network.
+func connectToWiFi(ssid, password string) error {
+	if password == "" {
+		// Open network
+		out, err := exec.Command("nmcli", "dev", "wifi", "connect", ssid).CombinedOutput()
+		if err != nil {
+			return fmt.Errorf("failed to connect: %s", string(out))
+		}
+	} else {
+		// Secured network - use connection clone with proper security
+		// First try to connect with password
+		out, err := exec.Command("nmcli", "dev", "wifi", "connect", ssid, "password", password, "key", "wpa-psk").CombinedOutput()
+		if err != nil {
+			// If that fails, try with wifi-sec key-mgmt
+			out, err = exec.Command("nmcli", "connection", "add", "type", "wifi", "ssid", ssid, "wifi-sec.key-mgmt", "wpa-psk", "wifi-sec.psk", password, "connection.autoconnect", "yes").CombinedOutput()
+			if err != nil {
+				return fmt.Errorf("failed to connect: %s", string(out))
+			}
+			// Try to activate the connection
+			out, err = exec.Command("nmcli", "connection", "up", ssid).CombinedOutput()
+			if err != nil {
+				return fmt.Errorf("failed to activate connection: %s", string(out))
+			}
+		}
+	}
+	return nil
+}
+
+// listOllamaModels lists locally installed Ollama models.
+func listOllamaModels() ([]string, error) {
+	out, err := exec.Command("ollama", "list").CombinedOutput()
+	if err != nil {
+		return nil, fmt.Errorf("failed to list models: %w", err)
+	}
+
+	var models []string
+	lines := strings.Split(string(out), "\n")
+	for i, line := range lines {
+		if i == 0 {
+			continue // Skip header
+		}
+		parts := strings.Fields(line)
+		if len(parts) > 0 {
+			models = append(models, parts[0])
+		}
+	}
+	return models, nil
+}
+
+// pullOllamaModel downloads an Ollama model.
+func pullOllamaModel(model string) error {
+	cmd := exec.Command("ollama", "pull", model)
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	return cmd.Run()
+}
+
+// runPrivileged runs a command, prefixing with sudo when we're not root so
+// manual (non-systemd) runs of kaya-web can still manage ufw/systemd.
+// runPrivileged runs a system command (systemctl, ufw, hostnamectl, reboot)
+// as root. It is a variable so tests replace it: a test must never restart
+// the real Kaya or change the real firewall on the machine it runs on.
+var runPrivileged = func(name string, args ...string) ([]byte, error) {
+	if os.Geteuid() != 0 {
+		args = append([]string{name}, args...)
+		name = "sudo"
+	}
+	return exec.Command(name, args...).CombinedOutput()
+}
+
+// cleanupFirewall removes the wizard port rule (whatever port was actually
+// bound) after setup completes.
+func cleanupFirewall() {
+	if boundPort > 0 {
+		runPrivileged("ufw", "delete", "allow", fmt.Sprintf("%d/tcp", boundPort))
+	}
+	// Also remove the common default in case setup was completed by an old
+	// binary that only managed port 80.
+	runPrivileged("ufw", "delete", "allow", "80/tcp")
+}
+
+// openFirewallPort opens the given TCP port on the firewall so the wizard is
+// reachable from other devices. Best-effort: failures are logged and ignored
+// (ufw may not be installed or active on the device).
+func openFirewallPort(port int) {
+	if out, err := runPrivileged("ufw", "allow", fmt.Sprintf("%d/tcp", port)); err != nil {
+		log.Printf("Failed to open firewall port %d (ufw may not be active): %v: %s", port, err, strings.TrimSpace(string(out)))
+	} else {
+		log.Printf("Opened firewall port %d", port)
+	}
+}
+
+// restartKayaService restarts the kaya service after setup.
+func restartKayaService() {
+	runPrivileged("systemctl", "daemon-reload")
+	runPrivileged("systemctl", "restart", "kaya")
+}

@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/ianclemence/ghost/pkg/artifacts"
+	"github.com/ianclemence/kaya/pkg/artifacts"
 )
 
 // PublishArtifactTool lets the model propose a handoff ("I put together

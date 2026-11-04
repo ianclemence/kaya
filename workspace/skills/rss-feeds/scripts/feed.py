@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Read RSS / Atom / JSON Feed sources and discover feeds behind a page URL.
 
-Standard library only, so it runs in any Ghost environment without an install
+Standard library only, so it runs in any Kaya environment without an install
 step. Output is JSON (``--json``) or a compact text listing.
 
     python3 feed.py read https://example.com/feed.xml [--limit N] [--since 2026-09-01]
@@ -23,7 +23,7 @@ import xml.etree.ElementTree as ET
 from datetime import datetime, timezone
 from email.utils import parsedate_to_datetime
 
-USER_AGENT = "ghost/1.0 (rss-feeds skill)"
+USER_AGENT = "kaya/1.0 (rss-feeds skill)"
 TIMEOUT = 20
 NS = {
     "atom": "http://www.w3.org/2005/Atom",

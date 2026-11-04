@@ -1,5 +1,5 @@
-// Package changelog embeds Ghost's release notes and tracks the last version
-// the user has seen, so Ghost can print only what is new after an update —
+// Package changelog embeds Kaya's release notes and tracks the last version
+// the user has seen, so Kaya can print only what is new after an update —
 // the same behavior Scout provides.
 package changelog
 
@@ -9,7 +9,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/ianclemence/ghost/pkg/appliance"
+	"github.com/ianclemence/kaya/pkg/appliance"
 )
 
 //go:embed CHANGELOG.md

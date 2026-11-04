@@ -1,0 +1,43 @@
+[Unit]
+Description=Kaya - your personal AI, running locally
+After=network-online.target kaya-web.service kaya-speech.service
+Wants=network-online.target
+# An appliance must come back on its own. (These keys used to sit in [Service],
+# where systemd ignores them; enforcing "3 in 5 minutes" would leave a Pod dead
+# after one bad boot, so rate limiting is explicitly off and RestartSec paces it.)
+StartLimitIntervalSec=0
+ConditionPathExists=__KAYA_DIR__/.setup-complete
+
+[Service]
+Type=simple
+User=__USER__
+Group=__GROUP__
+WorkingDirectory=__KAYA_DIR__
+EnvironmentFile=__KAYA_DIR__/.env
+Environment=KAYA_WORKSPACE_DIR=/var/lib/kaya/workspace
+ExecStart=__BIN_DIR__/kaya serve
+Restart=always
+RestartSec=5
+
+# Security hardening
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=__KAYA_DIR__ /var/lib/kaya
+PrivateTmp=true
+
+# Resource ceiling. Browsers, installs and sandboxed code all run inside this
+# service's cgroup, so one runaway tool must slow down (MemoryHigh throttles
+# and reclaims) and then be killed (MemoryMax) before it can starve the Pod,
+# the web console or SSH. Percentages follow the machine, 4 GB or 16 GB.
+MemoryHigh=70%
+MemoryMax=85%
+TasksMax=4096
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=kaya
+
+[Install]
+WantedBy=multi-user.target

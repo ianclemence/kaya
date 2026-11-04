@@ -6,11 +6,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ianclemence/ghost/pkg/bus"
-	"github.com/ianclemence/ghost/pkg/cevents"
-	"github.com/ianclemence/ghost/pkg/config"
-	"github.com/ianclemence/ghost/pkg/providers"
-	"github.com/ianclemence/ghost/pkg/turnlog"
+	"github.com/ianclemence/kaya/pkg/bus"
+	"github.com/ianclemence/kaya/pkg/cevents"
+	"github.com/ianclemence/kaya/pkg/config"
+	"github.com/ianclemence/kaya/pkg/providers"
+	"github.com/ianclemence/kaya/pkg/turnlog"
 	_ "modernc.org/sqlite"
 )
 

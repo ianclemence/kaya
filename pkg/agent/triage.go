@@ -5,10 +5,10 @@ import (
 	"strings"
 	"unicode"
 
-	"github.com/ianclemence/ghost/pkg/personalcontext"
+	"github.com/ianclemence/kaya/pkg/personalcontext"
 )
 
-// Effort classifies how much work a turn deserves. Ghost should be fast for
+// Effort classifies how much work a turn deserves. Kaya should be fast for
 // simple things and deliberate for complex ones — and honest when it doesn't
 // know — rather than running every request through the same expensive loop.
 type Effort int

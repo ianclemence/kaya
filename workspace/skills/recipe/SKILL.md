@@ -2,10 +2,10 @@
 name: recipe
 description: Search for food recipes by name, ingredient, or category, and retrieve full details with ingredients and instructions. Invoke when user asks "find a recipe for X", "how do I make chicken pasta", "what can I cook with X", "recipe for lasagna", "show me the ingredients for Y", or "give me a random meal idea". Uses TheMealDB API — no API key required.
 version: 1.1.0
-author: Ghost
+author: Kaya
 license: MIT
 metadata:
-  ghost:
+  kaya:
     tags: [recipe, food, cooking, mealdb, meals]
 prerequisites:
   commands: [curl]

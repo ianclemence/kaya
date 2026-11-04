@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/ianclemence/ghost/pkg/logger"
+	"github.com/ianclemence/kaya/pkg/logger"
 )
 
 // VoiceWakeTool allows the agent to control its "always-listening" state for wake words.
@@ -24,7 +24,7 @@ func (t *VoiceWakeTool) Name() string {
 }
 
 func (t *VoiceWakeTool) Description() string {
-	return "Enable or disable the 'Always-Listening' mode for wake words (e.g., 'Hey Ghost'). When active, Ghost will listen for your voice via the Pi's microphone."
+	return "Enable or disable the 'Always-Listening' mode for wake words (e.g., 'Hey Kaya'). When active, Kaya will listen for your voice via the Pi's microphone."
 }
 
 func (t *VoiceWakeTool) Parameters() map[string]interface{} {

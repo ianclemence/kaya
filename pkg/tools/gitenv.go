@@ -16,7 +16,7 @@ import (
 //
 //   - safe.directory=* : (GIT_CONFIG_PARAMETERS, because the environment filter
 //     rightly drops any variable named like a key) the sandbox shows one project, and its owner is the
-//     person Ghost works for. Git's ownership check is for shared machines.
+//     person Kaya works for. Git's ownership check is for shared machines.
 //   - GIT_TERMINAL_PROMPT=0 and GCM_INTERACTIVE=never : no credentials means
 //     a clear failure at once, not a prompt that waits for a person who is not
 //     there.
@@ -32,12 +32,12 @@ func gitSandboxEnv() []string {
 	}
 }
 
-// gitIdentityConfig is the global git configuration Ghost starts with. Commits
-// it makes are marked as Ghost's, so they are easy to tell from the owner's, and
+// gitIdentityConfig is the global git configuration Kaya starts with. Commits
+// it makes are marked as Kaya's, so they are easy to tell from the owner's, and
 // the owner can replace the file with their own.
 const gitIdentityConfig = `[user]
-	name = Ghost
-	email = ghost@ghost.local
+	name = Kaya
+	email = kaya@kaya.local
 [init]
 	defaultBranch = main
 `

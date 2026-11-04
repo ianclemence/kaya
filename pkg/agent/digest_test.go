@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ianclemence/ghost/pkg/providers"
+	"github.com/ianclemence/kaya/pkg/providers"
 )
 
 // recordingDigestProvider records every system prompt it receives so tests can

@@ -1,5 +1,5 @@
 // Package archtest holds the Capability Architecture Contract Suite: fast,
-// deterministic tests that protect Ghost's architectural invariants from
+// deterministic tests that protect Kaya's architectural invariants from
 // regression. It is deliberately separate from the behavioral Golden suite.
 //
 // The single most important invariants:
@@ -16,10 +16,10 @@ import (
 	"database/sql"
 	"testing"
 
-	"github.com/ianclemence/ghost/pkg/capability"
-	"github.com/ianclemence/ghost/pkg/connectedapp"
-	"github.com/ianclemence/ghost/pkg/permissions"
-	"github.com/ianclemence/ghost/pkg/tools"
+	"github.com/ianclemence/kaya/pkg/capability"
+	"github.com/ianclemence/kaya/pkg/connectedapp"
+	"github.com/ianclemence/kaya/pkg/permissions"
+	"github.com/ianclemence/kaya/pkg/tools"
 	_ "modernc.org/sqlite"
 )
 

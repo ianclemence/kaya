@@ -36,7 +36,7 @@ type found struct {
 // FindSpan reads the dates a sentence names and returns the span they cover.
 // A date without a year is the next one on or after `heard` (when the owner
 // said it), so "26 October" said on 2 Oct is this year's and "3 March" is
-// next year's. Text that names no date returns false: Ghost never guesses a
+// next year's. Text that names no date returns false: Kaya never guesses a
 // date from "next month" or "soon".
 //
 // Only the first two dates count (start and end). Words like "scrapped" or

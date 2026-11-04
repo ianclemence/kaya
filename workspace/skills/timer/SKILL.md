@@ -2,10 +2,10 @@
 name: timer
 description: Set short one-shot countdown timers. Invoke when user asks "set a timer for 10 minutes", "timer 5 min for pasta", "countdown 30 seconds", "wake me in 20 minutes", or any minutes/seconds countdown. Ephemeral by design — fires once then disappears, unlike durable reminders.
 version: 1.0.0
-author: Ghost
+author: Kaya
 license: MIT
 metadata:
-  ghost:
+  kaya:
     tags: [timer, countdown, alarm, pomodoro]
 prerequisites:
   commands: []

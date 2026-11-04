@@ -7,11 +7,11 @@ import (
 	"sync"
 	"time"
 
-	"github.com/ianclemence/ghost/pkg/bus"
-	"github.com/ianclemence/ghost/pkg/cards"
+	"github.com/ianclemence/kaya/pkg/bus"
+	"github.com/ianclemence/kaya/pkg/cards"
 )
 
-// ClarifyTool asks the owner something Ghost needs to go on. On a surface that
+// ClarifyTool asks the owner something Kaya needs to go on. On a surface that
 // draws cards the question is a card answered with a tap (or a few words);
 // elsewhere it is the question as text. The turn waits for the answer for a
 // while; once it stops waiting, the card stays answerable and the answer

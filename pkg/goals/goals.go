@@ -1,4 +1,4 @@
-// Package goals owns Ghost's standing goals: durable owner intents like
+// Package goals owns Kaya's standing goals: durable owner intents like
 // "take care of school emails" that outlive any single turn. A goal is the
 // *why*; routines/schedules linked to it are the *how*. The heartbeat and
 // proactive engine evaluate goals on every tick; expiry auto-pauses.

@@ -3,7 +3,7 @@
 // vercel-labs agent-browser daemon (cli/src/native): the same layered design —
 // a websocket JSON-RPC client, a Chrome launcher, an accessibility-tree
 // snapshot that mints durable @eN element refs, and ref-resolution into real
-// input events — so Ghost can own its browser layer instead of shelling out to
+// input events — so Kaya can own its browser layer instead of shelling out to
 // a third-party CLI.
 //
 // The package is deliberately a subset. It implements the operations the agent

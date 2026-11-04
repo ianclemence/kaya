@@ -7,22 +7,22 @@ build/
 *.dylib
 *.test
 *.out
-/ghost
-/ghost-test
-/ghost-web
-cmd/ghost/workspace
+/kaya
+/kaya-test
+/kaya-web
+cmd/kaya/workspace
 
-# Ghost specific
-.ghost/
+# Kaya specific
+.kaya/
 config.json
-# Sticky console port — runtime state written by ghost-web on startup.
+# Sticky console port — runtime state written by kaya-web on startup.
 .console-port
 sessions/
 build/
 tmp/
-ghost.service
-ghost-web.service
-ghost-speech.service
+kaya.service
+kaya-web.service
+kaya-speech.service
 
 # Coverage
 coverage.txt
@@ -70,10 +70,10 @@ workspace/*
 !workspace/state/README.md
 !workspace/journal/README.md
 !workspace/data/README.md
-!workspace/GHOST.md
+!workspace/KAYA.md
 !workspace/HEARTBEAT.md
 # Prompt contract files — persona, identity, and conventions ship with the
-# embed like GHOST.md; only USER.md stays per-installation.
+# embed like KAYA.md; only USER.md stays per-installation.
 !workspace/SOUL.md
 !workspace/IDENTITY.md
 !workspace/AGENTS.md
@@ -112,5 +112,5 @@ backups/
 __pycache__/
 *.pyc
 
-/cmd/ghost/ghost
-/cmd/ghost-web/ghost-web
+/cmd/kaya/kaya
+/cmd/kaya-web/kaya-web

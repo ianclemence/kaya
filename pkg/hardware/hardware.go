@@ -1,6 +1,6 @@
-// Package hardware normalizes the machine Ghost runs on into the small
+// Package hardware normalizes the machine Kaya runs on into the small
 // profile the runtime actually needs — then derives device defaults
-// automatically. Same Ghost, different hardware, appropriate defaults;
+// automatically. Same Kaya, different hardware, appropriate defaults;
 // the owner never configures model tiers, concurrency, or context sizes.
 //
 // Supported classes: Raspberry Pi 5, RK1-class (16GB ARM SBC),

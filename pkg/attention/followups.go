@@ -11,7 +11,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/ianclemence/ghost/pkg/providers"
+	"github.com/ianclemence/kaya/pkg/providers"
 )
 
 // Follow-ups are things the owner said that a good assistant would come back
@@ -265,7 +265,7 @@ func AskAt(f Followup, loc *time.Location) time.Time {
 }
 
 // Line is how a thread reads in the morning message, and Reply is the next
-// step the owner can tap (a purchase gets help finding the best price: Ghost
+// step the owner can tap (a purchase gets help finding the best price: Kaya
 // shops for its owner, not for a store).
 func (f Followup) Line() string {
 	w := strings.TrimRight(f.What, ".")

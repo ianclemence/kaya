@@ -1,8 +1,8 @@
 package agent
 
 import (
-	"github.com/ianclemence/ghost/pkg/cevents"
-	"github.com/ianclemence/ghost/pkg/providers"
+	"github.com/ianclemence/kaya/pkg/cevents"
+	"github.com/ianclemence/kaya/pkg/providers"
 )
 
 // usageMeasured reports whether a provider usage block carries a real
@@ -41,7 +41,7 @@ func recordTurnUsage(al *AgentLoop, opts processOptions, model string, iteration
 		Type:      cevents.UsageRecorded,
 		RequestID: opts.RequestID,
 		SessionID: opts.SessionKey,
-		GhostID:   al.governance.GhostID,
+		KayaID:   al.governance.KayaID,
 		AgentID:   al.governance.AgentID,
 		Payload: map[string]interface{}{
 			"session_key":        opts.SessionKey,

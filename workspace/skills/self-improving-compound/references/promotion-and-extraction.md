@@ -58,8 +58,8 @@ Promote a learning when it is:
 | `CLAUDE.md` | Project facts, conventions, durable gotchas |
 | `AGENTS.md` | Workflow rules, automation sequences, verification steps |
 | `.github/copilot-instructions.md` | Shared Copilot context |
-| `SOUL.md` | Behavioural rules in Ghost workspaces |
-| `TOOLS.md` | Tool-specific gotchas in Ghost workspaces |
+| `SOUL.md` | Behavioural rules in Kaya workspaces |
+| `TOOLS.md` | Tool-specific gotchas in Kaya workspaces |
 
 ## Quantified promotion thresholds (legacy)
 

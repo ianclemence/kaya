@@ -6,9 +6,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ianclemence/ghost/pkg/cevents"
-	"github.com/ianclemence/ghost/pkg/logger"
-	"github.com/ianclemence/ghost/pkg/watch"
+	"github.com/ianclemence/kaya/pkg/cevents"
+	"github.com/ianclemence/kaya/pkg/logger"
+	"github.com/ianclemence/kaya/pkg/watch"
 )
 
 // Deterministic watch control.
@@ -26,7 +26,7 @@ import (
 // instead of creating the watch the owner asked for.
 
 var (
-	// watchStartRE matches the owner asking Ghost to watch something.
+	// watchStartRE matches the owner asking Kaya to watch something.
 	watchStartRE = regexp.MustCompile(`(?i)\b(?:track|watch|follow|monitor|keep\s+(?:me\s+)?(?:an\s+)?eye\s+on|stay\s+on\s+top\s+of|check\s+up\s+on)\b`)
 	// watchStopRE matches the owner ending a watch. Checked first: a stop
 	// phrase contains the start verb.
@@ -35,7 +35,7 @@ var (
 	// "stop watching BA123" cancels exactly what "track BA123" created.
 	// watchDirectiveRE requires the watch verb to open the sentence, after
 	// any greeting or politeness.
-	watchDirectiveRE = regexp.MustCompile(`(?i)^(?:(?:hey|hi|ok|okay|so|and|also|now|just|please|pls|ghost|can you|could you|would you|will you|i want you to|i'd like you to|go ahead and)[,\s]+)*(?:track|watch|follow|monitor|keep|stay|check up|stop|cancel|end|drop|untrack|quit)\b`)
+	watchDirectiveRE = regexp.MustCompile(`(?i)^(?:(?:hey|hi|ok|okay|so|and|also|now|just|please|pls|kaya|can you|could you|would you|will you|i want you to|i'd like you to|go ahead and)[,\s]+)*(?:track|watch|follow|monitor|keep|stay|check up|stop|cancel|end|drop|untrack|quit)\b`)
 	// watchStopAllRE is the one stop phrase that names no flight and still
 	// means every watch.
 	watchStopAllRE = regexp.MustCompile(`(?i)\b(?:stop|cancel|end|drop|untrack|quit)\s+(?:all\s+(?:of\s+)?(?:my\s+|the\s+)?)?(?:watching|tracking|watches|trackers?)(?:\s+(?:everything|it|that|them|all(?:\s+of\s+them)?|(?:my\s+|the\s+)?flights?))?`)

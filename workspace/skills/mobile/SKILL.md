@@ -2,10 +2,10 @@
 name: mobile
 description: Control an Android device via ADB — open apps, tap, swipe, type, screenshot, install APKs. Invoke when user asks to "open app on my phone", "take a screenshot", "tap the button", "type on my phone", or "install this APK". Requires Android device with USB debugging enabled and adb installed.
 version: 1.1.0
-author: Ghost
+author: Kaya
 license: MIT
 metadata:
-  ghost:
+  kaya:
     tags: [mobile, android, adb, automation, phone]
 prerequisites:
   commands: [adb, python]
@@ -71,7 +71,7 @@ python workspace\skills\mobile\scripts\rpc.py tap --x 500 --y 1000
 Types text into the currently focused field.
 
 ```bash
-python workspace\skills\mobile\scripts\rpc.py enter-text --text "Hello Ghost"
+python workspace\skills\mobile\scripts\rpc.py enter-text --text "Hello Kaya"
 ```
 
 #### Swipe

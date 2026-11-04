@@ -4,7 +4,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/ianclemence/ghost/pkg/logger"
+	"github.com/ianclemence/kaya/pkg/logger"
 )
 
 // SteeringMode controls how queued steering messages are dequeued.

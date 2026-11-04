@@ -31,11 +31,11 @@ func TestIsNewer(t *testing.T) {
 
 func TestVerifySHA256(t *testing.T) {
 	dir := t.TempDir()
-	f := filepath.Join(dir, "ghost_linux_arm64")
-	if err := os.WriteFile(f, []byte("ghost"), 0o755); err != nil {
+	f := filepath.Join(dir, "kaya_linux_arm64")
+	if err := os.WriteFile(f, []byte("kaya"), 0o755); err != nil {
 		t.Fatal(err)
 	}
-	sum := sha256.Sum256([]byte("ghost"))
+	sum := sha256.Sum256([]byte("kaya"))
 	hexSum := hex.EncodeToString(sum[:])
 	if err := VerifySHA256(f, hexSum); err != nil {
 		t.Fatalf("verify should pass: %v", err)
@@ -50,7 +50,7 @@ func TestVerifySHA256(t *testing.T) {
 
 func TestVerifyEd25519(t *testing.T) {
 	dir := t.TempDir()
-	f := filepath.Join(dir, "ghost")
+	f := filepath.Join(dir, "kaya")
 	if err := os.WriteFile(f, []byte("payload"), 0o755); err != nil {
 		t.Fatal(err)
 	}
@@ -79,7 +79,7 @@ func TestVerifyEd25519(t *testing.T) {
 func TestAtomicInstall(t *testing.T) {
 	dir := t.TempDir()
 	src := filepath.Join(dir, "src")
-	dst := filepath.Join(dir, "bin", "ghost")
+	dst := filepath.Join(dir, "bin", "kaya")
 	if err := os.WriteFile(src, []byte("bin"), 0o755); err != nil {
 		t.Fatal(err)
 	}

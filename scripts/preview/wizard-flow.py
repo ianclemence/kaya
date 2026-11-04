@@ -11,11 +11,11 @@ def step(body, name, wait=700, log=None):
 wrong = "000000" if code != "000000" else "111111"
 pw = 'set("Password","correct horse 88");set("Confirm password","correct horse 88");btn("Continue")'
 steps = [
-  step(f'set("Setup code","{wrong}");btn("Set up Ghost")', "01-identity"),
+  step(f'set("Setup code","{wrong}");btn("Set up Kaya")', "01-identity"),
   step('set("Your name","Sam");btn("Continue")', "02-password"),
   step(pw, "03-brain"),
   step('[...document.querySelectorAll(".wizard-choice")].find(b=>/On this device/.test(b.textContent)).click();btn("Continue")', "04-wrong-code-bounce", 5000),
-  step(f'set("Setup code","{code}");btn("Set up Ghost")', "05-identity-again"),
+  step(f'set("Setup code","{code}");btn("Set up Kaya")', "05-identity-again"),
   step('set("Your name","Sam");btn("Continue")', "06-password-again"),
   step(pw, "07-brain-again"),
   step('[...document.querySelectorAll(".wizard-choice")].find(b=>/On this device/.test(b.textContent)).click();btn("Continue")', "08-claimed", 6000),

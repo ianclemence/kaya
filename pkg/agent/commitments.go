@@ -6,18 +6,18 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ianclemence/ghost/pkg/capability"
-	"github.com/ianclemence/ghost/pkg/cevents"
-	"github.com/ianclemence/ghost/pkg/commitments"
-	"github.com/ianclemence/ghost/pkg/ideas"
-	"github.com/ianclemence/ghost/pkg/logger"
-	"github.com/ianclemence/ghost/pkg/proactive"
-	"github.com/ianclemence/ghost/pkg/scheduled"
+	"github.com/ianclemence/kaya/pkg/capability"
+	"github.com/ianclemence/kaya/pkg/cevents"
+	"github.com/ianclemence/kaya/pkg/commitments"
+	"github.com/ianclemence/kaya/pkg/ideas"
+	"github.com/ianclemence/kaya/pkg/logger"
+	"github.com/ianclemence/kaya/pkg/proactive"
+	"github.com/ianclemence/kaya/pkg/scheduled"
 )
 
 // Commitments: the bridge from conversation to proactive action.
 //
-// When the owner says "I need to send Alex those photos Friday", Ghost stores a
+// When the owner says "I need to send Alex those photos Friday", Kaya stores a
 // durable obligation (pkg/commitments) instead of letting the sentence die in
 // the transcript. Later the obligation becomes an observation, and the runtime
 // proposes exactly one governed action for it.
@@ -28,10 +28,10 @@ import (
 
 const (
 	// commitmentStallAfter is how long an obligation with no date on it may
-	// sit untouched before Ghost offers to pick it up. Long enough not to
+	// sit untouched before Kaya offers to pick it up. Long enough not to
 	// nag, short enough to be useful.
 	commitmentStallAfter = 72 * time.Hour
-	// commitmentBlockedRetryAfter is how long a promise Ghost could not move
+	// commitmentBlockedRetryAfter is how long a promise Kaya could not move
 	// on its own stays quiet before it may ask again — this time with the
 	// missing piece stated.
 	commitmentBlockedRetryAfter = 24 * time.Hour
@@ -109,7 +109,7 @@ func (al *AgentLoop) scheduleTimezone() string {
 
 // observeCommitments turns obligations into grounded observations. An
 // obligation becomes relevant when its day arrives, or when it has been
-// waiting long enough that Ghost offering to pick it up is useful.
+// waiting long enough that Kaya offering to pick it up is useful.
 func (al *AgentLoop) observeCommitments(now time.Time) []ideas.Observation {
 	if al.workspace == "" {
 		return nil
@@ -125,7 +125,7 @@ func (al *AgentLoop) observeCommitments(now time.Time) []ideas.Observation {
 	var out []ideas.Observation
 	for _, c := range attention {
 		if _, ok := al.commitmentPlan(c); !ok {
-			// Nothing Ghost can honestly offer for this one. Waiting is
+			// Nothing Kaya can honestly offer for this one. Waiting is
 			// better than a proposal it cannot keep.
 			continue
 		}
@@ -191,21 +191,21 @@ func provenancePhrase(c commitments.Commitment) string {
 }
 
 // commitmentPlan is the capability-aware planner for obligations. It answers
-// "what can Ghost actually do about this?" and returns ok=false when the
+// "what can Kaya actually do about this?" and returns ok=false when the
 // honest answer is "nothing useful".
 //
 // The plan is always executable as stated:
 //
 //   - A messaging obligation whose channel is gone degrades to a reminder,
-//     because offering to send something Ghost cannot send would be a false
+//     because offering to send something Kaya cannot send would be a false
 //     promise.
-//   - Otherwise Ghost offers to take it on, which runs as a normal governed
+//   - Otherwise Kaya offers to take it on, which runs as a normal governed
 //     turn: any consequential tool the model then reaches for still goes
 //     through the Permission Broker on its own.
 func (al *AgentLoop) commitmentPlan(c commitments.Commitment) (*ideas.Plan, bool) {
 	describe := c.Kind.Action()
 	if c.Kind.Messaging() && !al.messagingAvailable() {
-		// No channel has ever been used, so Ghost has nowhere to send it.
+		// No channel has ever been used, so Kaya has nowhere to send it.
 		return &ideas.Plan{
 			Kind: ideas.PlanLocal, Op: opCommitmentRemind, Capability: capScheduleCreate,
 			Args: map[string]string{"id": c.ID}, Risk: ideas.RiskLow,
@@ -219,7 +219,7 @@ func (al *AgentLoop) commitmentPlan(c commitments.Commitment) (*ideas.Plan, bool
 	}, true
 }
 
-// messagingAvailable reports whether Ghost has a real outbound channel. It
+// messagingAvailable reports whether Kaya has a real outbound channel. It
 // reads runtime state, never configuration guesses: a channel that has never
 // carried a message cannot be relied on to carry this one.
 func (al *AgentLoop) messagingAvailable() bool {
@@ -308,7 +308,7 @@ func (al *AgentLoop) publishCommitment(typ cevents.Type, c commitments.Commitmen
 	}
 	al.governance.Events.Publish(&cevents.Event{
 		Type: typ, SessionID: proposalSession,
-		GhostID: al.governance.GhostID, AgentID: al.governance.AgentID,
+		KayaID: al.governance.KayaID, AgentID: al.governance.AgentID,
 		Status: string(c.Status), Payload: payload,
 	})
 }
@@ -457,7 +457,7 @@ Rules:
 }
 
 // executeCommitmentRemind creates a real reminder. It is the honest fallback
-// when the obligation needs a channel the owner has not connected: Ghost does
+// when the obligation needs a channel the owner has not connected: Kaya does
 // not offer to send something it cannot send.
 func (al *AgentLoop) executeCommitmentRemind(ctx context.Context, idea ideas.Idea, channel, chatID string) (planOutcome, string, map[string]interface{}, error) {
 	if al.schedSvc == nil {
@@ -529,7 +529,7 @@ func (al *AgentLoop) Commitments() ([]commitments.Commitment, error) {
 }
 
 // CancelCommitment closes a promise by owner decision. It never touches the
-// work Ghost may have done; it records that the owner no longer wants it held.
+// work Kaya may have done; it records that the owner no longer wants it held.
 func (al *AgentLoop) CancelCommitment(id, note string) (commitments.Commitment, error) {
 	store, err := al.commitmentStoreFor()
 	if err != nil {

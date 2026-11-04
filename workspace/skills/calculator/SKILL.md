@@ -2,10 +2,10 @@
 name: calculator
 description: Evaluate math expressions, percentages, tips, and splits. Invoke when user asks "what is 15% of 850", "calculate X", "15% tip on 850 baht", "split 1200 three ways", "what is 48*17+3", or any arithmetic. Fully offline, no API key required.
 version: 1.0.0
-author: Ghost
+author: Kaya
 license: MIT
 metadata:
-  ghost:
+  kaya:
     tags: [calculator, math, arithmetic, tip, percent]
 prerequisites:
   commands: [python]

@@ -3,8 +3,8 @@ package agent
 import (
 	"testing"
 
-	"github.com/ianclemence/ghost/pkg/contexts"
-	"github.com/ianclemence/ghost/pkg/permissions"
+	"github.com/ianclemence/kaya/pkg/contexts"
+	"github.com/ianclemence/kaya/pkg/permissions"
 )
 
 // personalContextID resolves the device's default personal context.
@@ -39,7 +39,7 @@ func TestBrowserIsolationAcrossContexts(t *testing.T) {
 	if dw.decision != "allow" {
 		t.Fatalf("work navigate must allow: %s", dw.decision)
 	}
-	if dw.call.ContextID != h.workCtx || dw.call.Owner != h.ghostID || dw.call.TaskID != "sess-work" {
+	if dw.call.ContextID != h.workCtx || dw.call.Owner != h.kayaID || dw.call.TaskID != "sess-work" {
 		t.Fatalf("work binding wrong: %+v", dw.call)
 	}
 	dp := al.authorizeBrowserCall("req-p-1", "sess-pers", "browser_navigate", map[string]interface{}{"url": "https://personal.example.com"})
@@ -52,11 +52,11 @@ func TestBrowserIsolationAcrossContexts(t *testing.T) {
 	// What the real tool would mint: one ledger row per owner+context+task.
 	// Same owner, two contexts → two distinct, non-interchangeable rows.
 	sessions := dw.call.Sessions
-	workRow, err := sessions.GetOrCreate(h.ghostID, h.workCtx, "sess-work", "default", 0)
+	workRow, err := sessions.GetOrCreate(h.kayaID, h.workCtx, "sess-work", "default", 0)
 	if err != nil {
 		t.Fatal(err)
 	}
-	personalRow, err := sessions.GetOrCreate(h.ghostID, personal, "sess-pers", "default", 0)
+	personalRow, err := sessions.GetOrCreate(h.kayaID, personal, "sess-pers", "default", 0)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -84,7 +84,7 @@ func TestForgedContextCannotUseWorkSession(t *testing.T) {
 	}
 	dv := al.authorizeBrowserCall("req-v-1", "sess-victim", "browser_navigate", map[string]interface{}{"url": "https://victim.example.com"})
 	// The victim's real browser session lives in the ledger under Work.
-	victimRow, err := dv.call.Sessions.GetOrCreate(h.ghostID, h.workCtx, "sess-victim", "default", 0)
+	victimRow, err := dv.call.Sessions.GetOrCreate(h.kayaID, h.workCtx, "sess-victim", "default", 0)
 	if err != nil {
 		t.Fatal(err)
 	}

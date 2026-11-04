@@ -64,10 +64,10 @@ When hooks are unavailable, add a compact reminder to `.github/copilot-instructi
 After solving non-obvious issues or learning project-specific conventions, consider logging the durable lesson to `learning/` and promoting proven rules into shared memory.
 ```
 
-## Ghost
+## Kaya
 
-Ghost-specific notes:
-- Set `GHOST_WORKSPACE` so `--root` is optional.
+Kaya-specific notes:
+- Set `KAYA_WORKSPACE` so `--root` is optional.
 - Keep `learning/` in the workspace root by default, not the skill directory.
 - Set `SELF_IMPROVING_LEARNING_ROOT` only when several workspaces should share one lesson store.
 - The `hooks/activator.sh` and `hooks/error-detector.sh` scripts are workspace-root aware.

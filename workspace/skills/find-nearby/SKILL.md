@@ -3,7 +3,7 @@ name: find-nearby
 description: "Find places near the owner (restaurants, cafes, bars, pharmacies) using OpenStreetMap. Invoke when the user asks for somewhere near them or shares a location pin. No API key needed."
 version: 1.0.0
 metadata:
-  ghost:
+  kaya:
     tags: [location, maps, nearby, places, restaurants, local]
     related_skills: []
 ---

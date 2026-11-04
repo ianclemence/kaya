@@ -8,10 +8,10 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/ianclemence/ghost/pkg/logger"
+	"github.com/ianclemence/kaya/pkg/logger"
 )
 
-// A canary is a private marker that lives only in Ghost's own instructions.
+// A canary is a private marker that lives only in Kaya's own instructions.
 // It has no use outside them, so seeing it inside the arguments of an
 // outbound action (a browser field, a fetched URL, a message, a command) means
 // the agent was steered into copying its context somewhere. That is how a

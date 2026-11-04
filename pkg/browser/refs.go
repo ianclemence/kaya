@@ -59,7 +59,7 @@ var (
 // the wire forms backends emit, normalized to the canonical @eN form
 // the model uses:
 //
-//	@e5              Ghost tool descriptions / model convention
+//	@e5              Kaya tool descriptions / model convention
 //	ref=e5           agent-browser snapshot tree text
 //	"e5"             refs-map keys in snapshot JSON
 //

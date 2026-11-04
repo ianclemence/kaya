@@ -2,10 +2,10 @@
 name: journal
 description: Append and search a dated markdown journal. Invoke when user says "log that", "note to self", "write in my journal", "remember that I...", "search my journal for X", or "what did I write about Y". Files live at workspace/journal/YYYY-MM-DD.md.
 version: 1.1.0
-author: Ghost
+author: Kaya
 license: MIT
 metadata:
-  ghost:
+  kaya:
     tags: [journal, notes, daily-notes, memory, logging]
 prerequisites:
   commands: []
@@ -111,7 +111,7 @@ To delete a specific entry, overwrite the file excluding that entry's block.
 
 ## Directory Path
 
-Always: `workspace/journal/` (relative to Ghost workspace root). Confirm the workspace path with `pwd` if targeting from a different context.
+Always: `workspace/journal/` (relative to Kaya workspace root). Confirm the workspace path with `pwd` if targeting from a different context.
 
 ## Wikilink Integration
 

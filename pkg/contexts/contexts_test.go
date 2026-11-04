@@ -5,7 +5,7 @@ import (
 )
 
 func TestDefaultPersonal(t *testing.T) {
-	s, err := Open(t.TempDir(), "ghost-1")
+	s, err := Open(t.TempDir(), "kaya-1")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -57,12 +57,12 @@ func TestFileScope(t *testing.T) {
 
 func TestCreateProject(t *testing.T) {
 	s, _ := Open(t.TempDir(), "g1")
-	p, err := s.Create(KindProject, "Ghost Launch")
+	p, err := s.Create(KindProject, "Kaya Launch")
 	if err != nil {
 		t.Fatal(err)
 	}
-	if p.GhostID != "g1" {
-		t.Fatal("project must belong to the ghost")
+	if p.KayaID != "g1" {
+		t.Fatal("project must belong to the kaya")
 	}
 	if _, err := s.Create(KindWork, "Work"); err != nil {
 		t.Fatal(err)
@@ -70,7 +70,7 @@ func TestCreateProject(t *testing.T) {
 	if _, err := s.Create(KindWork, "Work Again"); err == nil {
 		t.Fatal("singleton kinds must not duplicate")
 	}
-	// Ghost isolation: other ghost's contexts never load.
+	// Kaya isolation: other kaya's contexts never load.
 	s2, _ := Open(s.path[:len(s.path)-len("/state/contexts.json")], "g2")
 	_ = s2
 }

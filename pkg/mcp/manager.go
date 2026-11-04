@@ -17,8 +17,8 @@ import (
 
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 
-	"github.com/ianclemence/ghost/pkg/config"
-	"github.com/ianclemence/ghost/pkg/logger"
+	"github.com/ianclemence/kaya/pkg/config"
+	"github.com/ianclemence/kaya/pkg/logger"
 )
 
 type headerTransport struct {
@@ -71,7 +71,7 @@ func ResolveHeaders(in map[string]string) map[string]string {
 
 // connectHTTP reaches an HTTP MCP server. Servers speak one of two dialects:
 // "streamable HTTP" (the current one, typically at .../mcp) or the older
-// server-sent-events style (.../sse). Ghost used to speak only the old one, so
+// server-sent-events style (.../sse). Kaya used to speak only the old one, so
 // most hosted servers could not be reached. It tries the likelier dialect for
 // the address first and falls back to the other.
 func connectHTTP(ctx context.Context, endpoint string, headers map[string]string) (*mcp.Client, *mcp.ClientSession, error) {
@@ -92,7 +92,7 @@ func connectHTTP(ctx context.Context, endpoint string, headers map[string]string
 	}
 	var errs []string
 	for _, a := range order {
-		client := mcp.NewClient(&mcp.Implementation{Name: "ghost"}, nil)
+		client := mcp.NewClient(&mcp.Implementation{Name: "kaya"}, nil)
 		sess, err := client.Connect(ctx, a.make(), nil)
 		if err == nil {
 			return client, sess, nil
@@ -353,7 +353,7 @@ func (m *Manager) ConnectServer(ctx context.Context, name string, cfg config.MCP
 			}
 			cmd.Env = envList
 		}
-		client = mcp.NewClient(&mcp.Implementation{Name: "ghost"}, nil)
+		client = mcp.NewClient(&mcp.Implementation{Name: "kaya"}, nil)
 		transport := &mcp.CommandTransport{Command: cmd}
 		handshakeCtx, cancel := context.WithTimeout(ctx, 30*time.Second)
 		defer cancel()

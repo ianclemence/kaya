@@ -3,7 +3,7 @@ package agent
 import (
 	"testing"
 
-	"github.com/ianclemence/ghost/pkg/permissions"
+	"github.com/ianclemence/kaya/pkg/permissions"
 )
 
 // Reading a file is never consequential, even under a consequential skill

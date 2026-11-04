@@ -18,10 +18,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ianclemence/ghost/pkg/browser"
-	"github.com/ianclemence/ghost/pkg/providers"
-	"github.com/ianclemence/ghost/pkg/tools"
-	"github.com/ianclemence/ghost/pkg/uploads"
+	"github.com/ianclemence/kaya/pkg/browser"
+	"github.com/ianclemence/kaya/pkg/providers"
+	"github.com/ianclemence/kaya/pkg/tools"
+	"github.com/ianclemence/kaya/pkg/uploads"
 )
 
 // registryHasBrowserTool reports whether the active tool set exposes
@@ -103,7 +103,7 @@ func screenshotImageMessage(path, source string) (providers.Message, bool) {
 var pictureAsk = regexp.MustCompile(`(?i)\bscreen ?shots?\b|\b(picture|photo|image|snapshot) of\b|\bshow me (what|how) it looks\b|\bsend me (a|the) (picture|photo|image)\b`)
 
 // ownerAskedForPicture reports whether the owner's message asks to see an
-// image of the page, as opposed to Ghost looking at the page for itself.
+// image of the page, as opposed to Kaya looking at the page for itself.
 func ownerAskedForPicture(userMessage string) bool {
 	return pictureAsk.MatchString(userMessage)
 }

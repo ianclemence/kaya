@@ -4,7 +4,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/ianclemence/ghost/pkg/config"
+	"github.com/ianclemence/kaya/pkg/config"
 )
 
 // Provider-key accessors.
@@ -21,13 +21,13 @@ import (
 // secretDirs returns the config directories searched for .secrets.json.
 func secretDirs() []string {
 	dirs := []string{}
-	if d := strings.TrimSpace(os.Getenv("GHOST_CONFIG_DIR")); d != "" {
+	if d := strings.TrimSpace(os.Getenv("KAYA_CONFIG_DIR")); d != "" {
 		dirs = append(dirs, d)
 	}
 	if home, err := os.UserHomeDir(); err == nil && home != "" {
-		dirs = append(dirs, home+"/.config/ghost", home+"/.ghost")
+		dirs = append(dirs, home+"/.config/kaya", home+"/.kaya")
 	}
-	dirs = append(dirs, "/var/lib/ghost/config", "./config")
+	dirs = append(dirs, "/var/lib/kaya/config", "./config")
 	return dirs
 }
 
@@ -112,7 +112,7 @@ func OpenWeatherKey() string {
 }
 
 // GithubKey returns the GitHub PAT (secrets-first, env fallback).
-// Trust-user model: Ghost documents read-only scopes but does not enforce
+// Trust-user model: Kaya documents read-only scopes but does not enforce
 // them — the token's own scopes are the authority.
 func GithubKey() string {
 	if v := providerKeyFromDisk("github"); v != "" {

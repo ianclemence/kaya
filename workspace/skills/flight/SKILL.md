@@ -1,11 +1,11 @@
 ---
 name: flight
-description: Track real-time flight status by flight number or airport. Invoke when user asks "where is flight UA123", "is AA456 on time", "flight status", "arrival time for DL100", " departures from JFK", or "is my flight delayed". Requires flight data key configured in Ghost settings (Integrations).
+description: Track real-time flight status by flight number or airport. Invoke when user asks "where is flight UA123", "is AA456 on time", "flight status", "arrival time for DL100", " departures from JFK", or "is my flight delayed". Requires flight data key configured in Kaya settings (Integrations).
 version: 1.1.0
-author: Ghost
+author: Kaya
 license: MIT
 metadata:
-  ghost:
+  kaya:
     tags: [flight, aviation, travel, tracking, airlines]
 prerequisites:
   commands: [curl]
@@ -16,7 +16,7 @@ prerequisites:
 > **Preferred path:** Call the `flight_status` tool with `flight_number` (e.g. `TG123`). It returns validated status with provider fallback built in — use its output directly. Only use the `curl` commands below if the tool reports it is unavailable.
 > **If flight number missing:** If user says `what's my flight status` without a flight number, ask `Which flight number should I check? (e.g., TG123)` and wait for the next message. When user replies with a short code like `TG123`, treat it as the answer and run `curl` with that flight. Do NOT use clarify tool for this — just ask naturally and resume. Tracker
 
-AviationStack API (Ghost's flight provider: free 100 lookups/month, global status/delay/gate coverage, simple key auth — best fit for a personal AI; alternatives like OpenSky lack schedule/status quality). The key lives in Ghost settings (Integrations) — never in chat, files, or commands. Get a free key at https://aviationstack.com.
+AviationStack API (Kaya's flight provider: free 100 lookups/month, global status/delay/gate coverage, simple key auth — best fit for a personal AI; alternatives like OpenSky lack schedule/status quality). The key lives in Kaya settings (Integrations) — never in chat, files, or commands. Get a free key at https://aviationstack.com.
 
 ## Quick Reference
 
@@ -43,7 +43,7 @@ unconfigured): sign up at https://rapidapi.com/aerodatabox/api/aerodatabox
 AERODATABOX_API_KEY=your_key_here
 ```
 Either key alone enables flight tracking; both keys may also be stored via
-Ghost settings (Integrations) instead of `.env`.
+Kaya settings (Integrations) instead of `.env`.
 
 Verify:
 ```bash

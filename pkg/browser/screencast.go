@@ -3,7 +3,7 @@
 // The agent-browser CLI (a Node CDP wrapper) already owns frame production:
 // `agent-browser stream enable` binds a localhost WebSocket server that emits
 // JPEG frames on repaint (latest-first, ack-paced, per-viewer backpressure).
-// Ghost never reimplements CDP: this broker only discovers that server and
+// Kaya never reimplements CDP: this broker only discovers that server and
 // mints short-lived, single-use viewer tickets bound to a browser session,
 // so the gateway can proxy exactly one viewer stream per ticket.
 //

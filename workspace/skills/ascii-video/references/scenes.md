@@ -846,13 +846,13 @@ def fx_morphing_journey(r, f, t, S):
 
 ### Specialized — Unique State Patterns
 
-### Game of Life with Ghost Trails
+### Game of Life with Kaya Trails
 
 Cellular automaton with analog fade trails. Beat injects random cells.
 
 ```python
 def fx_life(r, f, t, S):
-    """Conway's Game of Life with fading ghost trails.
+    """Conway's Game of Life with fading kaya trails.
     Beat events inject random live cells for disruption."""
     canvas = _render_vf(r, "sm",
         lambda g, f, t, S: vf_game_of_life(g, f, t, S,

@@ -10,11 +10,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ianclemence/ghost/pkg/provider"
+	"github.com/ianclemence/kaya/pkg/provider"
 )
 
 // Every geocode failure cause maps to its honest class: a dropped connection is
-// a network failure, not an "unexpected response" Ghost "didn't want to guess" at.
+// a network failure, not an "unexpected response" Kaya "didn't want to guess" at.
 func TestGeocodeFailureClassification(t *testing.T) {
 	var malformed map[string]interface{}
 	jsonErr := json.Unmarshal([]byte("{"), &malformed)

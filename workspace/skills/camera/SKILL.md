@@ -2,10 +2,10 @@
 name: camera
 description: Capture photos, video, and time-lapses from webcam or connected cameras. Invoke when user asks to "take a photo", "see what's on camera", "record video", "capture a time-lapse", or "what do you see". Works on Linux (ffmpeg/v4l2/libcamera) and Windows (ffmpeg/dshow).
 version: 1.1.0
-author: Ghost
+author: Kaya
 license: MIT
 metadata:
-  ghost:
+  kaya:
     tags: [camera, photo, webcam, capture, video, timelapse, vision]
 prerequisites:
   commands: [ffmpeg]

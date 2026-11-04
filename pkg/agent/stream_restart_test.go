@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/ianclemence/ghost/pkg/providers"
+	"github.com/ianclemence/kaya/pkg/providers"
 )
 
 // droppingStreamProvider streams half an answer and then loses the

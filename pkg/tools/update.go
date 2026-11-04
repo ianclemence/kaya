@@ -8,8 +8,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ianclemence/ghost/pkg/logger"
-	"github.com/ianclemence/ghost/pkg/updaterun"
+	"github.com/ianclemence/kaya/pkg/logger"
+	"github.com/ianclemence/kaya/pkg/updaterun"
 )
 
 type UpdateTool struct {
@@ -33,7 +33,7 @@ func (t *UpdateTool) Name() string {
 }
 
 func (t *UpdateTool) Description() string {
-	return "Check for, or install, a new verified release of Ghost. Set check=true to only report the installed and available version — read-only, changes nothing, safe to call whenever the owner asks \"is there an update?\". To actually update, pass confirm=true: it runs on its own, takes a few minutes, and Ghost is briefly unavailable while it restarts. Only update when the owner asked for it."
+	return "Check for, or install, a new verified release of Kaya. Set check=true to only report the installed and available version — read-only, changes nothing, safe to call whenever the owner asks \"is there an update?\". To actually update, pass confirm=true: it runs on its own, takes a few minutes, and Kaya is briefly unavailable while it restarts. Only update when the owner asked for it."
 }
 
 func (t *UpdateTool) Parameters() map[string]interface{} {
@@ -69,15 +69,15 @@ func (t *UpdateTool) Execute(ctx context.Context, args map[string]interface{}) *
 		return t.check(ctx)
 	}
 
-	// The one updater is `ghost update` (release-based, verified). It runs as
+	// The one updater is `kaya update` (release-based, verified). It runs as
 	// its own systemd unit: this process is sandboxed read-only and is
 	// restarted by the update itself.
 	if c, _ := args["confirm"].(bool); !c {
-		return ErrorResult("Updating restarts Ghost. Ask the owner to confirm, then call update with confirm=true. To only check for a new version, call update with check=true.")
+		return ErrorResult("Updating restarts Kaya. Ask the owner to confirm, then call update with confirm=true. To only check for a new version, call update with check=true.")
 	}
 	// The update restarts this process, so leave a note for the release that
 	// comes up: it tells this conversation whether the update took and whether
-	// Ghost is healthy.
+	// Kaya is healthy.
 	_ = updaterun.WritePending(updaterun.Pending{From: RunningVersion(), Channel: t.channel, ChatID: t.chatID})
 	if err := updaterun.StartDetachedUpdate(); err != nil {
 		updaterun.ClearPending()
@@ -85,14 +85,14 @@ func (t *UpdateTool) Execute(ctx context.Context, args map[string]interface{}) *
 	}
 	logger.InfoCF("tools", "Update started", map[string]interface{}{"unit": updaterun.UpdateUnit})
 
-	msg := "Update started. Ghost will restart when it finishes, then check itself and report back here."
+	msg := "Update started. Kaya will restart when it finishes, then check itself and report back here."
 	return &ToolResult{
 		ForLLM:  msg,
 		ForUser: msg,
 	}
 }
 
-// check runs `ghost update --check`, which resolves the release and prints the
+// check runs `kaya update --check`, which resolves the release and prints the
 // versions without touching the install.
 func (t *UpdateTool) check(ctx context.Context) *ToolResult {
 	ctx, cancel := context.WithTimeout(ctx, 60*time.Second)

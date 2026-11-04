@@ -108,33 +108,33 @@ func TestTaintLog(t *testing.T) {
 
 func TestRevalidate(t *testing.T) {
 	s := testStore(t)
-	sess, err := s.GetOrCreate("ghost", "personal", "task1", "default", time.Minute)
+	sess, err := s.GetOrCreate("kaya", "personal", "task1", "default", time.Minute)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if _, err := s.Revalidate(sess.ID, "ghost", "personal", "task1"); err != nil {
+	if _, err := s.Revalidate(sess.ID, "kaya", "personal", "task1"); err != nil {
 		t.Fatalf("matching resume must pass: %v", err)
 	}
-	if _, err := s.Revalidate(sess.ID, "ghost", "work", "task1"); err == nil {
+	if _, err := s.Revalidate(sess.ID, "kaya", "work", "task1"); err == nil {
 		t.Fatal("context mismatch must fail")
 	}
-	if _, err := s.Revalidate(sess.ID, "ghost", "personal", "other"); err == nil {
+	if _, err := s.Revalidate(sess.ID, "kaya", "personal", "other"); err == nil {
 		t.Fatal("task mismatch must fail")
 	}
-	if _, err := s.Revalidate("nope", "ghost", "personal", "task1"); err == nil {
+	if _, err := s.Revalidate("nope", "kaya", "personal", "task1"); err == nil {
 		t.Fatal("unknown session must fail")
 	}
 }
 
 func TestSweepRefs(t *testing.T) {
 	s := testStore(t)
-	s.Observe("ghost-session", []string{"@e1"})
-	s.RecordTaint(TaintSpan{SessionID: "ghost-session", Domain: "x.test"})
+	s.Observe("kaya-session", []string{"@e1"})
+	s.RecordTaint(TaintSpan{SessionID: "kaya-session", Domain: "x.test"})
 	s.SweepRefs() // no rows in table: everything sweeps
-	if got := s.RefEpoch("ghost-session"); got != -1 {
+	if got := s.RefEpoch("kaya-session"); got != -1 {
 		t.Fatal("swept epoch must report -1")
 	}
-	if got := s.TaintedDomains("ghost-session"); len(got) != 0 {
+	if got := s.TaintedDomains("kaya-session"); len(got) != 0 {
 		t.Fatal("swept taint must clear")
 	}
 }

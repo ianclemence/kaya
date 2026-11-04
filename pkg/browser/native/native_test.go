@@ -12,8 +12,8 @@ import (
 // hasBrowser reports whether a real Chrome is available for the e2e tests.
 func hasBrowser(t *testing.T) {
 	t.Helper()
-	if os.Getenv("GHOST_NATIVE_BROWSER") != "1" {
-		t.Skip("native browser e2e needs GHOST_NATIVE_BROWSER=1 (real Chrome)")
+	if os.Getenv("KAYA_NATIVE_BROWSER") != "1" {
+		t.Skip("native browser e2e needs KAYA_NATIVE_BROWSER=1 (real Chrome)")
 	}
 	if _, err := chromeBinary(); err != nil {
 		t.Skip("no Chrome/Chromium on PATH")

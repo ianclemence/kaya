@@ -7,7 +7,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/ianclemence/ghost/pkg/cards"
+	"github.com/ianclemence/kaya/pkg/cards"
 )
 
 // Decision is the outcome of a proactive gating check.
@@ -22,12 +22,12 @@ const (
 	DecisionBudgetExhausted Decision = "budget_exhausted"
 )
 
-// Notice is a candidate proactive message Ghost is considering surfacing.
+// Notice is a candidate proactive message Kaya is considering surfacing.
 type Notice struct {
 	Topic      string  // subject, for per-topic cooldown / dedupe
 	Priority   int     // 1-10: how important to this user the thing is
 	Urgency    bool    // time-sensitive (deadline, data arrived, unfinished task)
-	Confidence float64 // 0-1: how sure Ghost is it's genuinely useful
+	Confidence float64 // 0-1: how sure Kaya is it's genuinely useful
 	DedupeKey  string  // unique content key (duplicate suppression)
 	Message    string
 
@@ -41,7 +41,7 @@ type Notice struct {
 }
 
 // Noticer is the value gate for proactive behaviour. The principle: "proactive
-// does not mean noisy." Ghost should only interrupt when expected usefulness is
+// does not mean noisy." Kaya should only interrupt when expected usefulness is
 // high, and should never spam the same thing twice or exceed a daily budget.
 // The gate is deterministic and fully testable; candidate signals are wired to
 // it later.

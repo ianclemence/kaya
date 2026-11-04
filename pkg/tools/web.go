@@ -12,7 +12,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ianclemence/ghost/pkg/logger"
+	"github.com/ianclemence/kaya/pkg/logger"
 )
 
 const (
@@ -447,7 +447,7 @@ func (t *WebFetchTool) Timeout() time.Duration { return 45 * time.Second }
 func (t *WebFetchTool) RetryPolicy() (int, time.Duration) { return 1, 500 * time.Millisecond }
 
 func (t *WebFetchTool) Description() string {
-	return "Fetch one exact URL and return its readable text. This is how Ghost reads a page — use it rather than a shell command. Only for URLs you already have."
+	return "Fetch one exact URL and return its readable text. This is how Kaya reads a page — use it rather than a shell command. Only for URLs you already have."
 }
 
 func (t *WebFetchTool) Parameters() map[string]interface{} {

@@ -10,7 +10,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ianclemence/ghost/pkg/browser/native"
+	"github.com/ianclemence/kaya/pkg/browser/native"
 )
 
 const (
@@ -24,7 +24,7 @@ const (
 
 // harness runs before the page's own script. It records what the page throws
 // and makes the page's world match the phone's sandbox: no storage, and the
-// ghost.save bridge.
+// kaya.save bridge.
 const harness = `<script>(function(){
 window.__errs=[];
 function note(m){if(window.__errs.length<8)window.__errs.push(String(m||'error').slice(0,200))}
@@ -33,7 +33,7 @@ window.addEventListener('unhandledrejection',function(e){note((e.reason&&e.reaso
 var ce=console.error;console.error=function(){try{note(Array.prototype.join.call(arguments,' '))}catch(x){}return ce&&ce.apply(console,arguments)};
 ['localStorage','sessionStorage','indexedDB'].forEach(function(k){try{Object.defineProperty(window,k,{get:function(){throw new DOMException('storage is not available here','SecurityError')}})}catch(x){}});
 try{Object.defineProperty(document,'cookie',{get:function(){throw new DOMException('cookies are not available here','SecurityError')},set:function(){throw new DOMException('cookies are not available here','SecurityError')}})}catch(x){}
-window.ghost={saved:null,save:function(){return true}};
+window.kaya={saved:null,save:function(){return true}};
 })();</script>`
 
 var (
@@ -119,7 +119,7 @@ func Findings(m measured, taps []tapped) []string {
 func Check(ctx context.Context, page string) []string {
 	ctx, cancel := context.WithTimeout(ctx, overall)
 	defer cancel()
-	dir, err := os.MkdirTemp("", "ghost-canvas-")
+	dir, err := os.MkdirTemp("", "kaya-canvas-")
 	if err != nil {
 		return nil
 	}

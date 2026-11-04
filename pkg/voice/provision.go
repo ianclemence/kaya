@@ -57,7 +57,7 @@ const (
 	// SidecarBinary is the installed whisper-server executable name.
 	SidecarBinary = "whisper-server"
 	// DefaultModelsDir is where speech models live on the personal AI.
-	DefaultModelsDir = "/var/ghost/models"
+	DefaultModelsDir = "/var/kaya/models"
 	// DefaultSidecarBinDir is where the sidecar binary is installed.
 	DefaultSidecarBinDir = "/usr/local/bin"
 )
@@ -72,7 +72,7 @@ var sttModels = map[string]string{
 	"small":    "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-small.bin",
 }
 
-// Pinned sha256 digests for the artifacts Ghost ships by default. Digests
+// Pinned sha256 digests for the artifacts Kaya ships by default. Digests
 // are captured at provisioning time from the pinned upstream release, so a
 // fetch that is tampered with or corrupted in transit fails closed instead
 // of running an unexpected binary or model. Non-default models have no
@@ -85,7 +85,7 @@ const (
 	ggmlTinyEnSHA256 = "921e4cf8686fdd993dcd081a5da5b6c365bfde1162e72b08d75ac75289920b1f"
 )
 
-// sttModelDigests pins the models Ghost provisions by default (base.en)
+// sttModelDigests pins the models Kaya provisions by default (base.en)
 // and documents as the low-RAM fallback (tiny.en).
 var sttModelDigests = map[string]string{
 	"base.en": ggmlBaseEnSHA256,

@@ -1,5 +1,5 @@
-// Package artifacts is Ghost's runtime-validated handoff primitive:
-// "things Ghost hands you" (documents, images, links, result summaries).
+// Package artifacts is Kaya's runtime-validated handoff primitive:
+// "things Kaya hands you" (documents, images, links, result summaries).
 //
 // Authority rule: the model proposes, the runtime disposes. An artifact
 // exists only after this package validates it against workspace bounds,
@@ -25,7 +25,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ianclemence/ghost/pkg/redact"
+	"github.com/ianclemence/kaya/pkg/redact"
 )
 
 // Kinds are deliberately coarse. Semantic rendering (email looks like
@@ -58,7 +58,7 @@ const (
 )
 
 // protectedPrefixes mirrors the workspace file boundary
-// (cmd/ghost/internal_api.go workspaceFileProtected) plus the memory
+// (cmd/kaya/internal_api.go workspaceFileProtected) plus the memory
 // ScopeGuard estate (pkg/tools/privacy_guard.go): nothing under these
 // paths may ever become a user-facing handoff.
 var protectedPrefixes = []string{
@@ -104,7 +104,7 @@ type Input struct {
 	EvidenceRef string
 }
 
-// Store persists artifacts in the Ghost database.
+// Store persists artifacts in the Kaya database.
 type Store struct {
 	db        *sql.DB
 	workspace string
@@ -512,7 +512,7 @@ func ShelfKindOf(a Artifact) string {
 	return ShelfDocuments
 }
 
-// Shelf lists everything Ghost has made, across every conversation, newest
+// Shelf lists everything Kaya has made, across every conversation, newest
 // first with pinned things on top. Versions of the same canvas or document
 // (same title, same kind of thing) are one entry: the newest, with the count.
 // query matches the title or summary; kind narrows to one filter.
@@ -593,12 +593,12 @@ func shelfGroup(a Artifact, k string) string {
 	return ""
 }
 
-// madeDirs are where Ghost keeps what it made. Deleting one of those removes
+// madeDirs are where Kaya keeps what it made. Deleting one of those removes
 // its file too; anything else (an upload, a file in the workspace) is only
 // taken off the shelf and out of the conversation, and stays in Files.
 var madeDirs = []string{"canvas/", "documents/", "motion/", "dashboards/", "films/"}
 
-func madeByGhost(path string) bool {
+func madeByKaya(path string) bool {
 	for _, d := range madeDirs {
 		if strings.HasPrefix(path, d) {
 			return true
@@ -632,7 +632,7 @@ func (s *Store) Versions(id string) ([]Artifact, error) {
 }
 
 // Delete removes one artifact: it leaves the shelf and the conversation, and
-// a file Ghost made goes with it (a document's source and Word copy, a
+// a file Kaya made goes with it (a document's source and Word copy, a
 // motion's video). It reports how many artifacts were removed.
 func (s *Store) Delete(id string) (int, error) {
 	a, err := s.Get(id)
@@ -670,7 +670,7 @@ func (s *Store) DeleteAll(id string) (int, error) {
 var canvasVersion = regexp.MustCompile(`^canvas/([a-z0-9-]+)-v\d+\.html$`)
 
 func (s *Store) remove(a Artifact) error {
-	if a.Kind == KindFile && madeByGhost(a.Path) {
+	if a.Kind == KindFile && madeByKaya(a.Path) {
 		// Another artifact may point at the same file (a dashboard saved
 		// again under its title): the file goes only with the last of them.
 		var others int

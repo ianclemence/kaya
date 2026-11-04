@@ -1,14 +1,14 @@
-// Package routines promotes the existing scheduler into Ghost's
+// Package routines promotes the existing scheduler into Kaya's
 // product-level routine architecture — without replacing it.
 //
-// A routine is a persistent instruction for Ghost to perform work in the
+// A routine is a persistent instruction for Kaya to perform work in the
 // future ("Every Monday at 9 AM, prepare my weekly brief"). Storage
 // reuses scheduled.Store (no duplicate scheduling tables): a routine IS
 // a scheduled automation item plus a metadata sidecar (instruction,
 // allowed capabilities, ownership). Execution reuses the SAME pipeline
 // as interactive requests:
 //
-// Scheduler → Routine → Ghost context → Brain → Memory → Capabilities →
+// Scheduler → Routine → Kaya context → Brain → Memory → Capabilities →
 // Permission Broker → Execution → Event Stream → Notification/Result.
 //
 // Unattended permission semantics: a routine CANNOT inherit unlimited
@@ -26,8 +26,8 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/ianclemence/ghost/pkg/product"
-	"github.com/ianclemence/ghost/pkg/scheduled"
+	"github.com/ianclemence/kaya/pkg/product"
+	"github.com/ianclemence/kaya/pkg/scheduled"
 )
 
 // Status is the product-level routine state.
@@ -45,7 +45,7 @@ const (
 // Routine is the product view over a scheduled automation item.
 type Routine struct {
 	ID                  string     `json:"id"`
-	GhostID             string     `json:"ghost_id"`
+	KayaID             string     `json:"kaya_id"`
 	OwnerID             string     `json:"owner_id"`
 	Name                string     `json:"name"`
 	Instruction         string     `json:"instruction"`
@@ -85,7 +85,7 @@ type Service struct {
 func New(db *sql.DB, store *scheduled.Store) (*Service, error) {
 	s := &Service{db: db, store: store}
 	_, err := db.Exec(`CREATE TABLE IF NOT EXISTS routine_meta (
-		item_id TEXT PRIMARY KEY, ghost_id TEXT, owner_id TEXT,
+		item_id TEXT PRIMARY KEY, kaya_id TEXT, owner_id TEXT,
 		instruction TEXT, allowed_capabilities TEXT,
 		created_at TEXT, updated_at TEXT
 	)`)
@@ -98,7 +98,7 @@ func New(db *sql.DB, store *scheduled.Store) (*Service, error) {
 // Create persists a routine as a scheduled automation + metadata. The
 // instruction must name WHAT to do; schedule/timezone come from the
 // parsed schedule. Allowed capabilities scope unattended execution.
-func (s *Service) Create(ghostID, ownerID, name, instruction, timezone string, sched scheduled.Schedule, allowed []string) (*Routine, error) {
+func (s *Service) Create(kayaID, ownerID, name, instruction, timezone string, sched scheduled.Schedule, allowed []string) (*Routine, error) {
 	if strings.TrimSpace(name) == "" || strings.TrimSpace(instruction) == "" {
 		return nil, errors.New("routine name and instruction required")
 	}
@@ -128,8 +128,8 @@ func (s *Service) Create(ghostID, ownerID, name, instruction, timezone string, s
 		return nil, err
 	}
 	ac, _ := json.Marshal(allowed)
-	_, err := s.db.Exec(`INSERT INTO routine_meta (item_id, ghost_id, owner_id, instruction, allowed_capabilities, created_at, updated_at)
-		VALUES (?,?,?,?,?,?,?)`, item.ID, ghostID, ownerID, item.Description, string(ac),
+	_, err := s.db.Exec(`INSERT INTO routine_meta (item_id, kaya_id, owner_id, instruction, allowed_capabilities, created_at, updated_at)
+		VALUES (?,?,?,?,?,?,?)`, item.ID, kayaID, ownerID, item.Description, string(ac),
 		now.Format(time.RFC3339), now.Format(time.RFC3339))
 	if err != nil {
 		return nil, err
@@ -142,14 +142,14 @@ func (s *Service) Get(id string) (*Routine, error) {
 	if err != nil {
 		return nil, err
 	}
-	var ghostID, ownerID, instruction, ac string
+	var kayaID, ownerID, instruction, ac string
 	var created, updated string
-	err = s.db.QueryRow(`SELECT ghost_id, owner_id, instruction, allowed_capabilities, created_at, updated_at FROM routine_meta WHERE item_id=?`, id).
-		Scan(&ghostID, &ownerID, &instruction, &ac, &created, &updated)
+	err = s.db.QueryRow(`SELECT kaya_id, owner_id, instruction, allowed_capabilities, created_at, updated_at FROM routine_meta WHERE item_id=?`, id).
+		Scan(&kayaID, &ownerID, &instruction, &ac, &created, &updated)
 	if err != nil {
 		return nil, errors.New("routine metadata not found")
 	}
-	r := &Routine{ID: item.ID, GhostID: ghostID, OwnerID: ownerID,
+	r := &Routine{ID: item.ID, KayaID: kayaID, OwnerID: ownerID,
 		Name: item.Title, Instruction: instruction, Timezone: item.Timezone,
 		Status: statusOf(item.State), NextRun: item.NextRunAt, LastRun: item.LastRunAt}
 	switch item.Schedule.Kind {
@@ -175,12 +175,12 @@ func (s *Service) Get(id string) (*Routine, error) {
 	return r, nil
 }
 
-// List returns routines for a Ghost (product view, newest first).
-func (s *Service) List(ghostID string, limit int) []*Routine {
+// List returns routines for a Kaya (product view, newest first).
+func (s *Service) List(kayaID string, limit int) []*Routine {
 	if limit <= 0 || limit > 100 {
 		limit = 50
 	}
-	rows, err := s.db.Query(`SELECT item_id FROM routine_meta WHERE ghost_id=? ORDER BY created_at DESC LIMIT ?`, ghostID, limit)
+	rows, err := s.db.Query(`SELECT item_id FROM routine_meta WHERE kaya_id=? ORDER BY created_at DESC LIMIT ?`, kayaID, limit)
 	if err != nil {
 		return nil
 	}

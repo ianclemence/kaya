@@ -12,8 +12,8 @@ Use `gog` for Gmail/Calendar/Drive/Contacts/Sheets/Docs. Requires OAuth setup.
 
 Setup
 - Everyday use needs no terminal: mail and calendar already work through
-  Ghost's Connected Apps (Gmail + Google Calendar). For non-technical users,
-  say "connect it in Ghost settings under Connected Apps" — never hand them
+  Kaya's Connected Apps (Gmail + Google Calendar). For non-technical users,
+  say "connect it in Kaya settings under Connected Apps" — never hand them
   setup commands.
 - The CLI extras (Drive, Sheets, Docs, Contacts) need a one-time Google
   sign-in on this device — techies only:

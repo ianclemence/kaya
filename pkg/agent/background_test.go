@@ -6,9 +6,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ianclemence/ghost/pkg/bus"
-	"github.com/ianclemence/ghost/pkg/session"
-	"github.com/ianclemence/ghost/pkg/tools"
+	"github.com/ianclemence/kaya/pkg/bus"
+	"github.com/ianclemence/kaya/pkg/session"
+	"github.com/ianclemence/kaya/pkg/tools"
 )
 
 // bgTestAsyncTool captures its injected callback so the test completes it

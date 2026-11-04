@@ -27,7 +27,7 @@ import (
 
 	"golang.org/x/oauth2"
 
-	"github.com/ianclemence/ghost/pkg/config"
+	"github.com/ianclemence/kaya/pkg/config"
 )
 
 // Gmail OAuth scopes (narrowest-first).
@@ -51,7 +51,7 @@ func GmailScopesFor(needWrite bool) []string {
 // GmailOAuthConfig is the deployment's shared Google OAuth client. The
 // ClientID/Secret are the same Cloud project as Calendar; only the
 // RedirectURL differs (/oauth/gmail/callback). Secrets never leave the
-// Ghost machine.
+// Kaya machine.
 type GmailOAuthConfig struct {
 	ClientID     string
 	ClientSecret string
@@ -336,7 +336,7 @@ func GmailClientConfigFromEnv() (GmailOAuthConfig, bool) {
 	cfg := GmailOAuthConfig{
 		ClientID:     c.ClientID,
 		ClientSecret: c.ClientSecret,
-		RedirectURL:  redirectOr("GHOST_GMAIL_REDIRECT_URL", ProviderGoogle),
+		RedirectURL:  redirectOr("KAYA_GMAIL_REDIRECT_URL", ProviderGoogle),
 	}
 	if cfg.ClientID == "" || cfg.ClientSecret == "" || cfg.RedirectURL == "" {
 		return GmailOAuthConfig{}, false

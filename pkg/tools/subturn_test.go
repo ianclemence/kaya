@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ianclemence/ghost/pkg/providers"
+	"github.com/ianclemence/kaya/pkg/providers"
 )
 
 func TestSubTurnManager_BasicLimits(t *testing.T) {

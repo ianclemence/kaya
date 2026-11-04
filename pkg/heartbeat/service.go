@@ -1,8 +1,8 @@
-// Ghost - Ultra-lightweight personal AI agent
-// Inspired by and based on GHOST: https://github.com/ianclemence/ghost
+// Kaya - Ultra-lightweight personal AI agent
+// Inspired by and based on KAYA: https://github.com/ianclemence/kaya
 // License: MIT
 //
-// Copyright (c) 2026 Ghost contributors
+// Copyright (c) 2026 Kaya contributors
 
 package heartbeat
 
@@ -16,12 +16,12 @@ import (
 	"sync"
 	"time"
 
-	"github.com/ianclemence/ghost/pkg/bus"
-	"github.com/ianclemence/ghost/pkg/constants"
-	"github.com/ianclemence/ghost/pkg/logger"
-	"github.com/ianclemence/ghost/pkg/scheduled"
-	"github.com/ianclemence/ghost/pkg/state"
-	"github.com/ianclemence/ghost/pkg/tools"
+	"github.com/ianclemence/kaya/pkg/bus"
+	"github.com/ianclemence/kaya/pkg/constants"
+	"github.com/ianclemence/kaya/pkg/logger"
+	"github.com/ianclemence/kaya/pkg/scheduled"
+	"github.com/ianclemence/kaya/pkg/state"
+	"github.com/ianclemence/kaya/pkg/tools"
 )
 
 const (
@@ -287,7 +287,7 @@ func (hs *HeartbeatService) buildPrompt() string {
 
 Current time: %s
 
-You are Ghost, a proactive personal AI. This is a scheduled heartbeat check.
+You are Kaya, a proactive personal AI. This is a scheduled heartbeat check.
 Review the following tasks and execute any necessary actions using available skills.
 If there is nothing that requires attention, respond ONLY with: HEARTBEAT_OK
 
@@ -301,8 +301,8 @@ func (hs *HeartbeatService) createDefaultHeartbeatTemplate() {
 
 	defaultContent := `# Heartbeat Tasks
 
-This file tells Ghost what to do periodically when it runs on its own. Only
-write here if you want Ghost to act without being asked.
+This file tells Kaya what to do periodically when it runs on its own. Only
+write here if you want Kaya to act without being asked.
 
 ## Daily briefing (morning only)
 

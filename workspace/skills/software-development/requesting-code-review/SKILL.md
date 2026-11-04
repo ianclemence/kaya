@@ -2,10 +2,10 @@
 name: requesting-code-review
 description: Use when completing tasks, implementing major features, or before merging. Validates work meets requirements through systematic review process.
 version: 1.1.0
-author: Ghost (adapted from obra/superpowers)
+author: Kaya (adapted from obra/superpowers)
 license: MIT
 metadata:
-  ghost:
+  kaya:
     tags: [code-review, quality, validation, workflow, review]
     related_skills:
       [subagent-driven-development, writing-plans, test-driven-development]

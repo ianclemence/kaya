@@ -9,10 +9,10 @@ import (
 
 // Limitation policy: when does a limitation belong in the owner's answer?
 //
-// Ghost's first instinct was to disclose everything it knew about how it got an
+// Kaya's first instinct was to disclose everything it knew about how it got an
 // answer — a page that would not parse, a snippet instead of an article body, a
 // publication whose pages came back empty. Every disclosure was true, and
-// together they made Ghost sound defensive and uncertain about everything,
+// together they made Kaya sound defensive and uncertain about everything,
 // which is its own kind of dishonesty: it teaches the owner to discount
 // statements that are actually solid.
 //
@@ -23,7 +23,7 @@ import (
 // announce it are different things.
 //
 // This file is the single policy that separates them. It is deterministic and
-// lives in the package that already owns Ghost's LLM-independent user-facing
+// lives in the package that already owns Kaya's LLM-independent user-facing
 // language, so honesty here does not depend on a model remembering an
 // instruction.
 
@@ -96,7 +96,7 @@ func DecideLimitation(f LimitationFacts) Limitation {
 		// single-line answer.
 		return LimitationMaterial
 	case f.RequestedSource != "" && !f.RequestedSourceRead:
-		// They asked for a specific source and Ghost could not read it. This
+		// They asked for a specific source and Kaya could not read it. This
 		// is the one case where "I couldn't access X" is the answer's content,
 		// not a footnote.
 		return LimitationMaterial
@@ -110,13 +110,13 @@ func DecideLimitation(f LimitationFacts) Limitation {
 		return LimitationContextual
 	default:
 		// Everything else — a page that would not parse, one source among
-		// several, a body Ghost chose not to read in full — is the runtime's
+		// several, a body Kaya chose not to read in full — is the runtime's
 		// business, not the owner's.
 		return LimitationNone
 	}
 }
 
-// CaveatRule is the prompt-facing statement of the same policy. GHOST.md must
+// CaveatRule is the prompt-facing statement of the same policy. KAYA.md must
 // carry it verbatim; a test asserts that, so the prose the model follows and
 // the decision the runtime makes cannot drift apart.
 const CaveatRule = "Be honest about uncertainty and never pretend something was verified that was not. " +
@@ -225,7 +225,7 @@ var labelledCaveatStartRE = regexp.MustCompile(`(?i)(?:^|[.!?\n]\s*|\s)((?:one c
 
 // caveatSourceShapeRE names the thing that makes a caveat about shape rather
 // than substance: how the retrieved material was cut, not what it says. This is
-// `source_access` — internal metadata the task keeps inside Ghost — showing up
+// `source_access` — internal metadata the task keeps inside Kaya — showing up
 // in prose.
 var caveatSourceShapeRE = regexp.MustCompile(`(?i)\b(homepages?|front pages?|headlines?|listings?|snippets?|summaries|summari[sz]ed|previews?|excerpts?|abstracts?|above the fold|listing text)\b`)
 

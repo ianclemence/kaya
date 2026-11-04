@@ -3,7 +3,7 @@ package channels
 import (
 	"testing"
 
-	"github.com/ianclemence/ghost/pkg/tools"
+	"github.com/ianclemence/kaya/pkg/tools"
 )
 
 func TestDetectToolProfile(t *testing.T) {

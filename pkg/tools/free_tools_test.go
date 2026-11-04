@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/ianclemence/ghost/pkg/providers"
+	"github.com/ianclemence/kaya/pkg/providers"
 )
 
 func providersTC(name string) providers.ToolCall {

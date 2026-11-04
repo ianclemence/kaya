@@ -1,6 +1,6 @@
 package permissions
 
-// Natural-language standing permissions: "Always let Ghost add calendar
+// Natural-language standing permissions: "Always let Kaya add calendar
 // events." The LLM may PROPOSE a scope, but the runtime DECIDES: every
 // grant is validated against declared capabilities, reduced or rejected
 // when overbroad, and confirmed before persistence. The model is never
@@ -10,7 +10,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/ianclemence/ghost/pkg/skills"
+	"github.com/ianclemence/kaya/pkg/skills"
 )
 
 // StandingGrant is one validated grant line.
@@ -33,11 +33,11 @@ type StandingRejection struct {
 	Options []string `json:"options,omitempty"`
 }
 
-var standingAllowRE = regexp.MustCompile(`(?i)(^\s*(always\s+(let|allow)\s+ghost|let\s+ghost\s+always|allow\s+ghost\s+to\s+always|you can always|i can always|you (can|may) (let|allow) (ghost|me))\b)|(\b(your|always)\s*:\s*(let|allow))`)
-var standingDenyRE = regexp.MustCompile(`(?i)^\s*(never\s+(let|allow)\s+ghost|don't\s+(ever\s+)?let\s+ghost|stop\s+asking\s+me\s+about)\b`)
+var standingAllowRE = regexp.MustCompile(`(?i)(^\s*(always\s+(let|allow)\s+kaya|let\s+kaya\s+always|allow\s+kaya\s+to\s+always|you can always|i can always|you (can|may) (let|allow) (kaya|me))\b)|(\b(your|always)\s*:\s*(let|allow))`)
+var standingDenyRE = regexp.MustCompile(`(?i)^\s*(never\s+(let|allow)\s+kaya|don't\s+(ever\s+)?let\s+kaya|stop\s+asking\s+me\s+about)\b`)
 
 // standingMaxLen bounds what can count as a standing-permission directive. A
-// request is a short imperative ("Always let Ghost add calendar events"), not
+// request is a short imperative ("Always let Kaya add calendar events"), not
 // prose. Without this bound, a brief, a pasted document, or any long question
 // that merely mentioned "access", "permissions" and "everything" was hijacked
 // by the broad-scope veto and answered with grant boilerplate instead of being
@@ -47,7 +47,7 @@ const standingMaxLen = 240
 // broadScopeSentenceSplit separates a message into clauses so broad-scope
 // language must occur in the SAME clause as the grant verb. "I gave you access
 // to my drive. Tell me everything about it." is two clauses and is not a
-// permission request; "Always let Ghost do everything" is one and is.
+// permission request; "Always let Kaya do everything" is one and is.
 var broadScopeSentenceSplit = regexp.MustCompile(`[.!?;\n]+`)
 
 // scopePhrase maps user language to narrow capability grants. Deliberately
@@ -94,8 +94,8 @@ func ProposeStanding(text string) (StandingProposal, StandingRejection, bool) {
 		return StandingProposal{}, StandingRejection{
 			Reason: "I can't grant access to an entire account. Grant one capability at a time instead.",
 			Options: []string{
-				"Always let Ghost read calendar events",
-				"Always let Ghost add calendar events",
+				"Always let Kaya read calendar events",
+				"Always let Kaya add calendar events",
 			},
 		}, true
 	}
@@ -116,8 +116,8 @@ func ProposeStanding(text string) (StandingProposal, StandingRejection, bool) {
 	return StandingProposal{}, StandingRejection{
 		Reason: "I couldn't tell exactly what to allow. Name one thing, like calendar events or reminders.",
 		Options: []string{
-			"Always let Ghost add calendar events",
-			"Always let Ghost create reminders",
+			"Always let Kaya add calendar events",
+			"Always let Kaya create reminders",
 		},
 	}, true
 }
@@ -196,9 +196,9 @@ func summarizeGrants(grants []StandingGrant, deny bool) string {
 	for _, g := range grants {
 		parts = append(parts, describeGrant(g))
 	}
-	verb := "Ghost will be allowed to "
+	verb := "Kaya will be allowed to "
 	if deny {
-		verb = "Ghost will never be allowed to "
+		verb = "Kaya will never be allowed to "
 	}
 	return verb + strings.Join(parts, " and ") + ". Nothing else changes."
 }

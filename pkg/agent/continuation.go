@@ -5,7 +5,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/ianclemence/ghost/pkg/permissions"
+	"github.com/ianclemence/kaya/pkg/permissions"
 )
 
 // An approval has to run the action the owner was shown, with its parameters.

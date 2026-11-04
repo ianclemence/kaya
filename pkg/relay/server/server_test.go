@@ -14,7 +14,7 @@ import (
 	"time"
 
 	"github.com/gorilla/websocket"
-	"github.com/ianclemence/ghost/pkg/relay/proto"
+	"github.com/ianclemence/kaya/pkg/relay/proto"
 )
 
 func tempRegistry(t *testing.T) string {
@@ -29,7 +29,7 @@ func TestRegistryAddAndAuthenticate(t *testing.T) {
 		t.Fatalf("NewRegistry: %v", err)
 	}
 
-	secret, err := reg.Add("device-1", "Test Ghost")
+	secret, err := reg.Add("device-1", "Test Kaya")
 	if err != nil {
 		t.Fatalf("Add: %v", err)
 	}
@@ -161,8 +161,8 @@ func TestHandleAppRequestDeviceOffline(t *testing.T) {
 	})
 
 	req := httptest.NewRequest("POST", "/v1/chat", nil)
-	req.Header.Set("X-Ghost-Client-Id", "device-1")
-	req.Header.Set("X-Ghost-Client-Token", "valid-token")
+	req.Header.Set("X-Kaya-Client-Id", "device-1")
+	req.Header.Set("X-Kaya-Client-Token", "valid-token")
 	w := httptest.NewRecorder()
 	srv.HandleHTTP(w, req)
 
@@ -180,8 +180,8 @@ func TestHandleAppRequestInvalidToken(t *testing.T) {
 	})
 
 	req := httptest.NewRequest("POST", "/v1/chat", nil)
-	req.Header.Set("X-Ghost-Client-Id", "device-1")
-	req.Header.Set("X-Ghost-Client-Token", "wrong-token")
+	req.Header.Set("X-Kaya-Client-Id", "device-1")
+	req.Header.Set("X-Kaya-Client-Token", "wrong-token")
 	w := httptest.NewRecorder()
 	srv.HandleHTTP(w, req)
 
@@ -274,8 +274,8 @@ func TestEndToEndRelayFlow(t *testing.T) {
 	appDone := make(chan int, 1)
 	go func() {
 		req, _ := http.NewRequest("POST", ts.URL+"/v1/chat", strings.NewReader(`{"content":"hello"}`))
-		req.Header.Set("X-Ghost-Client-Id", "test-device")
-		req.Header.Set("X-Ghost-Client-Token", "app-token")
+		req.Header.Set("X-Kaya-Client-Id", "test-device")
+		req.Header.Set("X-Kaya-Client-Token", "app-token")
 		req.Header.Set("Content-Type", "application/json")
 
 		resp, err := http.DefaultClient.Do(req)
@@ -341,8 +341,8 @@ func TestTwoDevicesIsolation(t *testing.T) {
 	srv, _ := NewServer(Config{RegistryPath: path})
 
 	// Register two devices
-	secret1, _ := srv.registry.Add("device-1", "Ghost 1")
-	secret2, _ := srv.registry.Add("device-2", "Ghost 2")
+	secret1, _ := srv.registry.Add("device-1", "Kaya 1")
+	secret2, _ := srv.registry.Add("device-2", "Kaya 2")
 
 	ts := httptest.NewServer(http.HandlerFunc(srv.HandleHTTP))
 	defer ts.Close()
@@ -365,8 +365,8 @@ func TestTwoDevicesIsolation(t *testing.T) {
 
 	// App tries to access device-2 (no client binding) -> should fail
 	req, _ := http.NewRequest("GET", ts.URL+"/v1/chat", nil)
-	req.Header.Set("X-Ghost-Client-Id", "device-2")
-	req.Header.Set("X-Ghost-Client-Token", "token-1")
+	req.Header.Set("X-Kaya-Client-Id", "device-2")
+	req.Header.Set("X-Kaya-Client-Token", "token-1")
 	w := httptest.NewRecorder()
 	srv.HandleHTTP(w, req)
 
@@ -419,8 +419,8 @@ func wsDial(t *testing.T, ts *httptest.Server, deviceID, secret string) *websock
 	t.Helper()
 	h := http.Header{}
 	if deviceID != "" {
-		h.Set("X-Ghost-Device", deviceID)
-		h.Set("X-Ghost-Device-Secret", secret)
+		h.Set("X-Kaya-Device", deviceID)
+		h.Set("X-Kaya-Device-Secret", secret)
 	}
 	conn, _, err := websocket.DefaultDialer.Dial(wsURL(ts.URL)+"/v1/tunnel", h)
 	if err != nil {
@@ -430,7 +430,7 @@ func wsDial(t *testing.T, ts *httptest.Server, deviceID, secret string) *websock
 }
 
 // ─── End-to-End Vertical Slice Test ─────────────────────────────────────────
-// Proves: phone → relay → Ghost → relay → phone
+// Proves: phone → relay → Kaya → relay → phone
 
 func TestEndToEndVerticalSlice(t *testing.T) {
 	path := tempRegistry(t)
@@ -440,37 +440,37 @@ func TestEndToEndVerticalSlice(t *testing.T) {
 	}
 
 	// 1. Register device
-	deviceSecret, _ := srv.registry.Add("ghost-alpha", "Test Ghost Alpha")
+	deviceSecret, _ := srv.registry.Add("kaya-alpha", "Test Kaya Alpha")
 
 	// 2. Start relay server
 	ts := httptest.NewServer(http.HandlerFunc(srv.HandleHTTP))
 	defer ts.Close()
 
-	// 3. Start mock Ghost gateway (simulates local Ghost API)
+	// 3. Start mock Kaya gateway (simulates local Kaya API)
 	bridgeSecret := "test-bridge-secret-abc123"
 	gateway := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Verify bridge secret was injected by relay client
-		got := r.Header.Get("X-Ghost-Secret")
+		got := r.Header.Get("X-Kaya-Secret")
 		if got != bridgeSecret {
 			t.Errorf("bridge secret: got %q, want %q", got, bridgeSecret)
 			http.Error(w, `{"error":"unauthorized"}`, http.StatusUnauthorized)
 			return
 		}
-		// Verify X-Ghost-Secret was NOT forwarded from relay (should be stripped)
+		// Verify X-Kaya-Secret was NOT forwarded from relay (should be stripped)
 		// The relay client injects it, so it should arrive but NOT from the relay
 
 		w.Header().Set("Content-Type", "text/event-stream")
 		w.Header().Set("Cache-Control", "no-cache")
 		w.WriteHeader(http.StatusOK)
 		// Simulate SSE streaming response
-		w.Write([]byte("data: {\"content\":\"Hello from Ghost via relay\"}\n\n"))
+		w.Write([]byte("data: {\"content\":\"Hello from Kaya via relay\"}\n\n"))
 		w.Write([]byte("data: [DONE]\n\n"))
 		w.(http.Flusher).Flush()
 	}))
 	defer gateway.Close()
 
 	// 4. Connect relay client (device) to relay
-	deviceConn := wsDial(t, ts, "ghost-alpha", deviceSecret)
+	deviceConn := wsDial(t, ts, "kaya-alpha", deviceSecret)
 	defer deviceConn.Close()
 
 	// Read welcome
@@ -485,18 +485,18 @@ func TestEndToEndVerticalSlice(t *testing.T) {
 
 	// Register client token for this device
 	tokenHash := sha256.Sum256([]byte("test-phone-token"))
-	srv.tunnels.SetClients("ghost-alpha", []ClientBinding{
+	srv.tunnels.SetClients("kaya-alpha", []ClientBinding{
 		{TokenHash: hex.EncodeToString(tokenHash[:]), Name: "Phone"},
 	})
 
 	// 5. Phone sends request through relay
 	// (simulates what the mobile app does: POST /v1/chat with relay headers)
-	chatBody := `{"content":"Hello Ghost","session_key":"mobile:default","channel":"mobile"}`
+	chatBody := `{"content":"Hello Kaya","session_key":"mobile:default","channel":"mobile"}`
 	req, _ := http.NewRequest("POST", ts.URL+"/v1/chat", strings.NewReader(chatBody))
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("X-Ghost-Client-Id", "ghost-alpha")
-	req.Header.Set("X-Ghost-Client-Token", "test-phone-token")
-	req.Header.Set("X-Ghost-Session", "mobile:default")
+	req.Header.Set("X-Kaya-Client-Id", "kaya-alpha")
+	req.Header.Set("X-Kaya-Client-Token", "test-phone-token")
+	req.Header.Set("X-Kaya-Session", "mobile:default")
 
 	// Device reads the forwarded request in a goroutine and sends response
 	deviceDone := make(chan struct{})
@@ -539,14 +539,14 @@ func TestEndToEndVerticalSlice(t *testing.T) {
 		}
 
 		// Verify bridge secret was stripped from forwarded headers
-		if _, ok := meta.Headers["X-Ghost-Secret"]; ok {
-			t.Error("X-Ghost-Secret should have been stripped by relay")
+		if _, ok := meta.Headers["X-Kaya-Secret"]; ok {
+			t.Error("X-Kaya-Secret should have been stripped by relay")
 		}
-		if _, ok := meta.Headers["X-Ghost-Client-Id"]; ok {
-			t.Error("X-Ghost-Client-Id should have been stripped by relay")
+		if _, ok := meta.Headers["X-Kaya-Client-Id"]; ok {
+			t.Error("X-Kaya-Client-Id should have been stripped by relay")
 		}
-		if _, ok := meta.Headers["X-Ghost-Client-Token"]; ok {
-			t.Error("X-Ghost-Client-Token should have been stripped by relay")
+		if _, ok := meta.Headers["X-Kaya-Client-Token"]; ok {
+			t.Error("X-Kaya-Client-Token should have been stripped by relay")
 		}
 
 		// Device sends response back through relay
@@ -556,7 +556,7 @@ func TestEndToEndVerticalSlice(t *testing.T) {
 			Status:  200,
 			Headers: map[string][]string{"Content-Type": {"text/event-stream"}},
 		})
-		_ = proto.WriteDATAWS(deviceConn, streamID, []byte("data: {\"content\":\"Hello from Ghost via relay\"}\n\n"))
+		_ = proto.WriteDATAWS(deviceConn, streamID, []byte("data: {\"content\":\"Hello from Kaya via relay\"}\n\n"))
 		_ = proto.WriteDATAWS(deviceConn, streamID, []byte("data: [DONE]\n\n"))
 		_ = proto.WriteENDWS(deviceConn, streamID)
 	}()
@@ -576,13 +576,13 @@ func TestEndToEndVerticalSlice(t *testing.T) {
 	if ct != "text/event-stream" {
 		t.Errorf("Content-Type = %q, want text/event-stream", ct)
 	}
-	relayHeader := resp.Header.Get("X-Ghost-Relay")
+	relayHeader := resp.Header.Get("X-Kaya-Relay")
 	if relayHeader != "true" {
-		t.Errorf("X-Ghost-Relay = %q, want true", relayHeader)
+		t.Errorf("X-Kaya-Relay = %q, want true", relayHeader)
 	}
 
 	body, _ := io.ReadAll(resp.Body)
-	if !strings.Contains(string(body), "Hello from Ghost via relay") {
+	if !strings.Contains(string(body), "Hello from Kaya via relay") {
 		t.Errorf("response body missing expected content: %s", body)
 	}
 	if !strings.Contains(string(body), "[DONE]") {
@@ -600,31 +600,31 @@ func TestCrossDeviceIsolation(t *testing.T) {
 	srv, _ := NewServer(Config{RegistryPath: path})
 
 	// Register two devices
-	secret1, _ := srv.registry.Add("ghost-1", "Ghost Alpha")
-	secret2, _ := srv.registry.Add("ghost-2", "Ghost Beta")
+	secret1, _ := srv.registry.Add("kaya-1", "Kaya Alpha")
+	secret2, _ := srv.registry.Add("kaya-2", "Kaya Beta")
 
 	ts := httptest.NewServer(http.HandlerFunc(srv.HandleHTTP))
 	defer ts.Close()
 
 	// Connect both devices
-	conn1 := wsDial(t, ts, "ghost-1", secret1)
+	conn1 := wsDial(t, ts, "kaya-1", secret1)
 	defer conn1.Close()
 	proto.ReadFrameWS(conn1) // welcome
 
-	conn2 := wsDial(t, ts, "ghost-2", secret2)
+	conn2 := wsDial(t, ts, "kaya-2", secret2)
 	defer conn2.Close()
 	proto.ReadFrameWS(conn2) // welcome
 
-	// Register client for ghost-1 only
-	hash1 := sha256.Sum256([]byte("token-ghost-1"))
-	srv.tunnels.SetClients("ghost-1", []ClientBinding{
+	// Register client for kaya-1 only
+	hash1 := sha256.Sum256([]byte("token-kaya-1"))
+	srv.tunnels.SetClients("kaya-1", []ClientBinding{
 		{TokenHash: hex.EncodeToString(hash1[:])},
 	})
 
-	// Phone tries to access ghost-2 using ghost-1's token → 401
+	// Phone tries to access kaya-2 using kaya-1's token → 401
 	req, _ := http.NewRequest("GET", ts.URL+"/v1/sessions", nil)
-	req.Header.Set("X-Ghost-Client-Id", "ghost-2")
-	req.Header.Set("X-Ghost-Client-Token", "token-ghost-1")
+	req.Header.Set("X-Kaya-Client-Id", "kaya-2")
+	req.Header.Set("X-Kaya-Client-Token", "token-kaya-1")
 	w := httptest.NewRecorder()
 	srv.HandleHTTP(w, req)
 	if w.Code != 401 {
@@ -635,25 +635,25 @@ func TestCrossDeviceIsolation(t *testing.T) {
 func TestInvalidTokenRejected(t *testing.T) {
 	path := tempRegistry(t)
 	srv, _ := NewServer(Config{RegistryPath: path})
-	secret, _ := srv.registry.Add("ghost-1", "Test")
+	secret, _ := srv.registry.Add("kaya-1", "Test")
 
 	ts := httptest.NewServer(http.HandlerFunc(srv.HandleHTTP))
 	defer ts.Close()
 
-	conn := wsDial(t, ts, "ghost-1", secret)
+	conn := wsDial(t, ts, "kaya-1", secret)
 	defer conn.Close()
 	proto.ReadFrameWS(conn) // welcome
 
 	// Register a client
 	hash := sha256.Sum256([]byte("correct-token"))
-	srv.tunnels.SetClients("ghost-1", []ClientBinding{
+	srv.tunnels.SetClients("kaya-1", []ClientBinding{
 		{TokenHash: hex.EncodeToString(hash[:])},
 	})
 
 	// Try with wrong token
 	req, _ := http.NewRequest("GET", ts.URL+"/v1/sessions", nil)
-	req.Header.Set("X-Ghost-Client-Id", "ghost-1")
-	req.Header.Set("X-Ghost-Client-Token", "wrong-token")
+	req.Header.Set("X-Kaya-Client-Id", "kaya-1")
+	req.Header.Set("X-Kaya-Client-Token", "wrong-token")
 	w := httptest.NewRecorder()
 	srv.HandleHTTP(w, req)
 	if w.Code != 401 {
@@ -664,12 +664,12 @@ func TestInvalidTokenRejected(t *testing.T) {
 func TestMissingCredentialsRejected(t *testing.T) {
 	path := tempRegistry(t)
 	srv, _ := NewServer(Config{RegistryPath: path})
-	secret, _ := srv.registry.Add("ghost-1", "Test")
+	secret, _ := srv.registry.Add("kaya-1", "Test")
 
 	ts := httptest.NewServer(http.HandlerFunc(srv.HandleHTTP))
 	defer ts.Close()
 
-	conn := wsDial(t, ts, "ghost-1", secret)
+	conn := wsDial(t, ts, "kaya-1", secret)
 	defer conn.Close()
 	proto.ReadFrameWS(conn) // welcome
 
@@ -685,26 +685,26 @@ func TestMissingCredentialsRejected(t *testing.T) {
 func TestBridgeSecretNotForwarded(t *testing.T) {
 	path := tempRegistry(t)
 	srv, _ := NewServer(Config{RegistryPath: path})
-	secret, _ := srv.registry.Add("ghost-1", "Test")
+	secret, _ := srv.registry.Add("kaya-1", "Test")
 
 	ts := httptest.NewServer(http.HandlerFunc(srv.HandleHTTP))
 	defer ts.Close()
 
-	conn := wsDial(t, ts, "ghost-1", secret)
+	conn := wsDial(t, ts, "kaya-1", secret)
 	defer conn.Close()
 	proto.ReadFrameWS(conn) // welcome
 
 	hash := sha256.Sum256([]byte("test-token"))
-	srv.tunnels.SetClients("ghost-1", []ClientBinding{
+	srv.tunnels.SetClients("kaya-1", []ClientBinding{
 		{TokenHash: hex.EncodeToString(hash[:])},
 	})
 
-	// Send request that includes X-Ghost-Secret (which should be stripped)
+	// Send request that includes X-Kaya-Secret (which should be stripped)
 	req, _ := http.NewRequest("POST", ts.URL+"/v1/chat", strings.NewReader(`{"content":"test"}`))
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("X-Ghost-Client-Id", "ghost-1")
-	req.Header.Set("X-Ghost-Client-Token", "test-token")
-	req.Header.Set("X-Ghost-Secret", "my-bridge-secret")
+	req.Header.Set("X-Kaya-Client-Id", "kaya-1")
+	req.Header.Set("X-Kaya-Client-Token", "test-token")
+	req.Header.Set("X-Kaya-Secret", "my-bridge-secret")
 
 	// Read the forwarded request in a goroutine. The fixture completes the
 	// protocol exchange (OPEN → DATA → END, then an ERROR reply) so the relay
@@ -730,8 +730,8 @@ func TestBridgeSecretNotForwarded(t *testing.T) {
 			}
 		}
 
-		// X-Ghost-Secret should NOT be in forwarded headers
-		_, hasSecret := meta.Headers["X-Ghost-Secret"]
+		// X-Kaya-Secret should NOT be in forwarded headers
+		_, hasSecret := meta.Headers["X-Kaya-Secret"]
 		got <- hasSecret
 
 		// Reply with ERROR so the relay handler finishes right away.
@@ -744,31 +744,31 @@ func TestBridgeSecretNotForwarded(t *testing.T) {
 	// Wait for device goroutine
 	hasSecretForwarded := <-got
 	if hasSecretForwarded {
-		t.Error("X-Ghost-Secret was forwarded through relay — should be stripped")
+		t.Error("X-Kaya-Secret was forwarded through relay — should be stripped")
 	}
 }
 
 func TestReconnectNoStaleTunnel(t *testing.T) {
 	path := tempRegistry(t)
 	srv, _ := NewServer(Config{RegistryPath: path})
-	secret, _ := srv.registry.Add("ghost-1", "Test")
+	secret, _ := srv.registry.Add("kaya-1", "Test")
 
 	ts := httptest.NewServer(http.HandlerFunc(srv.HandleHTTP))
 	defer ts.Close()
 
 	// First connection
-	conn1 := wsDial(t, ts, "ghost-1", secret)
+	conn1 := wsDial(t, ts, "kaya-1", secret)
 	proto.ReadFrameWS(conn1) // welcome
-	t1 := srv.tunnels.GetTunnel("ghost-1")
+	t1 := srv.tunnels.GetTunnel("kaya-1")
 	if t1 == nil {
 		t.Fatal("expected tunnel after first connect")
 	}
 
 	// Second connection (reconnect)
-	conn2 := wsDial(t, ts, "ghost-1", secret)
+	conn2 := wsDial(t, ts, "kaya-1", secret)
 	defer conn2.Close()
 	proto.ReadFrameWS(conn2) // welcome
-	t2 := srv.tunnels.GetTunnel("ghost-1")
+	t2 := srv.tunnels.GetTunnel("kaya-1")
 	if t2 == nil {
 		t.Fatal("expected tunnel after reconnect")
 	}
@@ -782,7 +782,7 @@ func TestReconnectNoStaleTunnel(t *testing.T) {
 	time.Sleep(50 * time.Millisecond)
 
 	// New tunnel should still be active
-	t3 := srv.tunnels.GetTunnel("ghost-1")
+	t3 := srv.tunnels.GetTunnel("kaya-1")
 	if t3 == nil {
 		t.Error("new tunnel should not be removed when old connection closes")
 	}
@@ -791,17 +791,17 @@ func TestReconnectNoStaleTunnel(t *testing.T) {
 func TestRelayDoesNotPersistConversationData(t *testing.T) {
 	path := tempRegistry(t)
 	srv, _ := NewServer(Config{RegistryPath: path})
-	secret, _ := srv.registry.Add("ghost-1", "Test")
+	secret, _ := srv.registry.Add("kaya-1", "Test")
 
 	ts := httptest.NewServer(http.HandlerFunc(srv.HandleHTTP))
 	defer ts.Close()
 
-	conn := wsDial(t, ts, "ghost-1", secret)
+	conn := wsDial(t, ts, "kaya-1", secret)
 	defer conn.Close()
 	proto.ReadFrameWS(conn) // welcome
 
 	hash := sha256.Sum256([]byte("test-token"))
-	srv.tunnels.SetClients("ghost-1", []ClientBinding{
+	srv.tunnels.SetClients("kaya-1", []ClientBinding{
 		{TokenHash: hex.EncodeToString(hash[:])},
 	})
 
@@ -809,8 +809,8 @@ func TestRelayDoesNotPersistConversationData(t *testing.T) {
 	chatBody := `{"content":"My private conversation","session_key":"mobile:default"}`
 	req, _ := http.NewRequest("POST", ts.URL+"/v1/chat", strings.NewReader(chatBody))
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("X-Ghost-Client-Id", "ghost-1")
-	req.Header.Set("X-Ghost-Client-Token", "test-token")
+	req.Header.Set("X-Kaya-Client-Id", "kaya-1")
+	req.Header.Set("X-Kaya-Client-Token", "test-token")
 
 	// Device goroutine reads and responds
 	go func() {
@@ -853,7 +853,7 @@ func TestQueryCredentialsRejectedOnAppRequest(t *testing.T) {
 		{TokenHash: hex.EncodeToString(hash[:])},
 	})
 
-	req := httptest.NewRequest("GET", "/v1/sessions?ghost=g1&token=tok", nil)
+	req := httptest.NewRequest("GET", "/v1/sessions?kaya=g1&token=tok", nil)
 	w := httptest.NewRecorder()
 	srv.HandleHTTP(w, req)
 
@@ -881,17 +881,17 @@ func TestTunnelQueryCredentialsRejected(t *testing.T) {
 func TestHopByHopHeadersFiltered(t *testing.T) {
 	path := tempRegistry(t)
 	srv, _ := NewServer(Config{RegistryPath: path})
-	secret, _ := srv.registry.Add("ghost-hbh", "Test")
+	secret, _ := srv.registry.Add("kaya-hbh", "Test")
 
 	ts := httptest.NewServer(http.HandlerFunc(srv.HandleHTTP))
 	defer ts.Close()
 
-	conn := wsDial(t, ts, "ghost-hbh", secret)
+	conn := wsDial(t, ts, "kaya-hbh", secret)
 	defer conn.Close()
 	proto.ReadFrameWS(conn) // welcome
 
 	hash := sha256.Sum256([]byte("tok"))
-	srv.tunnels.SetClients("ghost-hbh", []ClientBinding{
+	srv.tunnels.SetClients("kaya-hbh", []ClientBinding{
 		{TokenHash: hex.EncodeToString(hash[:])},
 	})
 
@@ -925,8 +925,8 @@ func TestHopByHopHeadersFiltered(t *testing.T) {
 	}()
 
 	req, _ := http.NewRequest("POST", ts.URL+"/v1/chat", strings.NewReader(`{}`))
-	req.Header.Set("X-Ghost-Client-Id", "ghost-hbh")
-	req.Header.Set("X-Ghost-Client-Token", "tok")
+	req.Header.Set("X-Kaya-Client-Id", "kaya-hbh")
+	req.Header.Set("X-Kaya-Client-Token", "tok")
 	req.Header.Set("Connection", "keep-alive")
 
 	resp, err := http.DefaultClient.Do(req)
@@ -953,17 +953,17 @@ func TestHopByHopHeadersFiltered(t *testing.T) {
 func TestErrorResponseJSONSafe(t *testing.T) {
 	path := tempRegistry(t)
 	srv, _ := NewServer(Config{RegistryPath: path})
-	secret, _ := srv.registry.Add("ghost-json", "Test")
+	secret, _ := srv.registry.Add("kaya-json", "Test")
 
 	ts := httptest.NewServer(http.HandlerFunc(srv.HandleHTTP))
 	defer ts.Close()
 
-	conn := wsDial(t, ts, "ghost-json", secret)
+	conn := wsDial(t, ts, "kaya-json", secret)
 	defer conn.Close()
 	proto.ReadFrameWS(conn) // welcome
 
 	hash := sha256.Sum256([]byte("tok"))
-	srv.tunnels.SetClients("ghost-json", []ClientBinding{
+	srv.tunnels.SetClients("kaya-json", []ClientBinding{
 		{TokenHash: hex.EncodeToString(hash[:])},
 	})
 
@@ -975,8 +975,8 @@ func TestErrorResponseJSONSafe(t *testing.T) {
 	}()
 
 	req, _ := http.NewRequest("POST", ts.URL+"/v1/chat", strings.NewReader(`{}`))
-	req.Header.Set("X-Ghost-Client-Id", "ghost-json")
-	req.Header.Set("X-Ghost-Client-Token", "tok")
+	req.Header.Set("X-Kaya-Client-Id", "kaya-json")
+	req.Header.Set("X-Kaya-Client-Token", "tok")
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {

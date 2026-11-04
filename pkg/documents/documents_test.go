@@ -20,7 +20,7 @@ func TestSlugAndSource(t *testing.T) {
 		t.Fatalf("source = %q %v", src, ok)
 	}
 	if _, ok := SourceOf("canvas/x.pdf"); ok {
-		t.Fatal("a PDF outside documents is not one of Ghost's documents")
+		t.Fatal("a PDF outside documents is not one of Kaya's documents")
 	}
 }
 
@@ -47,7 +47,7 @@ func TestRenderEndToEnd(t *testing.T) {
 		t.Skipf("missing %v", m)
 	}
 	ws := t.TempDir()
-	md := "# Ian Clemence\n\nProduct engineer, Nairobi\n\n## Experience\n\n- Built Ghost\n- Shipped things\n\n| Year | Role |\n|---|---|\n| 2026 | Founder |\n\n<script>alert(1)</script>\n"
+	md := "# Ian Clemence\n\nProduct engineer, Nairobi\n\n## Experience\n\n- Built Kaya\n- Shipped things\n\n| Year | Role |\n|---|---|\n| 2026 | Founder |\n\n<script>alert(1)</script>\n"
 	r, err := Render(context.Background(), ws, "Ian's CV", md)
 	if err != nil {
 		t.Fatal(err)

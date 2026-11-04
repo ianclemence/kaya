@@ -10,9 +10,9 @@ import (
 
 // Primary-file integrity guard.
 //
-// Ghost's primary files are the artifacts whose destruction bricks the
+// Kaya's primary files are the artifacts whose destruction bricks the
 // system or silently destroys the owner's data: the SQLite database, the
-// prompt contract files (GHOST.md and its companions), the skills estate,
+// prompt contract files (KAYA.md and its companions), the skills estate,
 // and the long-term memory digest. The file tools are the model's CRUD
 // surface; this guard makes overwrite-and-truncate of those files
 // impossible through them, independently of the workspace-restriction
@@ -27,7 +27,7 @@ import (
 var contractFiles = []string{"AGENTS.md", "SOUL.md", "IDENTITY.md", "HEARTBEAT.md"}
 
 // guardPrimaryFile returns an error when resolvedPath names — or lives
-// inside — a Ghost primary file. It is checked by every write-class file
+// inside — a Kaya primary file. It is checked by every write-class file
 // tool path (write, edit, append, frame output) before any byte lands on
 // disk.
 func guardPrimaryFile(resolvedPath string) error {
@@ -35,7 +35,7 @@ func guardPrimaryFile(resolvedPath string) error {
 }
 
 // guardPrimaryFileIn is guardPrimaryFile for a path that may be in a project:
-// the guard protects Ghost's estate, and a project's own folders are not it.
+// the guard protects Kaya's estate, and a project's own folders are not it.
 func guardPrimaryFileIn(workspace, resolvedPath string) error {
 	if inProjects(workspace, resolvedPath) {
 		return nil
@@ -45,11 +45,11 @@ func guardPrimaryFileIn(workspace, resolvedPath string) error {
 
 	// The database and its journal/backup family: any overwrite is
 	// immediate, unrecoverable data loss.
-	if strings.HasPrefix(base, "ghost.db") {
+	if strings.HasPrefix(base, "kaya.db") {
 		return primaryDeny(base, "the database")
 	}
-	// The governance prompt ships as GHOST.md; backups keep the prefix.
-	if strings.HasPrefix(base, "GHOST.md") {
+	// The governance prompt ships as KAYA.md; backups keep the prefix.
+	if strings.HasPrefix(base, "KAYA.md") {
 		return primaryDeny(base, "the prompt contract")
 	}
 	for _, name := range contractFiles {
@@ -62,7 +62,7 @@ func guardPrimaryFileIn(workspace, resolvedPath string) error {
 	if base == "MEMORY.md" && hasDirSegment(clean, "memory") {
 		return primaryDeny("memory/MEMORY.md", "the long-term memory digest")
 	}
-	// The skills estate is Ghost's procedural behavior; skill_manage is
+	// The skills estate is Kaya's procedural behavior; skill_manage is
 	// the only sanctioned path and it is broker-gated.
 	if hasDirSegment(clean, "skills") {
 		return primaryDeny("skills/", "the skills estate")
@@ -71,14 +71,14 @@ func guardPrimaryFileIn(workspace, resolvedPath string) error {
 }
 
 func primaryDeny(name, what string) error {
-	return fmt.Errorf("access denied: %s is a Ghost primary file (%s); primary files are never overwritten or deleted through file tools", name, what)
+	return fmt.Errorf("access denied: %s is a Kaya primary file (%s); primary files are never overwritten or deleted through file tools", name, what)
 }
 
 // Runtime-owned estate guard.
 //
 // AGENTS.md states the contract in words: state/, sessions/, events/ and
-// ghost.db are runtime-owned — never hand-edited, moved, or deleted.
-// guardGhostEstateWrite enforces the same contract in code, for the whole
+// kaya.db are runtime-owned — never hand-edited, moved, or deleted.
+// guardKayaEstateWrite enforces the same contract in code, for the whole
 // runtime estate, at every write-class file tool. The estate is the
 // machine's memory of itself (session logs, the scheduler, the event
 // trail, the personal-context journal, reflection/in-flight state, the
@@ -93,11 +93,11 @@ var runtimeOwnedDirs = []string{
 }
 
 // defaultWorkspaceDirs and defaultWorkspaceFiles are the top-level entries
-// Ghost's workspace is born with or grows on its own: its identity, prompt,
+// Kaya's workspace is born with or grows on its own: its identity, prompt,
 // memory, skills, sessions, uploads and the rest. Nobody can have these
 // deleted or moved, however the request is phrased and whoever makes it: they
-// are what makes the workspace Ghost's. What lives inside the open ones
-// (notes, downloads, screenshots, knowledge, data) is still Ghost's to tidy.
+// are what makes the workspace Kaya's. What lives inside the open ones
+// (notes, downloads, screenshots, knowledge, data) is still Kaya's to tidy.
 var defaultWorkspaceDirs = []string{
 	"skills", "knowledge", "memory", "sessions", "commitments", "cron", "events", "dreams",
 	"proactive", "pending", "personal-context", "state", "journal", "conversations",
@@ -105,7 +105,7 @@ var defaultWorkspaceDirs = []string{
 }
 
 var defaultWorkspaceFiles = []string{
-	"GHOST.md", "AGENTS.md", "SOUL.md", "IDENTITY.md", "USER.md", "HEARTBEAT.md",
+	"KAYA.md", "AGENTS.md", "SOUL.md", "IDENTITY.md", "USER.md", "HEARTBEAT.md",
 	"README.md", "PROACTIVE_PREFERENCES.md", "heartbeat.log",
 }
 
@@ -132,7 +132,7 @@ func isDefaultWorkspaceEntry(workspace, resolved string) bool {
 	if strings.Contains(rel, "/") {
 		return false
 	}
-	if strings.HasPrefix(rel, "ghost.db") {
+	if strings.HasPrefix(rel, "kaya.db") {
 		return true
 	}
 	for _, d := range defaultWorkspaceDirs {
@@ -149,7 +149,7 @@ func isDefaultWorkspaceEntry(workspace, resolved string) bool {
 }
 
 func defaultEntryDeny(workspace, resolved string) error {
-	return fmt.Errorf("%s is part of Ghost's own workspace. Ghost never deletes or moves its default files and folders, whoever asks; what you put inside the open ones, like notes or downloads, it can tidy", filepath.Base(resolved))
+	return fmt.Errorf("%s is part of Kaya's own workspace. Kaya never deletes or moves its default files and folders, whoever asks; what you put inside the open ones, like notes or downloads, it can tidy", filepath.Base(resolved))
 }
 
 // runtimeOwnedFiles are top-level runtime files with no governed edit
@@ -157,12 +157,12 @@ func defaultEntryDeny(workspace, resolved string) error {
 // the heartbeat log and the shipped docs the installer and runtime own.
 var runtimeOwnedFiles = []string{"heartbeat.log", "README.md", "USER.md"}
 
-// guardGhostEstateWrite refuses a write-class file-tool operation that
-// targets Ghost's runtime-owned estate, whether inside the workspace or in
+// guardKayaEstateWrite refuses a write-class file-tool operation that
+// targets Kaya's runtime-owned estate, whether inside the workspace or in
 // the runtime home beside it (backups, install snapshots). Reads are
 // governed separately by the ScopeGuard privacy boundary; this guard is
-// about never creating, changing, or destroying Ghost's own files.
-func guardGhostEstateWrite(workspace, resolvedPath string) error {
+// about never creating, changing, or destroying Kaya's own files.
+func guardKayaEstateWrite(workspace, resolvedPath string) error {
 	if workspace == "" {
 		return nil
 	}
@@ -196,29 +196,29 @@ func guardGhostEstateWrite(workspace, resolvedPath string) error {
 		}
 		return nil
 	}
-	if ghostRuntimeHomePath(workspace, p) {
+	if kayaRuntimeHomePath(workspace, p) {
 		return estateDeny(filepath.Base(p))
 	}
 	return nil
 }
 
 func estateDeny(name string) error {
-	return fmt.Errorf("access denied: %s is part of Ghost's own runtime state; only Ghost's own subsystem tools change it, never raw file writes", name)
+	return fmt.Errorf("access denied: %s is part of Kaya's own runtime state; only Kaya's own subsystem tools change it, never raw file writes", name)
 }
 
 // runtimeHomeSibling reports whether a directory beside workspace/ is one
-// of Ghost's own runtime-home entries rather than a user project.
+// of Kaya's own runtime-home entries rather than a user project.
 func runtimeHomeSibling(name string) bool {
 	return name == "backups" ||
 		strings.HasPrefix(name, "workspace-orig") ||
 		strings.HasPrefix(name, "skills-backup")
 }
 
-// ghostRuntimeHomePath reports whether p is Ghost's runtime home itself or
+// kayaRuntimeHomePath reports whether p is Kaya's runtime home itself or
 // one of its own entries (backups, install snapshots) — the directories
 // beside workspace/ that are never a working area or a write target for
 // the model. User projects anywhere else are unaffected.
-func ghostRuntimeHomePath(workspace, p string) bool {
+func kayaRuntimeHomePath(workspace, p string) bool {
 	if workspace == "" || p == "" {
 		return false
 	}
@@ -261,16 +261,16 @@ func hasDirSegment(p, seg string) bool {
 // keep working.
 func execDeniedPrimaryFiles(command, cwd, workspace string) (string, bool) {
 	// Blanket: naming these from the shell is never legitimate.
-	blanket := []string{"ghost.db"}
-	if dir := strings.TrimSpace(os.Getenv("GHOST_CONFIG_DIR")); dir != "" {
+	blanket := []string{"kaya.db"}
+	if dir := strings.TrimSpace(os.Getenv("KAYA_CONFIG_DIR")); dir != "" {
 		blanket = append(blanket, dir)
 	} else {
 		// Install convention when the service env is not exported here.
-		blanket = append(blanket, "/var/ghost/config")
+		blanket = append(blanket, "/var/kaya/config")
 	}
 	for _, tok := range blanket {
 		if strings.Contains(command, tok) {
-			return fmt.Sprintf("that command names a Ghost primary file (%s); the database and config are never touched from the shell — use Ghost's own tools instead", tok), true
+			return fmt.Sprintf("that command names a Kaya primary file (%s); the database and config are never touched from the shell — use Kaya's own tools instead", tok), true
 		}
 	}
 
@@ -284,20 +284,20 @@ func execDeniedPrimaryFiles(command, cwd, workspace string) (string, bool) {
 		scan = scrubWritableAreas(scan, workspace)
 		if inProject(cwd, workspace) {
 			if name, ok := primaryAbsoluteIn(scan, workspace); ok {
-				return fmt.Sprintf("that command would destroy a Ghost primary file (%s); primary files are never deleted or modified from the shell", name), true
+				return fmt.Sprintf("that command would destroy a Kaya primary file (%s); primary files are never deleted or modified from the shell", name), true
 			}
 		} else if name, ok := primaryNameIn(scan); ok {
-			return fmt.Sprintf("that command would destroy a Ghost primary file (%s); primary files are never deleted or modified from the shell. To work on a project, run it from the project folder (working_dir projects/<name>)", name), true
+			return fmt.Sprintf("that command would destroy a Kaya primary file (%s); primary files are never deleted or modified from the shell. To work on a project, run it from the project folder (working_dir projects/<name>)", name), true
 		}
 	}
 	// find … -delete over the whole tree removes everything without naming
 	// any of it.
 	if findWipesTree(command) {
-		return "that command would delete the whole working tree, which contains Ghost's own files; name the specific files to remove", true
+		return "that command would delete the whole working tree, which contains Kaya's own files; name the specific files to remove", true
 	}
 	// Broad recursive wipe of whatever directory the command runs in.
 	if recursiveWipeOfTree(command) {
-		return "that command would recursively wipe the working tree, which contains Ghost's primary files; primary files are never deleted", true
+		return "that command would recursively wipe the working tree, which contains Kaya's primary files; primary files are never deleted", true
 	}
 	return "", false
 }
@@ -330,7 +330,7 @@ func scrubWritableAreas(command, workspace string) string {
 }
 
 // inProject reports whether a command runs inside projects/, where the sandbox
-// shows only that project and Ghost's estate is not there to be touched.
+// shows only that project and Kaya's estate is not there to be touched.
 func inProject(cwd, workspace string) bool {
 	if cwd == "" || workspace == "" {
 		return false
@@ -406,12 +406,12 @@ func hasDestructiveShape(command string) bool {
 // deliberately conservative (a name like "skills-backup" still trips
 // "skills"): fail closed, never fail open.
 var primaryFragments = []string{
-	"GHOST.md", "AGENTS.md", "SOUL.md", "IDENTITY.md", "HEARTBEAT.md", "MEMORY.md",
+	"KAYA.md", "AGENTS.md", "SOUL.md", "IDENTITY.md", "HEARTBEAT.md", "MEMORY.md",
 	"skills", "knowledge", "personal-context", "state", "commitments",
 	"sessions", "cron", "dreams", "proactive", "events", "journal", "workspace",
 	"USER.md", "README.md", "PROACTIVE_PREFERENCES.md", "memory", "uploads", "conversations",
 	"screenshots", "downloads",
-	"/usr/local/bin/ghost", "/.local/bin/ghost",
+	"/usr/local/bin/kaya", "/.local/bin/kaya",
 }
 
 func primaryNameIn(command string) (string, bool) {

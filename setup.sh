@@ -43,7 +43,7 @@ ask() {
 }
 
 echo -e "${GREEN}===================================================${NC}"
-echo -e "${GREEN}  Ghost: Your Sovereign Intelligence (Linux/Pi Setup)${NC}"
+echo -e "${GREEN}  Kaya: Your Sovereign Intelligence (Linux/Pi Setup)${NC}"
 echo -e "${GREEN}===================================================${NC}"
 echo ""
 
@@ -107,7 +107,7 @@ fi
 # ── 2. Python tools ───────────────────────────────────────────────────────
 echo ""
 echo -e "${YELLOW}[2/4] Installing Python tools (Calendar & Document skills)...${NC}"
-# NOTE: ghost-web runs as root with ProtectHome=true, so a user-local
+# NOTE: kaya-web runs as root with ProtectHome=true, so a user-local
 # ~/.local/bin/gcalcli is invisible to the service. Always ensure the
 # system-wide /usr/local/bin/gcalcli exists regardless of check_command.
 if [ ! -x /usr/local/bin/gcalcli ]; then
@@ -138,16 +138,16 @@ else
     ollama pull "$DEFAULT_EMBED_TAG"
 fi
 
-# ── 3. Build Ghost ────────────────────────────────────────────────────────
+# ── 3. Build Kaya ────────────────────────────────────────────────────────
 echo ""
-echo -e "${YELLOW}[3/4] Building Ghost binary...${NC}"
+echo -e "${YELLOW}[3/4] Building Kaya binary...${NC}"
 
 # .env setup
 if [ ! -f ".env" ]; then
     if [ -f ".env.example" ]; then
         echo -e "${YELLOW}[INFO] No .env file found. Creating from .env.example...${NC}"
         cp .env.example .env
-        echo -e "${YELLOW}[IMPORTANT] Please edit .env and add your API keys before running Ghost!${NC}"
+        echo -e "${YELLOW}[IMPORTANT] Please edit .env and add your API keys before running Kaya!${NC}"
     else
         echo -e "${RED}[WARNING] No .env or .env.example found. Configure API keys manually.${NC}"
     fi
@@ -170,12 +170,12 @@ if [ -f ".env" ]; then
     fi
 fi
 
-# Fix tilde in GHOST_AGENTS_DEFAULTS_WORKSPACE if present
+# Fix tilde in KAYA_AGENTS_DEFAULTS_WORKSPACE if present
 if [ -f ".env" ]; then
-    if grep -q "GHOST_AGENTS_DEFAULTS_WORKSPACE=~" ".env"; then
-        ABSOLUTE_WORKSPACE="${HOME}/ghost/workspace"
-        sed -i "s|GHOST_AGENTS_DEFAULTS_WORKSPACE=~/ghost/workspace|GHOST_AGENTS_DEFAULTS_WORKSPACE=${ABSOLUTE_WORKSPACE}|g" .env
-        echo -e "${GREEN}[OK] Fixed tilde in GHOST_AGENTS_DEFAULTS_WORKSPACE → ${ABSOLUTE_WORKSPACE}${NC}"
+    if grep -q "KAYA_AGENTS_DEFAULTS_WORKSPACE=~" ".env"; then
+        ABSOLUTE_WORKSPACE="${HOME}/kaya/workspace"
+        sed -i "s|KAYA_AGENTS_DEFAULTS_WORKSPACE=~/kaya/workspace|KAYA_AGENTS_DEFAULTS_WORKSPACE=${ABSOLUTE_WORKSPACE}|g" .env
+        echo -e "${GREEN}[OK] Fixed tilde in KAYA_AGENTS_DEFAULTS_WORKSPACE → ${ABSOLUTE_WORKSPACE}${NC}"
     fi
 fi
 
@@ -185,36 +185,36 @@ if ! check_command "go"; then
 fi
 
 echo -e "${YELLOW}Running code generation...${NC}"
-go generate ./cmd/ghost
+go generate ./cmd/kaya
 if [ $? -ne 0 ]; then
     echo -e "${RED}[ERROR] Code generation failed. Trying manual copy...${NC}"
-    rm -rf cmd/ghost/workspace
-    cp -r workspace cmd/ghost/workspace
+    rm -rf cmd/kaya/workspace
+    cp -r workspace cmd/kaya/workspace
 fi
 
-[ -f "ghost" ] && rm -f ghost
+[ -f "kaya" ] && rm -f kaya
 
-go build -o ghost ./cmd/ghost
+go build -o kaya ./cmd/kaya
 if [ $? -eq 0 ]; then
-    echo -e "${GREEN}[OK] Build successful: ./ghost${NC}"
+    echo -e "${GREEN}[OK] Build successful: ./kaya${NC}"
 else
     echo -e "${RED}[ERROR] Build failed.${NC}"
     exit 1
 fi
 
 # Install binary to the canonical location via make (single install path).
-# Developer Mode converges on the same /usr/local/bin/ghost the services and
-# `ghost update` use — a separate ~/.local/bin copy is what made updated
+# Developer Mode converges on the same /usr/local/bin/kaya the services and
+# `kaya update` use — a separate ~/.local/bin copy is what made updated
 # binaries appear not to run.
-if ! make install-ghost; then
-    echo -e "${RED}[ERROR] Install failed (see the make output above). Ghost is NOT installed.${NC}"
+if ! make install-kaya; then
+    echo -e "${RED}[ERROR] Install failed (see the make output above). Kaya is NOT installed.${NC}"
     exit 1
 fi
-echo -e "${GREEN}[OK] Binary installed to /usr/local/bin/ghost${NC}"
+echo -e "${GREEN}[OK] Binary installed to /usr/local/bin/kaya${NC}"
 
 # ── 4. Services ───────────────────────────────────────────────────────────
-# `make install-ghost` already wrote, enabled and started the system units
-# (ghost, ghost-web, ghost-speech, backups) under /var/ghost. There is exactly
+# `make install-kaya` already wrote, enabled and started the system units
+# (kaya, kaya-web, kaya-speech, backups) under /var/kaya. There is exactly
 # one install shape; offering a second per-user unit here would overwrite the
 # system one and leave two daemons fighting for the same port.
 echo ""
@@ -222,8 +222,8 @@ echo -e "${YELLOW}[4/4] Services${NC}"
 if [ "$NO_SERVICE" = "1" ]; then
     echo -e "${BLUE}[INFO] Not starting services (--no-service).${NC}"
 else
-    sudo systemctl enable --now ghost ghost-web 2>/dev/null || true
-    echo -e "${GREEN}[OK] Ghost and the web console are running and start on boot.${NC}"
+    sudo systemctl enable --now kaya kaya-web 2>/dev/null || true
+    echo -e "${GREEN}[OK] Kaya and the web console are running and start on boot.${NC}"
 fi
 
 # ── Done ──────────────────────────────────────────────────────────────────
@@ -233,13 +233,13 @@ echo -e "${GREEN}  Setup Complete!${NC}"
 echo -e "${GREEN}===================================================${NC}"
 echo ""
 echo -e "${BLUE}Next, in order:${NC}"
-echo "  1. ghost onboard --guided       # choose the AI Ghost thinks with (resumable)"
-echo "  2. ghost pair                   # shows a QR: scan it with the Ghost app"
-echo "  3. ghost                        # or just talk to it here in the terminal"
+echo "  1. kaya onboard --guided       # choose the AI Kaya thinks with (resumable)"
+echo "  2. kaya pair                   # shows a QR: scan it with the Kaya app"
+echo "  3. kaya                        # or just talk to it here in the terminal"
 echo ""
 echo -e "${BLUE}Useful commands:${NC}"
-echo "  sudo systemctl status ghost          # check service status"
-echo "  sudo journalctl -u ghost -f          # follow logs"
-echo "  sudo systemctl restart ghost         # restart after config changes"
-echo "  make install-ghost                   # rebuild + reinstall everything"
+echo "  sudo systemctl status kaya          # check service status"
+echo "  sudo journalctl -u kaya -f          # follow logs"
+echo "  sudo systemctl restart kaya         # restart after config changes"
+echo "  make install-kaya                   # rebuild + reinstall everything"
 echo ""

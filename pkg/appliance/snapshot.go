@@ -5,21 +5,21 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/ianclemence/ghost/pkg/ghoststate"
+	"github.com/ianclemence/kaya/pkg/kayastate"
 )
 
 // PreUpdateSnapshot takes a recovery snapshot of the personal AI
 // workspace before any mutating update step. It is the Snapshot stage
 // of RunUpdate: failure aborts the update while services still run.
 // Secrets are included — a recovery point without credentials restores
-// a lobotomized Ghost — sealed under the existing vault key.
+// a lobotomized Kaya — sealed under the existing vault key.
 func PreUpdateSnapshot() error {
-	workspace := os.Getenv("GHOST_WORKSPACE_DIR")
+	workspace := os.Getenv("KAYA_WORKSPACE_DIR")
 	if workspace == "" {
 		workspace = DefaultWorkspaceDir
 	}
-	configPath := filepath.Join(DefaultGhostDir, "config", "config.json")
-	dest, removed, err := ghoststate.SnapshotAndPrune(workspace, configPath, ghoststate.SnapshotKeep)
+	configPath := filepath.Join(DefaultKayaDir, "config", "config.json")
+	dest, removed, err := kayastate.SnapshotAndPrune(workspace, configPath, kayastate.SnapshotKeep)
 	if err != nil {
 		return err
 	}

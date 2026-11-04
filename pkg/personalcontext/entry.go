@@ -1,5 +1,5 @@
 // Package personalcontext is the storage layer for Personal Context: a
-// derived, portable, correctable view of what Ghost currently believes about
+// derived, portable, correctable view of what Kaya currently believes about
 // its person, grounded in conversations which remain the authoritative
 // evidence.
 //

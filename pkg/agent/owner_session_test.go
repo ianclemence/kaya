@@ -7,10 +7,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ianclemence/ghost/pkg/bus"
-	"github.com/ianclemence/ghost/pkg/channels"
-	"github.com/ianclemence/ghost/pkg/config"
-	"github.com/ianclemence/ghost/pkg/providers"
+	"github.com/ianclemence/kaya/pkg/bus"
+	"github.com/ianclemence/kaya/pkg/channels"
+	"github.com/ianclemence/kaya/pkg/config"
+	"github.com/ianclemence/kaya/pkg/providers"
 )
 
 // A loop with the production rule, unlike newTestAgentLoop, which trusts every
@@ -28,7 +28,7 @@ func productionRuleLoop(t *testing.T, ws string) *AgentLoop {
 // Test clients and probes talk to the same gateway as the owner, under a key of
 // their own. What they say is not about the owner: a probe once filed a girlfriend,
 // a dog and a death in the family into the live profile.
-func TestOnlyTheOwnersConversationTeachesGhostAboutThem(t *testing.T) {
+func TestOnlyTheOwnersConversationTeachesKayaAboutThem(t *testing.T) {
 	ws := t.TempDir()
 	al := productionRuleLoop(t, ws)
 
@@ -45,11 +45,11 @@ func TestOnlyTheOwnersConversationTeachesGhostAboutThem(t *testing.T) {
 	}
 }
 
-func TestMachineTurnsNeverTeachGhostAboutTheOwner(t *testing.T) {
+func TestMachineTurnsNeverTeachKayaAboutTheOwner(t *testing.T) {
 	al := productionRuleLoop(t, t.TempDir())
 	for _, key := range []string{"automation:daily", "routine:water", "heartbeat", "cron-1", "proactive:x"} {
 		if al.learnsAboutOwner(key) {
-			t.Errorf("%s is Ghost talking to itself", key)
+			t.Errorf("%s is Kaya talking to itself", key)
 		}
 	}
 	if !al.learnsAboutOwner(channels.SharedConversationKey) {
@@ -66,12 +66,12 @@ func TestProbeSessionsAreNotJournaledIntoTheOwnersNotes(t *testing.T) {
 	}
 	for _, key := range []string{channels.SharedConversationKey, "automation:daily", "routine:water", "heartbeat", "proactive:x"} {
 		if !al.journalsSession(key) {
-			t.Errorf("%s is the owner's or Ghost's own work and must still be journaled", key)
+			t.Errorf("%s is the owner's or Kaya's own work and must still be journaled", key)
 		}
 	}
 }
 
-func TestThePromptNamesEveryStoreGhostKeepsAboutTheOwner(t *testing.T) {
+func TestThePromptNamesEveryStoreKayaKeepsAboutTheOwner(t *testing.T) {
 	section := buildOwnerRecordSection()
 	for _, want := range []string{"Personal Context", "/forget", "Daily journals", "does not score the tone", "keeps no mood or affinity total", "never say a mechanism does not exist"} {
 		if !strings.Contains(strings.ToLower(section), strings.ToLower(want)) {
@@ -82,7 +82,7 @@ func TestThePromptNamesEveryStoreGhostKeepsAboutTheOwner(t *testing.T) {
 
 // An answer to "what do you infer about me" is generated analysis. If the
 // summary of that turn records it as what happened, it comes back later as a
-// memory, and Ghost has then confused its own reading with a record.
+// memory, and Kaya has then confused its own reading with a record.
 func TestSummariesDoNotRecordJudgmentsAboutTheOwner(t *testing.T) {
 	p := summarizePrompt(nil, "", time.Now())
 	for _, want := range []string{"Do not record judgments about the owner's personality", "assistant's own analysis", "readings, not facts"} {
@@ -93,8 +93,8 @@ func TestSummariesDoNotRecordJudgmentsAboutTheOwner(t *testing.T) {
 }
 
 // Nothing scores the owner's tone and nothing tells the model how close it is
-// to them; any such file left on disk is deleted when Ghost starts.
-func TestStartingGhostDeletesTheOldRelationalScore(t *testing.T) {
+// to them; any such file left on disk is deleted when Kaya starts.
+func TestStartingKayaDeletesTheOldRelationalScore(t *testing.T) {
 	ws := t.TempDir()
 	old := filepath.Join(ws, "personal-context", "affect.json")
 	if err := os.MkdirAll(filepath.Dir(old), 0o755); err != nil {
@@ -117,7 +117,7 @@ func TestStartingGhostDeletesTheOldRelationalScore(t *testing.T) {
 	}
 }
 
-// Asking Ghost to show what it knows reads the record and changes nothing.
+// Asking Kaya to show what it knows reads the record and changes nothing.
 // Journaling that turn files the model's commentary on the owner as a memory.
 func TestReadingBackTheOwnerRecordIsNotJournaled(t *testing.T) {
 	cases := []struct {
@@ -159,10 +159,10 @@ func TestTurnToolNamesReadsOnlyTheLatestTurn(t *testing.T) {
 	}
 }
 
-// The live Ghost found go.mod modified, said it came from "your docparse work",
-// told the owner to re-apply it, and reverted it. The reflog showed it was Ghost's
-// own earlier build. An unexplained change is unexplained, and not Ghost's to discard.
-func TestGroundingKeepsGhostFromInventingCausesOrDiscardingOthersWork(t *testing.T) {
+// The live Kaya found go.mod modified, said it came from "your docparse work",
+// told the owner to re-apply it, and reverted it. The reflog showed it was Kaya's
+// own earlier build. An unexplained change is unexplained, and not Kaya's to discard.
+func TestGroundingKeepsKayaFromInventingCausesOrDiscardingOthersWork(t *testing.T) {
 	section := buildBehaviorSection()
 	for _, want := range []string{"has no known cause", "say you don't know where it came from", "git add <paths>", "Never discard, revert or stash changes you did not make"} {
 		if !strings.Contains(section, want) {

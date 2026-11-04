@@ -8,8 +8,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ianclemence/ghost/pkg/tools"
-	"github.com/ianclemence/ghost/pkg/uploads"
+	"github.com/ianclemence/kaya/pkg/tools"
+	"github.com/ianclemence/kaya/pkg/uploads"
 )
 
 // An attachment must be openable by the tool the model is told to use. Before
@@ -131,7 +131,7 @@ func TestLateNoteOnlyWhenActuallyLate(t *testing.T) {
 }
 
 // A job queued while a drain is running must survive it. The drain used to
-// rewrite the queue from a stale snapshot, erasing the new record: Ghost said
+// rewrite the queue from a stale snapshot, erasing the new record: Kaya said
 // "saved" for a memory it never stored.
 func TestDeferredQueueKeepsJobsQueuedDuringADrain(t *testing.T) {
 	al := newTestAgentLoop(t, t.TempDir())
@@ -147,7 +147,7 @@ func TestDeferredQueueKeepsJobsQueuedDuringADrain(t *testing.T) {
 	}
 }
 
-// Ghost tells the owner once and keeps its word about not repeating itself,
+// Kaya tells the owner once and keeps its word about not repeating itself,
 // even across a restart.
 func TestAnnounceSaysItOnceAndRemembersAcrossRestarts(t *testing.T) {
 	ws := t.TempDir()
@@ -171,7 +171,7 @@ func TestAnnounceSaysItOnceAndRemembersAcrossRestarts(t *testing.T) {
 	// A new process (same workspace) still remembers.
 	al2 := newTestAgentLoop(t, ws)
 	if al2.Announce("storage-critical", "I'm almost out of storage.", time.Hour, true) {
-		t.Fatal("a restart must not make Ghost repeat itself")
+		t.Fatal("a restart must not make Kaya repeat itself")
 	}
 	if !al2.Announce("pod-hot", "The Pod is running hot.", time.Hour, true) {
 		t.Fatal("a different matter is announced")
@@ -200,7 +200,7 @@ func TestQuickPathOnlyAnswersASingleAsk(t *testing.T) {
 	}
 }
 
-// Messages Ghost starts itself are marked, stored with that mark, and sent on
+// Messages Kaya starts itself are marked, stored with that mark, and sent on
 // live frames, so a surface can set a reminder apart from a reply.
 func TestOwnerMessagesCarryTheirKind(t *testing.T) {
 	cases := []struct {
@@ -246,7 +246,7 @@ func TestPlainReminderRoutinesNeedNoModel(t *testing.T) {
 		t.Fatalf("%q %v", task, ok)
 	}
 	if _, ok := ReminderInstructionTask("give me a brief of my week"); ok {
-		t.Fatal("a brief is a job for Ghost, not a plain reminder")
+		t.Fatal("a brief is a job for Kaya, not a plain reminder")
 	}
 	if got := ReminderText("take my vitamins"); got != "Reminder: take my vitamins." {
 		t.Fatalf("%q", got)

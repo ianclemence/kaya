@@ -35,7 +35,7 @@ const (
 	maxResetAttempts = 5
 
 	// BootResetFileName is the file an owner drops on the SD card.
-	BootResetFileName = "ghost-reset-password"
+	BootResetFileName = "kaya-reset-password"
 )
 
 // bootResetPaths are where the boot-partition file is looked for. A variable
@@ -68,12 +68,12 @@ func normalizeResetCode(code string) string {
 	return code
 }
 
-func resetCodePath(ghostDir string) string { return filepath.Join(ghostDir, resetCodeFileName) }
+func resetCodePath(kayaDir string) string { return filepath.Join(kayaDir, resetCodeFileName) }
 
 // IssueResetCode creates a fresh code (replacing any earlier one) and returns
 // it. It is shown once, to the person who asked; only its hash is kept.
-func IssueResetCode(ghostDir string, now time.Time) (code string, expires time.Time, err error) {
-	if !AdminConfigured(ghostDir) {
+func IssueResetCode(kayaDir string, now time.Time) (code string, expires time.Time, err error) {
+	if !AdminConfigured(kayaDir) {
 		return "", time.Time{}, errors.New("there is no console password to reset yet; finish setup first")
 	}
 	buf := make([]byte, 8)
@@ -91,10 +91,10 @@ func IssueResetCode(ghostDir string, now time.Time) (code string, expires time.T
 	expires = now.Add(ResetCodeTTL)
 	rec := resetRecord{Hash: hashResetCode(code), Expires: expires, IssuedAt: now}
 	data, _ := json.Marshal(rec)
-	if err := os.MkdirAll(ghostDir, 0o755); err != nil {
+	if err := os.MkdirAll(kayaDir, 0o755); err != nil {
 		return "", time.Time{}, err
 	}
-	if err := os.WriteFile(resetCodePath(ghostDir), data, 0o600); err != nil {
+	if err := os.WriteFile(resetCodePath(kayaDir), data, 0o600); err != nil {
 		return "", time.Time{}, err
 	}
 	return code, expires, nil
@@ -102,8 +102,8 @@ func IssueResetCode(ghostDir string, now time.Time) (code string, expires time.T
 
 // RedeemResetCode reports whether code is the live one, and uses it up when it
 // is. A wrong guess counts against the code; a few burn it.
-func RedeemResetCode(ghostDir, code string, now time.Time) bool {
-	path := resetCodePath(ghostDir)
+func RedeemResetCode(kayaDir, code string, now time.Time) bool {
+	path := resetCodePath(kayaDir)
 	data, err := os.ReadFile(path)
 	if err != nil {
 		return false
@@ -128,8 +128,8 @@ func RedeemResetCode(ghostDir, code string, now time.Time) bool {
 }
 
 // ResetCodePending reports whether an unexpired code exists.
-func ResetCodePending(ghostDir string, now time.Time) bool {
-	data, err := os.ReadFile(resetCodePath(ghostDir))
+func ResetCodePending(kayaDir string, now time.Time) bool {
+	data, err := os.ReadFile(resetCodePath(kayaDir))
 	if err != nil {
 		return false
 	}
@@ -142,13 +142,13 @@ func ResetCodePending(ghostDir string, now time.Time) bool {
 // file. A file that cannot be used is renamed with the reason inside, so the
 // owner sees what to fix instead of nothing happening. It returns whether a
 // password was changed.
-func ApplyBootReset(ghostDir string) (changed bool, err error) {
+func ApplyBootReset(kayaDir string) (changed bool, err error) {
 	for _, p := range bootResetPaths {
 		raw, rerr := os.ReadFile(p)
 		if rerr != nil {
 			continue
 		}
-		if !AdminConfigured(ghostDir) {
+		if !AdminConfigured(kayaDir) {
 			return false, nil // nothing to reset; leave the file for later
 		}
 		pw := strings.TrimSpace(firstLine(string(raw)))
@@ -158,7 +158,7 @@ func ApplyBootReset(ghostDir string) (changed bool, err error) {
 			_ = os.Remove(p)
 			return false, verr
 		}
-		if serr := SetAdminPassword(ghostDir, pw); serr != nil {
+		if serr := SetAdminPassword(kayaDir, pw); serr != nil {
 			return false, serr
 		}
 		_ = os.Remove(p)

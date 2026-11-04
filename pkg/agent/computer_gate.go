@@ -6,12 +6,12 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/ianclemence/ghost/pkg/cevents"
-	"github.com/ianclemence/ghost/pkg/computer"
-	"github.com/ianclemence/ghost/pkg/live"
-	"github.com/ianclemence/ghost/pkg/permissions"
-	"github.com/ianclemence/ghost/pkg/providers"
-	"github.com/ianclemence/ghost/pkg/tools"
+	"github.com/ianclemence/kaya/pkg/cevents"
+	"github.com/ianclemence/kaya/pkg/computer"
+	"github.com/ianclemence/kaya/pkg/live"
+	"github.com/ianclemence/kaya/pkg/permissions"
+	"github.com/ianclemence/kaya/pkg/providers"
+	"github.com/ianclemence/kaya/pkg/tools"
 )
 
 // Computer governance: the model proposes, the runtime decides.
@@ -159,15 +159,15 @@ func (al *AgentLoop) authorizeComputerCall(requestID, sessionKey, tool string, a
 		return deny(denyText(permissions.CodeUnavailable, "Computer is unavailable: this runtime is not governed.", "Try again in a moment; if it persists, the operator must check the gateway."))
 	}
 	g := al.governance
-	owner := g.GhostID
+	owner := g.KayaID
 	if owner == "" {
-		return deny(denyText(permissions.CodeUnavailable, "Computer is unavailable: no Ghost identity.", "The operator must complete onboarding so this Ghost has an identity."))
+		return deny(denyText(permissions.CodeUnavailable, "Computer is unavailable: no Kaya identity.", "The operator must complete onboarding so this Kaya has an identity."))
 	}
 	// Live Surface plane: register the personal AI computer and enforce the
-	// pause. While a human owns the surface, Ghost is paused.
+	// pause. While a human owns the surface, Kaya is paused.
 	if al.livePlane != nil {
 		al.livePlane.Register("local", live.KindComputer)
-		if ok, reason := al.livePlane.GhostMayAct("local"); !ok {
+		if ok, reason := al.livePlane.KayaMayAct("local"); !ok {
 			return deny(denyText(permissions.CodeUnavailable, fmt.Sprintf("The computer is paused: %s.", reason), "Resume the surface and ask again."))
 		}
 	}
@@ -183,7 +183,7 @@ func (al *AgentLoop) authorizeComputerCall(requestID, sessionKey, tool string, a
 	}
 	exec, err := al.computerExecutor()
 	if err != nil || exec == nil {
-		return deny(denyText(permissions.CodeUnavailable, "Computer unavailable on this Ghost.", "The operator must attach a computer executor first."))
+		return deny(denyText(permissions.CodeUnavailable, "Computer unavailable on this Kaya.", "The operator must attach a computer executor first."))
 	}
 	authority, reason := computerAuthority(exec)
 	if authority == "none" {
@@ -259,7 +259,7 @@ func (al *AgentLoop) bindComputer(owner, contextID, sessionKey, taskID, generati
 		call.ControlAuthority = true
 	}
 	if al.livePlane != nil {
-		al.livePlane.SetControlOwner("local", live.OwnerGhost)
+		al.livePlane.SetControlOwner("local", live.OwnerKaya)
 		al.livePlane.SetTask("local", taskID)
 		al.announceSurface(sessionKey, "local", live.KindComputer)
 	}
@@ -285,20 +285,20 @@ func (al *AgentLoop) resumeComputerCall(resume ResumeOutcome, sessionKey, reques
 	if !ok {
 		return refuse(denyText(permissions.CodePreconditionFailed, fmt.Sprintf("Unknown computer operation %q.", tool), "Use an operation this computer supports; ask what it can do."))
 	}
-	owner := g.GhostID
+	owner := g.KayaID
 	if owner == "" {
-		return refuse(denyText(permissions.CodeUnavailable, "Computer is unavailable: no Ghost identity.", "The operator must complete onboarding so this Ghost has an identity."))
+		return refuse(denyText(permissions.CodeUnavailable, "Computer is unavailable: no Kaya identity.", "The operator must complete onboarding so this Kaya has an identity."))
 	}
 	// Live Surface pause must be rechecked on resume (a takeover may have
 	// happened while approval waited).
 	if al.livePlane != nil {
 		al.livePlane.Register("local", live.KindComputer)
-		if ok, reason := al.livePlane.GhostMayAct("local"); !ok {
+		if ok, reason := al.livePlane.KayaMayAct("local"); !ok {
 			return refuse(denyText(permissions.CodeUnavailable, fmt.Sprintf("The computer is paused: %s.", reason), "Resume the surface and ask again."))
 		}
 	}
 	if stored, _ := resume.Args[contOwner].(string); stored != "" && stored != owner {
-		return refuse(denyText(permissions.CodeBindingMismatch, "Owner mismatch: this approval belongs to a different Ghost.", "Approvals never transfer between owners; ask again here."))
+		return refuse(denyText(permissions.CodeBindingMismatch, "Owner mismatch: this approval belongs to a different Kaya.", "Approvals never transfer between owners; ask again here."))
 	}
 	contextID := ""
 	if g.Contexts != nil {
@@ -326,7 +326,7 @@ func (al *AgentLoop) resumeComputerCall(resume ResumeOutcome, sessionKey, reques
 	}
 	exec, err := al.computerExecutor()
 	if err != nil || exec == nil {
-		return refuse(denyText(permissions.CodeUnavailable, "Computer unavailable on this Ghost.", "The operator must attach a computer executor first."))
+		return refuse(denyText(permissions.CodeUnavailable, "Computer unavailable on this Kaya.", "The operator must attach a computer executor first."))
 	}
 	authority, _ := computerAuthority(exec)
 	if computerControlOp(op) && authority != "control" {
@@ -378,7 +378,7 @@ func (al *AgentLoop) recordComputerSurface(call tools.ComputerCall, res *tools.T
 	if al.livePlane == nil || res == nil {
 		return
 	}
-	obs := live.Observation{Title: "Ghost computer"}
+	obs := live.Observation{Title: "Kaya computer"}
 	if res.IsError {
 		al.livePlane.SetState("local", live.StateFailed)
 	} else {
@@ -414,7 +414,7 @@ func (al *AgentLoop) publishComputerEvidence(requestID, sessionKey, tool string,
 	}
 	al.governance.Events.Publish(&cevents.Event{
 		Type: typ, RequestID: requestID, SessionID: sessionKey,
-		GhostID: al.governance.GhostID, AgentID: al.governance.AgentID,
+		KayaID: al.governance.KayaID, AgentID: al.governance.AgentID,
 		Status:  map[bool]string{true: "failed", false: "success"}[res.IsError],
 		Payload: payload,
 	})

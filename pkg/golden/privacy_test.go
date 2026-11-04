@@ -95,7 +95,7 @@ func TestPrivacyRestrictedValuesHardFailOnStream(t *testing.T) {
 
 func writeSessionMessages(t *testing.T, ws, sessionID string, rows []string) {
 	t.Helper()
-	db, err := sql.Open("sqlite", "file:"+filepath.Join(ws, "ghost.db"))
+	db, err := sql.Open("sqlite", "file:"+filepath.Join(ws, "kaya.db"))
 	if err != nil {
 		t.Fatal(err)
 	}

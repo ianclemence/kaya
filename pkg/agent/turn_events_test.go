@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/ianclemence/ghost/pkg/tools"
+	"github.com/ianclemence/kaya/pkg/tools"
 )
 
 func TestToolDetailIsOneSafeLine(t *testing.T) {

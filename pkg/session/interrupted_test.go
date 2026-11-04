@@ -7,8 +7,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ianclemence/ghost/pkg/db"
-	"github.com/ianclemence/ghost/pkg/providers"
+	"github.com/ianclemence/kaya/pkg/db"
+	"github.com/ianclemence/kaya/pkg/providers"
 )
 
 // A reply a restart cut off carries a marker, and that marker has to survive
@@ -74,7 +74,7 @@ func TestInterruptedMarkerSurvivesEveryWrite(t *testing.T) {
 }
 
 // The marker is provenance, not conversation: it must never reach a
-// provider, where it would read as Ghost telling the model about a restart
+// provider, where it would read as Kaya telling the model about a restart
 // in the middle of ordinary speech.
 func TestInterruptedMarkerIsNeverSerializedToProviders(t *testing.T) {
 	raw, err := json.Marshal(providers.Message{

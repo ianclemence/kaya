@@ -35,7 +35,7 @@ func TestTranslateErrorKeepsRemedy(t *testing.T) {
 	if !errors.Is(err, ErrDiskFull) {
 		t.Fatalf("must wrap ErrDiskFull: %v", err)
 	}
-	if got := err.Error(); !containsStr(got, "ghost state prune") {
+	if got := err.Error(); !containsStr(got, "kaya state prune") {
 		t.Fatalf("must name the remedy: %q", got)
 	}
 	if err := TranslateError("migration", errors.New("syntax error")); errors.Is(err, ErrDiskFull) {
@@ -54,7 +54,7 @@ func TestCheckIntegrity(t *testing.T) {
 	}
 	d.Close()
 	// Corrupt the file: integrity must fail loudly with the restore path.
-	path := filepath.Join(ws, "ghost.db")
+	path := filepath.Join(ws, "kaya.db")
 	f, err := os.OpenFile(path, os.O_WRONLY, 0600)
 	if err != nil {
 		t.Fatal(err)
@@ -70,7 +70,7 @@ func TestCheckIntegrity(t *testing.T) {
 	defer raw.Close()
 	if err := CheckIntegrity(raw); err == nil {
 		t.Fatal("corrupt database must fail integrity")
-	} else if !containsStr(err.Error(), "ghost state import") {
+	} else if !containsStr(err.Error(), "kaya state import") {
 		t.Fatalf("must name the restore runbook: %v", err)
 	}
 }

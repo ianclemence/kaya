@@ -13,14 +13,14 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ianclemence/ghost/pkg/browser"
-	"github.com/ianclemence/ghost/pkg/browser/native"
+	"github.com/ianclemence/kaya/pkg/browser"
+	"github.com/ianclemence/kaya/pkg/browser/native"
 )
 
 // The golden set.
 //
-// Ghost's browser is currently the agent-browser CLI; pkg/browser/native is
-// Ghost's own Go engine speaking Chrome's protocol directly. "Supported" and
+// Kaya's browser is currently the agent-browser CLI; pkg/browser/native is
+// Kaya's own Go engine speaking Chrome's protocol directly. "Supported" and
 // "works on a real site" are different questions, and only the second one
 // matters, so the golden set asks it the only way it can be asked: one page,
 // one script, both engines, and the contract the tool layer actually depends
@@ -28,7 +28,7 @@ import (
 // that change what the page says.
 //
 // The core loop is gated on real browsers being present
-// (GHOST_NATIVE_BROWSER=1 and agent-browser on PATH). The readiness report
+// (KAYA_NATIVE_BROWSER=1 and agent-browser on PATH). The readiness report
 // below it always runs: how far the native engine is from being able to take
 // over is a fact about the code, not about the machine.
 
@@ -59,8 +59,8 @@ type goldenEngine interface {
 
 func goldenGate(t *testing.T) {
 	t.Helper()
-	if os.Getenv("GHOST_NATIVE_BROWSER") != "1" {
-		t.Skip("golden set needs GHOST_NATIVE_BROWSER=1 (real Chrome + agent-browser)")
+	if os.Getenv("KAYA_NATIVE_BROWSER") != "1" {
+		t.Skip("golden set needs KAYA_NATIVE_BROWSER=1 (real Chrome + agent-browser)")
 	}
 	if _, err := exec.LookPath("agent-browser"); err != nil {
 		t.Skip("golden set needs agent-browser on PATH")

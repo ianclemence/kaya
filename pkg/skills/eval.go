@@ -67,7 +67,7 @@ func evalRequiresKnown(skillDir string) SkillEval {
 		return SkillEval{Name: "requires", Passed: true, Detail: "no metadata"}
 	}
 	for _, req := range meta.RequiresCapabilities {
-		if !HasCapability(req) && !isKnownGhostCapability(req) {
+		if !HasCapability(req) && !isKnownKayaCapability(req) {
 			return SkillEval{Name: "requires", Passed: false, Detail: fmt.Sprintf("unknown capability %q", req)}
 		}
 	}

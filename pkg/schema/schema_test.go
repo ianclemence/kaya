@@ -10,7 +10,7 @@ import (
 
 func openRaw(t *testing.T) (*sql.DB, string) {
 	t.Helper()
-	path := filepath.Join(t.TempDir(), "ghost.db")
+	path := filepath.Join(t.TempDir(), "kaya.db")
 	db, err := sql.Open("sqlite", "file:"+path)
 	if err != nil {
 		t.Fatal(err)
@@ -78,7 +78,7 @@ func TestFreshDBReachesCurrent(t *testing.T) {
 	}
 }
 
-// `ghost status` opens the workspace database ?mode=ro and calls
+// `kaya status` opens the workspace database ?mode=ro and calls
 // CheckCurrent through the doctor. CheckCurrent is documented as changing
 // nothing, so a read-only handle must never fail it with a write error —
 // the failure below is exactly the reported

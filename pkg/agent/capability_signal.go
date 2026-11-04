@@ -1,11 +1,11 @@
 package agent
 
-import "github.com/ianclemence/ghost/pkg/modes"
+import "github.com/ianclemence/kaya/pkg/modes"
 
 // offlineCapabilityNote returns a compact per-turn capability signal for the
 // model when the runtime is degraded to local mode. It is empty when cloud is
 // available, so ordinary turns carry no banner: offline state is surfaced only
-// when it changes what Ghost can do.
+// when it changes what Kaya can do.
 func offlineCapabilityNote(m modes.Mode) string {
 	if m != modes.Local {
 		return ""

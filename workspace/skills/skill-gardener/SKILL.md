@@ -23,7 +23,7 @@ Preserve proven procedures in compact skills that a future agent can use without
 
 ## Prerequisites
 
-Resolve the active workspace, the intended skill root, and this skill's own directory from the runtime/catalog before editing. In Ghost, `workspace/skills/skill-gardener` refers to this installed skill's directory. Do not assume the current working directory or an installation under `skills/skill-gardener`.
+Resolve the active workspace, the intended skill root, and this skill's own directory from the runtime/catalog before editing. In Kaya, `workspace/skills/skill-gardener` refers to this installed skill's directory. Do not assume the current working directory or an installation under `skills/skill-gardener`.
 
 For the bundled audit, use Python 3.10+. It uses PyYAML when an already-trusted environment provides it; otherwise it uses its built-in, deliberately bounded YAML parser. Both paths reject aliases, merge keys, unsafe tags, duplicate keys, and nesting beyond 32 levels. Do not install dependencies just to run the audit.
 
@@ -80,7 +80,7 @@ Inspect the bundled helper before first use. With the prepared Python interprete
 python3 "workspace/skills/skill-gardener/scripts/audit_skills.py" --skill "/absolute/path/to/staged-skill"
 ```
 
-Replace `python3` with the prepared environment's interpreter if necessary. This is a structural check, not a security verdict or proof that the workflow works. The audit supports normal YAML scalars, multiline descriptions, and nested Ghost metadata; it intentionally rejects aliases, merge keys, duplicate keys, and excessive nesting.
+Replace `python3` with the prepared environment's interpreter if necessary. This is a structural check, not a security verdict or proof that the workflow works. The audit supports normal YAML scalars, multiline descriptions, and nested Kaya metadata; it intentionally rejects aliases, merge keys, duplicate keys, and excessive nesting.
 
 Run relevant inspected deterministic tests in a temporary workspace. Test execution already authorized by the task needs no second approval. External or newly written code still requires inspection and appropriate isolation; do not give a test real credentials or network access unless the task authorizes and requires them. Do not run production actions just to validate a skill.
 

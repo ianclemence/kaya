@@ -4,12 +4,12 @@ import (
 	"context"
 	"testing"
 
-	"github.com/ianclemence/ghost/pkg/providers"
+	"github.com/ianclemence/kaya/pkg/providers"
 )
 
 func TestRecentTurnsKeepsOnlyTheConversation(t *testing.T) {
 	h := []providers.Message{
-		{Role: "system", Content: "you are ghost"},
+		{Role: "system", Content: "you are kaya"},
 		{Role: "user", Content: "hi"},
 		{Role: "tool", Content: "{...}"},
 		{Role: "assistant", Content: ""},
@@ -23,12 +23,12 @@ func TestRecentTurnsKeepsOnlyTheConversation(t *testing.T) {
 	}
 }
 
-func TestSuggestNextNeedsGhostToBeWaiting(t *testing.T) {
+func TestSuggestNextNeedsKayaToBeWaiting(t *testing.T) {
 	var nilLoop *AgentLoop
 	if s := nilLoop.SuggestNext(context.Background(), "main"); s.Text != "" {
 		t.Fatalf("a nil loop suggests nothing, got %+v", s)
 	}
-	t.Setenv("GHOST_SUGGEST", "off")
+	t.Setenv("KAYA_SUGGEST", "off")
 	al := &AgentLoop{}
 	if s := al.SuggestNext(context.Background(), "main"); s.Text != "" {
 		t.Fatalf("off means off, got %+v", s)
@@ -36,11 +36,11 @@ func TestSuggestNextNeedsGhostToBeWaiting(t *testing.T) {
 }
 
 func TestSuggestNextRulesThenModelThenCache(t *testing.T) {
-	t.Setenv("GHOST_SUGGEST", "")
+	t.Setenv("KAYA_SUGGEST", "")
 	al := newTestAgentLoop(t, t.TempDir())
 	const sess = "main"
 
-	// Ghost made an offer: a rule answers it, without the model.
+	// Kaya made an offer: a rule answers it, without the model.
 	al.sessions.AddMessage(sess, "user", "any reminders?")
 	al.sessions.AddMessage(sess, "assistant", `"Pay rent" is the next one up. Want me to move it, or add a nudge before it?`)
 	s := al.SuggestNext(context.Background(), sess)
@@ -53,7 +53,7 @@ func TestSuggestNextRulesThenModelThenCache(t *testing.T) {
 		t.Fatalf("an unchanged conversation must give the same suggestion: %+v vs %+v", again, s)
 	}
 
-	// The owner replied and Ghost answered with something no rule covers: the
+	// The owner replied and Kaya answered with something no rule covers: the
 	// model is asked, and its short line is used.
 	al.sessions.AddMessage(sess, "user", "yes")
 	al.sessions.AddMessage(sess, "assistant", "Done, I moved it to 7 PM.")
@@ -63,7 +63,7 @@ func TestSuggestNextRulesThenModelThenCache(t *testing.T) {
 	}
 
 	// With the model switched off, the same state yields only rules.
-	t.Setenv("GHOST_SUGGEST", "rules")
+	t.Setenv("KAYA_SUGGEST", "rules")
 	al.sessions.AddMessage(sess, "user", "thanks")
 	al.sessions.AddMessage(sess, "assistant", "Anytime.")
 	if r := al.SuggestNext(context.Background(), sess); r.Text != "" {

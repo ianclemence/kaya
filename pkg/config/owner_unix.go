@@ -9,7 +9,7 @@ import (
 )
 
 // KeepOwner gives a freshly written file the owner of the file it is about to
-// replace. Ghost's services run as root while the person who installed it owns
+// replace. Kaya's services run as root while the person who installed it owns
 // the files and runs the terminal as themselves. A save from the daemon or the
 // console used to hand the new file to root, and from then on the owner's own
 // terminal could not read its settings and would not start ("permission
@@ -33,7 +33,7 @@ func KeepOwner(tmpPath, target string) {
 
 // MatchOwnerUnder gives path, and every folder between it and root, the owner
 // of root. The daemon runs as root while the workspace belongs to the person
-// who installed Ghost; a folder or file the daemon created privately inside it
+// who installed Kaya; a folder or file the daemon created privately inside it
 // (screenshots, downloads) made every backup and update fail with "permission
 // denied". root itself is never changed.
 func MatchOwnerUnder(root, path string) {

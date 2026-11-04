@@ -3,13 +3,13 @@ package agent
 import (
 	"strings"
 
-	"github.com/ianclemence/ghost/pkg/cevents"
-	"github.com/ianclemence/ghost/pkg/personalcontext"
+	"github.com/ianclemence/kaya/pkg/cevents"
+	"github.com/ianclemence/kaya/pkg/personalcontext"
 )
 
 // wireMemoryAudit makes every forgetting visible. Until this existed the
 // canonical stream carried memory.created and memory.updated but never
-// memory.deleted — so a belief Ghost removed simply vanished from the
+// memory.deleted — so a belief Kaya removed simply vanished from the
 // record, and the owner's activity feed could not show that it happened.
 //
 // The hook is global (personalcontext is the storage layer and knows
@@ -22,7 +22,7 @@ func (al *AgentLoop) wireMemoryAudit() {
 		}
 		al.governance.Events.Publish(&cevents.Event{
 			Type:    cevents.MemoryDeleted,
-			GhostID: al.governance.GhostID,
+			KayaID: al.governance.KayaID,
 			AgentID: al.governance.AgentID,
 			Payload: map[string]interface{}{
 				"claim_id": r.ClaimID,
@@ -57,7 +57,7 @@ func forgottenSummary(r personalcontext.ForgetReport) string {
 		parts = append(parts, "Rebuilt "+strings.Join(r.DerivativesRebuilt, ", "))
 	}
 	if len(parts) == 0 {
-		return "Removed from what Ghost remembers."
+		return "Removed from what Kaya remembers."
 	}
 	return strings.Join(parts, ". ") + "."
 }

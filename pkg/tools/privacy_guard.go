@@ -6,10 +6,10 @@ import (
 	"strings"
 )
 
-// ScopeGuard enforces Ghost's memory privacy boundary at the file-tool
+// ScopeGuard enforces Kaya's memory privacy boundary at the file-tool
 // layer.
 //
-// Ghost's memory is governed state with its own context/scope rules. Every
+// Kaya's memory is governed state with its own context/scope rules. Every
 // retrieval path (digest, curated notes, recall, RAG) filters through
 // those rules before anything reaches the model. Raw file access must
 // never become a way to bypass that filter: a model reading the memory

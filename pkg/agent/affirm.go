@@ -3,10 +3,10 @@ package agent
 import (
 	"strings"
 
-	"github.com/ianclemence/ghost/pkg/permissions"
+	"github.com/ianclemence/kaya/pkg/permissions"
 )
 
-// Saying yes and no in other languages. An owner who talks to Ghost in Spanish,
+// Saying yes and no in other languages. An owner who talks to Kaya in Spanish,
 // French, Swahili, Thai or Chinese answers a confirmation in that language, and
 // "sí" or "ndiyo" or "好" must count as much as "yes". Only whole, short replies
 // are matched, never a word inside a longer sentence, so a story that happens to

@@ -1,0 +1,28 @@
+[Unit]
+Description=Kaya Web Console (Setup Wizard + Admin Dashboard)
+After=network-online.target
+Wants=network-online.target
+Before=kaya.service
+
+[Service]
+Type=simple
+User=root
+Restart=always
+RestartSec=5
+ExecStart=__BIN_DIR__/kaya-web -force -port 80 -dir __KAYA_DIR__
+Environment=KAYA_WORKSPACE_DIR=/var/lib/kaya/workspace
+
+# Security hardening
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=__KAYA_DIR__ /var/lib/kaya /run -/boot/firmware -/boot
+PrivateTmp=true
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=kaya-web
+
+[Install]
+WantedBy=multi-user.target

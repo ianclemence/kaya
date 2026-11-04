@@ -14,7 +14,7 @@ import (
 // user-visible descriptions. Routing triggers ("Invoke when...") stay in
 // frontmatter intentionally — the Web UI strips them via humanizeSkillDesc.
 func TestSkillFrontmatterHygiene(t *testing.T) {
-	roots := []string{"../../workspace/skills", "../../cmd/ghost/workspace/skills"}
+	roots := []string{"../../workspace/skills", "../../cmd/kaya/workspace/skills"}
 	checked := 0
 	for _, root := range roots {
 		dirs, err := os.ReadDir(root)

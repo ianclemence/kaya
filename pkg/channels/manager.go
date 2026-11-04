@@ -1,8 +1,8 @@
-// Ghost - Ultra-lightweight personal AI agent
-// Inspired by and based on GHOST: https://github.com/ianclemence/ghost
+// Kaya - Ultra-lightweight personal AI agent
+// Inspired by and based on KAYA: https://github.com/ianclemence/kaya
 // License: MIT
 //
-// Copyright (c) 2026 Ghost contributors
+// Copyright (c) 2026 Kaya contributors
 
 package channels
 
@@ -13,13 +13,13 @@ import (
 	"sync"
 	"time"
 
-	"github.com/ianclemence/ghost/pkg/bus"
-	"github.com/ianclemence/ghost/pkg/commands"
-	"github.com/ianclemence/ghost/pkg/config"
-	"github.com/ianclemence/ghost/pkg/constants"
-	"github.com/ianclemence/ghost/pkg/logger"
-	"github.com/ianclemence/ghost/pkg/telemetry"
-	"github.com/ianclemence/ghost/pkg/tools"
+	"github.com/ianclemence/kaya/pkg/bus"
+	"github.com/ianclemence/kaya/pkg/commands"
+	"github.com/ianclemence/kaya/pkg/config"
+	"github.com/ianclemence/kaya/pkg/constants"
+	"github.com/ianclemence/kaya/pkg/logger"
+	"github.com/ianclemence/kaya/pkg/telemetry"
+	"github.com/ianclemence/kaya/pkg/tools"
 )
 
 type Manager struct {

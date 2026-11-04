@@ -12,7 +12,7 @@ import (
 // Learning is something the owner is reading, studying or wants to: a book, a
 // course, a subject for an exam, an article or a podcast. It keeps where they
 // are (page 140 of 320, lesson 6 of 12), what they made of it (notes, and the
-// lines they wanted to keep), and when they started and finished, so Ghost can
+// lines they wanted to keep), and when they started and finished, so Kaya can
 // pick up where they left off, quiz them on it, and remind them gently when
 // something they meant to finish has gone quiet.
 type Learning struct {
@@ -182,7 +182,7 @@ func (k *Knowledge) Save(in LearningInput, now time.Time) (Learning, bool, error
 			l = (*d)[idx]
 		} else {
 			if len(*d) >= maxLearnings {
-				return fmt.Errorf("Ghost keeps up to %d things you read or study; forget some first", maxLearnings)
+				return fmt.Errorf("Kaya keeps up to %d things you read or study; forget some first", maxLearnings)
 			}
 			l = Learning{ID: newID("learn"), Kind: "book", Status: "want", Title: in.Title, Source: in.Source, Created: now}
 			created = true

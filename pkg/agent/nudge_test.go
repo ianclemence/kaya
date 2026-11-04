@@ -3,7 +3,7 @@ package agent
 import (
 	"testing"
 
-	"github.com/ianclemence/ghost/pkg/providers"
+	"github.com/ianclemence/kaya/pkg/providers"
 )
 
 func setupTestNudgeManager(memoryInterval, skillInterval int) *NudgeManager {

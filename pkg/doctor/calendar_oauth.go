@@ -12,7 +12,7 @@ import (
 
 // calendarSkillActive reports whether the calendar skill is currently enabled
 // in the workspace (SKILL.md present; disable renames it to SKILL.md.disabled).
-// When Ghost has no workspace (nil/empty, e.g. unit tests) we cannot know, and
+// When Kaya has no workspace (nil/empty, e.g. unit tests) we cannot know, and
 // the caller keeps its default behavior.
 func (d *Doctor) calendarSkillActive() bool {
 	if d == nil || d.workspace == "" {
@@ -43,9 +43,9 @@ func (d *Doctor) checkCalendarOAuth(ctx context.Context) CheckResult {
 			Latency: time.Since(start).Milliseconds(),
 		}
 	}
-	clientID := strings.TrimSpace(os.Getenv("GHOST_GOOGLE_CLIENT_ID"))
-	secret := strings.TrimSpace(os.Getenv("GHOST_GOOGLE_CLIENT_SECRET"))
-	redirect := strings.TrimSpace(os.Getenv("GHOST_CALENDAR_REDIRECT_URL"))
+	clientID := strings.TrimSpace(os.Getenv("KAYA_GOOGLE_CLIENT_ID"))
+	secret := strings.TrimSpace(os.Getenv("KAYA_GOOGLE_CLIENT_SECRET"))
+	redirect := strings.TrimSpace(os.Getenv("KAYA_CALENDAR_REDIRECT_URL"))
 
 	if clientID == "" || secret == "" || redirect == "" {
 		return CheckResult{
@@ -97,7 +97,7 @@ func (d *Doctor) checkCalendarOAuth(ctx context.Context) CheckResult {
 		return CheckResult{
 			Name: "calendar_oauth", Label: "Calendar sign-in",
 			Status:  "warning",
-			Message: "The redirect URL should end with /oauth/calendar/callback to match Ghost's handler.",
+			Message: "The redirect URL should end with /oauth/calendar/callback to match Kaya's handler.",
 			Latency: time.Since(start).Milliseconds(),
 		}
 	}

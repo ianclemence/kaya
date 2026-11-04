@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ianclemence/ghost/pkg/scheduled"
+	"github.com/ianclemence/kaya/pkg/scheduled"
 )
 
 func mustCreate(t *testing.T, fake *fakeScheduleService, item *scheduled.ScheduledItem) {
@@ -79,7 +79,7 @@ func TestScheduleListShowsFailed(t *testing.T) {
 	fake := newFakeScheduleService()
 	past := time.Now().UTC().Add(-time.Hour)
 	mustCreate(t, fake, &scheduled.ScheduledItem{
-		ID: "f1", Type: scheduled.TypeReminder, Title: "Check Ghost logs",
+		ID: "f1", Type: scheduled.TypeReminder, Title: "Check Kaya logs",
 		State: scheduled.StateFailed, Timezone: "Asia/Bangkok",
 		Schedule:  scheduled.Schedule{Kind: scheduled.ScheduleAt, At: &past},
 		LastRunAt: &past,

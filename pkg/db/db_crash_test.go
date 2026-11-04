@@ -14,7 +14,7 @@ import (
 )
 
 // TestCrashMidTransactionRecovers proves the exact durability mechanism
-// Ghost relies on: a writer SIGKILLed mid-transaction (simulated power
+// Kaya relies on: a writer SIGKILLed mid-transaction (simulated power
 // loss) must leave the database integral, without the uncommitted row,
 // and fully writable afterwards. WAL mode + atomic commit is what makes
 // abrupt personal AI power loss safe.
@@ -44,7 +44,7 @@ func TestCrashMidTransactionRecovers(t *testing.T) {
 	}
 
 	dir := t.TempDir()
-	dbPath := filepath.Join(dir, "ghost.db")
+	dbPath := filepath.Join(dir, "kaya.db")
 	db, err := sql.Open("sqlite", "file:"+dbPath+"?_pragma=journal_mode(WAL)&_pragma=busy_timeout(5000)")
 	if err != nil {
 		t.Fatal(err)

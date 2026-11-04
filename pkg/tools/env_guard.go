@@ -8,7 +8,7 @@ import (
 
 // EnvGuard builds a sanitized environment for model-initiated subprocesses.
 //
-// Ghost's own process environment holds provider credentials and secrets. A
+// Kaya's own process environment holds provider credentials and secrets. A
 // shell command proposed by the model must never be able to read them: the
 // model is not the security boundary, and "don't echo $API_KEY" is not
 // enforcement. Subprocesses therefore start from a minimal allowlist and only
@@ -45,8 +45,8 @@ func IsSecretEnvName(name string) bool {
 	if upper == "" {
 		return true
 	}
-	// Ghost's own namespace is always internal.
-	if strings.HasPrefix(upper, "GHOST_") {
+	// Kaya's own namespace is always internal.
+	if strings.HasPrefix(upper, "KAYA_") {
 		return true
 	}
 	for _, m := range secretMarkers {

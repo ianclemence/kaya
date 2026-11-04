@@ -10,11 +10,11 @@ import (
 	"sync"
 	"time"
 
-	"github.com/ianclemence/ghost/pkg/capability"
-	"github.com/ianclemence/ghost/pkg/logger"
-	"github.com/ianclemence/ghost/pkg/permissions"
-	"github.com/ianclemence/ghost/pkg/providers"
-	"github.com/ianclemence/ghost/pkg/redact"
+	"github.com/ianclemence/kaya/pkg/capability"
+	"github.com/ianclemence/kaya/pkg/logger"
+	"github.com/ianclemence/kaya/pkg/permissions"
+	"github.com/ianclemence/kaya/pkg/providers"
+	"github.com/ianclemence/kaya/pkg/redact"
 	"github.com/santhosh-tekuri/jsonschema/v5"
 )
 

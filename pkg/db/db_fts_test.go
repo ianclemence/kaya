@@ -35,7 +35,7 @@ func TestMigrateFTS5CreatesAndIndexesMessages(t *testing.T) {
 		t.Fatalf("expected 1 FTS match, got %d", count)
 	}
 
-	if _, err := os.Stat(filepath.Join(workspace, "ghost.db")); err != nil {
+	if _, err := os.Stat(filepath.Join(workspace, "kaya.db")); err != nil {
 		t.Fatalf("database file missing: %v", err)
 	}
 }

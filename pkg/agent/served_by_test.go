@@ -4,7 +4,7 @@ import (
 	"context"
 	"testing"
 
-	"github.com/ianclemence/ghost/pkg/config"
+	"github.com/ianclemence/kaya/pkg/config"
 )
 
 // The owner is told where a turn ran from execution: the provider behind

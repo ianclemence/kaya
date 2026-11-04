@@ -9,7 +9,7 @@ import (
 	"time"
 )
 
-// What the owner's phone tells Ghost, when the owner turned it on: the
+// What the owner's phone tells Kaya, when the owner turned it on: the
 // notifications of the apps they chose, their daily health totals (steps,
 // sleep, resting heart rate), and the places they asked to be reminded at.
 // All of it stays on the Pod; the phone sends only what each switch allows.
@@ -320,7 +320,7 @@ func (d *Device) AddPlace(name string, lat, lon float64, radius int, message, on
 			}
 		}
 		if active >= maxPlaces {
-			return fmt.Errorf("Ghost already watches %d places (the most a phone allows)", maxPlaces)
+			return fmt.Errorf("Kaya already watches %d places (the most a phone allows)", maxPlaces)
 		}
 		p.ID = newID("place")
 		x.Places = append(x.Places, p)

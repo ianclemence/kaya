@@ -8,11 +8,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ianclemence/ghost/pkg/personalcontext"
-	"github.com/ianclemence/ghost/pkg/providers"
-	"github.com/ianclemence/ghost/pkg/skills"
-	"github.com/ianclemence/ghost/pkg/tools"
-	"github.com/ianclemence/ghost/pkg/watch"
+	"github.com/ianclemence/kaya/pkg/personalcontext"
+	"github.com/ianclemence/kaya/pkg/providers"
+	"github.com/ianclemence/kaya/pkg/skills"
+	"github.com/ianclemence/kaya/pkg/tools"
+	"github.com/ianclemence/kaya/pkg/watch"
 )
 
 func testMessagesWithSkillRead(args string) []providers.Message {
@@ -220,7 +220,7 @@ func TestResumeDoesNotHijackProposals(t *testing.T) {
 	// A standing-permission proposal (no MissingField set).
 	skills.SetPendingDurable(ws, "sess-g", skills.PendingContinuation{
 		CapabilityID: "permission.standing", Skill: "permissions",
-		MissingField: "", Question: "Ghost will be allowed to add calendar events for you. Nothing else changes. Say yes to confirm.",
+		MissingField: "", Question: "Kaya will be allowed to add calendar events for you. Nothing else changes. Say yes to confirm.",
 		OriginalTask: "You can always add calendar events for me",
 	})
 	if _, ok, _, _ := resolvePendingResume(ws, "sess-g", "yes"); ok {
@@ -534,7 +534,7 @@ func TestWeatherAnaphoraDefersToModel(t *testing.T) {
 func TestCapabilityFastPathNeedsWeatherAsk(t *testing.T) {
 	notWeather := []string{
 		// The two real turns, verbatim.
-		"great. assuming you were to design your Ghost Pod and want to manufacture it in China. What specifications do you need fo the pod assuming it can also read room temperature and humidity for the first version. i also bought a KLYSTR Kit to learn hardware and sensors stuff to build you",
+		"great. assuming you were to design your Kaya Pod and want to manufacture it in China. What specifications do you need fo the pod assuming it can also read room temperature and humidity for the first version. i also bought a KLYSTR Kit to learn hardware and sensors stuff to build you",
 		"why are you tellingnme the weather i did not ask you aboht it",
 		// Same shape, so the fix is not a lookup table of these strings.
 		"does the pod read room temperature and humidity?",
@@ -621,7 +621,7 @@ func TestDispatchNeverWeatherOnSpecQuestion(t *testing.T) {
 	reg.Register(&recordWeatherTool{calls: &calls})
 	al := &AgentLoop{tools: reg}
 
-	spec := "great. assuming you were to design your Ghost Pod and want to manufacture it in China. What specifications do you need fo the pod assuming it can also read room temperature and humidity for the first version. i also bought a KLYSTR Kit to learn hardware and sensors stuff to build you"
+	spec := "great. assuming you were to design your Kaya Pod and want to manufacture it in China. What specifications do you need fo the pod assuming it can also read room temperature and humidity for the first version. i also bought a KLYSTR Kit to learn hardware and sensors stuff to build you"
 	if ans, ok := al.tryDeterministicNetworkDispatch(spec, "s-spec", nil); ok {
 		t.Fatalf("a product-spec question was answered deterministically: %q", ans)
 	}

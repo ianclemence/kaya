@@ -10,11 +10,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ianclemence/ghost/pkg/attention"
-	"github.com/ianclemence/ghost/pkg/cevents"
-	"github.com/ianclemence/ghost/pkg/commitments"
-	"github.com/ianclemence/ghost/pkg/logger"
-	"github.com/ianclemence/ghost/pkg/personalcontext"
+	"github.com/ianclemence/kaya/pkg/attention"
+	"github.com/ianclemence/kaya/pkg/cevents"
+	"github.com/ianclemence/kaya/pkg/commitments"
+	"github.com/ianclemence/kaya/pkg/logger"
+	"github.com/ianclemence/kaya/pkg/personalcontext"
 )
 
 // Deferred extraction.
@@ -383,7 +383,7 @@ func (al *AgentLoop) extractSemanticMemory(session, message, requestID string) {
 				// store-wide current (never retire a fact from a context we
 				// cannot see).
 				// The exception: a belief the owner stated outright is not
-				// replaced by something Ghost merely inferred from a later
+				// replaced by something Kaya merely inferred from a later
 				// message. The inference is kept as an unconfirmed candidate
 				// and the owner is asked which is right.
 				if entry.Status == personalcontext.StatusCurrent && statedByOwnerAndDiffers(current, entry) {

@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ianclemence/ghost/pkg/personalcontext"
+	"github.com/ianclemence/kaya/pkg/personalcontext"
 )
 
 func styleEntry(predicate, value string) personalcontext.Entry {

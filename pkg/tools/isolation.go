@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/ianclemence/ghost/pkg/egress"
+	"github.com/ianclemence/kaya/pkg/egress"
 )
 
 // IsolationMode controls OS-level isolation for model-initiated subprocesses.
@@ -22,14 +22,14 @@ const (
 	IsolationRequire IsolationMode = "require"
 )
 
-// isolationMode reads GHOST_EXEC_ISOLATION (default require). Require is
+// isolationMode reads KAYA_EXEC_ISOLATION (default require). Require is
 // the fail-closed default: model-initiated subprocesses refuse to run
 // without OS-level isolation rather than silently downgrading to
 // unsandboxed execution. Operators on machines without bubblewrap opt out
-// explicitly with GHOST_EXEC_ISOLATION=auto (isolate when possible) or
+// explicitly with KAYA_EXEC_ISOLATION=auto (isolate when possible) or
 // =off (env sanitization only).
 func isolationMode() IsolationMode {
-	switch strings.ToLower(strings.TrimSpace(os.Getenv("GHOST_EXEC_ISOLATION"))) {
+	switch strings.ToLower(strings.TrimSpace(os.Getenv("KAYA_EXEC_ISOLATION"))) {
 	case "off":
 		return IsolationOff
 	case "auto":
@@ -47,7 +47,7 @@ func isolationMode() IsolationMode {
 // The isolation (Linux/bubblewrap) gives a read-only root, a private /tmp,
 // process/IPC/UTS namespaces, and — critically — does NOT bind the config
 // directory, so provider credentials are not reachable from the sandbox.
-// Ghost's own workspace is bound read-only: only the scratch directory and
+// Kaya's own workspace is bound read-only: only the scratch directory and
 // the owner-content areas (memory notes, knowledge, captures, learning)
 // are writable, and HOME points at scratch. A user project outside the
 // workspace is bound read-write so real work can happen there.
@@ -74,7 +74,7 @@ func WrapArgv(base []string, cwd, workspace string, allowNetwork bool) ([]string
 }
 
 // wrapEgress runs base in a sandbox with no network of its own. Its only way
-// out is the host proxy, reached through a bridge that Ghost's own binary runs
+// out is the host proxy, reached through a bridge that Kaya's own binary runs
 // inside the sandbox (see package egress). If that cannot be set up the
 // command does not run: a guard that fails open is not a guard.
 func wrapEgress(base []string, cwd, workspace string, pol egress.Policy) ([]string, bool, error) {
@@ -84,16 +84,16 @@ func wrapEgress(base []string, cwd, workspace string, pol egress.Policy) ([]stri
 	}
 	self, err := os.Executable()
 	if err != nil {
-		return nil, false, fmt.Errorf("egress guard is on but Ghost cannot find its own binary: %w", err)
+		return nil, false, fmt.Errorf("egress guard is on but Kaya cannot find its own binary: %w", err)
 	}
-	const inDir = "/run/ghost-egress"
+	const inDir = "/run/kaya-egress"
 	args := bwrapArgs(cwd, workspace, false)
 	args = append(args,
-		"--ro-bind", self, inDir+"/ghost",
+		"--ro-bind", self, inDir+"/kaya",
 		"--bind", filepath.Dir(sock), inDir+"/sock",
 	)
 	wrapped := append([]string{"bwrap"}, args...)
-	wrapped = append(wrapped, inDir+"/ghost", "__egress-exec", inDir+"/sock/"+filepath.Base(sock), "--")
+	wrapped = append(wrapped, inDir+"/kaya", "__egress-exec", inDir+"/sock/"+filepath.Base(sock), "--")
 	wrapped = append(wrapped, base...)
 	return wrapped, true, nil
 }

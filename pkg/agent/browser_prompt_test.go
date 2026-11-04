@@ -6,8 +6,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/ianclemence/ghost/pkg/providers"
-	"github.com/ianclemence/ghost/pkg/tools"
+	"github.com/ianclemence/kaya/pkg/providers"
+	"github.com/ianclemence/kaya/pkg/tools"
 )
 
 func browserRegistry(t *testing.T) *tools.ToolRegistry {
@@ -26,7 +26,7 @@ func systemMessages(content string) []providers.Message {
 // The contract lands in the system prompt BEFORE the cache boundary —
 // exactly when browser tools are visible — and never twice.
 func TestInjectBrowserContractPlacement(t *testing.T) {
-	base := "# Ghost\n\nYou are Ghost.\n\n" + systemPromptCacheBoundary + "\n\nTime: now"
+	base := "# Kaya\n\nYou are Kaya.\n\n" + systemPromptCacheBoundary + "\n\nTime: now"
 	msgs := systemMessages(base)
 
 	injectBrowserContract(msgs, browserRegistry(t))
@@ -53,7 +53,7 @@ func TestInjectBrowserContractPlacement(t *testing.T) {
 // No browser tools → prompt untouched (turns pay nothing for a surface
 // they cannot call).
 func TestInjectBrowserContractAbsentWithoutTools(t *testing.T) {
-	base := "# Ghost\n\n" + systemPromptCacheBoundary + "\n\nTime: now"
+	base := "# Kaya\n\n" + systemPromptCacheBoundary + "\n\nTime: now"
 	msgs := systemMessages(base)
 	empty := tools.NewToolRegistry()
 	empty.Register(tools.NewReadFileTool(t.TempDir(), false))
@@ -70,7 +70,7 @@ func TestInjectBrowserContractAbsentWithoutTools(t *testing.T) {
 
 // Missing boundary still injects (tail append), never panics.
 func TestInjectBrowserContractNoBoundary(t *testing.T) {
-	msgs := systemMessages("# Ghost\n\nplain")
+	msgs := systemMessages("# Kaya\n\nplain")
 	injectBrowserContract(msgs, browserRegistry(t))
 	if !strings.Contains(msgs[0].Content, "# Browser control (") {
 		t.Fatal("fallback append missing")
@@ -82,7 +82,7 @@ func TestInjectBrowserContractNoBoundary(t *testing.T) {
 func TestSkillStubInPrompt(t *testing.T) {
 	cb := NewContextBuilder(t.TempDir())
 	prompt := cb.BuildSystemPrompt(nil)
-	if !strings.Contains(prompt, "Browser control (Ghost-native") {
+	if !strings.Contains(prompt, "Browser control (Kaya-native") {
 		t.Fatal("SkillStub (discovery) missing from the system prompt")
 	}
 	if strings.Contains(prompt, "## The ref loop (mandatory)") {

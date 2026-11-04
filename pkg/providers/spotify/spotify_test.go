@@ -6,7 +6,7 @@ import (
 )
 
 func TestNowPlayingNotConfigured(t *testing.T) {
-	t.Setenv("GHOST_CREDENTIALS_DIR", t.TempDir())
+	t.Setenv("KAYA_CREDENTIALS_DIR", t.TempDir())
 	svc := New(Config{})
 	if svc.Configured() {
 		t.Fatal("empty token must not be configured")
@@ -17,7 +17,7 @@ func TestNowPlayingNotConfigured(t *testing.T) {
 }
 
 func TestControlNotConfigured(t *testing.T) {
-	t.Setenv("GHOST_CREDENTIALS_DIR", t.TempDir())
+	t.Setenv("KAYA_CREDENTIALS_DIR", t.TempDir())
 	svc := New(Config{})
 	if r := svc.Control(context.Background(), "pause", ""); r.Err == nil {
 		t.Fatal("control without token must fail")

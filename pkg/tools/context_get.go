@@ -6,11 +6,11 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/ianclemence/ghost/pkg/personalcontext"
+	"github.com/ianclemence/kaya/pkg/personalcontext"
 )
 
 // ContextGetTool is the on-demand, structured lookup tool for Personal
-// Context. It answers "what does Ghost currently believe?" for a specific
+// Context. It answers "what does Kaya currently believe?" for a specific
 // kind, subject, or predicate by reading the current state of the
 // personalcontext.Store. It never runs automatic injection, never touches the
 // conversation store, and never queries RAG: facts are queried structurally.
@@ -31,7 +31,7 @@ func (t *ContextGetTool) Name() string {
 }
 
 func (t *ContextGetTool) Description() string {
-	return "Query Personal Context: what Ghost currently believes about the user, as structured entries. " +
+	return "Query Personal Context: what Kaya currently believes about the user, as structured entries. " +
 		"Filter by kind (identity, fact, preference, relationship, goal, decision, consent, routine), " +
 		"subject (e.g. user), or predicate (e.g. preference/favorite_color, fact/location). " +
 		"Only current entries are returned; superseded, rejected, and expired entries are excluded, and " +

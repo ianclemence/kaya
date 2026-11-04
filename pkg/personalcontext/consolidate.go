@@ -253,7 +253,7 @@ func (s *Store) FoldDuplicates() (int, error) {
 	return folded, nil
 }
 
-// better prefers what the owner said over what Ghost inferred, then the
+// better prefers what the owner said over what Kaya inferred, then the
 // older entry (it carries the original receipt).
 func better(a, b *Entry) bool {
 	da, db := ownerStated(*a), ownerStated(*b)

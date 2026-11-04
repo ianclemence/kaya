@@ -17,12 +17,12 @@ import (
 	"time"
 )
 
-// This is Ghost's release client: resolve a release, download and verify its
+// This is Kaya's release client: resolve a release, download and verify its
 // artifacts (sha256, and an Ed25519 signature when a public key is configured),
-// and install atomically. It replaces the standalone ghost-update-daemon with
-// one updater shared by `ghost update` and any future auto-update loop.
+// and install atomically. It replaces the standalone kaya-update-daemon with
+// one updater shared by `kaya update` and any future auto-update loop.
 
-// Release describes a published Ghost release.
+// Release describes a published Kaya release.
 type Release struct {
 	Version    string  `json:"tag_name"`
 	Name       string  `json:"name"`
@@ -75,7 +75,7 @@ func (c *GitHubClient) get(url string, into any) error {
 		return err
 	}
 	req.Header.Set("Accept", "application/vnd.github+json")
-	req.Header.Set("User-Agent", "ghost-selfupdate")
+	req.Header.Set("User-Agent", "kaya-selfupdate")
 	resp, err := c.HTTP.Do(req)
 	if err != nil {
 		return err

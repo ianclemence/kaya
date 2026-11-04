@@ -1,13 +1,13 @@
-.PHONY: release all build install install-ghost install-user uninstall-user install-cleanup-shadow uninstall clean help test vet install-service build-ghost rebuild-web
+.PHONY: release all build install install-kaya install-user uninstall-user install-cleanup-shadow uninstall clean help test vet install-service build-kaya rebuild-web
 
 # Build variables
-BINARY_NAME=ghost
+BINARY_NAME=kaya
 BUILD_DIR=build
 CMD_DIR=cmd/$(BINARY_NAME)
 MAIN_GO=$(CMD_DIR)/main.go
 
 # Web console binary (setup wizard + admin dashboard, always-on on port 80)
-WEB_NAME=ghost-web
+WEB_NAME=kaya-web
 WEB_DIR=cmd/$(WEB_NAME)
 
 # Version
@@ -22,16 +22,16 @@ GO?=go
 GOFLAGS?=-v
 
 # Installation
-# Single canonical location. Services (ghost, ghost-web, ghost-speech) all
-# ExecStart from here, so this must be the only place a `ghost` binary lives.
-# A user-local copy (~/.local/bin/ghost) once shadowed it because it came first
+# Single canonical location. Services (kaya, kaya-web, kaya-speech) all
+# ExecStart from here, so this must be the only place a `kaya` binary lives.
+# A user-local copy (~/.local/bin/kaya) once shadowed it because it came first
 # in PATH, making updates appear not to take; install-cleanup-shadow removes it.
 CANONICAL_BIN_DIR?=/usr/local/bin
 INSTALL_MAN_DIR=/usr/local/share/man/man1
 
 # The account that OWNS the install (config, workspace, services). This is the
-# owner of the source checkout, NOT $(USER): `sudo make install-ghost` (as
-# `ghost update` runs it) would otherwise resolve $(USER) to root and make the
+# owner of the source checkout, NOT $(USER): `sudo make install-kaya` (as
+# `kaya update` runs it) would otherwise resolve $(USER) to root and make the
 # config unreadable to the owner — the cause of "configured in the console but
 # the CLI says no key". Explicit INSTALL_OWNER / INSTALL_GROUP always win.
 INSTALL_OWNER?=$(shell stat -c '%U' . 2>/dev/null || echo "$(USER)")
@@ -39,7 +39,7 @@ INSTALL_GROUP?=$(shell stat -c '%G' . 2>/dev/null || echo "$(USER)")
 
 # Personal AI runtime workspace (kept outside the install tree so user data
 # never mixes with the deployment or blocks git pulls in checkout layouts)
-WORKSPACE_DIR?=/var/lib/ghost/workspace
+WORKSPACE_DIR?=/var/lib/kaya/workspace
 
 # OS detection
 UNAME_S:=$(shell uname -s)
@@ -91,7 +91,7 @@ generate:
 	@$(GO) generate ./...
 	@echo "Run generate complete"
 
-## build: Build the ghost binary for current platform
+## build: Build the kaya binary for current platform
 build: generate
 	@echo "Building $(BINARY_NAME) for $(PLATFORM)/$(ARCH)..."
 	@mkdir -p $(BUILD_DIR)
@@ -99,7 +99,7 @@ build: generate
 	@echo "Build complete: $(BINARY_PATH)"
 	@ln -sf $(BINARY_NAME)-$(PLATFORM)-$(ARCH) $(BUILD_DIR)/$(BINARY_NAME)
 
-## build-all: Build ghost for all platforms
+## build-all: Build kaya for all platforms
 build-all: generate
 	@echo "Building for multiple platforms..."
 	@mkdir -p $(BUILD_DIR)
@@ -115,7 +115,7 @@ deps:
 	@echo "Installing system dependencies..."
 	@sudo apt-get update && sudo apt-get install -y golang git python3 python3-pip ffmpeg alsa-utils espeak fswebcam adb nmap poppler-utils pandoc chromium avahi-utils coreutils
 
-## install: Stop service, install ghost binary to the canonical location, restart
+## install: Stop service, install kaya binary to the canonical location, restart
 install: build
 	@echo "Installing $(BINARY_NAME)..."
 	@# Canonical install location. A second, user-local copy is what made an
@@ -123,27 +123,27 @@ install: build
 	@sudo mkdir -p $(CANONICAL_BIN_DIR)
 	@# Stop the service before replacing the binary to avoid "Text file busy" error.
 	@# The binary cannot be overwritten while it is being executed by systemd.
-	@sudo systemctl stop ghost 2>/dev/null || true
-	@sudo systemctl stop ghost-web 2>/dev/null || true
+	@sudo systemctl stop kaya 2>/dev/null || true
+	@sudo systemctl stop kaya-web 2>/dev/null || true
 	@sudo cp $(BINARY_PATH) $(CANONICAL_BIN_DIR)/$(BINARY_NAME).new
 	@sudo mv -f $(CANONICAL_BIN_DIR)/$(BINARY_NAME).new $(CANONICAL_BIN_DIR)/$(BINARY_NAME)
 	@sudo chmod +x $(CANONICAL_BIN_DIR)/$(BINARY_NAME)
 	@echo "Installed binary to $(CANONICAL_BIN_DIR)/$(BINARY_NAME)"
 	@$(MAKE) --no-print-directory install-cleanup-shadow
 	@# Restart the service if it was previously enabled
-	@sudo systemctl start ghost 2>/dev/null || true
+	@sudo systemctl start kaya 2>/dev/null || true
 	@echo "Installation complete!"
 
-## install-cleanup-shadow: remove a stale user-local ghost that shadows /usr/local/bin
+## install-cleanup-shadow: remove a stale user-local kaya that shadows /usr/local/bin
 ##
 ## Only removes a file this repo actually installed (identified by the string
 ## marker), so it can never delete an unrelated program that happens to be
-## named 'ghost'.
+## named 'kaya'.
 install-cleanup-shadow:
 	@for d in $(HOME)/.local/bin /usr/local/sbin; do \
 		f="$$d/$(BINARY_NAME)"; \
 		if [ -f "$$f" ] && [ "$$f" != "$(CANONICAL_BIN_DIR)/$(BINARY_NAME)" ]; then \
-			if grep -aqE "Ghost - (Personal AI Assistant|Your Local AI)" "$$f" 2>/dev/null; then \
+			if grep -aqE "Kaya - (Personal AI Assistant|Your Local AI)" "$$f" 2>/dev/null; then \
 				rm -f "$$f" 2>/dev/null || sudo rm -f "$$f"; \
 				echo "Removed stale shadow: $$f"; \
 			fi; \
@@ -152,27 +152,27 @@ install-cleanup-shadow:
 
 ## install-service: Generate service file from template and install it
 install-service:
-	@echo "Installing ghost.service for user: $(INSTALL_OWNER)"
+	@echo "Installing kaya.service for user: $(INSTALL_OWNER)"
 	@sed \
 		-e "s|__USER__|$(INSTALL_OWNER)|g" \
 		-e "s|__HOME__|$(HOME)|g" \
-		ghost.service.template > ghost.service
-	@sudo cp ghost.service /etc/systemd/system/ghost.service
+		kaya.service.template > kaya.service
+	@sudo cp kaya.service /etc/systemd/system/kaya.service
 	@sudo systemctl daemon-reload
-	@sudo systemctl enable ghost
-	@sudo systemctl restart ghost
-	@echo "ghost.service installed for $(INSTALL_OWNER)"
+	@sudo systemctl enable kaya
+	@sudo systemctl restart kaya
+	@echo "kaya.service installed for $(INSTALL_OWNER)"
 
-## build-ghost: Build all Ghost binaries
-build-ghost: build
+## build-kaya: Build all Kaya binaries
+build-kaya: build
 	@echo "Building web console binary..."
 	@$(GO) build $(GOFLAGS) $(LDFLAGS) -o $(BUILD_DIR)/$(WEB_NAME)-$(PLATFORM)-$(ARCH) ./$(WEB_DIR)
 	@ln -sf $(WEB_NAME)-$(PLATFORM)-$(ARCH) $(BUILD_DIR)/$(WEB_NAME)
 	@echo "Build complete"
 
-## install-ghost: Build, install binaries and services, then restart Ghost
-install-ghost: build-ghost
-	@echo "Installing Ghost..."
+## install-kaya: Build, install binaries and services, then restart Kaya
+install-kaya: build-kaya
+	@echo "Installing Kaya..."
 	@sudo mkdir -p /usr/local/bin
 	@# Python is a runtime dependency for many skills (document conversion,
 	@# internet reading, media). Install a minimal Python + pip if missing.
@@ -182,7 +182,7 @@ install-ghost: build-ghost
 	else \
 		echo "Python 3 already installed."; \
 	fi
-	@# What Ghost works with on the Pod: ffmpeg (voice, video from motions),
+	@# What Kaya works with on the Pod: ffmpeg (voice, video from motions),
 	@# a browser (browsing, laying out documents, drawing motions), pandoc and
 	@# poppler (documents). Only what is missing is installed; the browser's
 	@# package is "chromium" on Debian and Raspberry Pi OS, "chromium-browser"
@@ -193,54 +193,54 @@ install-ghost: build-ghost
 	done; \
 	if [ -n "$$missing" ]; then echo "Installing$$missing..."; sudo apt-get install -y $$missing; fi; \
 	if ! command -v chromium >/dev/null 2>&1 && ! command -v chromium-browser >/dev/null 2>&1; then \
-		echo "Installing a browser for Ghost..."; \
+		echo "Installing a browser for Kaya..."; \
 		sudo apt-get install -y chromium 2>/dev/null || sudo apt-get install -y chromium-browser || \
 			echo "Couldn't install a browser: browsing, documents and motion videos need Chromium."; \
 	fi
 	@# Stop services before replacing binaries
-	@sudo systemctl stop ghost 2>/dev/null || true
-	@sudo systemctl stop ghost-web 2>/dev/null || true
-	@sudo systemctl stop ghost-speech 2>/dev/null || true
-	@sudo mkdir -p /var/ghost/config /var/ghost/data /var/ghost/workspace
+	@sudo systemctl stop kaya 2>/dev/null || true
+	@sudo systemctl stop kaya-web 2>/dev/null || true
+	@sudo systemctl stop kaya-speech 2>/dev/null || true
+	@sudo mkdir -p /var/kaya/config /var/kaya/data /var/kaya/workspace
 	@sudo mkdir -p $(WORKSPACE_DIR)
 	@# Lock down the install root and hand OWNERSHIP of the data to the
 	@# install owner so the CLI (running as that user) reads the same config
 	@# and workspace the console and daemon use. Mode 700 still keeps it
 	@# private; the daemon (root) can read anything.
-	@sudo chown -R $(INSTALL_OWNER):$(INSTALL_GROUP) /var/ghost
-	@sudo chown -R $(INSTALL_OWNER):$(INSTALL_GROUP) /var/lib/ghost
-	@sudo chmod 700 /var/ghost /var/ghost/config /var/ghost/data
-	@sudo chmod 700 /var/lib/ghost /var/lib/ghost/workspace
-	@sudo chmod 600 $(WORKSPACE_DIR)/ghost.db 2>/dev/null || true
-	@# Copy to temp then rename so a running 'ghost update' binary can be replaced (ETXTBSY)
-	@sudo cp $(BINARY_PATH) /usr/local/bin/ghost.new
-	@sudo mv -f /usr/local/bin/ghost.new /usr/local/bin/ghost
+	@sudo chown -R $(INSTALL_OWNER):$(INSTALL_GROUP) /var/kaya
+	@sudo chown -R $(INSTALL_OWNER):$(INSTALL_GROUP) /var/lib/kaya
+	@sudo chmod 700 /var/kaya /var/kaya/config /var/kaya/data
+	@sudo chmod 700 /var/lib/kaya /var/lib/kaya/workspace
+	@sudo chmod 600 $(WORKSPACE_DIR)/kaya.db 2>/dev/null || true
+	@# Copy to temp then rename so a running 'kaya update' binary can be replaced (ETXTBSY)
+	@sudo cp $(BINARY_PATH) /usr/local/bin/kaya.new
+	@sudo mv -f /usr/local/bin/kaya.new /usr/local/bin/kaya
 	@sudo cp $(BUILD_DIR)/$(WEB_NAME)-$(PLATFORM)-$(ARCH) /usr/local/bin/$(WEB_NAME).new
 	@sudo mv -f /usr/local/bin/$(WEB_NAME).new /usr/local/bin/$(WEB_NAME)
-	@sudo chmod +x /usr/local/bin/ghost /usr/local/bin/$(WEB_NAME)
+	@sudo chmod +x /usr/local/bin/kaya /usr/local/bin/$(WEB_NAME)
 	@# Single canonical install location: /usr/local/bin. A user-local copy at
-	@# ~/.local/bin/ghost historically shadowed it (it comes FIRST in PATH), so
+	@# ~/.local/bin/kaya historically shadowed it (it comes FIRST in PATH), so
 	@# an update could appear not to take. Rather than keep two copies in sync,
 	@# remove the stale shadow when it lives on the operator's PATH.
 	@$(MAKE) --no-print-directory install-cleanup-shadow
-	@# There is exactly one updater: `ghost update`. The old privileged
-	@# ghost-update executor (hardcoded checkout path, git-pull based) and the
+	@# There is exactly one updater: `kaya update`. The old privileged
+	@# kaya-update executor (hardcoded checkout path, git-pull based) and the
 	@# release-polling daemon are retired; remove any leftover copies.
-	@sudo rm -f /usr/local/bin/ghost-update /usr/local/bin/ghost-update-daemon 2>/dev/null || true
+	@sudo rm -f /usr/local/bin/kaya-update /usr/local/bin/kaya-update-daemon 2>/dev/null || true
 	@# Install web console service
 	@sed \
-		-e "s|__GHOST_DIR__|/var/ghost|g" \
+		-e "s|__KAYA_DIR__|/var/kaya|g" \
 		-e "s|__BIN_DIR__|/usr/local/bin|g" \
-		ghost-web.service.template > ghost-web.service
-	@sudo cp ghost-web.service /etc/systemd/system/ghost-web.service
+		kaya-web.service.template > kaya-web.service
+	@sudo cp kaya-web.service /etc/systemd/system/kaya-web.service
 	@# Install local speech-to-text sidecar service
 	@sed \
 		-e "s|__BIN_DIR__|/usr/local/bin|g" \
-		-e "s|__MODELS_DIR__|/var/ghost/models|g" \
+		-e "s|__MODELS_DIR__|/var/kaya/models|g" \
 		-e "s|__PORT__|11435|g" \
-		ghost-speech.service.template > ghost-speech.service
-	@sudo cp ghost-speech.service /etc/systemd/system/ghost-speech.service
-	@sudo mkdir -p /var/ghost/models
+		kaya-speech.service.template > kaya-speech.service
+	@sudo cp kaya-speech.service /etc/systemd/system/kaya-speech.service
+	@sudo mkdir -p /var/kaya/models
 	@# ffmpeg is a hard runtime dependency for the voice stack: the STT
 	@# sidecar converts ogg/m4a/mp3 voice notes with it and TTS uses it for
 	@# mp3 delivery. Install it if missing and fail loudly if it cannot be.
@@ -257,75 +257,75 @@ install-ghost: build-ghost
 	@$(BINARY_PATH) speech stt setup || echo "WARNING: local speech-to-text provisioning failed; cloud transcription remains available"
 	@# Provision the TTS engine binary + default voice (best effort: edge-tts stays as fallback)
 	@$(BINARY_PATH) speech tts setup || echo "WARNING: local speech synthesis provisioning failed; edge-tts remains available"
-	@# Install main ghost service. The daemon runs as root for hardware and
+	@# Install main kaya service. The daemon runs as root for hardware and
 	@# service management; that is independent of who OWNS the data. Keep
 	@# User=root explicitly rather than deriving it from the invoking user.
 	@sed \
 		-e "s|__USER__|root|g" \
 		-e "s|__GROUP__|root|g" \
-		-e "s|__GHOST_DIR__|/var/ghost|g" \
+		-e "s|__KAYA_DIR__|/var/kaya|g" \
 		-e "s|__BIN_DIR__|/usr/local/bin|g" \
-		ghost.service.template > ghost.service
-	@sudo cp ghost.service /etc/systemd/system/ghost.service
+		kaya.service.template > kaya.service
+	@sudo cp kaya.service /etc/systemd/system/kaya.service
 	@# Open firewall ports (silent when the rules already exist: ufw
 	@# narrates "Skipping adding existing rule" on stdout otherwise).
 	@sudo ufw allow 80/tcp >/dev/null 2>&1 || true
 	@sudo ufw allow 8766/tcp >/dev/null 2>&1 || true
 	@# Enable and restart services
 	@sudo systemctl daemon-reload
-	@sudo systemctl enable ghost-web
-	@sudo systemctl enable ghost
+	@sudo systemctl enable kaya-web
+	@sudo systemctl enable kaya
 	@# Weekly state snapshots (same encrypted archive as manual export,
 	@# retention kept, no interactivity).
-	@sudo cp ghost-backup.service.template /etc/systemd/system/ghost-backup.service
-	@sudo cp ghost-backup.timer.template /etc/systemd/system/ghost-backup.timer
+	@sudo cp kaya-backup.service.template /etc/systemd/system/kaya-backup.service
+	@sudo cp kaya-backup.timer.template /etc/systemd/system/kaya-backup.timer
 	@sudo systemctl daemon-reload
-	@sudo systemctl enable ghost-backup.timer
-	@sudo systemctl enable ghost-speech
-	@sudo systemctl restart ghost 2>/dev/null || true
-	@sudo systemctl restart ghost-web 2>/dev/null || true
-	@sudo systemctl restart ghost-speech 2>/dev/null || true
+	@sudo systemctl enable kaya-backup.timer
+	@sudo systemctl enable kaya-speech
+	@sudo systemctl restart kaya 2>/dev/null || true
+	@sudo systemctl restart kaya-web 2>/dev/null || true
+	@sudo systemctl restart kaya-speech 2>/dev/null || true
 	@# Restore repo ownership to the developer user
-	@sudo chown -R $(shell stat -c '%U' .):$(shell stat -c '%G' .) $(BUILD_DIR) $(CMD_DIR)/workspace ghost.service ghost-web.service ghost-speech.service 2>/dev/null || true
-	@echo "Ghost installed"
-	@if [ ! -f /var/ghost/.setup-complete ]; then echo "Run 'sudo systemctl start ghost-web' to begin setup now"; echo "Or reboot to start setup automatically"; fi
+	@sudo chown -R $(shell stat -c '%U' .):$(shell stat -c '%G' .) $(BUILD_DIR) $(CMD_DIR)/workspace kaya.service kaya-web.service kaya-speech.service 2>/dev/null || true
+	@echo "Kaya installed"
+	@if [ ! -f /var/kaya/.setup-complete ]; then echo "Run 'sudo systemctl start kaya-web' to begin setup now"; echo "Or reboot to start setup automatically"; fi
 
 ## install-user: Unprivileged install into ~/.local/bin with a per-user service
 ##
 ## No sudo anywhere. Mirrors how Scout and comparable agents install: the
 ## binary lives in the user's bin dir and the service runs under
-## `systemctl --user`. Data stays under ~/.local/share/ghost.
+## `systemctl --user`. Data stays under ~/.local/share/kaya.
 install-user: build
-	@echo "Installing Ghost (user scope; no sudo)..."
-	@mkdir -p $(HOME)/.local/bin $(HOME)/.local/share/ghost/workspace $(HOME)/.config/systemd/user
-	@# Atomic swap so a running 'ghost update' can replace the binary.
-	@cp $(BINARY_PATH) $(HOME)/.local/bin/ghost.new
-	@mv -f $(HOME)/.local/bin/ghost.new $(HOME)/.local/bin/ghost
-	@chmod +x $(HOME)/.local/bin/ghost
+	@echo "Installing Kaya (user scope; no sudo)..."
+	@mkdir -p $(HOME)/.local/bin $(HOME)/.local/share/kaya/workspace $(HOME)/.config/systemd/user
+	@# Atomic swap so a running 'kaya update' can replace the binary.
+	@cp $(BINARY_PATH) $(HOME)/.local/bin/kaya.new
+	@mv -f $(HOME)/.local/bin/kaya.new $(HOME)/.local/bin/kaya
+	@chmod +x $(HOME)/.local/bin/kaya
 	@sed \
-		-e "s|__GHOST_DIR__|$(HOME)/.local/share/ghost|g" \
+		-e "s|__KAYA_DIR__|$(HOME)/.local/share/kaya|g" \
 		-e "s|__BIN_DIR__|$(HOME)/.local/bin|g" \
-		-e "s|__WORKSPACE_DIR__|$(HOME)/.local/share/ghost/workspace|g" \
-		ghost-user.service.template > $(HOME)/.config/systemd/user/ghost.service
+		-e "s|__WORKSPACE_DIR__|$(HOME)/.local/share/kaya/workspace|g" \
+		kaya-user.service.template > $(HOME)/.config/systemd/user/kaya.service
 	@systemctl --user daemon-reload
-	@systemctl --user enable --now ghost 2>/dev/null || true
-	@echo "Ghost installed (user scope). Service: systemctl --user status ghost"
+	@systemctl --user enable --now kaya 2>/dev/null || true
+	@echo "Kaya installed (user scope). Service: systemctl --user status kaya"
 
 ## uninstall-user: Remove the per-user install (no sudo)
 uninstall-user:
-	@systemctl --user disable --now ghost 2>/dev/null || true
-	@rm -f $(HOME)/.config/systemd/user/ghost.service $(HOME)/.local/bin/ghost
+	@systemctl --user disable --now kaya 2>/dev/null || true
+	@rm -f $(HOME)/.config/systemd/user/kaya.service $(HOME)/.local/bin/kaya
 	@systemctl --user daemon-reload 2>/dev/null || true
-	@echo "Ghost user install removed (data under ~/.local/share/ghost left intact)"
+	@echo "Kaya user install removed (data under ~/.local/share/kaya left intact)"
 
 ## rebuild-web: Quick rebuild and install web console only
 rebuild-web:
 	@echo "Rebuilding web console..."
-	@sudo systemctl stop ghost-web 2>/dev/null || true
+	@sudo systemctl stop kaya-web 2>/dev/null || true
 	@$(GO) build $(GOFLAGS) $(LDFLAGS) -o $(BUILD_DIR)/$(WEB_NAME)-$(PLATFORM)-$(ARCH) ./$(WEB_DIR)
 	@sudo cp $(BUILD_DIR)/$(WEB_NAME)-$(PLATFORM)-$(ARCH) /usr/local/bin/$(WEB_NAME)
 	@sudo systemctl daemon-reload
-	@sudo systemctl restart ghost-web
+	@sudo systemctl restart kaya-web
 	@echo "Web console rebuilt and restarted"
 
 ## test: Run the full test suite (same gate release.sh enforces)

@@ -1,15 +1,15 @@
-// Preview tooling: seed a scratch Ghost directory so the web console can be
-// run and inspected against synthetic data. Never touches the installed Ghost.
+// Preview tooling: seed a scratch Kaya directory so the web console can be
+// run and inspected against synthetic data. Never touches the installed Kaya.
 //
-//	go run ./scripts/preview/seed /tmp/ghost-preview
+//	go run ./scripts/preview/seed /tmp/kaya-preview
 package main
 
 import (
 	"os"
 	"path/filepath"
 
-	"github.com/ianclemence/ghost/pkg/appliance"
-	"github.com/ianclemence/ghost/pkg/config"
+	"github.com/ianclemence/kaya/pkg/appliance"
+	"github.com/ianclemence/kaya/pkg/config"
 )
 
 func main() {

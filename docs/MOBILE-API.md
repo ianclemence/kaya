@@ -1,12 +1,12 @@
-<!-- Reference for how the Ghost app connects to a Pod and what the gateway
+<!-- Reference for how the Kaya app connects to a Pod and what the gateway
 exposes. Moved out of the main README so that stays a front door; the content
 is unchanged apart from this heading. Newer routes (live replies, tool servers,
 the console password reset code, connected-app checks) are described in the
 CHANGELOG entries for 0.24.90 and later. -->
 
-# The Ghost app and the gateway API
+# The Kaya app and the gateway API
 
-Ghost exposes a unified API on port **8766**:
+Kaya exposes a unified API on port **8766**:
 
 * Chat
 * Memory
@@ -21,9 +21,9 @@ The mobile app connects via device pairing — no manual API key configuration i
 
 The app can bring a fresh Pod online without opening a browser:
 
-1. Start `ghost-web` on the Pod and read its setup code:
-   `journalctl -u ghost-web | grep 'Setup code'`
-2. In the app: **Connect a Ghost Pod → Set up a new Ghost Pod**
+1. Start `kaya-web` on the Pod and read its setup code:
+   `journalctl -u kaya-web | grep 'Setup code'`
+2. In the app: **Connect a Kaya Pod → Set up a new Kaya Pod**
 3. Enter the Pod address, the setup code, your name, and an owner password
 4. The phone claims the Pod, then pairs automatically
 
@@ -35,7 +35,7 @@ manual pairing path as a fallback.
 1. Open admin dashboard at `http://<pi-ip>` on any browser
 2. Log in with your admin password
 3. Navigate to Devices → "Connect another device"
-4. Scan the QR code with the Ghost app
+4. Scan the QR code with the Kaya app
 5. The app is now connected
 
 #### Remote (Relay)
@@ -43,15 +43,15 @@ manual pairing path as a fallback.
 For when you're away from home:
 
 ```bash
-ghost relay pair
+kaya relay pair
 ```
 
-This outputs a URI that you open on your phone. The relay tunnels traffic back to your Ghost device.
+This outputs a URI that you open on your phone. The relay tunnels traffic back to your Kaya device.
 
 ### Run Mobile App
 
 ```bash
-cd ghost-app
+cd kaya-app
 npm install
 npx expo start
 ```
@@ -82,7 +82,7 @@ Key HTTP endpoints the app uses on port `8766`:
 | `/v1/model` | GET/POST | Read active model + presets, switch model |
 | `/v1/doctor` | GET | Diagnostics and service health checks |
 | `/v1/tools` | GET | List available skills/tools |
-| `/v1/identity` | GET | Owner/Ghost identity |
+| `/v1/identity` | GET | Owner/Kaya identity |
 | `/v1/activity` | GET | User-safe activity |
 | `/v1/permissions/requests` + `/v1/permissions/resolve` | GET/POST | Pending approvals |
 | `/v1/routinefeed` | GET | The unified Routines feed (routines + scheduled items) |
@@ -95,8 +95,8 @@ Key HTTP endpoints the app uses on port `8766`:
 | `/v1/files` | GET | Files the owner has sent (name, kind, size, date) |
 | `/v1/files/{id}` | DELETE | Delete one uploaded file and its metadata |
 
-All mobile API endpoints require device credentials (`X-Ghost-Device-ID` +
-`X-Ghost-Credential` headers) unless the request arrives on loopback, which the
+All mobile API endpoints require device credentials (`X-Kaya-Device-ID` +
+`X-Kaya-Credential` headers) unless the request arrives on loopback, which the
 gateway trusts. Auth failures return `401` (`authentication_required` /
 `authentication_failed`); the only public pairing endpoint is
 `POST /v1/pairing/complete`, where the short-lived token is the authorization.
@@ -122,8 +122,8 @@ Pod. Each live reply shows where it ran: on your Pod, or which cloud model.
 After pairing, the mobile app authenticates using:
 
 ```
-X-Ghost-Device-ID: <device_id>
-X-Ghost-Credential: <credential>
+X-Kaya-Device-ID: <device_id>
+X-Kaya-Credential: <credential>
 ```
 
 These headers must be included in every request to the gateway API.
@@ -133,7 +133,7 @@ These headers must be included in every request to the gateway API.
 The web dashboard uses session-based authentication:
 
 1. POST to `/api/login` with admin password
-2. Receive a session cookie (`ghost_admin_session`)
+2. Receive a session cookie (`kaya_admin_session`)
 3. All subsequent requests include the cookie automatically
 
 ### Internal Authentication (Web Proxy, Relay, CLI)

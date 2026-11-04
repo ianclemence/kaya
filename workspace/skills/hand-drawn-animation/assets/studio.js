@@ -103,7 +103,7 @@ function drawStroke(c, stroke, { color = PAL.ink, map = p => p, progress = 1, op
   }
   c.restore();
 }
-// A deliberately designed stretched drawing, distinct from the legacy ghost trail.
+// A deliberately designed stretched drawing, distinct from the legacy kaya trail.
 function smearPose(points, direction, amount, pivot = [0, 0]) {
   const dx = Math.cos(direction), dy = Math.sin(direction), stretch = Math.max(.1, 1 + amount), side = 1 / Math.sqrt(stretch);
   return points.map(p => { const x = p[0] - pivot[0], y = p[1] - pivot[1], a = (x * dx + y * dy) * stretch, b = (-x * dy + y * dx) * side; return [pivot[0] + a * dx - b * dy, pivot[1] + a * dy + b * dx]; });

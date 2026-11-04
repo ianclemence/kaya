@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
-ROOT="${GHOST_WORKSPACE:-$PWD}"
+ROOT="${KAYA_WORKSPACE:-$PWD}"
 LEARNING_ROOT="${SELF_IMPROVING_LEARNING_ROOT:-${SELF_IMPROVING_LEARNING_DIR:-$ROOT/learning}}"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SKILL_DIR="${SELF_IMPROVING_SKILL_DIR:-$(dirname "$SCRIPT_DIR")}"

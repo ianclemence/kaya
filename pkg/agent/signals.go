@@ -2,24 +2,24 @@ package agent
 
 import (
 	"fmt"
-	"github.com/ianclemence/ghost/pkg/cevents"
+	"github.com/ianclemence/kaya/pkg/cevents"
 	"strings"
 	"time"
 	"unicode"
 
-	"github.com/ianclemence/ghost/pkg/attention"
-	"github.com/ianclemence/ghost/pkg/bus"
-	"github.com/ianclemence/ghost/pkg/cards"
-	"github.com/ianclemence/ghost/pkg/commands"
-	"github.com/ianclemence/ghost/pkg/constants"
-	"github.com/ianclemence/ghost/pkg/ghoststate"
-	"github.com/ianclemence/ghost/pkg/goals"
-	"github.com/ianclemence/ghost/pkg/ideas"
-	"github.com/ianclemence/ghost/pkg/logger"
-	"github.com/ianclemence/ghost/pkg/proactive"
-	"github.com/ianclemence/ghost/pkg/providers"
-	"github.com/ianclemence/ghost/pkg/routines"
-	"github.com/ianclemence/ghost/pkg/scheduled"
+	"github.com/ianclemence/kaya/pkg/attention"
+	"github.com/ianclemence/kaya/pkg/bus"
+	"github.com/ianclemence/kaya/pkg/cards"
+	"github.com/ianclemence/kaya/pkg/commands"
+	"github.com/ianclemence/kaya/pkg/constants"
+	"github.com/ianclemence/kaya/pkg/kayastate"
+	"github.com/ianclemence/kaya/pkg/goals"
+	"github.com/ianclemence/kaya/pkg/ideas"
+	"github.com/ianclemence/kaya/pkg/logger"
+	"github.com/ianclemence/kaya/pkg/proactive"
+	"github.com/ianclemence/kaya/pkg/providers"
+	"github.com/ianclemence/kaya/pkg/routines"
+	"github.com/ianclemence/kaya/pkg/scheduled"
 )
 
 // Proactive signals: the sense organs for intent prediction. Each signal
@@ -163,7 +163,7 @@ func (al *AgentLoop) ProactiveQuiet(now time.Time) bool {
 	return proactive.InQuietHours(now, loc, pol)
 }
 
-// ProactiveStatus assembles the owner-facing view of Ghost's quiet work:
+// ProactiveStatus assembles the owner-facing view of Kaya's quiet work:
 // quiet-hours state, today's check-in budget, and anything waiting to be
 // delivered. Read-only — it changes no policy and delivers nothing. Safe to
 // call from an API handler; returns a zero status when unwired.
@@ -181,7 +181,7 @@ func (al *AgentLoop) ProactiveStatus() proactive.Status {
 	if open, blocked := al.CommitmentCounts(); open+blocked > 0 {
 		st.OpenCommitments = open + blocked
 	}
-	// Watches: what Ghost is quietly polling, and how much of today's
+	// Watches: what Kaya is quietly polling, and how much of today's
 	// probe budget it has spent. Counts only — never a claim about state.
 	st.ActiveWatches = al.ActiveWatchCount()
 	if b := al.watchBudget(); b != nil {
@@ -209,11 +209,11 @@ func (al *AgentLoop) OpenProposalCount() int {
 	return len(list)
 }
 
-func (al *AgentLoop) ghostID() string {
-	if id, err := ghoststate.LoadIdentity(al.workspace); err == nil && id != nil {
-		return id.GhostID
+func (al *AgentLoop) kayaID() string {
+	if id, err := kayastate.LoadIdentity(al.workspace); err == nil && id != nil {
+		return id.KayaID
 	}
-	return "ghost-local"
+	return "kaya-local"
 }
 
 // scanRoutineNotices proposes notices for routines needing attention:
@@ -226,7 +226,7 @@ func (al *AgentLoop) scanRoutineNotices() []Notice {
 	if al.routineSvc == nil {
 		return nil
 	}
-	list := al.routineSvc.List(al.ghostID(), 100)
+	list := al.routineSvc.List(al.kayaID(), 100)
 	var out []Notice
 	for _, r := range list {
 		if r == nil {
@@ -285,7 +285,7 @@ func (al *AgentLoop) scanGoalNotices(now time.Time) []Notice {
 		troubled := ""
 		if al.routineSvc != nil {
 			for _, rid := range g.RoutineIDs {
-				for _, r := range al.routineSvc.List(al.ghostID(), 100) {
+				for _, r := range al.routineSvc.List(al.kayaID(), 100) {
 					if r == nil || r.ID != rid {
 						continue
 					}
@@ -374,7 +374,7 @@ func (al *AgentLoop) WriteEveningReflection(now time.Time) bool {
 	}
 	routinesTotal := 0
 	if al.routineSvc != nil {
-		routinesTotal = len(al.routineSvc.List(al.ghostID(), 500))
+		routinesTotal = len(al.routineSvc.List(al.kayaID(), 500))
 	}
 	entry := fmt.Sprintf("## %s — Evening reflection\nActive goals: %d. Routines: %d.\n",
 		now.In(loc).Format("15:04"), len(goalNames), routinesTotal)
@@ -476,7 +476,7 @@ func truncateReason(s string, max int) string {
 }
 
 // CanonicalEvents exposes the durable event stream so a surface (the phone
-// push bridge) can react to what Ghost does, such as an approval being requested.
+// push bridge) can react to what Kaya does, such as an approval being requested.
 // Nil when governance isn't wired.
 func (al *AgentLoop) CanonicalEvents() *cevents.Stream {
 	if al == nil || al.governance == nil {
@@ -489,7 +489,7 @@ func (al *AgentLoop) CanonicalEvents() *cevents.Stream {
 const ownerConversation = "main"
 
 // DeliverToOwner says something to the owner in the shared conversation, from
-// Ghost's own initiative (a reminder coming due, a scheduled result). It is
+// Kaya's own initiative (a reminder coming due, a scheduled result). It is
 // stored in the conversation, so the app and terminal find it in history, and
 // it is published live tagged as part of that conversation, so a connected
 // surface shows it at once. Before this, a timer's reply stayed in its private
@@ -504,7 +504,7 @@ func (al *AgentLoop) DeliverToOwner(channel, chatID, text string, meta map[strin
 		key, _ := meta["announce"].(string)
 		al.sessions.AddFullMessage(ownerConversation, providers.Message{Role: "assistant", Content: text, Kind: kind, NoticeKey: key})
 	}
-	m := map[string]interface{}{"type": "assistant_message", "session_id": ownerConversation, "origin": "ghost"}
+	m := map[string]interface{}{"type": "assistant_message", "session_id": ownerConversation, "origin": "kaya"}
 	for k, v := range meta {
 		m[k] = v
 	}
@@ -517,7 +517,7 @@ func (al *AgentLoop) DeliverToOwner(channel, chatID, text string, meta map[strin
 	al.bus.PublishOutbound(bus.OutboundMessage{Channel: channel, ChatID: chatID, Content: text, Metadata: m})
 }
 
-// messageKindFor classifies a message Ghost sends on its own from the
+// messageKindFor classifies a message Kaya sends on its own from the
 // metadata its sender attached, so every surface can set it apart from a reply.
 func messageKindFor(meta map[string]interface{}) string {
 	if r, _ := meta["reminder"].(bool); r {
@@ -572,7 +572,7 @@ func ReminderText(title string) string {
 
 // LateNote tells the owner a reminder is late and why, in plain words, when it
 // is more than a few minutes past its time (the Pod was off, or restarting).
-// A reminder that arrives on time gets no note. Ghost knows it missed the
+// A reminder that arrives on time gets no note. Kaya knows it missed the
 // moment; it should say so instead of delivering as though nothing happened.
 func LateNote(due, now time.Time, zone string) string {
 	late := now.Sub(due)

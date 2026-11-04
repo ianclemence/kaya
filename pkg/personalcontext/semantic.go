@@ -8,8 +8,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ianclemence/ghost/pkg/logger"
-	"github.com/ianclemence/ghost/pkg/providers"
+	"github.com/ianclemence/kaya/pkg/logger"
+	"github.com/ianclemence/kaya/pkg/providers"
 )
 
 // SemanticExtractor uses the LLM to extract memories from natural language.
@@ -243,9 +243,9 @@ func (se *SemanticExtractor) extractWithLLM(ctx context.Context, text string, ex
 			if !validatedItem.Valid || !validatedItem.ShouldRemember {
 				continue
 			}
-			// Memory is what Ghost knows about the owner, never what Ghost is
+			// Memory is what Kaya knows about the owner, never what Kaya is
 			// allowed to do. A "consent" the model inferred from chat ("has
-			// granted Ghost access to their drive") could later be quoted as
+			// granted Kaya access to their drive") could later be quoted as
 			// permission, so authority never enters memory: the broker owns it.
 			// A shopping errand is an errand, not a trait.
 			if strings.EqualFold(string(validatedItem.Kind), "consent") || transientPurchaseIntent(validatedItem.Summary) {
@@ -297,7 +297,7 @@ func (se *SemanticExtractor) extractWithLLM(ctx context.Context, text string, ex
 
 	// Both attempts produced malformed JSON. This is a genuine extraction
 	// failure: observable via the reason, and NEVER reported as a saved
-	// memory. Ghost does not claim persistence it does not have.
+	// memory. Kaya does not claim persistence it does not have.
 	return ExtractResult{
 		ShouldRemember: false,
 		Reason:         "parse_error",
@@ -339,11 +339,11 @@ func (se *SemanticExtractor) buildExtractionPrompt(text string, existing []Entry
 // and whether it is private. Only then does it choose a kind and domain. A
 // person's life is not a list of "favorites"; it is people, places, dates,
 // habits, health, things they own, things they can do, and views they hold.
-const extractionSystemPrompt = `You are the memory of Ghost, a personal AI that lives with one person for years. Decide what is worth remembering about them, and record it the way a thoughtful friend would understand it.
+const extractionSystemPrompt = `You are the memory of Kaya, a personal AI that lives with one person for years. Decide what is worth remembering about them, and record it the way a thoughtful friend would understand it.
 
 First understand the message. For each thing worth keeping, work out:
 - about: who or what it concerns. "user" for the owner. For anyone else use their name or role ("Jas", "Mum", "Biscuit the dog", "Nairobi office"). A fact about someone else is a fact about that person, not about the owner.
-- topic: a short key for the specific thing it is about, 1 to 3 lowercase words joined by hyphens: "home-city", "partner", "jas-birthday", "diet", "car", "ghost-project". The same topic later REPLACES this memory (I moved: home-city changes). A different topic sits beside it (two people, two projects, two allergies never overwrite each other). Never use a generic key like "general" or "fact".
+- topic: a short key for the specific thing it is about, 1 to 3 lowercase words joined by hyphens: "home-city", "partner", "jas-birthday", "diet", "car", "kaya-project". The same topic later REPLACES this memory (I moved: home-city changes). A different topic sits beside it (two people, two projects, two allergies never overwrite each other). Never use a generic key like "general" or "fact".
 - summary: one clean sentence, third person, in the owner's frame ("Jas is their girlfriend", "Is allergic to peanuts", "Flies to Paris on 12 Oct 2026"). Never "user said". One fact per memory.
 - lasting: "lasting" if it will probably be true for a long time; "dated" if it is tied to a date (a trip, an appointment, a deadline, a birthday is lasting-and-yearly so use lasting); "temporary" if it is true only for a while (a cold this week, staying at a hotel).
 - valid_until: for dated or temporary, the date it stops mattering, as YYYY-MM-DD. Empty for lasting.
@@ -657,7 +657,7 @@ func verbatimQuote(text, quote string) string {
 }
 
 // sourceKindFor tells a thing the owner said outright ("my dentist is Dr.
-// Lee", "I work at a school") from something Ghost worked out. Every model
+// Lee", "I work at a school") from something Kaya worked out. Every model
 // extraction used to be filed as inferred, so the owner's own words carried
 // no more weight than a guess, and the memory screen could not show which
 // was which.

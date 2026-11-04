@@ -8,7 +8,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/ianclemence/ghost/pkg/browser"
+	"github.com/ianclemence/kaya/pkg/browser"
 )
 
 // openBrowserTestDB opens a scratch database for the session ledger.
@@ -129,7 +129,7 @@ func TestBrowserLegacyPathUnchanged(t *testing.T) {
 // milliseconds ("Failed to create socket directory: Read-only file system").
 func TestBrowserGetsAWritableHomeWhenTheDefaultIsSealed(t *testing.T) {
 	state := t.TempDir()
-	t.Setenv("GHOST_DIR", state)
+	t.Setenv("KAYA_DIR", state)
 	sealed := t.TempDir()
 	if err := os.Chmod(sealed, 0o500); err != nil {
 		t.Fatal(err)

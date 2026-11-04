@@ -6,7 +6,7 @@ import (
 	"time"
 )
 
-// Descriptor describes one computer Ghost may drive. Availability is
+// Descriptor describes one computer Kaya may drive. Availability is
 // always honest: local reflects the device itself, paired reflects
 // last contact, and future placements report unavailable with a reason
 // until they exist.
@@ -20,7 +20,7 @@ type Descriptor struct {
 	MaxSessions  int
 }
 
-// Availability is the product-level state of a computer. It uses Ghost's
+// Availability is the product-level state of a computer. It uses Kaya's
 // existing outcome vocabulary (available / unavailable / offline /
 // temporarily_unavailable), never raw infrastructure errors.
 type Availability struct {
@@ -45,12 +45,12 @@ func AvailabilityOf(d Descriptor, now time.Time) Availability {
 	switch d.Placement {
 	case PlacementLocal:
 		// Preview vs control: the local computer is "available" only in the
-		// sense that it is the device itself. Whether Ghost can actually
+		// sense that it is the device itself. Whether Kaya can actually
 		// control it depends on a real executor (SupportedOps/Capabilities).
 		if len(d.Capabilities) == 0 {
-			return Availability{State: Available, Detail: "Ghost (view only: no computer executor installed)"}
+			return Availability{State: Available, Detail: "Kaya (view only: no computer executor installed)"}
 		}
-		return Availability{State: Available, Detail: "Ghost (computer executor ready)"}
+		return Availability{State: Available, Detail: "Kaya (computer executor ready)"}
 	case PlacementPaired:
 		if d.LastSeen.IsZero() {
 			return Availability{State: Offline, Detail: "paired computer has never checked in"}
@@ -60,15 +60,15 @@ func AvailabilityOf(d Descriptor, now time.Time) Availability {
 		}
 		return Availability{State: Available, Detail: "paired computer"}
 	case PlacementRemote:
-		return Availability{State: Unavailable, Detail: "remote computers are not enabled on this Ghost"}
+		return Availability{State: Unavailable, Detail: "remote computers are not enabled on this Kaya"}
 	case PlacementSandbox:
-		return Availability{State: Unavailable, Detail: "sandbox computers are not enabled on this Ghost"}
+		return Availability{State: Unavailable, Detail: "sandbox computers are not enabled on this Kaya"}
 	default:
 		return Availability{State: Unavailable, Detail: fmt.Sprintf("unknown placement %q", d.Placement)}
 	}
 }
 
-// Registry holds the computers one Ghost knows about. It is inventory,
+// Registry holds the computers one Kaya knows about. It is inventory,
 // not execution: driving a computer still requires a lease.
 type Registry struct {
 	mu        sync.RWMutex

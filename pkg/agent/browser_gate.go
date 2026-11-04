@@ -10,16 +10,16 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ianclemence/ghost/pkg/browser"
-	"github.com/ianclemence/ghost/pkg/cevents"
-	"github.com/ianclemence/ghost/pkg/film"
-	"github.com/ianclemence/ghost/pkg/live"
-	"github.com/ianclemence/ghost/pkg/logger"
-	"github.com/ianclemence/ghost/pkg/permissions"
-	"github.com/ianclemence/ghost/pkg/product"
-	"github.com/ianclemence/ghost/pkg/providers"
-	"github.com/ianclemence/ghost/pkg/tasks"
-	"github.com/ianclemence/ghost/pkg/tools"
+	"github.com/ianclemence/kaya/pkg/browser"
+	"github.com/ianclemence/kaya/pkg/cevents"
+	"github.com/ianclemence/kaya/pkg/film"
+	"github.com/ianclemence/kaya/pkg/live"
+	"github.com/ianclemence/kaya/pkg/logger"
+	"github.com/ianclemence/kaya/pkg/permissions"
+	"github.com/ianclemence/kaya/pkg/product"
+	"github.com/ianclemence/kaya/pkg/providers"
+	"github.com/ianclemence/kaya/pkg/tasks"
+	"github.com/ianclemence/kaya/pkg/tools"
 )
 
 // Browser governance: the model proposes, the runtime decides.
@@ -115,7 +115,7 @@ type browserGateResult struct {
 // browserSessionLedger opens the session ledger once per loop on the
 // loop's database (per-loop, not per-process: tests and golden runs host
 // several loops over different databases in one process). The table is
-// part of Ghost State (migration v2).
+// part of Kaya State (migration v2).
 func (al *AgentLoop) browserSessionLedger() (*browser.SessionStore, error) {
 	al.browserSessionsOnce.Do(func() {
 		if al == nil || al.db == nil || al.db.DB == nil {
@@ -190,9 +190,9 @@ func (al *AgentLoop) authorizeBrowserCall(requestID, sessionKey, tool string, ar
 		return deny(denyText(permissions.CodeUnavailable, "Browser is unavailable: governance is not wired.", "Try again in a moment; if it persists, the operator must check the gateway."))
 	}
 	g := al.governance
-	owner := g.GhostID
+	owner := g.KayaID
 	if owner == "" {
-		return deny(denyText(permissions.CodeUnavailable, "Browser is unavailable: no Ghost identity.", "The operator must complete onboarding so this Ghost has an identity."))
+		return deny(denyText(permissions.CodeUnavailable, "Browser is unavailable: no Kaya identity.", "The operator must complete onboarding so this Kaya has an identity."))
 	}
 	// Context comes from the session binding, never from arguments.
 	contextID := ""
@@ -218,7 +218,7 @@ func (al *AgentLoop) authorizeBrowserCall(requestID, sessionKey, tool string, ar
 	}
 	// Live Surface plane: register the browser session for this
 	// owner+context+task and enforce the pause. While a human owns the
-	// surface, Ghost is paused. GetOrCreate is deterministic per
+	// surface, Kaya is paused. GetOrCreate is deterministic per
 	// owner/context/task, so the execution path reuses the same session.
 	var liveSessionID string
 	if al.livePlane != nil {
@@ -228,7 +228,7 @@ func (al *AgentLoop) authorizeBrowserCall(requestID, sessionKey, tool string, ar
 		}
 		liveSessionID = sess.ID
 		al.livePlane.Register(sess.ID, live.KindBrowser)
-		if ok, reason := al.livePlane.GhostMayAct(sess.ID); !ok {
+		if ok, reason := al.livePlane.KayaMayAct(sess.ID); !ok {
 			return deny(denyText(permissions.CodeUnavailable, fmt.Sprintf("The browser is paused: %s.", reason), "Resume the surface and ask again."))
 		}
 	}
@@ -239,7 +239,7 @@ func (al *AgentLoop) authorizeBrowserCall(requestID, sessionKey, tool string, ar
 	switch g.evaluateTurn(requestID, browserCapability, toolAction(tool, args), scope, risk) {
 	case permissions.VerdictAllow:
 		if al.livePlane != nil && liveSessionID != "" {
-			al.livePlane.SetControlOwner(liveSessionID, live.OwnerGhost)
+			al.livePlane.SetControlOwner(liveSessionID, live.OwnerKaya)
 			al.livePlane.SetTask(liveSessionID, taskID)
 			// Announced once, by announceBrowserStart, just before the step.
 		}
@@ -325,12 +325,12 @@ func (al *AgentLoop) resumeBrowserCall(resume ResumeOutcome, sessionKey, request
 	}
 	// Owner and context are re-resolved from the live session, then
 	// compared to the stored binding. A forged or drifted context fails.
-	owner := g.GhostID
+	owner := g.KayaID
 	if owner == "" {
-		return refuse(denyText(permissions.CodeUnavailable, "Browser is unavailable: no Ghost identity.", "The operator must complete onboarding so this Ghost has an identity."))
+		return refuse(denyText(permissions.CodeUnavailable, "Browser is unavailable: no Kaya identity.", "The operator must complete onboarding so this Kaya has an identity."))
 	}
 	if stored, _ := args[contOwner].(string); stored != "" && stored != owner {
-		return refuse(denyText(permissions.CodeBindingMismatch, "Owner mismatch: this approval belongs to a different Ghost.", "Approvals never transfer between owners; ask again here."))
+		return refuse(denyText(permissions.CodeBindingMismatch, "Owner mismatch: this approval belongs to a different Kaya.", "Approvals never transfer between owners; ask again here."))
 	}
 	contextID := ""
 	if g.Contexts != nil {
@@ -382,7 +382,7 @@ func (al *AgentLoop) resumeBrowserCall(resume ResumeOutcome, sessionKey, request
 	// the human now owns the surface.
 	if al.livePlane != nil && call.SessionID != "" {
 		al.livePlane.Register(call.SessionID, live.KindBrowser)
-		if ok, reason := al.livePlane.GhostMayAct(call.SessionID); !ok {
+		if ok, reason := al.livePlane.KayaMayAct(call.SessionID); !ok {
 			return tools.BrowserCall{}, tools.ErrorResult(denyText(permissions.CodeUnavailable, "The browser is paused: "+reason+".", "Resume the surface and ask again."))
 		}
 	}
@@ -461,7 +461,7 @@ func (al *AgentLoop) maybeRunBrowserTool(toolCtx context.Context, reg *tools.Too
 	case "allow":
 		// Put the live browser card in front of the owner now, not after the
 		// step: a first page load can take over a minute, and until this
-		// point there was nothing on screen to say Ghost was in a browser.
+		// point there was nothing on screen to say Kaya was in a browser.
 		al.announceBrowserStart(decision.call, opts.SessionKey, browserStepLabel(tc.Name, tc.Arguments))
 		res := al.runBrowserTool(toolCtx, decision.call, tc.Name, tc.Arguments, opts.Channel, opts.ChatID, opts.SessionKey)
 		al.publishBrowserEvidence(opts.RequestID, opts.SessionKey, tc.Name, res)
@@ -491,7 +491,7 @@ func (al *AgentLoop) runBrowserTool(ctx context.Context, call tools.BrowserCall,
 	// not a reason to try harder: it is a step only the owner can take.
 	// Say so in the same breath as the page that shows it, naming the
 	// button that is on the card, so instruction and affordance land
-	// together instead of Ghost burning the turn on a check it will fail.
+	// together instead of Kaya burning the turn on a check it will fail.
 	if note, ok := humanCheckHandoff(res); ok {
 		res.ForLLM = strings.TrimSpace(res.ForLLM) + "\n\n" + note
 	}
@@ -586,7 +586,7 @@ func (al *AgentLoop) browserPageEvidence(sessionKey string, ev map[string]interf
 	return out
 }
 
-// browserWaitLabel says what Ghost is waiting for the owner's OK to do. Never
+// browserWaitLabel says what Kaya is waiting for the owner's OK to do. Never
 // the text it would type: that can be private.
 func browserWaitLabel(tool, page string) string {
 	on := "the page"
@@ -610,7 +610,7 @@ func browserWaitLabel(tool, page string) string {
 	return "Wants to act on " + on
 }
 
-// browserStepLabel is what the owner's card says Ghost is doing during one
+// browserStepLabel is what the owner's card says Kaya is doing during one
 // browser step, in plain words. Never page text, element references, typed
 // values or full addresses: a domain at most.
 func browserStepLabel(tool string, args map[string]interface{}) string {
@@ -703,7 +703,7 @@ func (al *AgentLoop) recordBrowserSurface(call tools.BrowserCall, tool string, r
 	al.livePlane.SetActivity(call.SessionID, "")
 	if !res.IsError {
 		// A step that reports no page of its own (typing) is named after
-		// the page Ghost is on.
+		// the page Kaya is on.
 		stepRes := res
 		if d, _ := res.Evidence["domain"].(string); d == "" {
 			if prev, ok := al.livePlane.Snapshot(call.SessionID); ok && prev.Obs.Domain != "" {
@@ -720,14 +720,14 @@ func (al *AgentLoop) recordBrowserSurface(call tools.BrowserCall, tool string, r
 		al.livePlane.AddStep(call.SessionID, browserStepSummary(tool, stepRes))
 	}
 	if res.IsError {
-		// One step not working is not the task failing: Ghost usually tries
+		// One step not working is not the task failing: Kaya usually tries
 		// another way, and the turn's outcome settles the surface. Marking it
-		// failed here flipped the card to "Ghost couldn't finish that" mid-task
+		// failed here flipped the card to "Kaya couldn't finish that" mid-task
 		// and replaced what the page looked like with nothing.
 		al.livePlane.SetState(call.SessionID, live.StateActive)
 		// A bot check is the owner's move the moment it is seen, including
 		// when it is a step that failed. The card must offer "Take over"
-		// in the same breath as Ghost refusing to continue, or the owner
+		// in the same breath as Kaya refusing to continue, or the owner
 		// is told to tap a button that is not there.
 		title, _ := res.Evidence["title"].(string)
 		text, _ := res.Evidence["text"].(string)
@@ -837,7 +837,7 @@ func (al *AgentLoop) publishBrowserEvidence(requestID, sessionKey, tool string, 
 	al.governance.Events.Publish(&cevents.Event{
 		Type:      typ,
 		RequestID: requestID, SessionID: sessionKey,
-		GhostID: al.governance.GhostID, AgentID: al.governance.AgentID,
+		KayaID: al.governance.KayaID, AgentID: al.governance.AgentID,
 		Status:     map[bool]string{true: "failed", false: "success"}[res.IsError],
 		Visibility: vis,
 		Payload:    payload,
@@ -846,7 +846,7 @@ func (al *AgentLoop) publishBrowserEvidence(requestID, sessionKey, tool string, 
 		map[string]interface{}{"tool": tool, "session": sessionKey})
 }
 
-// PurgeBrowserProfiles signs the browser out everywhere on this Ghost: every
+// PurgeBrowserProfiles signs the browser out everywhere on this Kaya: every
 // session is closed and every profile directory (cookies, storage) is
 // deleted. It is the owner-facing "sign out of all sites" action — the
 // revocation counterpart to persistent profiles.
@@ -879,7 +879,7 @@ func (al *AgentLoop) recentFilmWork() bool {
 
 // recentCanvasWork reports whether a canvas was made in the last half hour, so
 // a follow-up ("make the button blue", "add a reset") keeps the canvas tool.
-// Such a message names nothing to match on its own, and without the tool Ghost
+// Such a message names nothing to match on its own, and without the tool Kaya
 // would answer by pasting HTML into the chat instead of showing the new version.
 func (al *AgentLoop) recentCanvasWork() bool {
 	if al == nil || al.workspace == "" {

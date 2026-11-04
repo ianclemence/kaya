@@ -5,8 +5,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/ianclemence/ghost/pkg/bus"
-	"github.com/ianclemence/ghost/pkg/permissions"
+	"github.com/ianclemence/kaya/pkg/bus"
+	"github.com/ianclemence/kaya/pkg/permissions"
 )
 
 // openProbeApproval parks a durable approval whose tool does not exist
@@ -15,7 +15,7 @@ import (
 // text that must reach the LIVE transcript.
 func openProbeApproval(t *testing.T, h *gateHarness, requestID, session string) {
 	t.Helper()
-	res := h.loop.governance.AuthorizeStandalone(requestID, session, "device.control", "ghost_probe", map[string]interface{}{}, permissions.RiskConsequential)
+	res := h.loop.governance.AuthorizeStandalone(requestID, session, "device.control", "kaya_probe", map[string]interface{}{}, permissions.RiskConsequential)
 	if res.Allowed || res.PendingID == "" {
 		t.Fatalf("want a durable approval, got %+v", res)
 	}
@@ -23,7 +23,7 @@ func openProbeApproval(t *testing.T, h *gateHarness, requestID, session string) 
 
 // An approved resume must report to the live transcript, not only to the
 // database: the receipt used to be saved and never streamed, and the
-// owner's screen showed "(no response)" while Ghost claimed it acted.
+// owner's screen showed "(no response)" while Kaya claimed it acted.
 func TestApprovalResumeStreamsReceipt(t *testing.T) {
 	h := newGateHarness(t)
 	openProbeApproval(t, h, "req-rs", "sess-rs")

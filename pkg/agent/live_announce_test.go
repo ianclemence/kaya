@@ -4,8 +4,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ianclemence/ghost/pkg/bus"
-	"github.com/ianclemence/ghost/pkg/live"
+	"github.com/ianclemence/kaya/pkg/bus"
+	"github.com/ianclemence/kaya/pkg/live"
 )
 
 func TestAnnounceSurfaceDeliversIdentityOnly(t *testing.T) {

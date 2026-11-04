@@ -49,9 +49,9 @@ func TestDeleteFileRemovesWhatWasAskedAndOnlyInsideTheWorkspace(t *testing.T) {
 	}
 }
 
-func TestDeleteFileNeverTouchesGhostsOwnFiles(t *testing.T) {
+func TestDeleteFileNeverTouchesKayasOwnFiles(t *testing.T) {
 	ws := t.TempDir()
-	for _, name := range []string{"GHOST.md", "IDENTITY.md", "ghost.db", "USER.md"} {
+	for _, name := range []string{"KAYA.md", "IDENTITY.md", "kaya.db", "USER.md"} {
 		os.WriteFile(filepath.Join(ws, name), []byte("x"), 0o644)
 	}
 	os.MkdirAll(filepath.Join(ws, "personal-context"), 0o755)
@@ -59,9 +59,9 @@ func TestDeleteFileNeverTouchesGhostsOwnFiles(t *testing.T) {
 	os.MkdirAll(filepath.Join(ws, "stuff", "skills"), 0o755)
 	os.WriteFile(filepath.Join(ws, "stuff", "skills", "a.md"), []byte("x"), 0o644)
 	del := NewDeleteFileTool(ws, true)
-	for _, p := range []string{"GHOST.md", "IDENTITY.md", "ghost.db", "USER.md", "personal-context/entries.jsonl", "personal-context"} {
+	for _, p := range []string{"KAYA.md", "IDENTITY.md", "kaya.db", "USER.md", "personal-context/entries.jsonl", "personal-context"} {
 		if r := run(t, del, map[string]interface{}{"path": p, "recursive": true}); !r.IsError {
-			t.Errorf("%s is Ghost's own and must be refused", p)
+			t.Errorf("%s is Kaya's own and must be refused", p)
 		}
 		if _, err := os.Stat(filepath.Join(ws, p)); err != nil {
 			t.Errorf("%s must still exist", p)
@@ -131,8 +131,8 @@ func TestMoveFileOrganizesAndNeverOverwrites(t *testing.T) {
 	if r := run(t, mv, map[string]interface{}{"from": "b.txt", "to": "../elsewhere.txt"}); !r.IsError {
 		t.Fatal("moving out of the workspace must stop")
 	}
-	if r := run(t, mv, map[string]interface{}{"from": "b.txt", "to": "GHOST.md"}); !r.IsError {
-		t.Fatal("moving onto Ghost's own file must stop")
+	if r := run(t, mv, map[string]interface{}{"from": "b.txt", "to": "KAYA.md"}); !r.IsError {
+		t.Fatal("moving onto Kaya's own file must stop")
 	}
 }
 
@@ -146,12 +146,12 @@ func TestScreenshotsAreKeptInsideTheWorkspace(t *testing.T) {
 	}
 }
 
-// Ghost's default files and folders are never deleted or moved, however they
+// Kaya's default files and folders are never deleted or moved, however they
 // are asked for, by the tool or through the shell.
 func TestDefaultWorkspaceIsNeverDeletedOrMoved(t *testing.T) {
 	ws := t.TempDir()
 	dirs := []string{"memory", "skills", "knowledge", "uploads", "screenshots", "downloads", "notes", "data", "sessions", "state"}
-	files := []string{"GHOST.md", "USER.md", "README.md", "IDENTITY.md", "SOUL.md", "AGENTS.md", "HEARTBEAT.md", "ghost.db"}
+	files := []string{"KAYA.md", "USER.md", "README.md", "IDENTITY.md", "SOUL.md", "AGENTS.md", "HEARTBEAT.md", "kaya.db"}
 	for _, d := range dirs {
 		os.MkdirAll(filepath.Join(ws, d), 0o755)
 	}
@@ -173,7 +173,7 @@ func TestDefaultWorkspaceIsNeverDeletedOrMoved(t *testing.T) {
 			t.Errorf("%s must still exist", name)
 		}
 	}
-	// What is inside the open folders is Ghost's to tidy.
+	// What is inside the open folders is Kaya's to tidy.
 	os.WriteFile(filepath.Join(ws, "notes", "old.md"), []byte("x"), 0o644)
 	os.WriteFile(filepath.Join(ws, "downloads", "a.pdf"), []byte("x"), 0o644)
 	os.WriteFile(filepath.Join(ws, "screenshots", "s.png"), []byte("x"), 0o644)
@@ -185,7 +185,7 @@ func TestDefaultWorkspaceIsNeverDeletedOrMoved(t *testing.T) {
 	// The shell is not a way around it.
 	for _, cmd := range []string{
 		"rm -rf memory", "rm -rf ./uploads", "mv USER.md /tmp/x", "rm README.md",
-		"rm -rf /var/lib/ghost/workspace", "rm -rf screenshots downloads", "find . -delete",
+		"rm -rf /var/lib/kaya/workspace", "rm -rf screenshots downloads", "find . -delete",
 		"sh -c 'rm -rf skills'", "truncate -s0 memory/MEMORY.md",
 	} {
 		if msg, denied := execDeniedPrimaryFiles(cmd, "", ""); !denied {
@@ -194,7 +194,7 @@ func TestDefaultWorkspaceIsNeverDeletedOrMoved(t *testing.T) {
 	}
 }
 
-// A turn must actually be offered the file tools, or Ghost tells the owner it
+// A turn must actually be offered the file tools, or Kaya tells the owner it
 // "has no delete tool" while one is registered.
 func TestFileManagementToolsAreAlwaysOffered(t *testing.T) {
 	for _, name := range []string{"delete_file", "move_file", "write_file"} {

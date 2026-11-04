@@ -10,7 +10,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ianclemence/ghost/pkg/scheduled"
+	"github.com/ianclemence/kaya/pkg/scheduled"
 )
 
 func DefaultDefinitions() []Definition {
@@ -34,7 +34,7 @@ func DefaultDefinitions() []Definition {
 		},
 		{
 			Name:        "/reset",
-			Description: "Factory reset Ghost — /reset all wipes everything including secrets and devices",
+			Description: "Factory reset Kaya — /reset all wipes everything including secrets and devices",
 			Usage:       "/reset all [--exclude=devices,secrets] | /reset <scope> [<scope>...]",
 			Handler:     resetHandler,
 		},
@@ -46,12 +46,12 @@ func DefaultDefinitions() []Definition {
 		},
 		{
 			Name:        "/status",
-			Description: "Show Pi system status and Ghost version",
+			Description: "Show Pi system status and Kaya version",
 			Handler:     statusHandler,
 		},
 		{
 			Name:        "/doctor",
-			Description: "Run read-only Ghost diagnostics checks",
+			Description: "Run read-only Kaya diagnostics checks",
 			Handler:     doctorHandler,
 		},
 		{
@@ -111,7 +111,7 @@ func DefaultDefinitions() []Definition {
 		},
 		{
 			Name:        "/context",
-			Description: "Show your current Personal Context — what Ghost believes about you",
+			Description: "Show your current Personal Context — what Kaya believes about you",
 			Usage:       "/context [kind|subject|predicate] [--verbose]",
 			Handler:     contextHandler,
 		},
@@ -130,16 +130,16 @@ func DefaultDefinitions() []Definition {
 	}
 }
 
-func getGhostBinary() string {
+func getKayaBinary() string {
 	exe, err := os.Executable()
 	if err != nil {
-		return "ghost"
+		return "kaya"
 	}
 	return exe
 }
 
 func getWorkspaceDir() string {
-	if v := strings.TrimSpace(os.Getenv("GHOST_WORKSPACE_DIR")); v != "" {
+	if v := strings.TrimSpace(os.Getenv("KAYA_WORKSPACE_DIR")); v != "" {
 		return v
 	}
 	return "workspace"
@@ -166,10 +166,10 @@ func listWorkspaceSkills() ([]string, error) {
 
 func statusHandler(ctx context.Context, req Request, rt *Runtime) error {
 	var sb strings.Builder
-	sb.WriteString("### Ghost System Status\n\n")
+	sb.WriteString("### Kaya System Status\n\n")
 
-	// Ghost Version
-	sb.WriteString(fmt.Sprintf("**Ghost Version**: %s\n", "dev")) // You might want to pass version through runtime
+	// Kaya Version
+	sb.WriteString(fmt.Sprintf("**Kaya Version**: %s\n", "dev")) // You might want to pass version through runtime
 	sb.WriteString(fmt.Sprintf("**Go Version**: %s\n", runtime.Version()))
 	sb.WriteString(fmt.Sprintf("**OS/Arch**: %s/%s\n", runtime.GOOS, runtime.GOARCH))
 	sb.WriteString(fmt.Sprintf("**CPUs**: %d\n", runtime.NumCPU()))
@@ -208,7 +208,7 @@ func doctorHandler(ctx context.Context, req Request, rt *Runtime) error {
 	}
 	results := rt.Doctor.RunAll(ctx)
 	var sb strings.Builder
-	sb.WriteString("### Ghost Doctor\n\n")
+	sb.WriteString("### Kaya Doctor\n\n")
 	for _, check := range results {
 		status := strings.ToUpper(check.Status)
 		if check.Status == "" {
@@ -239,7 +239,7 @@ func skillsHandler(ctx context.Context, req Request, rt *Runtime) error {
 		return req.Reply("No installed skills found in workspace/skills.")
 	}
 	var sb strings.Builder
-	sb.WriteString(fmt.Sprintf("### Ghost Skills (%d)\n\n", len(skills)))
+	sb.WriteString(fmt.Sprintf("### Kaya Skills (%d)\n\n", len(skills)))
 	for _, name := range skills {
 		sb.WriteString(fmt.Sprintf("- `%s`\n", name))
 	}
@@ -260,12 +260,12 @@ func installHandler(ctx context.Context, req Request, rt *Runtime) error {
 		return req.Reply("Shell execution is unavailable.")
 	}
 	res := tool.Execute(ctx, map[string]interface{}{
-		"command": fmt.Sprintf("%s skills install %s", getGhostBinary(), url),
+		"command": fmt.Sprintf("%s skills install %s", getKayaBinary(), url),
 	})
 	if res.Err != nil {
 		return req.Reply(fmt.Sprintf("Failed to install skill: %v", res.Err))
 	}
-	return req.Reply(fmt.Sprintf("### Ghost Skill Install\n\n```\n%s\n```\n", res.ForLLM))
+	return req.Reply(fmt.Sprintf("### Kaya Skill Install\n\n```\n%s\n```\n", res.ForLLM))
 }
 
 func toolsHandler(ctx context.Context, req Request, rt *Runtime) error {
@@ -278,7 +278,7 @@ func toolsHandler(ctx context.Context, req Request, rt *Runtime) error {
 	}
 	sort.Strings(toolNames)
 	var sb strings.Builder
-	sb.WriteString(fmt.Sprintf("### Ghost Tools (%d)\n\n", len(toolNames)))
+	sb.WriteString(fmt.Sprintf("### Kaya Tools (%d)\n\n", len(toolNames)))
 	for _, t := range toolNames {
 		if tool, ok := rt.Tools.Get(t); ok {
 			sb.WriteString(fmt.Sprintf("- **%s**: %s\n", t, tool.Description()))
@@ -292,7 +292,7 @@ func helpHandler(ctx context.Context, req Request, rt *Runtime) error {
 		return req.Reply("Help is unavailable.")
 	}
 	var sb strings.Builder
-	sb.WriteString("### Ghost Help\n\n")
+	sb.WriteString("### Kaya Help\n\n")
 	sb.WriteString("**Slash Commands:**\n")
 	defs := rt.Commands.Definitions()
 	sort.Slice(defs, func(i, j int) bool { return defs[i].Name < defs[j].Name })
@@ -328,7 +328,7 @@ func clearHandler(ctx context.Context, req Request, rt *Runtime) error {
 		if err := clearAllChats(ws, rt); err != nil {
 			return req.Reply(fmt.Sprintf("Failed to clear chats: %v", err))
 		}
-		return req.Reply("All chat history cleared (all sessions). Ghost is ready for a fresh conversation.")
+		return req.Reply("All chat history cleared (all sessions). Kaya is ready for a fresh conversation.")
 	}
 	if rt == nil || rt.Sessions == nil {
 		return req.Reply("Session manager unavailable.")

@@ -3,7 +3,7 @@ package connector
 import (
 	"fmt"
 
-	"github.com/ianclemence/ghost/pkg/capability"
+	"github.com/ianclemence/kaya/pkg/capability"
 )
 
 // Finding is one result of the connector review pipeline.

@@ -5,11 +5,11 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/ianclemence/ghost/pkg/credentials"
+	"github.com/ianclemence/kaya/pkg/credentials"
 )
 
 func TestBrowserLoginNeedsASavedLogin(t *testing.T) {
-	t.Setenv("GHOST_CONFIG_DIR", t.TempDir())
+	t.Setenv("KAYA_CONFIG_DIR", t.TempDir())
 	tool := NewBrowserTool(t.TempDir(), "login")
 	res := tool.executeLogin(context.Background(), map[string]interface{}{"host": "accounts.example.com"})
 	if res == nil || !res.IsError {
@@ -27,7 +27,7 @@ func TestBrowserLoginNeedsASavedLogin(t *testing.T) {
 // must never appear in argv (process list) or in anything returned to the
 // model — even if the CLI echoes it.
 func TestBrowserLoginPipesPasswordOnStdinNeverArgv(t *testing.T) {
-	t.Setenv("GHOST_CONFIG_DIR", t.TempDir())
+	t.Setenv("KAYA_CONFIG_DIR", t.TempDir())
 	if err := credentials.SaveWebLogin(credentials.WebLogin{
 		URL: "https://accounts.example.com/login", Username: "ian@example.com", Password: "hunter2",
 	}); err != nil {
@@ -52,7 +52,7 @@ func TestBrowserLoginPipesPasswordOnStdinNeverArgv(t *testing.T) {
 	}
 	// The password is the secret and must never be in argv. The username is a
 	// required positional-ish flag of agent-browser's `auth save`; it stays
-	// local (owner-only process list) and Ghost never returns or logs it.
+	// local (owner-only process list) and Kaya never returns or logs it.
 	for _, args := range calls {
 		for _, a := range args {
 			if strings.Contains(a, "hunter2") {
@@ -80,7 +80,7 @@ func TestBrowserLoginPipesPasswordOnStdinNeverArgv(t *testing.T) {
 }
 
 func loginFixture(t *testing.T) {
-	t.Setenv("GHOST_CONFIG_DIR", t.TempDir())
+	t.Setenv("KAYA_CONFIG_DIR", t.TempDir())
 	if err := credentials.SaveWebLogin(credentials.WebLogin{
 		URL: "https://shop.example.com", Username: "ian@example.com", Password: "hunter2",
 	}); err != nil {
@@ -144,7 +144,7 @@ func TestBrowserLoginStopsAtAHumanCheck(t *testing.T) {
 		t.Fatalf("must say a human check blocks it: %+v", res)
 	}
 	if authCalls != 0 {
-		t.Fatal("no credential may be handed to a form Ghost cannot finish")
+		t.Fatal("no credential may be handed to a form Kaya cannot finish")
 	}
 }
 

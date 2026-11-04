@@ -80,7 +80,7 @@ func TestPublishRejectsProtectedEstate(t *testing.T) {
 	s, ws := testStore(t)
 	protected := []string{
 		"personal-context/entries.jsonl",
-		"state/ghost.db",
+		"state/kaya.db",
 		"events/2026-01-01.ndjson",
 		"knowledge/self/notes.md",
 		"data/vault.db",

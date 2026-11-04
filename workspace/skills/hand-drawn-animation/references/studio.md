@@ -67,7 +67,7 @@ new drawings or an explicit width profile, not arbitrary stretching.
 
 `smearPose(points,directionRadians,amount,pivot)` creates a directional stretched
 shape. Author and inspect that single drawing at speed. It is different from
-legacy `smear`, which composites ghost copies. No helper chooses the right smear
+legacy `smear`, which composites kaya copies. No helper chooses the right smear
 or fixes a poor key pose automatically.
 
 ## Materials
@@ -94,7 +94,7 @@ animating curves. This is not a general SVG document importer.
 
 Render at the film's intended aspect ratio, with a smaller output width during
 iteration. `preview` with `grid` N samples the film; with `strip` "START,COUNT"
-it shows consecutive output-frame indices. Ghost cannot watch playback, so
+it shows consecutive output-frame indices. Kaya cannot watch playback, so
 strips are the motion review: look at contact frames, fast turns, a static hold
 and a camera push, and say in the report that playback was not watched. Test both PNG detail and the compressed
 MP4. Render after a backward seek to catch state-dependent drawings.

@@ -2,10 +2,10 @@
 name: crypto
 description: Check real-time cryptocurrency prices, market data, and price changes. Invoke when user asks "what is Bitcoin worth", "ETH price", "crypto market", "X coin price", "Bitcoin price in USD", or "crypto 24h change". Uses CoinGecko API — no API key required. Free tier: 50 req/min.
 version: 1.1.0
-author: Ghost
+author: Kaya
 license: MIT
 metadata:
-  ghost:
+  kaya:
     tags: [crypto, cryptocurrency, bitcoin, ethereum, prices, finance]
 prerequisites:
   commands: [curl]

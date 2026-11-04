@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/ianclemence/ghost/pkg/providers"
+	"github.com/ianclemence/kaya/pkg/providers"
 )
 
 // The budget is model-aware: a large-window model gets a larger input limit

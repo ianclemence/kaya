@@ -1,14 +1,14 @@
 package agent
 
 import (
-	"github.com/ianclemence/ghost/pkg/bus"
-	"github.com/ianclemence/ghost/pkg/live"
+	"github.com/ianclemence/kaya/pkg/bus"
+	"github.com/ianclemence/kaya/pkg/live"
 )
 
 // SettleSessionSurfaces retires the live surfaces of one finished turn.
 // Conversation outcome describes the request; surface lifecycle describes
 // the execution surface. This is the documented relationship between the
-// two: success completes the task's Ghost-owned surfaces, any other
+// two: success completes the task's Kaya-owned surfaces, any other
 // terminal outcome fails them, waiting leaves them alone (the work is
 // parked, not finished). User-held and already-terminal surfaces are
 // never touched (CompleteTask enforces).
@@ -48,7 +48,7 @@ func (al *AgentLoop) completeSessionTask(sessionKey string, failed bool) int {
 		}
 	}
 	// Tell the owner's devices: without this the phone's card kept saying
-	// "Ghost is working…" under a finished reply, because nothing ever told
+	// "Kaya is working…" under a finished reply, because nothing ever told
 	// it the work was over.
 	for _, s := range settled {
 		al.announceSurface(sessionKey, s.ID, s.Kind)

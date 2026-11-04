@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ianclemence/ghost/pkg/providers"
+	"github.com/ianclemence/kaya/pkg/providers"
 )
 
 func TestExtractDeterministicAcceptsRealObligation(t *testing.T) {
@@ -35,7 +35,7 @@ func TestExtractDeterministicAcceptsRealObligation(t *testing.T) {
 	}
 }
 
-// Speculation, hypotheticals, questions, requests to Ghost, and explicit
+// Speculation, hypotheticals, questions, requests to Kaya, and explicit
 // reminder asks are all rejected: only a real promise creates durable state.
 func TestExtractDeterministicRejectsNonCommitments(t *testing.T) {
 	now := time.Now()
@@ -205,7 +205,7 @@ func TestStoreLifecycle(t *testing.T) {
 	}
 
 	// Provenance is mandatory: an obligation nobody can be shown the origin of
-	// is not one Ghost may act on.
+	// is not one Kaya may act on.
 	if _, err := store.Create(Commitment{Text: "do the thing", Origin: "model"}); err == nil {
 		t.Fatal("a commitment without the owner's words must be refused")
 	}
@@ -229,7 +229,7 @@ func TestStoreLifecycle(t *testing.T) {
 }
 
 // A promise needs something to do. A bare "get it soon" and a described travel
-// plan are not obligations Ghost could pick up.
+// plan are not obligations Kaya could pick up.
 func TestVagueClausesAreNotCommitments(t *testing.T) {
 	now := time.Date(2026, 9, 30, 10, 0, 0, 0, time.UTC)
 	for _, msg := range []string{
@@ -252,7 +252,7 @@ func TestVagueClausesAreNotCommitments(t *testing.T) {
 	}
 }
 
-// Live false positives: a request to Ghost, something done on the spot, and a
+// Live false positives: a request to Kaya, something done on the spot, and a
 // wish were all filed as promises the owner made.
 func TestNotCommitments(t *testing.T) {
 	now := time.Date(2026, 10, 3, 8, 0, 0, 0, time.UTC)

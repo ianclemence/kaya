@@ -6,14 +6,14 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/ianclemence/ghost/pkg/cevents"
-	"github.com/ianclemence/ghost/pkg/contexts"
-	"github.com/ianclemence/ghost/pkg/db"
-	"github.com/ianclemence/ghost/pkg/permissions"
-	"github.com/ianclemence/ghost/pkg/providers"
-	"github.com/ianclemence/ghost/pkg/schema"
-	"github.com/ianclemence/ghost/pkg/tasks"
-	"github.com/ianclemence/ghost/pkg/tools"
+	"github.com/ianclemence/kaya/pkg/cevents"
+	"github.com/ianclemence/kaya/pkg/contexts"
+	"github.com/ianclemence/kaya/pkg/db"
+	"github.com/ianclemence/kaya/pkg/permissions"
+	"github.com/ianclemence/kaya/pkg/providers"
+	"github.com/ianclemence/kaya/pkg/schema"
+	"github.com/ianclemence/kaya/pkg/tasks"
+	"github.com/ianclemence/kaya/pkg/tools"
 )
 
 // stubBrowserTool stands in for the real BrowserTool (whose CLI runner
@@ -58,7 +58,7 @@ type gateHarness struct {
 	contexts *contexts.Store
 	jobs     *tasks.Store
 	stubs    map[string]*stubBrowserTool
-	ghostID  string
+	kayaID  string
 	workCtx  string
 	raw      *sql.DB
 }
@@ -89,7 +89,7 @@ type hT interface {
 
 // newGateHarnessOnWS wires the real stores over an EXISTING workspace's
 // database, so a test can simulate a restart by building a second harness
-// on the same workspace. The workspace's ghost.db must already exist and
+// on the same workspace. The workspace's kaya.db must already exist and
 // be at the schema head (newGateHarness migrates it; restart harnesses
 // reuse the file).
 func newGateHarnessOnWS(t hT, ws string) *gateHarness {
@@ -99,7 +99,7 @@ func newGateHarnessOnWS(t hT, ws string) *gateHarness {
 		t.Fatal(err)
 	}
 	t.Cleanup(func() { database.Close() })
-	raw, err := sql.Open("sqlite", "file:"+ws+"/ghost.db?_pragma=busy_timeout(5000)")
+	raw, err := sql.Open("sqlite", "file:"+ws+"/kaya.db?_pragma=busy_timeout(5000)")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -115,7 +115,7 @@ func newGateHarnessOnWS(t hT, ws string) *gateHarness {
 	if err != nil {
 		t.Fatal(err)
 	}
-	cs, err := contexts.Open(ws, "ghost-test-1")
+	cs, err := contexts.Open(ws, "kaya-test-1")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -128,7 +128,7 @@ func newGateHarnessOnWS(t hT, ws string) *gateHarness {
 		}
 	}
 	jobs := tasks.NewStore(raw, nil)
-	gov := NewGovernance(events, broker, "ghost-test-1", "agent-test")
+	gov := NewGovernance(events, broker, "kaya-test-1", "agent-test")
 	gov.Contexts = cs
 	reg := tools.NewToolRegistry()
 	stubs := map[string]*stubBrowserTool{}
@@ -138,7 +138,7 @@ func newGateHarnessOnWS(t hT, ws string) *gateHarness {
 		reg.Register(st)
 	}
 	al := &AgentLoop{db: database, jobs: jobs, governance: gov, tools: reg, workspace: ws}
-	return &gateHarness{loop: al, broker: broker, events: events, contexts: cs, jobs: jobs, stubs: stubs, ghostID: "ghost-test-1", workCtx: work.ID, raw: raw}
+	return &gateHarness{loop: al, broker: broker, events: events, contexts: cs, jobs: jobs, stubs: stubs, kayaID: "kaya-test-1", workCtx: work.ID, raw: raw}
 }
 
 func (s *stubBrowserTool) run(ctx context.Context, args map[string]interface{}) *tools.ToolResult {
@@ -198,7 +198,7 @@ func TestGateObserveExecutes(t *testing.T) {
 		t.Fatalf("executor must run once under binding: %+v", st)
 	}
 	bag := st.bags[0]
-	if bag.Owner != h.ghostID || bag.TaskID != "sess-a" || bag.Sessions == nil || bag.Permission != "allow" {
+	if bag.Owner != h.kayaID || bag.TaskID != "sess-a" || bag.Sessions == nil || bag.Permission != "allow" {
 		t.Fatalf("binding must be server-resolved: %+v", bag)
 	}
 	// Untrusted labeling is the tool layer's job (proven in pkg/tools);
@@ -276,7 +276,7 @@ func TestGateApprovalWaits(t *testing.T) {
 			t.Fatalf("continuation must carry %q: %+v", k, pending.Continuation)
 		}
 	}
-	if pending.Continuation[contOwner] != h.ghostID || pending.Continuation[contBrowserTool] != "browser_type" {
+	if pending.Continuation[contOwner] != h.kayaID || pending.Continuation[contBrowserTool] != "browser_type" {
 		t.Fatalf("binding wrong: %+v", pending.Continuation)
 	}
 }

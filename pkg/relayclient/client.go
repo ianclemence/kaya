@@ -1,7 +1,7 @@
-// Package relayclient implements the Ghost device-side relay client.
+// Package relayclient implements the Kaya device-side relay client.
 //
 // It maintains an outbound WebSocket tunnel to the relay server and forwards
-// HTTP requests from paired apps to the local Ghost gateway via localhost.
+// HTTP requests from paired apps to the local Kaya gateway via localhost.
 //
 // Concurrency model: readLoop is the SOLE reader on the WebSocket. Frames for
 // individual streams are routed to per-stream handler goroutines via channels.
@@ -30,13 +30,13 @@ import (
 	"time"
 
 	"github.com/gorilla/websocket"
-	"github.com/ianclemence/ghost/pkg/relay/proto"
-	"github.com/ianclemence/ghost/pkg/relaycrypto"
+	"github.com/ianclemence/kaya/pkg/relay/proto"
+	"github.com/ianclemence/kaya/pkg/relaycrypto"
 )
 
 // ClientConfig holds the relay client configuration.
 type ClientConfig struct {
-	DeviceID     string // ghost_id, used as device identifier
+	DeviceID     string // kaya_id, used as device identifier
 	DeviceSecret string // loaded from .secrets.json
 	RelayServer  string // e.g. wss://relay.example.com or ws://127.0.0.1:8080
 	GatewayURL   string // e.g. http://127.0.0.1:8766 (local gateway)
@@ -49,7 +49,7 @@ type ClientConfig struct {
 	// RequireSealed refuses plain relayed requests. A hosted relay must be
 	// used this way: otherwise whoever runs it could read the traffic.
 	RequireSealed bool
-	// Entitlement is the Ghost Connect pass to present to a hosted relay, or ""
+	// Entitlement is the Kaya Connect pass to present to a hosted relay, or ""
 	// for a relay that does not ask for one.
 	Entitlement string
 }
@@ -60,7 +60,7 @@ type State string
 const (
 	StateOffline      State = "offline"       // not connected, retrying
 	StateConnected    State = "connected"     // the tunnel is up
-	StateNeedsPayment State = "needs-payment" // the hosted relay wants a current Ghost Connect subscription
+	StateNeedsPayment State = "needs-payment" // the hosted relay wants a current Kaya Connect subscription
 )
 
 // Status is the current state and when it began.
@@ -72,7 +72,7 @@ type Status struct {
 
 // ErrNotEntitled is returned when a hosted relay refuses the Pod for want of a
 // current entitlement.
-var ErrNotEntitled = fmt.Errorf("the relay needs a current Ghost Connect subscription")
+var ErrNotEntitled = fmt.Errorf("the relay needs a current Kaya Connect subscription")
 
 // Client is the relay client.
 type Client struct {
@@ -241,11 +241,11 @@ func (c *Client) connectAndRun(ctx context.Context) error {
 		HandshakeTimeout: 15 * time.Second,
 	}
 	hdr := http.Header{
-		"X-Ghost-Device":        []string{c.cfg.DeviceID},
-		"X-Ghost-Device-Secret": []string{c.cfg.DeviceSecret},
+		"X-Kaya-Device":        []string{c.cfg.DeviceID},
+		"X-Kaya-Device-Secret": []string{c.cfg.DeviceSecret},
 	}
 	if tok, _ := c.entitlement.Load().(string); tok != "" {
-		hdr.Set("X-Ghost-Entitlement", tok)
+		hdr.Set("X-Kaya-Entitlement", tok)
 	}
 	conn, resp, err := dialer.DialContext(ctx, u.String(), hdr)
 	if err != nil {
@@ -488,7 +488,7 @@ loop:
 	}
 
 	// Mark the request as relay-forwarded for gateway-side auditability.
-	req.Header.Set("X-Ghost-Via", "relay")
+	req.Header.Set("X-Kaya-Via", "relay")
 
 	// Execute request against local gateway
 	client := &http.Client{Timeout: 5 * time.Minute}
@@ -598,11 +598,11 @@ type StoredClient struct {
 
 func clientsPath(deviceID string) string {
 	home, _ := os.UserHomeDir()
-	ghostDir := os.Getenv("GHOST_DIR")
-	if ghostDir == "" {
-		ghostDir = filepath.Join(home, "ghost")
+	kayaDir := os.Getenv("KAYA_DIR")
+	if kayaDir == "" {
+		kayaDir = filepath.Join(home, "kaya")
 	}
-	return filepath.Join(ghostDir, "workspace", "state", "relay_clients.json")
+	return filepath.Join(kayaDir, "workspace", "state", "relay_clients.json")
 }
 
 // loadClients loads the client list from disk.
@@ -765,7 +765,7 @@ func (c *Client) RefreshClients() {
 }
 
 // watchClients notices when the list of paired phones changes on disk, from
-// `ghost relay pair` in another process or the console, and tells the relay.
+// `kaya relay pair` in another process or the console, and tells the relay.
 func (c *Client) watchClients(connDone chan struct{}) {
 	path := clientsPath(c.cfg.DeviceID)
 	stamp := func() (int64, int64) {

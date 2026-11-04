@@ -20,7 +20,7 @@ func TestAttemptBudgetDeniesOverCap(t *testing.T) {
 }
 
 func TestRoutineGuardHalvesCaps(t *testing.T) {
-	g := &Governance{GhostID: "g", AgentID: "a"}
+	g := &Governance{KayaID: "g", AgentID: "a"}
 	b := newAttemptBudget(map[string]int{"email.send": 4})
 	gr := b.routineGuard(g)
 	args := map[string]interface{}{}

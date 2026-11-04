@@ -48,7 +48,7 @@ func rejected(service string) CheckResult {
 }
 
 func unreachable(service string) CheckResult {
-	return CheckResult{Unreachable, "Saved, but I couldn't reach " + service + " to check it just now. Ghost will tell you if it doesn't work."}
+	return CheckResult{Unreachable, "Saved, but I couldn't reach " + service + " to check it just now. Kaya will tell you if it doesn't work."}
 }
 
 func doCheck(ctx context.Context, req *http.Request) (int, []byte, error) {
@@ -70,7 +70,7 @@ func Check(ctx context.Context, id, value, extra string) CheckResult {
 	case "github":
 		req, _ := http.NewRequest(http.MethodGet, checkBase(id, "https://api.github.com")+"/user", nil)
 		req.Header.Set("Authorization", "Bearer "+value)
-		req.Header.Set("User-Agent", "ghost")
+		req.Header.Set("User-Agent", "kaya")
 		return verdictFromStatus("GitHub", ctx, req)
 	case "notion":
 		req, _ := http.NewRequest(http.MethodGet, checkBase(id, "https://api.notion.com")+"/v1/users/me", nil)
@@ -107,9 +107,9 @@ func Check(ctx context.Context, id, value, extra string) CheckResult {
 	case "home-assistant", "homeassistant":
 		return checkHomeAssistant(ctx, value, extra)
 	}
-	// No way to check this one (a key for a service Ghost has no test call
+	// No way to check this one (a key for a service Kaya has no test call
 	// for): saved as given, and said so.
-	return CheckResult{Unreachable, "Saved. Ghost can't test this one until it's used."}
+	return CheckResult{Unreachable, "Saved. Kaya can't test this one until it's used."}
 }
 
 func verdictFromStatus(service string, ctx context.Context, req *http.Request) CheckResult {

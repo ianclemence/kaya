@@ -25,7 +25,7 @@ Any thoughts on what you want to achieve tomorrow?
 ```
 
 ## 3. Storage
-When the user replies to this, record the answer through Ghost's governed
+When the user replies to this, record the answer through Kaya's governed
 memory (the `remember` tool or an explicit "remember this" capture) so it
 carries provenance like any other durable fact. Never write memory stores
 directly and never treat a workflow note as authority.

@@ -3,7 +3,7 @@ package tools
 import (
 	"context"
 
-	"github.com/ianclemence/ghost/pkg/browser"
+	"github.com/ianclemence/kaya/pkg/browser"
 )
 
 // BrowserCall is the server-resolved binding for one browser operation.
@@ -12,7 +12,7 @@ import (
 // ignores for binding purposes. A forged owner/context/session in tool
 // args cannot escalate: this bag is the only binding the tool honors.
 type BrowserCall struct {
-	// Owner is the Ghost principal (ghost_id). Empty fails closed.
+	// Owner is the Kaya principal (kaya_id). Empty fails closed.
 	Owner string
 	// ContextID is the turn's context ("personal", "work", ...). Empty
 	// means the device's default single context; it still binds — a call

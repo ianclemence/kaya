@@ -42,7 +42,7 @@ type Profile struct {
 	Description string            `json:"description"`
 	Group       string            `json:"group,omitempty"`
 	Avatar      *Avatar           `json:"avatar,omitempty"`
-	GhostHome   string            `json:"ghost_home"`
+	KayaHome   string            `json:"kaya_home"`
 	Workspace   string            `json:"workspace"`
 	Skills      []string          `json:"skills,omitempty"`
 	Env         map[string]string `json:"env,omitempty"`
@@ -51,27 +51,27 @@ type Profile struct {
 }
 
 func (p *Profile) ConfigPath() string {
-	return filepath.Join(p.GhostHome, "config.json")
+	return filepath.Join(p.KayaHome, "config.json")
 }
 
 func (p *Profile) EnvPath() string {
-	return filepath.Join(p.GhostHome, ".env")
+	return filepath.Join(p.KayaHome, ".env")
 }
 
 func (p *Profile) WorkspacePath() string {
-	return filepath.Join(p.GhostHome, "workspace")
+	return filepath.Join(p.KayaHome, "workspace")
 }
 
 func (p *Profile) SkillsPath() string {
-	return filepath.Join(p.GhostHome, "skills")
+	return filepath.Join(p.KayaHome, "skills")
 }
 
 func (p *Profile) LogsPath() string {
-	return filepath.Join(p.GhostHome, "logs")
+	return filepath.Join(p.KayaHome, "logs")
 }
 
 func (p *Profile) ChannelsPath() string {
-	return filepath.Join(p.GhostHome, "channels")
+	return filepath.Join(p.KayaHome, "channels")
 }
 
 func (p *Profile) Load() error {
@@ -83,7 +83,7 @@ func (p *Profile) Load() error {
 }
 
 func (p *Profile) Save() error {
-	if err := os.MkdirAll(p.GhostHome, 0700); err != nil {
+	if err := os.MkdirAll(p.KayaHome, 0700); err != nil {
 		return err
 	}
 	data, err := json.MarshalIndent(p, "", "  ")
@@ -95,7 +95,7 @@ func (p *Profile) Save() error {
 
 func (p *Profile) EnsureDirs() error {
 	dirs := []string{
-		p.GhostHome,
+		p.KayaHome,
 		p.WorkspacePath(),
 		p.SkillsPath(),
 		p.LogsPath(),

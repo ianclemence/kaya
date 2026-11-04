@@ -24,7 +24,7 @@ import (
 
 	"golang.org/x/oauth2"
 
-	"github.com/ianclemence/ghost/pkg/config"
+	"github.com/ianclemence/kaya/pkg/config"
 )
 
 // Spotify OAuth scopes (narrowest-first).
@@ -310,7 +310,7 @@ func SpotifyClientConfigFromEnv() (SpotifyOAuthConfig, bool) {
 	cfg := SpotifyOAuthConfig{
 		ClientID:     c.ClientID,
 		ClientSecret: c.ClientSecret,
-		RedirectURL:  redirectOr("GHOST_SPOTIFY_REDIRECT_URL", ProviderSpotify),
+		RedirectURL:  redirectOr("KAYA_SPOTIFY_REDIRECT_URL", ProviderSpotify),
 	}
 	if cfg.ClientID == "" || cfg.ClientSecret == "" || cfg.RedirectURL == "" {
 		return SpotifyOAuthConfig{}, false

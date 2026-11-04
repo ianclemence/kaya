@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/ianclemence/ghost/pkg/scheduled"
+	"github.com/ianclemence/kaya/pkg/scheduled"
 )
 
 // Two routines share the word "brief": the daily Morning brief and the

@@ -257,7 +257,7 @@ func Generate(sig Signals, existing []Idea) []Idea {
 		out = append(out, Idea{
 			ID:    newID(),
 			Title: fmt.Sprintf("Want check-ins for %q?", truncate(m.Value, 60)),
-			Body:  "Accepting suggests a weekly check-in routine (you confirm the schedule before anything is created — Ghost never automates silently).",
+			Body:  "Accepting suggests a weekly check-in routine (you confirm the schedule before anything is created — Kaya never automates silently).",
 			Sources: []Source{{
 				Kind: SourceMemory, Ref: m.ID,
 				Excerpt: fmt.Sprintf("%s: %s", m.Predicate, truncate(m.Value, 80)),

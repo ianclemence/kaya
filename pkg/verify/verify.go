@@ -1,5 +1,5 @@
 // Package verify is the canonical personal AI verification suite behind
-// `ghost verify`. Every check executes real product behavior against a
+// `kaya verify`. Every check executes real product behavior against a
 // scratch device (temp workspace + SQLite) — never compilation
 // status, never canned results. Live-vendor checks run only with
 // Live=true; otherwise they report NOT-RUN explicitly.
@@ -19,22 +19,22 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ianclemence/ghost/pkg/activity"
-	"github.com/ianclemence/ghost/pkg/backup"
-	"github.com/ianclemence/ghost/pkg/cevents"
-	"github.com/ianclemence/ghost/pkg/credentials"
-	"github.com/ianclemence/ghost/pkg/ghost"
-	"github.com/ianclemence/ghost/pkg/ghoststate"
-	"github.com/ianclemence/ghost/pkg/hardware"
-	"github.com/ianclemence/ghost/pkg/modes"
-	"github.com/ianclemence/ghost/pkg/permissions"
-	"github.com/ianclemence/ghost/pkg/personalcontext"
-	"github.com/ianclemence/ghost/pkg/product"
-	"github.com/ianclemence/ghost/pkg/provider"
-	"github.com/ianclemence/ghost/pkg/providers/weather"
-	"github.com/ianclemence/ghost/pkg/routines"
-	"github.com/ianclemence/ghost/pkg/scheduled"
-	"github.com/ianclemence/ghost/pkg/skills"
+	"github.com/ianclemence/kaya/pkg/activity"
+	"github.com/ianclemence/kaya/pkg/backup"
+	"github.com/ianclemence/kaya/pkg/cevents"
+	"github.com/ianclemence/kaya/pkg/credentials"
+	"github.com/ianclemence/kaya/pkg/kaya"
+	"github.com/ianclemence/kaya/pkg/kayastate"
+	"github.com/ianclemence/kaya/pkg/hardware"
+	"github.com/ianclemence/kaya/pkg/modes"
+	"github.com/ianclemence/kaya/pkg/permissions"
+	"github.com/ianclemence/kaya/pkg/personalcontext"
+	"github.com/ianclemence/kaya/pkg/product"
+	"github.com/ianclemence/kaya/pkg/provider"
+	"github.com/ianclemence/kaya/pkg/providers/weather"
+	"github.com/ianclemence/kaya/pkg/routines"
+	"github.com/ianclemence/kaya/pkg/scheduled"
+	"github.com/ianclemence/kaya/pkg/skills"
 	_ "modernc.org/sqlite"
 )
 
@@ -54,7 +54,7 @@ type Check struct {
 	Detail  string `json:"detail,omitempty"`
 	Hard    bool   `json:"hard_fail,omitempty"`
 	// Kind separates infrastructure health ("is the personal AI
-	// structurally healthy?") from Ghost quality ("does Ghost behave
+	// structurally healthy?") from Kaya quality ("does Kaya behave
 	// correctly for a person?"). Never collapsed into one flag.
 	Kind string `json:"kind"`
 }
@@ -66,7 +66,7 @@ const KindInfra = "infrastructure"
 const KindQuality = "quality"
 
 // kindOf separates infrastructure health ("is the personal AI
-// structurally healthy?") from Ghost quality ("does Ghost behave
+// structurally healthy?") from Kaya quality ("does Kaya behave
 // correctly for a person?"). Single mapping point; never collapsed.
 func kindOf(c Check) string {
 	switch c.Section {
@@ -126,7 +126,7 @@ func Run(opts Options) Report {
 		ctx, cancel = context.WithTimeout(ctx, opts.Timeout)
 		defer cancel()
 	}
-	ws, err := os.MkdirTemp("", "ghost-verify-")
+	ws, err := os.MkdirTemp("", "kaya-verify-")
 	if err != nil {
 		return Report{Overall: "FAIL", At: time.Now().Format(time.RFC3339),
 			Checks: []Check{{Section: "setup", Name: "scratch workspace", Outcome: Fail, Detail: err.Error(), Hard: true}}}
@@ -195,28 +195,28 @@ func fail(section, name, detail string, hard bool) Check {
 // --- Identity ---
 
 func checkIdentity(e *Env) Check {
-	s, err := ghost.Open(e.Workspace, "", "Ghost", "Owner")
+	s, err := kaya.Open(e.Workspace, "", "Kaya", "Owner")
 	if err != nil {
-		return fail("Identity", "ghost identity exists", err.Error(), true)
+		return fail("Identity", "kaya identity exists", err.Error(), true)
 	}
-	if s.GhostEntity().ID == "" {
-		return fail("Identity", "ghost identity exists", "empty id", true)
+	if s.KayaEntity().ID == "" {
+		return fail("Identity", "kaya identity exists", "empty id", true)
 	}
-	return pass("Identity", "ghost identity exists")
+	return pass("Identity", "kaya identity exists")
 }
 
 func checkIdentityRestart(e *Env) Check {
-	s1, _ := ghost.Open(e.Workspace, "", "Ghost", "Owner")
-	id1 := s1.GhostEntity().ID
-	s2, _ := ghost.Open(e.Workspace, "", "Other", "Other")
-	if s2.GhostEntity().ID != id1 {
+	s1, _ := kaya.Open(e.Workspace, "", "Kaya", "Owner")
+	id1 := s1.KayaEntity().ID
+	s2, _ := kaya.Open(e.Workspace, "", "Other", "Other")
+	if s2.KayaEntity().ID != id1 {
 		return fail("Identity", "identity persists across restart", "id reminted", true)
 	}
 	return pass("Identity", "identity persists across restart")
 }
 
 func checkPrimaryAgent(e *Env) Check {
-	s, _ := ghost.Open(e.Workspace, "", "Ghost", "Owner")
+	s, _ := kaya.Open(e.Workspace, "", "Kaya", "Owner")
 	p := s.PrimaryAgent()
 	if !p.IsPrimary || p.Kind != "main" {
 		return fail("Identity", "primary agent valid", "no primary", true)
@@ -507,7 +507,7 @@ func testStream(e *Env) (*cevents.Stream, error) { return cevents.Open(e.DB, e.W
 
 func checkEventsEmission(e *Env) Check {
 	st, _ := testStream(e)
-	ev := st.Publish(&cevents.Event{Type: cevents.CapabilityCompleted, RequestID: "v", GhostID: "g"})
+	ev := st.Publish(&cevents.Event{Type: cevents.CapabilityCompleted, RequestID: "v", KayaID: "g"})
 	if ev.ID == "" {
 		return fail("Events", "canonical event emission", "no id", true)
 	}
@@ -516,8 +516,8 @@ func checkEventsEmission(e *Env) Check {
 
 func checkEventsOrdering(e *Env) Check {
 	st, _ := testStream(e)
-	st.Publish(&cevents.Event{Type: cevents.CapabilityStarted, RequestID: "v-ord", GhostID: "g"})
-	st.Publish(&cevents.Event{Type: cevents.CapabilityCompleted, RequestID: "v-ord", GhostID: "g"})
+	st.Publish(&cevents.Event{Type: cevents.CapabilityStarted, RequestID: "v-ord", KayaID: "g"})
+	st.Publish(&cevents.Event{Type: cevents.CapabilityCompleted, RequestID: "v-ord", KayaID: "g"})
 	got := st.ByRequest("v-ord")
 	if len(got) != 2 || got[0].Type != cevents.CapabilityStarted {
 		return fail("Events", "ordering", "trace unordered", true)
@@ -535,7 +535,7 @@ func checkEventPersistence(e *Env) Check {
 
 func checkRedaction(e *Env) Check {
 	st, _ := testStream(e)
-	ev := st.Publish(&cevents.Event{Type: cevents.MessageCreated, RequestID: "v-red", GhostID: "g",
+	ev := st.Publish(&cevents.Event{Type: cevents.MessageCreated, RequestID: "v-red", KayaID: "g",
 		Payload: map[string]interface{}{"api_key": "sk-proj-abcdefghijklmnop"}})
 	if ev.Payload["api_key"] == "sk-proj-abcdefghijklmnop" {
 		return fail("Events", "redaction", "secret survived publish", true)
@@ -547,7 +547,7 @@ func checkReplaySafe(e *Env) Check {
 	st, _ := testStream(e)
 	before := len(st.ByRequest("v-ord"))
 	for _, ev := range st.ByRequest("v-ord") {
-		st.Publish(&cevents.Event{Type: ev.Type, RequestID: ev.RequestID, GhostID: ev.GhostID, Payload: ev.Payload})
+		st.Publish(&cevents.Event{Type: ev.Type, RequestID: ev.RequestID, KayaID: ev.KayaID, Payload: ev.Payload})
 	}
 	// Replay appends descriptive rows (audit trail), but the broker
 	// consumed-approval state is untouched — verified by the governance
@@ -662,9 +662,9 @@ func checkNoBypass(e *Env) Check {
 func checkCrossOwner(e *Env) Check {
 	st, _ := testStream(e)
 	var leaked int
-	unsub := st.Subscribe(cevents.Filter{GhostID: "victim"}, func(ev *cevents.Event) { leaked++ })
+	unsub := st.Subscribe(cevents.Filter{KayaID: "victim"}, func(ev *cevents.Event) { leaked++ })
 	defer unsub()
-	st.Publish(&cevents.Event{Type: cevents.MessageCreated, GhostID: "attacker"})
+	st.Publish(&cevents.Event{Type: cevents.MessageCreated, KayaID: "attacker"})
 	if leaked != 0 {
 		return fail("Security", "cross-owner isolation", "leak", true)
 	}
@@ -673,7 +673,7 @@ func checkCrossOwner(e *Env) Check {
 
 func checkSecretsSurfaces(e *Env) Check {
 	st, _ := testStream(e)
-	ev := st.Publish(&cevents.Event{Type: cevents.MessageCreated, RequestID: "v-sec", GhostID: "g",
+	ev := st.Publish(&cevents.Event{Type: cevents.MessageCreated, RequestID: "v-sec", KayaID: "g",
 		Payload: map[string]interface{}{"token": "ghp_abcdefghijklmnopqrstuvwx"}})
 	if _, data, ok := ev.SSEForm(); !ok {
 		return fail("Security", "secret leak checks", "form failed", true)
@@ -686,15 +686,15 @@ func checkSecretsSurfaces(e *Env) Check {
 // --- Live personal AI (real workspace, only with Options.Workspace) ---
 
 func checkLiveIdentity(workspace string) Check {
-	id, err := ghoststate.LoadIdentity(workspace)
-	if err != nil || id == nil || id.GhostID == "" {
-		return Check{Section: "Personal AI", Name: "live identity on disk", Outcome: Skip, Detail: "Ghost not set up yet at this workspace"}
+	id, err := kayastate.LoadIdentity(workspace)
+	if err != nil || id == nil || id.KayaID == "" {
+		return Check{Section: "Personal AI", Name: "live identity on disk", Outcome: Skip, Detail: "Kaya not set up yet at this workspace"}
 	}
 	return Check{Section: "Personal AI", Name: "live identity on disk", Outcome: Pass}
 }
 
 func checkLiveDatabase(workspace string) Check {
-	for _, candidate := range []string{workspace + "/ghost.db", workspace + "/data/ghost.db"} {
+	for _, candidate := range []string{workspace + "/kaya.db", workspace + "/data/kaya.db"} {
 		db, err := sql.Open("sqlite", "file:"+candidate+"?mode=ro")
 		if err != nil {
 			continue
@@ -706,7 +706,7 @@ func checkLiveDatabase(workspace string) Check {
 			return Check{Section: "Personal AI", Name: "live database opens", Outcome: Pass}
 		}
 	}
-	return Check{Section: "Personal AI", Name: "live database opens", Outcome: Skip, Detail: "no Ghost database found yet"}
+	return Check{Section: "Personal AI", Name: "live database opens", Outcome: Skip, Detail: "no Kaya database found yet"}
 }
 
 func checkLiveStateWritable(workspace string) Check {
@@ -722,16 +722,16 @@ func checkLiveStateWritable(workspace string) Check {
 }
 
 // Render produces the human-readable report (the priority output),
-// grouped into infrastructure health vs Ghost quality.
+// grouped into infrastructure health vs Kaya quality.
 func Render(r Report) string {
 	var b strings.Builder
-	b.WriteString("\nGHOST VERIFICATION\n\n")
+	b.WriteString("\nKAYA VERIFICATION\n\n")
 	groups := []struct {
 		kind  string
 		title string
 	}{
-		{KindInfra, "INFRASTRUCTURE — is Ghost structurally healthy?"},
-		{KindQuality, "GHOST QUALITY — does Ghost behave correctly for a person?"},
+		{KindInfra, "INFRASTRUCTURE — is Kaya structurally healthy?"},
+		{KindQuality, "KAYA QUALITY — does Kaya behave correctly for a person?"},
 	}
 	for _, group := range groups {
 		b.WriteString(group.title + "\n")
@@ -843,7 +843,7 @@ func checkLiveDisk(workspace string) Check {
 func checkLiveRetention(workspace string) Check {
 	// Oldest canonical event must respect the retention policy: user
 	// history older than the durable bound means maintenance isn't running.
-	for _, candidate := range []string{workspace + "/ghost.db", workspace + "/data/ghost.db"} {
+	for _, candidate := range []string{workspace + "/kaya.db", workspace + "/data/kaya.db"} {
 		db, err := sql.Open("sqlite", "file:"+candidate+"?mode=ro")
 		if err != nil {
 			continue

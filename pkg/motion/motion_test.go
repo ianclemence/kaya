@@ -81,9 +81,9 @@ func TestRenderMakesAVideo(t *testing.T) {
 	t.Logf("rendered %.0fs of motion in %s (%d KB)", s.Duration(), time.Since(start).Round(time.Second), fi.Size()/1024)
 }
 
-const diagrams = `{"title":"How Ghost works","accent":"#8FB8FF","scenes":[
- {"duration":5,"elements":[{"type":"flow","label":"From words to done","items":["You ask","Ghost plans","You approve","It acts","It shows proof"]}]},
- {"duration":5,"elements":[{"type":"hub","label":"One Ghost, everywhere","text":"Your Pod","items":["Phone","Web console","Terminal","Home Assistant","Your files"]}]},
+const diagrams = `{"title":"How Kaya works","accent":"#8FB8FF","scenes":[
+ {"duration":5,"elements":[{"type":"flow","label":"From words to done","items":["You ask","Kaya plans","You approve","It acts","It shows proof"]}]},
+ {"duration":5,"elements":[{"type":"hub","label":"One Kaya, everywhere","text":"Your Pod","items":["Phone","Web console","Terminal","Home Assistant","Your files"]}]},
  {"duration":4,"elements":[{"type":"gauge","to":100,"suffix":"%","label":"Of your data stays at home"}]},
  {"duration":4,"elements":[{"type":"flow","items":["Notice","Remind","Follow up"],"loop":true}]},
  {"duration":5,"elements":[{"type":"timeline","label":"That morning","items":["Alarm","Coffee","Inbox zero","Standup"]}]},

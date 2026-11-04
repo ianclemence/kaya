@@ -2,10 +2,10 @@
 name: room-climate
 description: Room temperature and humidity measured by the Arduino Uno + DHT11 sensor attached to this Pod. Use when the owner asks about the temperature, humidity or climate in the room, how hot or cold or humid it is in here, or wants a comfort reading.
 version: 1.0.0
-author: Ghost
+author: Kaya
 license: MIT
 metadata:
-  ghost:
+  kaya:
     tags: [sensor, temperature, humidity, room, hardware]
 prerequisites:
   commands: [cat]
@@ -50,7 +50,7 @@ the Pod's own temperature (`system_status`) or outdoor conditions
 ## Proactive alerts — already built in
 
 When a reading leaves the 5–30 °C band, the bridge drops an event into
-`state/sensors/` and Ghost pages the owner on its own ("Heads up from
+`state/sensors/` and Kaya pages the owner on its own ("Heads up from
 room-uno: high temperature at room-uno"). Nothing to configure: only heat and
 cold pages, comfort bands stay silent, and humidity never pages by design.
 

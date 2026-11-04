@@ -1,6 +1,6 @@
 // Package infer defines the runtime-independent inference contract.
 //
-// Ghost asks for capabilities (language generation, tool calling, embeddings,
+// Kaya asks for capabilities (language generation, tool calling, embeddings,
 // vision, structured output, context capacity, locality), never "is Ollama
 // running?". Ollama/cloud/mobile runtimes implement InferenceRuntime; the
 // agent loop programs against this interface.
@@ -8,7 +8,7 @@ package infer
 
 import "context"
 
-// Capability is a single inference ability Ghost can require.
+// Capability is a single inference ability Kaya can require.
 type Capability string
 
 const (
@@ -38,7 +38,7 @@ type ModelRef struct {
 	ContextMax int      `json:"context_max,omitempty"`
 }
 
-// Requirements is what Ghost needs for one turn.
+// Requirements is what Kaya needs for one turn.
 type Requirements struct {
 	Capabilities []Capability `json:"capabilities"`
 	MinContext   int          `json:"min_context,omitempty"`

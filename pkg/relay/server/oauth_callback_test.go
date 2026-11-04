@@ -9,7 +9,7 @@ import (
 
 func TestOAuthCallbackUnknownProvider(t *testing.T) {
 	srv, _ := NewServer(Config{RegistryPath: tempRegistry(t)})
-	req := httptest.NewRequest("GET", "/oauth/dropbox/callback?ghost=d1&code=c", nil)
+	req := httptest.NewRequest("GET", "/oauth/dropbox/callback?kaya=d1&code=c", nil)
 	w := httptest.NewRecorder()
 	srv.HandleHTTP(w, req)
 	if w.Code != 404 {
@@ -17,13 +17,13 @@ func TestOAuthCallbackUnknownProvider(t *testing.T) {
 	}
 }
 
-func TestOAuthCallbackRequiresGhost(t *testing.T) {
+func TestOAuthCallbackRequiresKaya(t *testing.T) {
 	srv, _ := NewServer(Config{RegistryPath: tempRegistry(t)})
 	for _, target := range []string{
 		"/oauth/calendar/callback?code=c&state=s",
-		"/oauth/calendar/callback?ghost=&code=c",
-		"/oauth/calendar/callback?ghost=../evil&code=c",
-		"/oauth/calendar/callback?ghost=d1%20x&code=c",
+		"/oauth/calendar/callback?kaya=&code=c",
+		"/oauth/calendar/callback?kaya=../evil&code=c",
+		"/oauth/calendar/callback?kaya=d1%20x&code=c",
 	} {
 		req := httptest.NewRequest("GET", target, nil)
 		w := httptest.NewRecorder()
@@ -36,7 +36,7 @@ func TestOAuthCallbackRequiresGhost(t *testing.T) {
 
 func TestOAuthCallbackOfflineHonest(t *testing.T) {
 	srv, _ := NewServer(Config{RegistryPath: tempRegistry(t)})
-	req := httptest.NewRequest("GET", "/oauth/calendar/callback?ghost=ghost-1&code=abc&state=def", nil)
+	req := httptest.NewRequest("GET", "/oauth/calendar/callback?kaya=kaya-1&code=abc&state=def", nil)
 	w := httptest.NewRecorder()
 	srv.HandleHTTP(w, req)
 	if w.Code != 503 {
@@ -49,7 +49,7 @@ func TestOAuthCallbackOfflineHonest(t *testing.T) {
 
 func TestOAuthCallbackMethodRejected(t *testing.T) {
 	srv, _ := NewServer(Config{RegistryPath: tempRegistry(t)})
-	req := httptest.NewRequest("POST", "/oauth/calendar/callback?ghost=d1", nil)
+	req := httptest.NewRequest("POST", "/oauth/calendar/callback?kaya=d1", nil)
 	w := httptest.NewRecorder()
 	srv.HandleHTTP(w, req)
 	if w.Code != 405 {
@@ -65,7 +65,7 @@ func TestOAuthCallbackRateLimited(t *testing.T) {
 	oauthLimiter = &oauthRateLimit{hits: map[string][]time.Time{}, max: 2, window: 1000000000 * 60}
 	_ = old
 	for i := 0; i < 3; i++ {
-		req := httptest.NewRequest("GET", "/oauth/calendar/callback?ghost=d1&code=c", nil)
+		req := httptest.NewRequest("GET", "/oauth/calendar/callback?kaya=d1&code=c", nil)
 		req.RemoteAddr = "10.9.9.9:1234"
 		w := httptest.NewRecorder()
 		srv.HandleHTTP(w, req)

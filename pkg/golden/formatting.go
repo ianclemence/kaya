@@ -1,6 +1,6 @@
 package golden
 
-// Formatting-decision cases: does Ghost choose Markdown appropriately, or
+// Formatting-decision cases: does Kaya choose Markdown appropriately, or
 // does it decorate every answer?
 //
 // These assert restraint (nothing decorative on a one-line answer) and
@@ -59,7 +59,7 @@ func formattingConversations() []Conversation {
 		{
 			ID: "fmt-06", Category: CatFormatting, Title: "Diagram request yields a Mermaid block",
 			Severity: "normal", People: onePerson("maya", "maya",
-				turn("Draw me a small flowchart of how a request flows through Ghost.")),
+				turn("Draw me a small flowchart of how a request flows through Kaya.")),
 			Expect: Expect{
 				// The owner asked for a diagram; the runtime must render one
 				// (Mermaid fence) rather than ASCII art or prose paragraphs.

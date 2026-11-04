@@ -29,7 +29,7 @@ func TestRefNeverCarriesSecrets(t *testing.T) {
 func TestNotConfigured(t *testing.T) {
 	v := New(t.TempDir())
 	t.Setenv("AVIATION_API_KEY", "")
-	t.Setenv("GHOST_CONFIG_DIR", t.TempDir())
+	t.Setenv("KAYA_CONFIG_DIR", t.TempDir())
 	ref := v.Ref("aviationstack")
 	if ref.Status != StatusNotConfigured {
 		t.Fatalf("absent key must be not_configured, got %s", ref.Status)

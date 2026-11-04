@@ -6,7 +6,7 @@ import (
 	"testing"
 )
 
-// Updating restarts Ghost, so the tool refuses until the owner's confirmation
+// Updating restarts Kaya, so the tool refuses until the owner's confirmation
 // is passed through, and it never falls back to the old git-pull path.
 func TestUpdateToolRequiresConfirmation(t *testing.T) {
 	res := NewUpdateTool("").Execute(context.Background(), map[string]interface{}{})
@@ -16,7 +16,7 @@ func TestUpdateToolRequiresConfirmation(t *testing.T) {
 }
 
 // The owner asks "is there an update?" on their phone. The tool must be in the
-// mobile profile and the question must route to it; otherwise Ghost answers
+// mobile profile and the question must route to it; otherwise Kaya answers
 // that it cannot check, which is what happened before this test existed.
 func TestUpdateIsOfferedForUpdateQuestionsOnMobile(t *testing.T) {
 	if !ProfileMobileSafe.Allows("update") {

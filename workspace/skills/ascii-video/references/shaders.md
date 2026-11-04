@@ -119,7 +119,7 @@ fb_cfg = {"decay": 0.8, "blend": "screen", "opacity": 0.4,
 fb_cfg = {"decay": 0.7, "blend": "screen", "opacity": 0.3,
           "transform": "zoom", "transform_amt": 0.01, "hue_shift": 0.02}
 
-# Ghostly echo (horror)
+# Kayaly echo (horror)
 fb_cfg = {"decay": 0.9, "blend": "add", "opacity": 0.15,
           "transform": "shift_up", "transform_amt": 0.01}
 

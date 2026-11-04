@@ -4,8 +4,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ianclemence/ghost/pkg/db"
-	"github.com/ianclemence/ghost/pkg/providers"
+	"github.com/ianclemence/kaya/pkg/db"
+	"github.com/ianclemence/kaya/pkg/providers"
 )
 
 // Compaction must bound the model's context without hiding earlier turns

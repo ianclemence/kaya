@@ -57,7 +57,7 @@ func TestArchitecture_NoActiveCronScheduler(t *testing.T) {
 	}
 	// No production code may import a cron engine.
 	scanGoFiles(t, func(path, rel string, src []byte) {
-		if strings.Contains(string(src), `"github.com/ianclemence/ghost/pkg/cron"`) {
+		if strings.Contains(string(src), `"github.com/ianclemence/kaya/pkg/cron"`) {
 			t.Errorf("%s imports the retired pkg/cron scheduler", rel)
 		}
 	})

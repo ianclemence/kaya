@@ -29,7 +29,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ianclemence/ghost/pkg/provider"
+	"github.com/ianclemence/kaya/pkg/provider"
 )
 
 // Status is the normalized, vendor-neutral flight status.

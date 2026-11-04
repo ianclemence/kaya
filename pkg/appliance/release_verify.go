@@ -155,7 +155,7 @@ func (r *Release) FindAsset(name string) (Asset, bool) {
 }
 
 // BinaryAssetName is the release file name for a binary on a platform:
-// "ghost_linux_arm64", "ghost-web_linux_amd64". The release tool and the
+// "kaya_linux_arm64", "kaya-web_linux_amd64". The release tool and the
 // updater both use this, so they cannot drift apart.
 func BinaryAssetName(binary, goos, goarch string) string {
 	return binary + "_" + goos + "_" + goarch
@@ -164,7 +164,7 @@ func BinaryAssetName(binary, goos, goarch string) string {
 // ChecksumsAssetName is the checksum list every release carries, and
 // ChecksumsSigAssetName its signature. These are the only two assets whose
 // names do not start with a binary's name: an updater that looks a binary up
-// by a substring of its name (older releases of `ghost update` did) must never
+// by a substring of its name (older releases of `kaya update` did) must never
 // find a signature there.
 const (
 	ChecksumsAssetName    = "checksums.txt"

@@ -4,8 +4,8 @@ import (
 	"database/sql"
 	"testing"
 
-	"github.com/ianclemence/ghost/pkg/contexts"
-	"github.com/ianclemence/ghost/pkg/permissions"
+	"github.com/ianclemence/kaya/pkg/contexts"
+	"github.com/ianclemence/kaya/pkg/permissions"
 	_ "modernc.org/sqlite"
 )
 
@@ -20,7 +20,7 @@ func openTestGovernance(t *testing.T) *Governance {
 	if err != nil {
 		t.Fatal(err)
 	}
-	return &Governance{Broker: b, GhostID: "g1", AgentID: "agent-main"}
+	return &Governance{Broker: b, KayaID: "g1", AgentID: "agent-main"}
 }
 
 func TestGateReadOnlyAllows(t *testing.T) {
@@ -121,7 +121,7 @@ func TestNilGovernanceSafe(t *testing.T) {
 
 func TestContextCapabilityGate(t *testing.T) {
 	g := openTestGovernance(t)
-	cs, err := contexts.Open(t.TempDir(), "ghost-1")
+	cs, err := contexts.Open(t.TempDir(), "kaya-1")
 	if err != nil {
 		t.Fatal(err)
 	}

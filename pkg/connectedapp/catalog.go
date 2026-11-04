@@ -1,8 +1,8 @@
-// Package connectedapp catalog: first-party connected apps for Ghost.
+// Package connectedapp catalog: first-party connected apps for Kaya.
 //
 // Channels are message transports (Telegram, WhatsApp, ...). They live in
 // pkg/channels and are managed via /v1/channels/*. Connected apps are
-// external systems Ghost acts on (Gmail, Calendar, Home Assistant, ...).
+// external systems Kaya acts on (Gmail, Calendar, Home Assistant, ...).
 // They live here and are served via /v1/connected-apps/*.
 //
 // The model never sees an app or a secret: it sees capability tools
@@ -48,18 +48,18 @@ type Connector struct {
 	// Scopes are split so users can grant read-only first.
 	ReadScopes  []string `json:"read_scopes"`
 	WriteScopes []string `json:"write_scopes,omitempty"`
-	// Capabilities are Ghost capability IDs this app can fulfil.
+	// Capabilities are Kaya capability IDs this app can fulfil.
 	Capabilities []string `json:"capabilities"`
 	// Help is how to connect it, shown where the owner connects it.
 	Help string `json:"help,omitempty"`
-	// Summary is what Ghost can do with it, in everyday words, for lists.
+	// Summary is what Kaya can do with it, in everyday words, for lists.
 	Summary string `json:"summary,omitempty"`
 	// Advanced marks keys and data sources most people never need; clients
 	// list them apart, under "For developers".
 	Advanced bool `json:"advanced,omitempty"`
 }
 
-// FirstParty is the curated set Ghost supports as head-of-engineering.
+// FirstParty is the curated set Kaya supports as head-of-engineering.
 // Tier 1 ships; Tier 2 is registered so status/connect flows exist even
 // before the execution adapter lands.
 func FirstParty() []Connector {
@@ -71,7 +71,7 @@ func FirstParty() []Connector {
 			WriteScopes:  []string{"calendar.events"},
 			Capabilities: []string{"calendar.read", "calendar.modify"},
 			Help:         "Connect in the web console or phone browser. Read-only first; enable writes when needed.",
-			Summary:      "Ghost sees what's on and can add events when you say so.",
+			Summary:      "Kaya sees what's on and can add events when you say so.",
 		},
 		{
 			ID: "gmail", Provider: "gmail", DisplayName: "Gmail",
@@ -80,7 +80,7 @@ func FirstParty() []Connector {
 			WriteScopes:  []string{"gmail.send"},
 			Capabilities: []string{"email.read", "email.send"},
 			Help:         "Search and send on your behalf. Sending always asks first. OTPs and reset links are filtered.",
-			Summary:      "Ghost finds emails, drafts replies and sends only with your OK.",
+			Summary:      "Kaya finds emails, drafts replies and sends only with your OK.",
 		},
 		{
 			ID: "outlook", Provider: "outlook", DisplayName: "Outlook",
@@ -95,7 +95,7 @@ func FirstParty() []Connector {
 			ID: "home-assistant", Provider: "homeassistant", DisplayName: "Home Assistant",
 			AuthKind: AuthToken, Setup: SetupPastePair,
 			Capabilities: []string{"device.read", "device.control"},
-			Help:         "Paste your instance URL plus a long-lived token. Stays on your Ghost.",
+			Help:         "Paste your instance URL plus a long-lived token. Stays on your Kaya.",
 			Summary:      "Lights, heating and locks, checked and switched when you ask.",
 		},
 		{
@@ -105,7 +105,7 @@ func FirstParty() []Connector {
 			WriteScopes:  []string{"user-modify-playback-state"},
 			Capabilities: []string{"media.playback"},
 			Help:         "Playback control. Read-only status first.",
-			Summary:      "Ghost can play, pause and pick music for you.",
+			Summary:      "Kaya can play, pause and pick music for you.",
 		},
 		{
 			ID: "github", Provider: "github", DisplayName: "GitHub",
@@ -121,7 +121,7 @@ func FirstParty() []Connector {
 			AuthKind: AuthToken, Setup: SetupPasteKey,
 			Capabilities: []string{"docs"},
 			Help:         "Paste an internal integration token for docs access.",
-			Summary:      "Ghost can read your Notion pages.",
+			Summary:      "Kaya can read your Notion pages.",
 			Advanced:     true,
 		},
 		{

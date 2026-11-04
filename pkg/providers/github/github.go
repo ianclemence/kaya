@@ -1,7 +1,7 @@
 package github
 
 // GitHub provider: validate a personal access token and search code via
-// the REST API. Trust-user model per head-of-engineering decision: Ghost
+// the REST API. Trust-user model per head-of-engineering decision: Kaya
 // documents read-only scopes (repo:read) but does not enforce them — the
 // token's own scopes are the authority. Secrets come from the vault
 // (.secrets.json ProviderAPIKeys[github] or GITHUB_TOKEN env fallback);
@@ -17,7 +17,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ianclemence/ghost/pkg/provider"
+	"github.com/ianclemence/kaya/pkg/provider"
 )
 
 // Config mirrors the other data providers.

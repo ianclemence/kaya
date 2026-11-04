@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/adhocore/gronx"
-	"github.com/ianclemence/ghost/pkg/clock"
+	"github.com/ianclemence/kaya/pkg/clock"
 )
 
 // Executor is the function signature for executing a scheduled item.
@@ -32,10 +32,10 @@ type Service struct {
 	// cycle. Nil means always fire (tests, callers without a clock).
 	ClockGate func() bool
 	// MissedNotice, when set, is told about a recurring run that was skipped
-	// because Ghost was off when it came due, so the owner can be told.
+	// because Kaya was off when it came due, so the owner can be told.
 	MissedNotice func(item *ScheduledItem, due time.Time)
 	// OnMissed, when set, hears about a one-time item that came due more than
-	// graceWindow ago (Ghost was off) and was marked missed instead of fired.
+	// graceWindow ago (Kaya was off) and was marked missed instead of fired.
 	OnMissed func(item *ScheduledItem, due time.Time)
 	// clockBlocked remembers the gate state to log transitions once
 	// instead of every second.
@@ -130,7 +130,7 @@ func (s *Service) tick() {
 	}
 
 	for _, item := range items {
-		// A recurring run that came due while Ghost was off is decided by the
+		// A recurring run that came due while Kaya was off is decided by the
 		// policy table, not by how late it is: a recent automation miss (a
 		// morning brief, a few hours late) runs once on recovery, while a
 		// stale one waits for its next occurrence. Commitments to the owner,

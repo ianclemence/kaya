@@ -1,8 +1,8 @@
-// Proactive status: the owner-facing view of Ghost's quiet work.
+// Proactive status: the owner-facing view of Kaya's quiet work.
 //
-// Ghost reaches out on its own only when something is genuinely useful, and
+// Kaya reaches out on its own only when something is genuinely useful, and
 // the policy (PROACTIVE_PREFERENCES.md) bounds how often. That machinery is
-// invisible by default, which makes Ghost look idle when it is actually
+// invisible by default, which makes Kaya look idle when it is actually
 // watching. This projection makes it legible: are we in quiet hours, how much
 // of today's budget is left, and is anything waiting to be delivered.
 //
@@ -30,15 +30,15 @@ type Status struct {
 	NextBriefing   string `json:"next_briefing,omitempty"`
 	NextReflection string `json:"next_reflection,omitempty"`
 	// Enabled mirrors the master proactivity switch, so a surface can say
-	// "Ghost is not watching for things" instead of showing a false zero.
+	// "Kaya is not watching for things" instead of showing a false zero.
 	Enabled bool `json:"enabled"`
 	// OpenProposals counts grounded opportunities waiting on the owner. Set
 	// by the runtime after assembly; it is a count, never a claim.
 	OpenProposals int `json:"open_proposals,omitempty"`
-	// OpenCommitments counts promises the owner made that Ghost is holding.
+	// OpenCommitments counts promises the owner made that Kaya is holding.
 	OpenCommitments int `json:"open_commitments,omitempty"`
 	// ActiveWatches counts watches of external state (flights,
-	// appointments, deliveries) Ghost is polling right now. Watched
+	// appointments, deliveries) Kaya is polling right now. Watched
 	// checks-per-day is reported through BudgetMax's sibling below.
 	ActiveWatches int `json:"active_watches,omitempty"`
 	// WatchChecksUsed / WatchChecksMax are today's background watch
@@ -47,7 +47,7 @@ type Status struct {
 	WatchChecksMax  int `json:"watch_checks_max,omitempty"`
 }
 
-// Active reports whether Ghost is doing anything proactive the owner should
+// Active reports whether Kaya is doing anything proactive the owner should
 // know about: a live budget, a quiet window, or waiting notices.
 func (s Status) Active() bool {
 	return s.Waiting > 0 || s.BudgetMax > 0 || s.Quiet

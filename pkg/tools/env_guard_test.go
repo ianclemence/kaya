@@ -7,7 +7,7 @@ import (
 )
 
 func TestIsSecretEnvName(t *testing.T) {
-	secret := []string{"DEEPSEEK_API_KEY", "GHOST_TOKEN", "OPENAI_API_KEY", "DB_PASSWORD",
+	secret := []string{"DEEPSEEK_API_KEY", "KAYA_TOKEN", "OPENAI_API_KEY", "DB_PASSWORD",
 		"AWS_SECRET_ACCESS_KEY", "SESSION_ID", "AUTH_HEADER", "SOME_CREDENTIAL"}
 	for _, n := range secret {
 		if !IsSecretEnvName(n) {
@@ -24,7 +24,7 @@ func TestIsSecretEnvName(t *testing.T) {
 
 func TestEnvGuardStripsSecrets(t *testing.T) {
 	t.Setenv("DEEPSEEK_API_KEY", "super-secret")
-	t.Setenv("GHOST_SECRET", "nope")
+	t.Setenv("KAYA_SECRET", "nope")
 	t.Setenv("PATH", "/usr/bin:/bin")
 
 	env := EnvGuard{}.Env("/tmp/ws")

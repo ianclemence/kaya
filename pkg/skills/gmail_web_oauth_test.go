@@ -40,7 +40,7 @@ func TestGmailBeginRequiresConfig(t *testing.T) {
 }
 
 func TestGmailBeginAndCompleteRoundtrip(t *testing.T) {
-	t.Setenv("GHOST_CREDENTIALS_DIR", t.TempDir())
+	t.Setenv("KAYA_CREDENTIALS_DIR", t.TempDir())
 	url, state, err := GmailOAuthBegin(testGmailOAuthConfig(), "sess-1", "pending-123", false)
 	if err != nil {
 		t.Fatal(err)

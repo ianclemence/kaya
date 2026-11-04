@@ -4,7 +4,7 @@
 // transcribes each with the owner's own speech engine (local first), and
 // keeps the transcript as a document in the workspace. What to make of it (a
 // summary, decisions, action items) is then an ordinary turn of the
-// conversation, so it lands where everything else Ghost says does.
+// conversation, so it lands where everything else Kaya says does.
 package meetings
 
 import (
@@ -69,7 +69,7 @@ type Meeting struct {
 type Transcriber func(ctx context.Context, audio []byte, mime string) (string, error)
 
 // Publisher puts the finished transcript in the conversation as something
-// Ghost made (an artifact); it returns its id.
+// Kaya made (an artifact); it returns its id.
 type Publisher func(title, summary, path string) (string, error)
 
 // Store is the workspace's recordings.
@@ -131,7 +131,7 @@ var mimeExt = map[string]string{"audio/mp4": "m4a", "audio/m4a": "m4a", "audio/x
 func (s *Store) Begin(title, mime string, now time.Time) (Meeting, error) {
 	mime = strings.ToLower(strings.TrimSpace(mime))
 	if _, ok := mimeExt[mime]; !ok {
-		return Meeting{}, fmt.Errorf("%q is not an audio format Ghost reads", mime)
+		return Meeting{}, fmt.Errorf("%q is not an audio format Kaya reads", mime)
 	}
 	title = strings.Join(strings.Fields(title), " ")
 	if title == "" {

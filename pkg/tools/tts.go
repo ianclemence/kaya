@@ -10,7 +10,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ianclemence/ghost/pkg/voice"
+	"github.com/ianclemence/kaya/pkg/voice"
 )
 
 type TTSConfig struct {
@@ -48,7 +48,7 @@ func (t *TTSTool) Name() string {
 }
 
 func (t *TTSTool) Description() string {
-	return "Convert text to speech using the local Ghost voice when provisioned (offline, no network), else Edge TTS (free, no API key required). Returns an audio file."
+	return "Convert text to speech using the local Kaya voice when provisioned (offline, no network), else Edge TTS (free, no API key required). Returns an audio file."
 }
 
 func (t *TTSTool) Parameters() map[string]interface{} {
@@ -61,7 +61,7 @@ func (t *TTSTool) Parameters() map[string]interface{} {
 			},
 			"voice": map[string]interface{}{
 				"type":        "string",
-				"description": "Voice name for Edge TTS (e.g., en-US-AriaNeural, zh-CN-XiaoxiaoNeural). Omit to use the local Ghost voice when available.",
+				"description": "Voice name for Edge TTS (e.g., en-US-AriaNeural, zh-CN-XiaoxiaoNeural). Omit to use the local Kaya voice when available.",
 			},
 			"format": map[string]interface{}{
 				"type":        "string",
@@ -120,17 +120,17 @@ func (t *TTSTool) synthesize(ctx context.Context, text, voiceName, format string
 	local := voice.SelectSynthesizer(voice.SynthConfig{Engine: voice.TTSEngineLocal, BinPath: t.config.LocalBin, VoiceDir: t.config.LocalVoiceDir})
 	if t.config.Provider == "local" {
 		if local == nil {
-			return "", "", "", fmt.Errorf("local voice is not provisioned (run: sudo ghost tts setup)")
+			return "", "", "", fmt.Errorf("local voice is not provisioned (run: sudo kaya tts setup)")
 		}
 		path, err := t.synthesizeLocal(ctx, text, local)
 		if err != nil {
 			return "", "", "", err
 		}
-		return path, "ghost", "mp3", nil
+		return path, "kaya", "mp3", nil
 	}
 	if !explicitVoice && local != nil {
 		if path, err := t.synthesizeLocal(ctx, text, local); err == nil {
-			return path, "ghost", "mp3", nil
+			return path, "kaya", "mp3", nil
 		}
 	}
 	path, err := t.synthesizeEdge(ctx, text, voiceName, format)
@@ -189,7 +189,7 @@ func (t *TTSTool) synthesizeEdge(ctx context.Context, text, voiceName, format st
 
 func (t *TTSTool) ListVoices() []string {
 	return []string{
-		"ghost (local default voice)",
+		"kaya (local default voice)",
 		"en-US-AriaNeural",
 		"en-US-GuyNeural",
 		"en-US-JennyNeural",

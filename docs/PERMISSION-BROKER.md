@@ -1,11 +1,11 @@
 # Permission Broker
 
-The Permission Broker is Ghost's authoritative authority boundary. It answers
+The Permission Broker is Kaya's authoritative authority boundary. It answers
 one question for every consequential action:
 
-> May Ghost do this?
+> May Kaya do this?
 
-Nothing else in Ghost may answer that question.
+Nothing else in Kaya may answer that question.
 
 ## Why it exists
 
@@ -20,7 +20,7 @@ audited.
 
 - **Authentication** establishes identity: which provider, which app, which
   credential, which device.
-- **Authorization** decides permission: whether Ghost may perform a specific
+- **Authorization** decides permission: whether Kaya may perform a specific
   operation.
 
 ```
@@ -28,7 +28,7 @@ AUTHENTICATED ≠ AUTHORIZED
 AVAILABLE     ≠ AUTHORIZED
 ```
 
-A connected app having credentials does not mean Ghost may use them for the
+A connected app having credentials does not mean Kaya may use them for the
 requested operation. The broker decides separately.
 
 ## The flow
@@ -57,7 +57,7 @@ one of four ways:
 | Answer | Effect |
 |---|---|
 | **Allow once** | This one execution. A second reply finds nothing to consume. |
-| **Allow for this task** | A scoped grant that follows the work: each use extends it by 10 minutes, it ends after 10 quiet minutes, and it hard-stops one hour after it was given. The runtime has no task identifier to bind to, so "task" means "while Ghost keeps using this". |
+| **Allow for this task** | A scoped grant that follows the work: each use extends it by 10 minutes, it ends after 10 quiet minutes, and it hard-stops one hour after it was given. The runtime has no task identifier to bind to, so "task" means "while Kaya keeps using this". |
 | **Always allow** | A scoped standing grant (see Grants). |
 | **Deny** | Refuse, and remember the refusal for this scope. |
 
@@ -148,7 +148,7 @@ PERMISSION BROKER
 EXECUTION
 ```
 
-The scheduler wakes Ghost. It does not grant permission. A scheduled action
+The scheduler wakes Kaya. It does not grant permission. A scheduled action
 whose authority has been revoked fails or waits rather than executing.
 
 ## Browser and computer control
@@ -156,7 +156,7 @@ whose authority has been revoked fails or waits rather than executing.
 Browser and computer operations pass through their own gates, which compose
 with the broker. Observation and control are distinct: observing a page or
 screen is read-only; interacting with it is consequential and governed.
-Control may be leased to the user (takeover), which pauses Ghost on that
+Control may be leased to the user (takeover), which pauses Kaya on that
 surface. See [Execution](EXECUTION.md).
 
 ## Subagents
@@ -168,8 +168,8 @@ governs each capability the subtask requests.
 ## Why the broker must remain singular
 
 If individual providers, skills, schedulers, or tools could authorize
-themselves, authority would be fragmented and unauditable. Ghost has exactly
-one broker so that "may Ghost do this?" has exactly one answer.
+themselves, authority would be fragmented and unauditable. Kaya has exactly
+one broker so that "may Kaya do this?" has exactly one answer.
 
 ## Related concepts
 

@@ -16,7 +16,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ianclemence/ghost/pkg/browser/native"
+	"github.com/ianclemence/kaya/pkg/browser/native"
 )
 
 // Options are what the owner or the model can change about how a film is

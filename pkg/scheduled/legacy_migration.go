@@ -11,7 +11,7 @@ import (
 
 // Legacy cron/jobs.json migration.
 //
-// Ghost previously ran a second scheduler (pkg/cron) backed by a JSON file.
+// Kaya previously ran a second scheduler (pkg/cron) backed by a JSON file.
 // The authoritative scheduler is now this package. This reader migrates any
 // legacy jobs into scheduled_items exactly once and idempotently.
 //

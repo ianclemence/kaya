@@ -49,7 +49,7 @@ python3 scripts/feed.py discover https://example.com/               # list candi
 | YouTube channel | `https://www.youtube.com/feeds/videos.xml?channel_id=UC…` |
 | Hacker News | `https://hnrss.org/frontpage`, `https://hnrss.org/newest?q=TERM` |
 | arXiv category | `https://rss.arxiv.org/rss/cs.CL` |
-| Substack / Medium / WordPress / Ghost | `SITE/feed`, `medium.com/feed/@user`, `SITE/rss/` |
+| Substack / Medium / WordPress / Kaya | `SITE/feed`, `medium.com/feed/@user`, `SITE/rss/` |
 | Podcasts | the show's RSS URL from its hosting page (`discover` finds it) |
 
 Output fields per entry: `title`, `link`, `published` (UTC ISO 8601), `author`, `summary`
@@ -87,6 +87,6 @@ truncated or the first paragraph only.
 
 ## Verification
 
-`python3 scripts/feed.py read https://github.com/NousResearch/ghost-agent/releases.atom
+`python3 scripts/feed.py read https://github.com/NousResearch/kaya-agent/releases.atom
 --limit 1` prints one entry with a `releases/tag/` link and a `[atom]` format tag;
 `discover https://simonwillison.net/` prints an `/atom/` URL.

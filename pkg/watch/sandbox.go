@@ -11,7 +11,7 @@ import (
 	"time"
 )
 
-// The sandbox is Ghost's local, network-free watch source: a file per
+// The sandbox is Kaya's local, network-free watch source: a file per
 // watched thing under <workspace>/state/watch-source/. It exists so watch
 // behavior is observable, testable and demonstrable without any external
 // provider — the same state a real probe would return, written down.
@@ -48,7 +48,7 @@ func (s *Sandbox) dir() string {
 
 // Available implements Probe: the sandbox can answer once its directory
 // exists — i.e. once someone has actually put a watch source on this
-// machine. Without it Ghost refuses to create a watch honestly rather than
+// machine. Without it Kaya refuses to create a watch honestly rather than
 // "watching" a source that is not there.
 func (s *Sandbox) Available() bool {
 	if s == nil || s.workspace == "" {

@@ -2,7 +2,7 @@
 name: blocked-page-recovery
 description: "Recover when a fetch is blocked: 403 or 429, a paywall, a WAF, a captcha, a login wall or a bot check. Invoke when browsing or fetching returns a block page, a challenge or nothing useful, before telling the owner it cannot be read."
 version: 1.0.0
-author: Ghost
+author: Kaya
 license: MIT
 platforms: [linux, macos, windows]
 ---

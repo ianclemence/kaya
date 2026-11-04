@@ -2,9 +2,9 @@ package agent
 
 import "strings"
 
-// NoteOwnerAction records, in the conversation Ghost reads, something the
-// owner did outside a turn: sent a draft Ghost wrote, answered a card after the
-// turn that asked had moved on. Ghost then knows it happened ("did you send
+// NoteOwnerAction records, in the conversation Kaya reads, something the
+// owner did outside a turn: sent a draft Kaya wrote, answered a card after the
+// turn that asked had moved on. Kaya then knows it happened ("did you send
 // it?") instead of guessing. It is a system line: the owner never sees it as a
 // message, and nothing is run because of it.
 func (al *AgentLoop) NoteOwnerAction(sessionKey, note string) {

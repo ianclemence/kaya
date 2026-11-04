@@ -12,7 +12,7 @@ func isolatedHome(t *testing.T) string {
 	t.Helper()
 	home := t.TempDir()
 	t.Setenv("HOME", home)
-	t.Setenv("GHOST_MASTER_KEY", "")
+	t.Setenv("KAYA_MASTER_KEY", "")
 	return home
 }
 
@@ -53,7 +53,7 @@ func TestAuthStoreSealedAtRest(t *testing.T) {
 
 func TestAuthStoreLegacyPlaintextUpgrades(t *testing.T) {
 	home := isolatedHome(t)
-	path := filepath.Join(home, ".GHOST", "auth.json")
+	path := filepath.Join(home, ".KAYA", "auth.json")
 	if err := os.MkdirAll(filepath.Dir(path), 0700); err != nil {
 		t.Fatal(err)
 	}

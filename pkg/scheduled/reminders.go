@@ -7,10 +7,10 @@ import (
 	"time"
 )
 
-// A reminder is a promise Ghost made to the owner, not a scheduled message.
+// A reminder is a promise Kaya made to the owner, not a scheduled message.
 // Each time one goes off it leaves a delivery record (reminder_acks), and
 // what the owner did with it lands there too: seen, done, snoozed or
-// dismissed. That record is what lets Ghost tell "reminded" from
+// dismissed. That record is what lets Kaya tell "reminded" from
 // "acknowledged" from "done", follow up on one that went unseen, and never
 // nag about one already handled.
 
@@ -86,7 +86,7 @@ func (s *Store) settleOpenDeliveries(itemID string, o Outcome, at time.Time) err
 }
 
 // OpenDeliveries returns reminders delivered between from and to that the
-// owner has neither seen nor answered: the ones Ghost may gently bring up
+// owner has neither seen nor answered: the ones Kaya may gently bring up
 // again, once.
 //
 // One row per reminder, carrying its most recent open delivery. A reminder

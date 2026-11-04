@@ -11,8 +11,8 @@ func TestWebAddressPattern(t *testing.T) {
 	hits := []string{
 		"check out nairobiunwind.com and tell me what it is",
 		"open https://example.com/pricing",
-		"visit www.ghost.org for the docs",
-		"compare docs.ghost.io with ghost.org",
+		"visit www.kaya.org for the docs",
+		"compare docs.kaya.io with kaya.org",
 		"go to mysite.dev and screenshot it",
 	}
 	for _, s := range hits {

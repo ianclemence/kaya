@@ -23,7 +23,7 @@ import (
 )
 
 const (
-	info = "ghost-relay-e2e-v1"
+	info = "kaya-relay-e2e-v1"
 	// KeySize is the size of an X25519 public key.
 	KeySize = 32
 	// Overhead is what sealing adds to a message: the counter and the GCM tag.

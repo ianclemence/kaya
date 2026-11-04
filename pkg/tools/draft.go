@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ianclemence/ghost/pkg/cards"
+	"github.com/ianclemence/kaya/pkg/cards"
 )
 
 // DraftTool writes something for the owner to send (an email, a calendar

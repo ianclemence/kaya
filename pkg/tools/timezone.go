@@ -48,13 +48,13 @@ func ValidateTimezone(tz string) string {
 }
 
 // DeviceTimezone returns the host device's configured IANA timezone, the same
-// way a smart speaker uses its device's configured region. It is Ghost's
+// way a smart speaker uses its device's configured region. It is Kaya's
 // default for user-facing dates/times and scheduling when the client does not
 // provide one.
 //
 // Precedence: /etc/localtime symlink, then /etc/timezone, then the TZ env,
 // then the Go process local zone, then UTC. Reading the system configuration
-// first means a stray TZ=UTC in an env file cannot make Ghost report the
+// first means a stray TZ=UTC in an env file cannot make Kaya report the
 // wrong day for the owner.
 func DeviceTimezone() string {
 	if link, err := os.Readlink("/etc/localtime"); err == nil {
@@ -102,7 +102,7 @@ func DeviceLocation() *time.Location {
 //
 //	Fallback behavior:
 //	  - If location (city or lat+lon) is present, skills use it directly.
-//	  - If absent, Ghost asks once ("Which city should I check?") and resumes
+//	  - If absent, Kaya asks once ("Which city should I check?") and resumes
 //	    when the user replies with a short value — no repeat of full request.
 //	  - Timezone absent/unknown never blocks; scheduling falls back to UTC
 //	    and labels the fallback explicitly.

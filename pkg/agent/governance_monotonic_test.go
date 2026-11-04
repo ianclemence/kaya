@@ -4,7 +4,7 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/ianclemence/ghost/pkg/permissions"
+	"github.com/ianclemence/kaya/pkg/permissions"
 )
 
 // A deny-only guard must be able to refuse a call that broker policy allows.

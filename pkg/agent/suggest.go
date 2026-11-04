@@ -10,9 +10,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/ianclemence/ghost/pkg/providers"
-	"github.com/ianclemence/ghost/pkg/suggest"
-	"github.com/ianclemence/ghost/pkg/utils"
+	"github.com/ianclemence/kaya/pkg/providers"
+	"github.com/ianclemence/kaya/pkg/suggest"
+	"github.com/ianclemence/kaya/pkg/utils"
 )
 
 // What the owner is most likely to type next, offered in the empty message box.
@@ -21,7 +21,7 @@ import (
 // the last message: the same ending gives the same suggestion, and a new
 // message gives a new one. Rules answer first (see package suggest); only when
 // none applies is a small model call made, and only when the model is free,
-// because a suggestion must never make a real turn wait. GHOST_SUGGEST turns
+// because a suggestion must never make a real turn wait. KAYA_SUGGEST turns
 // the model off ("rules") or everything off ("off").
 
 // Suggestion is a possible next message and where it came from.
@@ -60,13 +60,13 @@ func suggestLock(session string) *sync.Mutex {
 // empty one. It never blocks behind a running turn and never errors: no
 // suggestion is a normal answer.
 func (al *AgentLoop) SuggestNext(ctx context.Context, session string) Suggestion {
-	mode := strings.ToLower(strings.TrimSpace(os.Getenv("GHOST_SUGGEST")))
+	mode := strings.ToLower(strings.TrimSpace(os.Getenv("KAYA_SUGGEST")))
 	if al == nil || mode == "off" || session == "" || isAutomationSession(session) {
 		return Suggestion{}
 	}
 	turns := recentTurns(al.History(session), suggestWindow)
 	if len(turns) == 0 || turns[len(turns)-1].Role != "assistant" {
-		return Suggestion{} // Ghost is not waiting on the owner
+		return Suggestion{} // Kaya is not waiting on the owner
 	}
 	last := turns[len(turns)-1].Text
 	sum := sha256.Sum256([]byte(fmt.Sprintf("%d\x00%s", len(turns), last)))
@@ -113,7 +113,7 @@ func (al *AgentLoop) modelSuggestion(ctx context.Context, turns []suggest.Turn, 
 	return suggest.Clean(resp.Content, last)
 }
 
-// recentTurns keeps the last n owner and Ghost messages, without tool calls or
+// recentTurns keeps the last n owner and Kaya messages, without tool calls or
 // the internal date labels, oldest first.
 func recentTurns(history []providers.Message, n int) []suggest.Turn {
 	var out []suggest.Turn

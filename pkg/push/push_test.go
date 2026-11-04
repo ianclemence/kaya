@@ -74,7 +74,7 @@ func TestNotifySendsFixedCopyOnly(t *testing.T) {
 	e := &expo{resp: `{"data":[{"status":"ok","id":"1"}]}`}
 	srv := e.server(t)
 	defer srv.Close()
-	t.Setenv("GHOST_EXPO_PUSH_URL", srv.URL)
+	t.Setenv("KAYA_EXPO_PUSH_URL", srv.URL)
 	n := NewNotifier(s)
 
 	sent, err := n.Notify(context.Background(), Approval)
@@ -82,7 +82,7 @@ func TestNotifySendsFixedCopyOnly(t *testing.T) {
 		t.Fatalf("sent=%d err=%v", sent, err)
 	}
 	m := e.reqs[0]
-	if m["to"] != tokA || m["body"] != "Ghost needs your OK." || m["title"] != "Ghost" {
+	if m["to"] != tokA || m["body"] != "Kaya needs your OK." || m["title"] != "Kaya" {
 		t.Fatalf("unexpected payload: %v", m)
 	}
 	data := m["data"].(map[string]interface{})
@@ -101,7 +101,7 @@ func TestBurstsCoalesceAndCategoriesAreIndependent(t *testing.T) {
 	e := &expo{resp: `{"data":[{"status":"ok"}]}`}
 	srv := e.server(t)
 	defer srv.Close()
-	t.Setenv("GHOST_EXPO_PUSH_URL", srv.URL)
+	t.Setenv("KAYA_EXPO_PUSH_URL", srv.URL)
 	n := NewNotifier(s)
 	now := time.Now()
 	n.now = func() time.Time { return now }
@@ -126,7 +126,7 @@ func TestDeadTokensArePruned(t *testing.T) {
 	e := &expo{resp: `{"data":[{"status":"error","message":"x","details":{"error":"DeviceNotRegistered"}},{"status":"ok"}]}`}
 	srv := e.server(t)
 	defer srv.Close()
-	t.Setenv("GHOST_EXPO_PUSH_URL", srv.URL)
+	t.Setenv("KAYA_EXPO_PUSH_URL", srv.URL)
 	sent, _ := NewNotifier(s).Notify(context.Background(), Question)
 	if sent != 1 {
 		t.Fatalf("one device accepted, got %d", sent)
@@ -141,7 +141,7 @@ func TestNoDevicesNoTraffic(t *testing.T) {
 	hit := false
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) { hit = true }))
 	defer srv.Close()
-	t.Setenv("GHOST_EXPO_PUSH_URL", srv.URL)
+	t.Setenv("KAYA_EXPO_PUSH_URL", srv.URL)
 	if n, _ := NewNotifier(s).Notify(context.Background(), Update); n != 0 || hit {
 		t.Fatal("with no registered device nothing may be sent")
 	}
@@ -152,7 +152,7 @@ func TestServiceErrorsAreReportedNotSwallowed(t *testing.T) {
 	s.Register("phone", tokA, "ios")
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) { w.WriteHeader(503) }))
 	defer srv.Close()
-	t.Setenv("GHOST_EXPO_PUSH_URL", srv.URL)
+	t.Setenv("KAYA_EXPO_PUSH_URL", srv.URL)
 	if _, err := NewNotifier(s).Notify(context.Background(), Update); err == nil {
 		t.Fatal("an outage must surface as an error")
 	}
@@ -164,11 +164,11 @@ func TestReminderCopyAndCategory(t *testing.T) {
 	e := &expo{resp: `{"data":[{"status":"ok"}]}`}
 	srv := e.server(t)
 	defer srv.Close()
-	t.Setenv("GHOST_EXPO_PUSH_URL", srv.URL)
+	t.Setenv("KAYA_EXPO_PUSH_URL", srv.URL)
 	if n, _ := NewNotifier(s).Notify(context.Background(), Reminder); n != 1 {
 		t.Fatal("a reminder must be sent")
 	}
-	if e.reqs[0]["body"] != "Ghost has a reminder for you." {
+	if e.reqs[0]["body"] != "Kaya has a reminder for you." {
 		t.Fatalf("reminder copy: %v", e.reqs[0]["body"])
 	}
 }

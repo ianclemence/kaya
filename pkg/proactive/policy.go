@@ -29,7 +29,7 @@ type Policy struct {
 
 	// Enabled is the master switch for proactive suggestions and notices.
 	// A disabled policy still lets explicitly requested work (reminders the
-	// owner asked for) run — it only silences Ghost volunteering things.
+	// owner asked for) run — it only silences Kaya volunteering things.
 	Enabled bool
 	// Categories limits which opportunity categories may surface. Empty means
 	// all categories; names match ideas.ObsKind.Category() (reminders,

@@ -56,12 +56,12 @@ func RunUpdate(s UpdateSteps) error {
 }
 
 // CheckWorkspaceMigration is the read-only half of the workspace
-// migration: it loads the Ghost config (vault included) and reports
+// migration: it loads the Kaya config (vault included) and reports
 // whether a move is needed, without moving anything. Update planning
 // calls this before services stop so a sealed-config failure aborts
 // early instead of stranding stopped services.
-func CheckWorkspaceMigration(ghostDir string) error {
-	plan, err := PlanWorkspaceMigrationFromDisk(ghostDir, "")
+func CheckWorkspaceMigration(kayaDir string) error {
+	plan, err := PlanWorkspaceMigrationFromDisk(kayaDir, "")
 	if err != nil {
 		return err
 	}

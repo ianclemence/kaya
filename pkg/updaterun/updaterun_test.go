@@ -8,13 +8,13 @@ import (
 	"time"
 )
 
-func fakeGhost(t *testing.T, body string) string {
+func fakeKaya(t *testing.T, body string) string {
 	t.Helper()
 	dir := t.TempDir()
-	bin := filepath.Join(dir, "ghost")
+	bin := filepath.Join(dir, "kaya")
 	os.WriteFile(bin, []byte("#!/bin/sh\n"+body+"\n"), 0755)
-	t.Setenv("GHOST_BIN", bin)
-	t.Setenv("GHOST_DIR", dir)
+	t.Setenv("KAYA_BIN", bin)
+	t.Setenv("KAYA_DIR", dir)
 	return dir
 }
 
@@ -30,7 +30,7 @@ func waitFor(t *testing.T, cond func() bool) {
 }
 
 func TestDetachedUpdateReportsSuccess(t *testing.T) {
-	fakeGhost(t, `echo "installing $1"; exit 0`)
+	fakeKaya(t, `echo "installing $1"; exit 0`)
 	if err := startWithoutSystemd(); err != nil {
 		t.Fatal(err)
 	}
@@ -42,7 +42,7 @@ func TestDetachedUpdateReportsSuccess(t *testing.T) {
 }
 
 func TestDetachedUpdateReportsFailureWithoutGuessing(t *testing.T) {
-	fakeGhost(t, `echo "build broke"; exit 3`)
+	fakeKaya(t, `echo "build broke"; exit 3`)
 	if err := startWithoutSystemd(); err != nil {
 		t.Fatal(err)
 	}
@@ -53,7 +53,7 @@ func TestDetachedUpdateReportsFailureWithoutGuessing(t *testing.T) {
 }
 
 func TestUpdateScriptQuotesTheBinaryPath(t *testing.T) {
-	if s := updateScript("/opt/it's here/ghost"); !strings.Contains(s, `'/opt/it'\''s here/ghost' update`) {
+	if s := updateScript("/opt/it's here/kaya"); !strings.Contains(s, `'/opt/it'\''s here/kaya' update`) {
 		t.Fatalf("binary path not safely quoted: %s", s)
 	}
 }

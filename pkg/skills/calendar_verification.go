@@ -7,7 +7,7 @@ import (
 // Google verification readiness: machine-readable scope justification.
 //
 // Google's OAuth verification cannot be performed programmatically — a
-// human submits the consent-screen review. What Ghost CAN do in code:
+// human submits the consent-screen review. What Kaya CAN do in code:
 // (1) request the narrowest scopes for the capability actually used,
 // (2) document why each scope exists, (3) expose a readiness checklist
 // the deployer completes before requesting verification, and
@@ -23,7 +23,7 @@ type ScopeInfo struct {
 }
 
 // CalendarScopeJustification returns the verification submission content:
-// every scope Ghost may request, what it is for, and why nothing broader
+// every scope Kaya may request, what it is for, and why nothing broader
 // is used. Full https://www.googleapis.com/auth/calendar access is never
 // requested — state that explicitly for the reviewer.
 func CalendarScopeJustification() []ScopeInfo {
@@ -31,7 +31,7 @@ func CalendarScopeJustification() []ScopeInfo {
 		{
 			Scope:       ScopeCalendarReadonly,
 			Purpose:     "Read the owner's upcoming events to answer 'what's on my calendar'.",
-			WhyNarrow:   "Read-only: Ghost cannot create, modify, or delete anything with this scope.",
+			WhyNarrow:   "Read-only: Kaya cannot create, modify, or delete anything with this scope.",
 			Sensitivity: "non-sensitive",
 		},
 		{

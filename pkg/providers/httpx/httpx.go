@@ -9,7 +9,7 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/ianclemence/ghost/pkg/provider"
+	"github.com/ianclemence/kaya/pkg/provider"
 )
 
 // GetJSON performs a GET and returns the body with per-attempt metadata.
@@ -23,7 +23,7 @@ func GetJSON(client *http.Client, ctx context.Context, url string, headers map[s
 		req.Header.Set(k, v)
 	}
 	if req.Header.Get("User-Agent") == "" {
-		req.Header.Set("User-Agent", "Ghost/1.0 (personal AI)")
+		req.Header.Set("User-Agent", "Kaya/1.0 (personal AI)")
 	}
 	resp, err := client.Do(req)
 	if err != nil {

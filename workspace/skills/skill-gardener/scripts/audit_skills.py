@@ -391,7 +391,7 @@ def audit(root: Path, *, single: bool = False, max_depth: int = DEFAULT_DEPTH) -
                 issue(path, "allowed-tools must be a non-empty string or list of non-empty strings when provided")
         if isinstance(fields.get("compatibility"), str) and len(fields["compatibility"]) > 500:
             issue(path, "compatibility exceeds 500 characters")
-        # Ghost accepts nested metadata; it is not limited to flat strings.
+        # Kaya accepts nested metadata; it is not limited to flat strings.
         if "metadata" in fields and fields["metadata"] is not None and not isinstance(fields["metadata"], dict):
             issue(path, "metadata must be a mapping when provided")
 

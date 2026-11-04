@@ -29,7 +29,7 @@
 // 27.0   pours a ground line, a sprout, and two words               one year
 // 31.0   lays a card on the glass                                   the author
 // ============================================================
-const HANDLE = 'ghost';
+const HANDLE = 'kaya';
 let T = 0; const go = (dur, make, gap = .08) => { const g = make(T, T + dur); T += dur + gap; return g; }, at = t => { T = t; return []; };
 const row = (y, dir, wob = 36) => Array.from({ length: 10 }, (_, k) => [dir > 0 ? -80 + k * 140 : 1160 - k * 140, y + Math.sin(k * 1.1 + y) * wob]);
 const hillY = x => 800 - 46 * Math.exp(-Math.pow((x - 440) / 300, 2));

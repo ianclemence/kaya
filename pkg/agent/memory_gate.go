@@ -10,10 +10,10 @@ import (
 // Measured on the live device: one local embedding call costs ~2.8 s and is
 // input-independent (1 character and 200 words both cost the same), and the
 // turn loop performed one on EVERY interactive message — including "hey
-// Ghost". The vector search itself is sub-millisecond; the embedding is the
+// Kaya". The vector search itself is sub-millisecond; the embedding is the
 // entire cost.
 //
-// Ghost already exposes `memory_recall` and `session_search` as ordinary
+// Kaya already exposes `memory_recall` and `session_search` as ordinary
 // tools, so a turn that genuinely needs memory and does not get it
 // auto-injected can still fetch it. That fallback is what makes a
 // conservative gate safe: the worst case is one extra tool call on a rare
@@ -38,7 +38,7 @@ var (
 		`my (?:notes|preferences|profile|history)` +
 		`)\b`)
 
-	// A possessive reference to something the owner owns and Ghost may have
+	// A possessive reference to something the owner owns and Kaya may have
 	// remembered. The noun is checked against runtime state below, so "my
 	// reminders" never reaches memory retrieval.
 	myFactRE = regexp.MustCompile(`(?i)\bmy\s+([a-z][a-z'\-]*)`)
@@ -56,7 +56,7 @@ var (
 	// message: naming live state means the answer comes from that state.
 	stateNounAnywhereRE = regexp.MustCompile(`(?i)\b(?:` + stateNounWords + `)\b`)
 
-	// A question about what Ghost is currently doing or just did. That is
+	// A question about what Kaya is currently doing or just did. That is
 	// runtime activity, which the state fast path answers from the event
 	// stream — never from durable memory.
 	activityProbeRE = regexp.MustCompile(`(?i)\b(` +
@@ -99,7 +99,7 @@ func extractionWorthwhile(message string) bool {
 // memoryRetrievalNeeded reports whether a turn should pay for a semantic
 // memory lookup before answering.
 //
-// Retrieval is justified when the owner is explicitly asking Ghost to recall
+// Retrieval is justified when the owner is explicitly asking Kaya to recall
 // something, or when the message refers to something the owner owns that is
 // not runtime state. Everything else — greetings, actions, tool requests, and
 // questions whose answer is authoritative runtime state — proceeds without an
@@ -127,7 +127,7 @@ func memoryRetrievalNeeded(query string) bool {
 		return true
 	}
 
-	// An imperative is an action Ghost performs, not a memory question.
+	// An imperative is an action Kaya performs, not a memory question.
 	if actionImperativeRE.MatchString(lower) {
 		return false
 	}
@@ -138,7 +138,7 @@ func memoryRetrievalNeeded(query string) bool {
 	}
 
 	// "my <thing>" is a reference to durable owner state unless the thing is
-	// something Ghost answers from live runtime state.
+	// something Kaya answers from live runtime state.
 	if m := myFactRE.FindStringSubmatch(lower); m != nil && !stateNounRE.MatchString(m[1]) {
 		return true
 	}

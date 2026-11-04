@@ -5,7 +5,7 @@ import (
 	"time"
 )
 
-// An approved action that was running when Ghost stopped used to stay
+// An approved action that was running when Kaya stopped used to stay
 // "executing" for ever: nothing finished it, and the dedupe check treats
 // executing as live, so the same opportunity could never be proposed again.
 func TestInterruptedExecutionIsFailedHonestlyAndFreesTheOpportunity(t *testing.T) {

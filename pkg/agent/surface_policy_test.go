@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/ianclemence/ghost/pkg/tools"
+	"github.com/ianclemence/kaya/pkg/tools"
 )
 
 // A surface that withholds a tool must say so before authority is requested.

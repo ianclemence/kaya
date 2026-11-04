@@ -68,7 +68,7 @@ func TestReadingOutsideContentTaintsLaterMemory(t *testing.T) {
 	}
 	for _, name := range []string{"read_file", "exec", "remember", "memory_recall", "system_status", "weather_now", ""} {
 		if ReadsOutsideContent(name, nil) {
-			t.Errorf("%s is the owner's or Ghost's own data and must not taint", name)
+			t.Errorf("%s is the owner's or Kaya's own data and must not taint", name)
 		}
 	}
 }

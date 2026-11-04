@@ -9,11 +9,11 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/ianclemence/ghost/pkg/capability"
-	"github.com/ianclemence/ghost/pkg/commitments"
-	"github.com/ianclemence/ghost/pkg/ideas"
-	"github.com/ianclemence/ghost/pkg/permissions"
-	"github.com/ianclemence/ghost/pkg/personalcontext"
+	"github.com/ianclemence/kaya/pkg/capability"
+	"github.com/ianclemence/kaya/pkg/commitments"
+	"github.com/ianclemence/kaya/pkg/ideas"
+	"github.com/ianclemence/kaya/pkg/permissions"
+	"github.com/ianclemence/kaya/pkg/personalcontext"
 	_ "modernc.org/sqlite"
 )
 
@@ -173,11 +173,11 @@ func readMemories(ws string) []memoryRow {
 	for _, id := range order {
 		out = append(out, final[id])
 	}
-	// Ghost remembers through more than the personal-context store: the
+	// Kaya remembers through more than the personal-context store: the
 	// model may persist a stated fact with the `remember` tool (MEMORY.md
 	// + RAG memory_chunks) instead of relying on background extraction.
 	// Both are real runtime memory; a memory-present assertion must see
-	// them or it would fail despite Ghost genuinely remembering.
+	// them or it would fail despite Kaya genuinely remembering.
 	out = append(out, memoryFromMemoryMD(ws)...)
 	out = append(out, memoryFromRAG(ws)...)
 	out = append(out, memoryFromCuratedProfile(ws)...)
@@ -229,7 +229,7 @@ func memoryFromMemoryMD(ws string) []memoryRow {
 
 // memoryFromRAG reads the remember tool's RAG sink (memory_chunks rows).
 func memoryFromRAG(ws string) []memoryRow {
-	db, err := sql.Open("sqlite", "file:"+filepath.Join(ws, "ghost.db")+"?mode=ro")
+	db, err := sql.Open("sqlite", "file:"+filepath.Join(ws, "kaya.db")+"?mode=ro")
 	if err != nil {
 		return nil
 	}
@@ -331,7 +331,7 @@ func successToolCounts(ws string) map[string]int {
 	if ws == "" {
 		return out
 	}
-	db, err := sql.Open("sqlite", "file:"+filepath.Join(ws, "ghost.db")+"?mode=ro")
+	db, err := sql.Open("sqlite", "file:"+filepath.Join(ws, "kaya.db")+"?mode=ro")
 	if err != nil {
 		return out
 	}
@@ -381,7 +381,7 @@ func gatherEvidence(ws string) *evidence {
 	ev := &evidence{EventTypes: map[string]int{}}
 	rows := readMemories(ws)
 	_ = rows
-	db, err := sql.Open("sqlite", "file:"+ws+"/ghost.db?mode=ro")
+	db, err := sql.Open("sqlite", "file:"+ws+"/kaya.db?mode=ro")
 	if err != nil {
 		return ev
 	}
@@ -501,7 +501,7 @@ func successfulExecutions(ws string) []execEvidence {
 	if ws == "" {
 		return out
 	}
-	db, err := sql.Open("sqlite", "file:"+ws+"/ghost.db?mode=ro")
+	db, err := sql.Open("sqlite", "file:"+ws+"/kaya.db?mode=ro")
 	if err != nil {
 		return out
 	}
@@ -555,7 +555,7 @@ func failedExecutions(ws string) []execEvidence {
 	if ws == "" {
 		return out
 	}
-	db, err := sql.Open("sqlite", "file:"+ws+"/ghost.db?mode=ro")
+	db, err := sql.Open("sqlite", "file:"+ws+"/kaya.db?mode=ro")
 	if err != nil {
 		return out
 	}
@@ -630,7 +630,7 @@ func brokerTargets(ws string) []brokerTarget {
 	if ws == "" {
 		return out
 	}
-	db, err := sql.Open("sqlite", "file:"+ws+"/ghost.db?mode=ro")
+	db, err := sql.Open("sqlite", "file:"+ws+"/kaya.db?mode=ro")
 	if err != nil {
 		return out
 	}
@@ -891,7 +891,7 @@ func lastSessionMessageList(ws, sessionKey string) []streamMsg {
 	if ws == "" || sessionKey == "" {
 		return nil
 	}
-	db, err := sql.Open("sqlite", "file:"+filepath.Join(ws, "ghost.db")+"?mode=ro")
+	db, err := sql.Open("sqlite", "file:"+filepath.Join(ws, "kaya.db")+"?mode=ro")
 	if err != nil {
 		return nil
 	}
@@ -1174,7 +1174,7 @@ func (r *Runner) evaluate(c Conversation, runs []personRun) (bool, []AssertionRe
 	if exp.RoutineCountSet {
 		var n int
 		if len(runs) > 0 {
-			db, err := sql.Open("sqlite", "file:"+runs[len(runs)-1].ws+"/ghost.db?mode=ro")
+			db, err := sql.Open("sqlite", "file:"+runs[len(runs)-1].ws+"/kaya.db?mode=ro")
 			if err == nil {
 				_ = db.QueryRow(`SELECT COUNT(*) FROM routine_meta`).Scan(&n)
 				db.Close()

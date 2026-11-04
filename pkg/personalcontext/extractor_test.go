@@ -710,7 +710,7 @@ func TestShoppingErrandsAndConsentAreNotMemories(t *testing.T) {
 			t.Errorf("%q is an errand, not a trait", s)
 		}
 	}
-	for _, s := range []string{"Favorite football club is Chelsea", "Always orders oat milk lattes", "Works on a pentesting agent", "Aims to launch Ghost as a product"} {
+	for _, s := range []string{"Favorite football club is Chelsea", "Always orders oat milk lattes", "Works on a pentesting agent", "Aims to launch Kaya as a product"} {
 		if transientPurchaseIntent(s) {
 			t.Errorf("%q is a lasting fact and must be kept", s)
 		}

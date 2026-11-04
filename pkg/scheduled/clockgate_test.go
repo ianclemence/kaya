@@ -71,7 +71,7 @@ func TestTickRespectsClockGate(t *testing.T) {
 	}
 }
 
-// A recurring automation that came due while Ghost was off is skipped, not
+// A recurring automation that came due while Kaya was off is skipped, not
 // replayed late, and the owner is told; a recurring reminder is a commitment
 // and still goes out; a slightly late run is just a slow boot and still runs.
 func TestTickAppliesMissedPolicyToRecurringItems(t *testing.T) {

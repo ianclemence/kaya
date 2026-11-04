@@ -1,7 +1,7 @@
-// Package awareness is how Ghost notices its own situation and tells its owner:
+// Package awareness is how Kaya notices its own situation and tells its owner:
 // someone poking at it over the network, a part of itself that has stopped
 // working, a room that has become uncomfortable. A friend who lived in your
-// house would mention these things without being asked; so should Ghost.
+// house would mention these things without being asked; so should Kaya.
 //
 // Nothing here acts on the world. It observes, decides whether the owner would
 // want to know, and says so once (with a cooldown) instead of repeating itself.

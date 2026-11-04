@@ -17,8 +17,8 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/ianclemence/ghost/pkg/provider"
-	"github.com/ianclemence/ghost/pkg/providers/httpx"
+	"github.com/ianclemence/kaya/pkg/provider"
+	"github.com/ianclemence/kaya/pkg/providers/httpx"
 )
 
 // Report is the validated capability result (vendor-neutral).

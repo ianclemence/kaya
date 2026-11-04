@@ -8,13 +8,13 @@ import (
 	"sync"
 	"time"
 
-	"github.com/ianclemence/ghost/pkg/cevents"
-	"github.com/ianclemence/ghost/pkg/credentials"
-	"github.com/ianclemence/ghost/pkg/logger"
-	"github.com/ianclemence/ghost/pkg/proactive"
-	"github.com/ianclemence/ghost/pkg/providers/flight"
-	"github.com/ianclemence/ghost/pkg/tools"
-	"github.com/ianclemence/ghost/pkg/watch"
+	"github.com/ianclemence/kaya/pkg/cevents"
+	"github.com/ianclemence/kaya/pkg/credentials"
+	"github.com/ianclemence/kaya/pkg/logger"
+	"github.com/ianclemence/kaya/pkg/proactive"
+	"github.com/ianclemence/kaya/pkg/providers/flight"
+	"github.com/ianclemence/kaya/pkg/tools"
+	"github.com/ianclemence/kaya/pkg/watch"
 )
 
 // Watches: the bridge from conversation to background observation of the
@@ -138,7 +138,7 @@ func (al *AgentLoop) watchProbes() *watch.Registry {
 				return res.Value, nil
 			}, true))
 		}
-		// A page the owner asked Ghost to watch: one bounded GET, through the
+		// A page the owner asked Kaya to watch: one bounded GET, through the
 		// same address safety gate as web_fetch (no private networks, no
 		// credentials in the address), checked again on every redirect.
 		reg.Register(watch.NewPageProbe(func(raw string) error {
@@ -340,7 +340,7 @@ func (al *AgentLoop) probeWatch(store *watch.Store, w watch.Watch, now time.Time
 	// price at or under their number, back in stock); other changes are
 	// observed and kept as evidence, not announced.
 	if first && err == nil {
-		// What the owner asked for may already be true the first time Ghost
+		// What the owner asked for may already be true the first time Kaya
 		// looks (the price is already under their number): say so now.
 		changes = append(changes, watch.AlreadyMet(updated)...)
 	}
@@ -573,7 +573,7 @@ func (al *AgentLoop) ActiveWatchCount() int {
 }
 
 // CancelWatch closes one watch by owner decision. It never touches any
-// state in the world; it records that the owner no longer wants Ghost
+// state in the world; it records that the owner no longer wants Kaya
 // watching.
 func (al *AgentLoop) CancelWatch(id, note string) (watch.Watch, error) {
 	store, err := al.watchStoreFor()
@@ -667,7 +667,7 @@ func (al *AgentLoop) publishWatch(typ cevents.Type, w watch.Watch, note string) 
 	}
 	al.governance.Events.Publish(&cevents.Event{
 		Type: typ, SessionID: proposalSession,
-		GhostID: al.governance.GhostID, AgentID: al.governance.AgentID,
+		KayaID: al.governance.KayaID, AgentID: al.governance.AgentID,
 		Status: string(w.Status), Payload: payload,
 	})
 }
@@ -707,6 +707,6 @@ func (al *AgentLoop) watchesNote(requestID string) string {
 	if len(parts) == 0 {
 		return ""
 	}
-	return "Ghost has just started watching, from the owner's own words: " + strings.Join(parts, "; ") +
+	return "Kaya has just started watching, from the owner's own words: " + strings.Join(parts, "; ") +
 		". It checks on its own and tells the owner when that happens. Confirm this in a sentence; do not say you cannot watch it, and do not set a reminder for it."
 }

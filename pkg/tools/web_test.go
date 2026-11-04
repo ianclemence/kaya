@@ -36,7 +36,7 @@ func TestWebTool_WebFetch_Success(t *testing.T) {
 		t.Errorf("Expected ForLLM to carry the readable page text, got: %s", result.ForLLM)
 	}
 	// And not the plumbing: no byte counts, extractor names or cache paths —
-	// that is how a reply ends up explaining Ghost's retrieval instead of
+	// that is how a reply ends up explaining Kaya's retrieval instead of
 	// answering.
 	for _, plumbing := range []string{"bytes", "extractor:", "Fetched ", "full_text_path"} {
 		if strings.Contains(result.ForLLM, plumbing) {

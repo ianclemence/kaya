@@ -3207,8 +3207,8 @@
   <xsd:complexType name="CT_MetadataType">
     <xsd:attribute name="name" type="s:ST_Xstring" use="required"/>
     <xsd:attribute name="minSupportedVersion" type="xsd:unsignedInt" use="required"/>
-    <xsd:attribute name="ghostRow" type="xsd:boolean" use="optional" default="false"/>
-    <xsd:attribute name="ghostCol" type="xsd:boolean" use="optional" default="false"/>
+    <xsd:attribute name="kayaRow" type="xsd:boolean" use="optional" default="false"/>
+    <xsd:attribute name="kayaCol" type="xsd:boolean" use="optional" default="false"/>
     <xsd:attribute name="edit" type="xsd:boolean" use="optional" default="false"/>
     <xsd:attribute name="delete" type="xsd:boolean" use="optional" default="false"/>
     <xsd:attribute name="copy" type="xsd:boolean" use="optional" default="false"/>

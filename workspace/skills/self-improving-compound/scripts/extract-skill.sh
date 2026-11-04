@@ -5,7 +5,7 @@
 set -euo pipefail
 
 SKILL_NAME="${1:-}"
-WORKSPACE_ROOT="${2:-${GHOST_WORKSPACE_DIR:-$HOME/.ghost/workspace}}"
+WORKSPACE_ROOT="${2:-${KAYA_WORKSPACE_DIR:-$HOME/.kaya/workspace}}"
 SOURCE_QUERY="${3:-}"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 LEARNINGS_CLI="$SCRIPT_DIR/learnings.py"

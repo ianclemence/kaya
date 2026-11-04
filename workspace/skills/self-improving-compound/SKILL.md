@@ -13,9 +13,9 @@ metadata:
 
 An agent memory and learning system that replaces naive file-based memory with a structured pipeline: real-time capture, observable Candidate → Learning → Promotion queues, automated cron-based audit, and continuous promotion of lessons into skills and agent instructions.
 
-> **Ghost scheduling note.** In Ghost, scheduled work runs through the runtime
+> **Kaya scheduling note.** In Kaya, scheduled work runs through the runtime
 > scheduler — the `schedule` tool and durable routines — never a shell cron.
-> The helper scripts under `scripts/` are optional and are not how Ghost
+> The helper scripts under `scripts/` are optional and are not how Kaya
 > schedules its own work; prefer `schedule` for anything recurring.
 
 The system runs as four layers:
@@ -47,21 +47,21 @@ You must distinguish two roots:
 
 ```bash
 # Workspace root: where memory/, learning/, AGENTS.md, etc. live
-export GHOST_WORKSPACE="/path/to/workspace"
+export KAYA_WORKSPACE="/path/to/workspace"
 
 # Optional shared lesson store for multiple workspace roots
-# export SELF_IMPROVING_LEARNING_ROOT="$HOME/.ghost/shared-learning"
+# export SELF_IMPROVING_LEARNING_ROOT="$HOME/.kaya/shared-learning"
 
 # Skill root: where this skill was installed
-export SELF_IMPROVING_SKILL_DIR="$GHOST_WORKSPACE/skills/self-improving-compound"
+export SELF_IMPROVING_SKILL_DIR="$KAYA_WORKSPACE/skills/self-improving-compound"
 export SELF_IMPROVING_LEARNINGS_CLI="$SELF_IMPROVING_SKILL_DIR/scripts/learnings.py"
 ```
 
-For Ghost's default workspace this is usually:
+For Kaya's default workspace this is usually:
 
 ```bash
-export GHOST_WORKSPACE="${GHOST_WORKSPACE_DIR:-$HOME/.ghost/workspace}"
-export SELF_IMPROVING_SKILL_DIR="$GHOST_WORKSPACE/skills/self-improving-compound"
+export KAYA_WORKSPACE="${KAYA_WORKSPACE_DIR:-$HOME/.kaya/workspace}"
+export SELF_IMPROVING_SKILL_DIR="$KAYA_WORKSPACE/skills/self-improving-compound"
 export SELF_IMPROVING_LEARNINGS_CLI="$SELF_IMPROVING_SKILL_DIR/scripts/learnings.py"
 ```
 
@@ -70,7 +70,7 @@ Do not write durable learnings into the skill directory. By default `learning/` 
 ### Phase 1 — Install files
 
 ```bash
-# The skill ships with Ghost; confirm it is present:
+# The skill ships with Kaya; confirm it is present:
 ls "$SELF_IMPROVING_SKILL_DIR/SKILL.md"
 cd "$SELF_IMPROVING_SKILL_DIR"
 chmod +x scripts/*.py scripts/*.sh hooks/*.sh 2>/dev/null || true
@@ -83,9 +83,9 @@ The bundled shell helpers require bash. On POSIX `sh`-only hosts, use the Python
 ### Phase 2 — Initialize and verify the learning store
 
 ```bash
-python3 "$SELF_IMPROVING_LEARNINGS_CLI" --root "$GHOST_WORKSPACE" init
-python3 "$SELF_IMPROVING_LEARNINGS_CLI" --root "$GHOST_WORKSPACE" status
-python3 "$SELF_IMPROVING_LEARNINGS_CLI" --root "$GHOST_WORKSPACE" search "install smoke test" --limit 3
+python3 "$SELF_IMPROVING_LEARNINGS_CLI" --root "$KAYA_WORKSPACE" init
+python3 "$SELF_IMPROVING_LEARNINGS_CLI" --root "$KAYA_WORKSPACE" status
+python3 "$SELF_IMPROVING_LEARNINGS_CLI" --root "$KAYA_WORKSPACE" search "install smoke test" --limit 3
 ```
 
 Expected result:
@@ -105,7 +105,7 @@ Before the final reply after any non-trivial task, check whether the work involv
 
 If yes:
 1. Search existing learnings first:
-   `python3 $SELF_IMPROVING_LEARNINGS_CLI --root $GHOST_WORKSPACE search "<keywords>" --limit 5`
+   `python3 $SELF_IMPROVING_LEARNINGS_CLI --root $KAYA_WORKSPACE search "<keywords>" --limit 5`
 2. If no suitable entry exists, log the durable lesson with `log-correction`, `log-error`, `log-learning`, or `log-feature`.
 3. Keep entries compact, prevention-oriented, and secret-free.
 ```
@@ -116,7 +116,7 @@ Without this phase the skill remains mostly passive; the agent will not consiste
 
 Cron installation is not automatic. The templates live in `scripts/setup-cron.json`; agent-facing instructions live in `scripts/setup-cron-agent.md`.
 
-Recommended Ghost flow:
+Recommended Kaya flow:
 
 1. Ask the agent: "Install the self-improving compound cron jobs using `scripts/setup-cron.json`. Check existing jobs first and update instead of duplicating."
 2. Configure delivery for your channel, e.g. Telegram or Feishu.
@@ -162,9 +162,9 @@ The bundled `scripts/memory-pipeline.py` adds an explicit queue and dashboard ar
 
 ```bash
 export SELF_IMPROVING_MEMORY_PIPELINE="$SELF_IMPROVING_SKILL_DIR/scripts/memory-pipeline.py"
-# Optional if the Ghost session key is ambiguous:
+# Optional if the Kaya session key is ambiguous:
 # export SELF_IMPROVING_MAIN_SESSION_KEY="agent:main:<channel>:direct:<id>"
-python3 "$SELF_IMPROVING_MEMORY_PIPELINE" --base "$GHOST_WORKSPACE/learning/pipeline" dashboard
+python3 "$SELF_IMPROVING_MEMORY_PIPELINE" --base "$KAYA_WORKSPACE/learning/pipeline" dashboard
 ```
 
 State files:
@@ -197,7 +197,7 @@ Collector contract:
 
 ```bash
 export SELF_IMPROVING_DAILY_COLLECTOR="python3 /path/to/collector.py"
-bash "$SELF_IMPROVING_SKILL_DIR/scripts/daily-memory.sh" --root "$GHOST_WORKSPACE"
+bash "$SELF_IMPROVING_SKILL_DIR/scripts/daily-memory.sh" --root "$KAYA_WORKSPACE"
 ```
 
 If no collector is configured, the helper prints the target note contract and the agent must gather context with available runtime tools.
@@ -207,15 +207,15 @@ If no collector is configured, the helper prints the target note contract and th
 Run this checklist after installation:
 
 ```bash
-python3 "$SELF_IMPROVING_LEARNINGS_CLI" --root "$GHOST_WORKSPACE" log-learning \
+python3 "$SELF_IMPROVING_LEARNINGS_CLI" --root "$KAYA_WORKSPACE" log-learning \
   --summary "Self-improving install smoke test" \
   --details "Temporary entry to verify logging path; mark resolved or delete if desired." \
   --pattern "install:smoke-test" \
   --area "domain:setup"
 
-python3 "$SELF_IMPROVING_LEARNINGS_CLI" --root "$GHOST_WORKSPACE" search "install smoke test" --limit 5
+python3 "$SELF_IMPROVING_LEARNINGS_CLI" --root "$KAYA_WORKSPACE" search "install smoke test" --limit 5
 bash "$SELF_IMPROVING_SKILL_DIR/scripts/learning-export.sh"
-bash "$SELF_IMPROVING_SKILL_DIR/scripts/daily-memory.sh" --root "$GHOST_WORKSPACE" --date "$(TZ=Asia/Shanghai date +%F)"
+bash "$SELF_IMPROVING_SKILL_DIR/scripts/daily-memory.sh" --root "$KAYA_WORKSPACE" --date "$(TZ=Asia/Shanghai date +%F)"
 ```
 
 Then verify:
@@ -232,7 +232,7 @@ Then verify:
 |---|---|---|
 | Skill installed but nothing changes | Capture gate and cron not configured | Complete phases 3-4. |
 | Cron runs but finds no conversation context | Isolated session has no main history or `session_search` is restricted | Configure `SELF_IMPROVING_LIGHT_CONTEXT_COLLECTOR`; use `session_search` only as a verified fallback. |
-| Learnings appear under the skill directory | Wrong `--root` | Set `GHOST_WORKSPACE`; always pass `--root`. |
+| Learnings appear under the skill directory | Wrong `--root` | Set `KAYA_WORKSPACE`; always pass `--root`. |
 | Cron summaries disappear | `delivery` missing channel/recipient | Set `delivery.channel` + `delivery.to`. |
 | Daily memory is generic or empty | No collector/context source | Configure `SELF_IMPROVING_DAILY_COLLECTOR` or improve the cron prompt. |
 | Duplicate cron jobs | Setup re-run without idempotency check | `cron list` first; update by job name. |
@@ -304,7 +304,7 @@ This skill merges three design lineages into one portable package:
 | **actual-self-improvement** | Execution core | Python CLI (`scripts/learnings.py`), structured logging, JSON evals, search-before-log dedupe |
 | **OpenHuman memory-tree** | Storage core | SQLite chunks, FTS search, entity index, scores, hotness, async jobs, deterministic tree buffers, lifecycle status, idempotent ingest |
 | **self-improving-compound** | Memory architecture | HOT/WARM/COLD lifecycle, workspace-scoped `learning/`, lightweight bootstrap markdown |
-| **self-improving-agent-local** | Promotion & hooks | Quantified promotion thresholds, Ghost hook guidance, pattern-key recurrence rules |
+| **self-improving-agent-local** | Promotion & hooks | Quantified promotion thresholds, Kaya hook guidance, pattern-key recurrence rules |
 
 ### Directory layout under `learning/`
 
@@ -384,11 +384,11 @@ Run `scripts/learning-export.sh`, inspect `learning/`, `skills/*/SKILL.md`, and 
 
 ### Cron installation (one-time setup)
 
-**The cron jobs described above are NOT created automatically when you install this skill.** You must run the setup once to create them in your Ghost instance.
+**The cron jobs described above are NOT created automatically when you install this skill.** You must run the setup once to create them in your Kaya instance.
 
 The production-grade cron job definitions are in `scripts/setup-cron.json`. The agent-facing setup guide is `scripts/setup-cron-agent.md`.
 
-Quick setup (run from your Ghost main session):
+Quick setup (run from your Kaya main session):
 
 1. **Confirm**: "I want to install the self-improving compound cron jobs. Use `scripts/setup-cron.json` as reference."
 
@@ -412,8 +412,8 @@ Add the following rule to agent instructions (e.g. AGENTS.md):
 
 Route watchdog, doctor, healthcheck, and cron failure signals into `log-error` with stable pattern keys and dedupe:
 
-- Pattern keys: `cron:<job-name>`, `doctor:<check-name>`, `watchdog:<component>`, `system:ghost-audit-failure`
-- Use `scripts/log-system-failures.sh` as an Ghost CLI audit wrapper where available.
+- Pattern keys: `cron:<job-name>`, `doctor:<check-name>`, `watchdog:<component>`, `system:kaya-audit-failure`
+- Use `scripts/log-system-failures.sh` as an Kaya CLI audit wrapper where available.
 - Always search existing entries first to prevent repeated failures from flooding SQLite.
 
 ### Guardrails
@@ -454,7 +454,7 @@ Before reading or writing `learning/`, determine `WORKSPACE_ROOT`.
 
 Good defaults:
 - the repository root for the current codebase
-- the Ghost workspace root (`GHOST_WORKSPACE` env var)
+- the Kaya workspace root (`KAYA_WORKSPACE` env var)
 - the directory containing the files being edited
 
 If unsure, prefer the directory containing `.git`, `AGENTS.md`, `CLAUDE.md`, or the user's active project files.
@@ -574,8 +574,8 @@ Common targets:
 - `CLAUDE.md` — durable project facts and conventions
 - `AGENTS.md` — workflow rules and automation guidance
 - `.github/copilot-instructions.md` — shared Copilot context
-- `SOUL.md` — behavioural principles in Ghost workspaces
-- `TOOLS.md` — tool-specific gotchas in Ghost workspaces
+- `SOUL.md` — behavioural principles in Kaya workspaces
+- `TOOLS.md` — tool-specific gotchas in Kaya workspaces
 
 Write promotions as **short prevention rules**, not long incident write-ups.
 
@@ -657,7 +657,7 @@ When patterns contradict:
 Use these only when needed:
 - `references/entry-formats.md` — full field schemas and manual templates
 - `references/promotion-and-extraction.md` — promotion rules and skill extraction criteria
-- `references/platform-setup.md` — Claude Code, Codex, Copilot, and Ghost setup notes
+- `references/platform-setup.md` — Claude Code, Codex, Copilot, and Kaya setup notes
 
 ## Hooks
 

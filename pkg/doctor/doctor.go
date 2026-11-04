@@ -8,12 +8,12 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ianclemence/ghost/pkg/clock"
-	"github.com/ianclemence/ghost/pkg/hardware"
-	"github.com/ianclemence/ghost/pkg/providers"
-	"github.com/ianclemence/ghost/pkg/schema"
-	"github.com/ianclemence/ghost/pkg/skills"
-	"github.com/ianclemence/ghost/pkg/tools"
+	"github.com/ianclemence/kaya/pkg/clock"
+	"github.com/ianclemence/kaya/pkg/hardware"
+	"github.com/ianclemence/kaya/pkg/providers"
+	"github.com/ianclemence/kaya/pkg/schema"
+	"github.com/ianclemence/kaya/pkg/skills"
+	"github.com/ianclemence/kaya/pkg/tools"
 )
 
 type CheckResult struct {
@@ -29,7 +29,7 @@ type Doctor struct {
 	provider  providers.LLMProvider
 	registry  *tools.ToolRegistry
 	workspace string
-	// configPath binds the Ghost config for the vault check.
+	// configPath binds the Kaya config for the vault check.
 	// Empty means unbound (info, not an error).
 	configPath string
 	// Estate is the configured model inventory (primary + fallbacks).
@@ -107,7 +107,7 @@ func (d *Doctor) Rebind(p providers.LLMProvider, estate []providers.ProviderInfo
 
 func (d *Doctor) RunAll(ctx context.Context) []CheckResult {
 	// Order is the user-visible diagnostics order: core health first
-	// (can Ghost think, act, remember?), capabilities next, storage and
+	// (can Kaya think, act, remember?), capabilities next, storage and
 	// security risk after, setup state last. Length scales with problems,
 	// not inventory — see the omission filter below.
 	checks := []func(context.Context) CheckResult{
@@ -156,7 +156,7 @@ func (d *Doctor) checkBrowser(ctx context.Context) CheckResult {
 			Name:    "browser_env",
 			Label:   "Web browsing",
 			Status:  "info",
-			Message: "Not installed — and that's okay. Ghost can still work, it just can't browse web pages for you.",
+			Message: "Not installed — and that's okay. Kaya can still work, it just can't browse web pages for you.",
 			Latency: time.Since(start).Milliseconds(),
 		}
 	}
@@ -174,7 +174,7 @@ func (d *Doctor) checkBrowser(ctx context.Context) CheckResult {
 func (d *Doctor) checkDatabase(ctx context.Context) CheckResult {
 	start := time.Now()
 	if d.db == nil {
-		return CheckResult{Name: "database", Label: "Memory", Status: "error", Message: "Ghost's memory isn't configured."}
+		return CheckResult{Name: "database", Label: "Memory", Status: "error", Message: "Kaya's memory isn't configured."}
 	}
 	err := d.db.PingContext(ctx)
 	if err != nil {
@@ -182,7 +182,7 @@ func (d *Doctor) checkDatabase(ctx context.Context) CheckResult {
 			Name:    "database",
 			Label:   "Memory",
 			Status:  "error",
-			Message: "Ghost's memory is having trouble: " + err.Error(),
+			Message: "Kaya's memory is having trouble: " + err.Error(),
 			Latency: time.Since(start).Milliseconds(),
 		}
 	}
@@ -190,7 +190,7 @@ func (d *Doctor) checkDatabase(ctx context.Context) CheckResult {
 		Name:    "database",
 		Label:   "Memory",
 		Status:  "ok",
-		Message: "Ghost's memory is healthy.",
+		Message: "Kaya's memory is healthy.",
 		Latency: time.Since(start).Milliseconds(),
 	}
 }
@@ -198,7 +198,7 @@ func (d *Doctor) checkDatabase(ctx context.Context) CheckResult {
 func (d *Doctor) checkSchema(ctx context.Context) CheckResult {
 	start := time.Now()
 	if d.db == nil {
-		return CheckResult{Name: "schema", Label: "Database schema", Status: "error", Message: "Ghost's memory isn't configured."}
+		return CheckResult{Name: "schema", Label: "Database schema", Status: "error", Message: "Kaya's memory isn't configured."}
 	}
 	ok, at, err := schema.CheckCurrent(d.db)
 	if err != nil {
@@ -215,7 +215,7 @@ func (d *Doctor) checkSchema(ctx context.Context) CheckResult {
 			Name:    "schema",
 			Label:   "Database schema",
 			Status:  "error",
-			Message: fmt.Sprintf("Database schema is at version %d but this Ghost needs version %d. Restart Ghost to migrate, or restore from a backup.", at, schema.CurrentVersion),
+			Message: fmt.Sprintf("Database schema is at version %d but this Kaya needs version %d. Restart Kaya to migrate, or restore from a backup.", at, schema.CurrentVersion),
 			Latency: time.Since(start).Milliseconds(),
 		}
 	}
@@ -323,7 +323,7 @@ func missingKeys(estate []providers.ProviderInfo) []string {
 func (d *Doctor) checkToolRegistry(ctx context.Context) CheckResult {
 	start := time.Now()
 	if d.registry == nil {
-		return CheckResult{Name: "tool_registry", Label: "Tools", Status: "error", Message: "Ghost's tools aren't available."}
+		return CheckResult{Name: "tool_registry", Label: "Tools", Status: "error", Message: "Kaya's tools aren't available."}
 	}
 	names := d.registry.List()
 	if len(names) == 0 {
@@ -367,10 +367,10 @@ func (d *Doctor) checkResources(ctx context.Context) CheckResult {
 	switch s.Memory {
 	case hardware.PressureCritical:
 		status = "error"
-		msg += " — critical: Ghost will reduce context and retrieval to keep running."
+		msg += " — critical: Kaya will reduce context and retrieval to keep running."
 	case hardware.PressureWarning:
 		status = "warning"
-		msg += " — running low: Ghost is trimming derived caches and context."
+		msg += " — running low: Kaya is trimming derived caches and context."
 	}
 	return CheckResult{
 		Name:    "resources",
@@ -388,7 +388,7 @@ func (d *Doctor) checkSkillDependencies(ctx context.Context) CheckResult {
 			Name:    "skill_dependencies",
 			Label:   "Skills",
 			Status:  "warning",
-			Message: "Ghost can't find its skills.",
+			Message: "Kaya can't find its skills.",
 			Latency: time.Since(start).Milliseconds(),
 		}
 	}

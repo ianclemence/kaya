@@ -3,7 +3,7 @@ package providers
 import (
 	"strings"
 
-	"github.com/ianclemence/ghost/pkg/config"
+	"github.com/ianclemence/kaya/pkg/config"
 )
 
 // KnownProviderModels is the curated recommendation per provider: the

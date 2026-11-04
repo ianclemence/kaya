@@ -47,7 +47,7 @@ type UsageInfo struct {
 // UnmarshalJSON reads the usage block of any OpenAI-compatible provider and
 // normalizes prompt-cache hits into CacheReadTokens: DeepSeek reports
 // "prompt_cache_hit_tokens", OpenAI "prompt_tokens_details.cached_tokens".
-// Ghost's own serialized form ("cache_read_tokens") round-trips unchanged.
+// Kaya's own serialized form ("cache_read_tokens") round-trips unchanged.
 func (u *UsageInfo) UnmarshalJSON(b []byte) error {
 	type plain UsageInfo
 	var raw struct {
@@ -87,11 +87,11 @@ type Message struct {
 	// SourceChannel records which surface a message came in on (mobile,
 	// cli, telegram, voice, …). It is provenance, not conversation
 	// identity: every surface shares one conversation, and this field only
-	// notes where a turn originated. Empty for messages Ghost produced
+	// notes where a turn originated. Empty for messages Kaya produced
 	// without an external surface.
 	SourceChannel string `json:"source_channel,omitempty"`
-	// Kind marks a message Ghost started itself rather than wrote in reply:
-	// "reminder" (something you asked to be told), "notice" (something Ghost
+	// Kind marks a message Kaya started itself rather than wrote in reply:
+	// "reminder" (something you asked to be told), "notice" (something Kaya
 	// thought you should know) or "alert" (something that needs you). Empty for
 	// ordinary conversation. Surfaces use it to set these apart.
 	Kind string `json:"kind,omitempty"`

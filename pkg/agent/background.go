@@ -5,8 +5,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ianclemence/ghost/pkg/bus"
-	"github.com/ianclemence/ghost/pkg/tools"
+	"github.com/ianclemence/kaya/pkg/bus"
+	"github.com/ianclemence/kaya/pkg/tools"
 )
 
 // maxBackgroundNoteChars bounds the completion text persisted into session

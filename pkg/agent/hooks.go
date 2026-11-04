@@ -7,7 +7,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/ianclemence/ghost/pkg/logger"
+	"github.com/ianclemence/kaya/pkg/logger"
 )
 
 // ToolApprovalAction represents the decision from a tool approver.

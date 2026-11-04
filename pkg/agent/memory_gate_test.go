@@ -2,7 +2,7 @@ package agent
 
 import "testing"
 
-// The gate exists to stop Ghost paying ~2.8 s of local embedding on every
+// The gate exists to stop Kaya paying ~2.8 s of local embedding on every
 // message. These cases are the contract: memory questions retrieve, everything
 // else does not.
 func TestMemoryRetrievalNeeded(t *testing.T) {
@@ -29,7 +29,7 @@ func TestMemoryRetrievalNeeded(t *testing.T) {
 	}
 
 	skip := []string{
-		"hey Ghost",
+		"hey Kaya",
 		"hi",
 		"thanks!",
 		"what reminders do I have?",
@@ -39,7 +39,7 @@ func TestMemoryRetrievalNeeded(t *testing.T) {
 		"is my morning routine okay?",
 		"what tasks are overdue?",
 		"what did you just do?",
-		"is Ghost healthy?",
+		"is Kaya healthy?",
 		"how much disk space is left?",
 		"is proactive mode on?",
 		"what model are you using?",

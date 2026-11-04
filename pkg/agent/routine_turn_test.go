@@ -4,9 +4,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/ianclemence/ghost/pkg/bus"
-	ghodb "github.com/ianclemence/ghost/pkg/db"
-	"github.com/ianclemence/ghost/pkg/skills"
+	"github.com/ianclemence/kaya/pkg/bus"
+	ghodb "github.com/ianclemence/kaya/pkg/db"
+	"github.com/ianclemence/kaya/pkg/skills"
 )
 
 func testRoutineLoop(t *testing.T) *AgentLoop {

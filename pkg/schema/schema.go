@@ -1,4 +1,4 @@
-// Package schema owns Ghost's database versioning: the ordered migration
+// Package schema owns Kaya's database versioning: the ordered migration
 // registry plus the current schema version. The gateway runs
 // MigrateToCurrent at startup before any subsystem touches the database;
 // import paths use it too. Subsystem DDL stays owned by each subsystem
@@ -15,17 +15,17 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/ianclemence/ghost/pkg/artifacts"
-	"github.com/ianclemence/ghost/pkg/browser"
-	"github.com/ianclemence/ghost/pkg/cevents"
-	"github.com/ianclemence/ghost/pkg/computer"
-	"github.com/ianclemence/ghost/pkg/db"
-	"github.com/ianclemence/ghost/pkg/migrations"
-	"github.com/ianclemence/ghost/pkg/permissions"
-	"github.com/ianclemence/ghost/pkg/routines"
-	"github.com/ianclemence/ghost/pkg/scheduled"
-	"github.com/ianclemence/ghost/pkg/tasks"
-	"github.com/ianclemence/ghost/pkg/tools"
+	"github.com/ianclemence/kaya/pkg/artifacts"
+	"github.com/ianclemence/kaya/pkg/browser"
+	"github.com/ianclemence/kaya/pkg/cevents"
+	"github.com/ianclemence/kaya/pkg/computer"
+	"github.com/ianclemence/kaya/pkg/db"
+	"github.com/ianclemence/kaya/pkg/migrations"
+	"github.com/ianclemence/kaya/pkg/permissions"
+	"github.com/ianclemence/kaya/pkg/routines"
+	"github.com/ianclemence/kaya/pkg/scheduled"
+	"github.com/ianclemence/kaya/pkg/tasks"
+	"github.com/ianclemence/kaya/pkg/tools"
 )
 
 // CurrentVersion is the schema head this build understands.
@@ -49,7 +49,7 @@ func baseline(raw *sql.DB) error {
 	if _, err := routines.New(raw, store); err != nil {
 		return fmt.Errorf("routines schema: %w", err)
 	}
-	logDir, err := os.MkdirTemp("", "ghost-schema-cevents-*")
+	logDir, err := os.MkdirTemp("", "kaya-schema-cevents-*")
 	if err != nil {
 		return fmt.Errorf("cevents staging dir: %w", err)
 	}

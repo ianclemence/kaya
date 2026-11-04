@@ -8,7 +8,7 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/ianclemence/ghost/pkg/logger"
+	"github.com/ianclemence/kaya/pkg/logger"
 )
 
 // VideoFramesTool extracts frames or short clips from videos using ffmpeg.
@@ -80,7 +80,7 @@ func (t *VideoFramesTool) Execute(ctx context.Context, args map[string]interface
 		if err := guardPrimaryFileIn(t.workspace, outputPath); err != nil {
 			return ErrorResult(err.Error())
 		}
-		if err := guardGhostEstateWrite(t.workspace, outputPath); err != nil {
+		if err := guardKayaEstateWrite(t.workspace, outputPath); err != nil {
 			return ErrorResult(err.Error())
 		}
 	}

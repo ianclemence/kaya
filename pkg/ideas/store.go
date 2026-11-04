@@ -406,7 +406,7 @@ func (s *Store) RecoverInterrupted(now, cutoff time.Time) ([]Idea, error) {
 			continue
 		}
 		updated, err := s.Fail(idea.ID, "interrupted",
-			"Ghost stopped before this finished, so I can't confirm it ran. It was not retried.", now)
+			"Kaya stopped before this finished, so I can't confirm it ran. It was not retried.", now)
 		if err == nil {
 			updated.EvidenceLevel = ""
 			recovered = append(recovered, updated)

@@ -5,7 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/ianclemence/ghost/pkg/config"
+	"github.com/ianclemence/kaya/pkg/config"
 	"net/url"
 	"os"
 	"os/exec"
@@ -16,11 +16,11 @@ import (
 	"sync"
 	"time"
 
-	"github.com/ianclemence/ghost/pkg/browser"
-	"github.com/ianclemence/ghost/pkg/cards"
-	"github.com/ianclemence/ghost/pkg/logger"
-	"github.com/ianclemence/ghost/pkg/permissions"
-	"github.com/ianclemence/ghost/pkg/redact"
+	"github.com/ianclemence/kaya/pkg/browser"
+	"github.com/ianclemence/kaya/pkg/cards"
+	"github.com/ianclemence/kaya/pkg/logger"
+	"github.com/ianclemence/kaya/pkg/permissions"
+	"github.com/ianclemence/kaya/pkg/redact"
 )
 
 // BrowserTool uses the 'agent-browser' CLI (a Node.js CDP wrapper) to provide
@@ -30,7 +30,7 @@ type BrowserTool struct {
 	workspace string
 	action    string // e.g. "navigate", "click", "type", "press", "snapshot"
 
-	// Policy attaches Ghost runtime guarantees. Nil keeps the exact
+	// Policy attaches Kaya runtime guarantees. Nil keeps the exact
 	// legacy behavior (no session binding, raw CLI output). Set it to
 	// bind every call to an isolated owner+context+task session and to
 	// label all page output untrusted before it reaches the model.
@@ -51,7 +51,7 @@ type BrowserTool struct {
 	sessionProfile string
 }
 
-// BrowserPolicy binds a BrowserTool to Ghost's browser runtime contract:
+// BrowserPolicy binds a BrowserTool to Kaya's browser runtime contract:
 // one isolated session per owner+context+task (cookie jars never cross
 // contexts), redacted untrusted-labeled observations, and an evidence
 // record per state-changing op.
@@ -173,7 +173,7 @@ func (t *BrowserTool) Description() string {
 	case "press":
 		return "Press a keyboard key (e.g. 'Enter', 'Tab', 'Escape')."
 	case "login":
-		return "Sign in to a site with the login the owner saved in Ghost's settings. You give only the host; the username and password are filled in without you ever seeing them. Always needs the owner's approval."
+		return "Sign in to a site with the login the owner saved in Kaya's settings. You give only the host; the username and password are filled in without you ever seeing them. Always needs the owner's approval."
 	case "fill":
 		return "Clear an input field and fill it with text (e.g. address, cardholder name). Requires the element reference ID. Prefer fill over type for forms."
 	case "submit":
@@ -207,7 +207,7 @@ func (t *BrowserTool) Description() string {
 	case "upload":
 		return "Upload local files to a file input by its @eN ref. HIGH IMPACT: file contents leave this device for the page's origin — approval is always required and names the exact paths."
 	case "download":
-		return "Click an element to download its file into Ghost's managed download directory. Returns the saved path."
+		return "Click an element to download its file into Kaya's managed download directory. Returns the saved path."
 	default:
 		return "Interact with the browser."
 	}
@@ -413,7 +413,7 @@ func (t *BrowserTool) Parameters() map[string]interface{} {
 	case "login":
 		props["host"] = map[string]interface{}{
 			"type":        "string",
-			"description": "Site host to sign in to (e.g. accounts.example.com). The credential comes from Ghost settings, never from you.",
+			"description": "Site host to sign in to (e.g. accounts.example.com). The credential comes from Kaya settings, never from you.",
 		}
 		props["url"] = map[string]interface{}{
 			"type":        "string",
@@ -432,7 +432,7 @@ func (t *BrowserTool) Parameters() map[string]interface{} {
 }
 
 // browserEnvironment returns the environment for the agent-browser child.
-// If Ghost discovered a working browser executable (Playwright's
+// If Kaya discovered a working browser executable (Playwright's
 // headless_shell) and the operator has not chosen one, it is exported so
 // agent-browser steers clear of a system Chromium that may crash silently
 // under --remote-debugging-port. An operator-set value is never overridden.
@@ -502,7 +502,7 @@ func browserStateRoot() string { return browser.StateRoot() }
 func writableDir(dir string) bool { return browser.WritableDir(dir) }
 
 // withWritableBrowserHome gives the browser child somewhere to put its socket
-// and state. Ghost's service runs with the home directory sealed off
+// and state. Kaya's service runs with the home directory sealed off
 // (ProtectHome) and the filesystem read-only, so agent-browser's default
 // location failed with "Failed to create socket directory: Read-only file
 // system" and every browser action died in milliseconds. An operator-chosen
@@ -613,7 +613,7 @@ func (t *BrowserTool) executeCLI(ctx context.Context, action string, args ...str
 // CLI may have dispatched the action before it died, so the message
 // must forbid blind retries of mutating actions and point at
 // re-observation instead. (Adopted from OpenCode's browser error
-// semantics; the same honesty serves Ghost's trust line as the
+// semantics; the same honesty serves Kaya's trust line as the
 // evidence rule — a claim never outruns what the runtime proved.)
 func browserFailureMessage(action string, runErr error, stderr string, ctx context.Context) string {
 	if ctx != nil && ctx.Err() != nil {
@@ -874,7 +874,7 @@ func staleRefFailure(msg string) bool {
 	return strings.Contains(lower, "stale element ref") || strings.Contains(lower, "unknown ref")
 }
 
-// healStaleRef is Ghost's answer to a page that re-renders under it —
+// healStaleRef is Kaya's answer to a page that re-renders under it —
 // the ordinary condition on real sites, where a modal opens, a list
 // reorders, or a component swaps its tree between one step and the next.
 //
@@ -884,7 +884,7 @@ func staleRefFailure(msg string) bool {
 //
 // It deliberately never retries the refused ref. Refs are positional: the
 // same @e1 on a re-rendered tree is a different element, and a re-resolve
-// that "worked" would be Ghost clicking something the owner never chose.
+// that "worked" would be Kaya clicking something the owner never chose.
 // The model sees the new page and picks the element itself.
 //
 // Returns nil when there is nothing to heal with (the page could not be
@@ -1116,7 +1116,7 @@ func browserScreenshotCommand(ctx context.Context, path string) *exec.Cmd {
 }
 
 // browserShotDir is where screenshots are kept: inside the workspace, so
-// nothing Ghost captures lands outside it. The agent sets it at startup.
+// nothing Kaya captures lands outside it. The agent sets it at startup.
 var browserShotDir string
 
 // SetBrowserShotDir points screenshot capture at a folder inside the workspace.
@@ -1126,7 +1126,7 @@ func defaultBrowserShotDir() string {
 	if browserShotDir != "" {
 		return browserShotDir
 	}
-	return filepath.Join(os.TempDir(), "ghost-browser-shots")
+	return filepath.Join(os.TempDir(), "kaya-browser-shots")
 }
 
 func captureBrowserShotWith(
@@ -1224,7 +1224,7 @@ func pruneBrowserShots(dir string) {
 }
 
 // browserPageView unwraps one CLI JSON payload (envelope or flat) into
-// the page fields Ghost's evidence and submit flows read. Tolerates
+// the page fields Kaya's evidence and submit flows read. Tolerates
 // both wire shapes: the legacy {url,title,text} form and the current
 // agent-browser {origin,refs,snapshot} form. ok=false only when the
 // payload is not JSON at all.
@@ -1809,7 +1809,7 @@ func (t *BrowserTool) executeBare(ctx context.Context, args map[string]interface
 	}
 }
 
-// waitBare maps Ghost's condition-style wait onto the CLI's wait modes.
+// waitBare maps Kaya's condition-style wait onto the CLI's wait modes.
 // Exactly one condition is required; no fixed sleeps are ever issued
 // (the model names what it needs, the CLI waits for that).
 func (t *BrowserTool) waitBare(ctx context.Context, args map[string]interface{}) *ToolResult {
@@ -1851,7 +1851,7 @@ func (t *BrowserTool) waitBare(ctx context.Context, args map[string]interface{})
 }
 
 // findBare reads a fresh snapshot and returns the lines whose text
-// matches, with their refs. Deterministic Ghost-side search — no new
+// matches, with their refs. Deterministic Kaya-side search — no new
 // CLI surface, and the refs it returns open the epoch via the enforced
 // observation path (browserActionObserves includes "find").
 func (t *BrowserTool) findBare(ctx context.Context, args map[string]interface{}) *ToolResult {
@@ -1965,7 +1965,7 @@ func (t *BrowserTool) uploadBare(ctx context.Context, args map[string]interface{
 	return t.run(ctx, "upload", append([]string{ref}, paths...)...)
 }
 
-// downloadDir is Ghost's managed download location: downloads never
+// downloadDir is Kaya's managed download location: downloads never
 // write to model-chosen paths — only inside this directory.
 func (t *BrowserTool) downloadDir() string {
 	return filepath.Join(t.workspace, "downloads")

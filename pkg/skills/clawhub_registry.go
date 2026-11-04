@@ -10,8 +10,8 @@ import (
 	"os"
 	"time"
 
-	"github.com/ianclemence/ghost/pkg/config"
-	"github.com/ianclemence/ghost/pkg/utils"
+	"github.com/ianclemence/kaya/pkg/config"
+	"github.com/ianclemence/kaya/pkg/utils"
 )
 
 const (
@@ -212,7 +212,7 @@ func (c *ClawHubRegistry) DownloadAndInstall(ctx context.Context, slug, version,
 	}
 	u.RawQuery = q.Encode()
 
-	tmpFile, err := os.CreateTemp("", "ghost-dl-*")
+	tmpFile, err := os.CreateTemp("", "kaya-dl-*")
 	if err != nil {
 		return nil, err
 	}

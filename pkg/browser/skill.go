@@ -20,7 +20,7 @@ const SkillVersion = "browser-skill/v1"
 
 // SkillStub is the thin discovery text injected into the skills index.
 func SkillStub() string {
-	return `Browser control (Ghost-native, ` + SkillVersion + `). ` +
+	return `Browser control (Kaya-native, ` + SkillVersion + `). ` +
 		`Prefer these tools over any built-in browser automation. ` +
 		`Loop: snapshot → act on @eN refs → re-snapshot. ` +
 		`Refs die on every page change; a stale ref errors and you must ` +
@@ -46,7 +46,7 @@ Find returns fresh refs that SUPERSEDE the last snapshot's refs.
 - Scroll moves the viewport only; existing refs stay valid.
 - fill_form batches up to 10 fields in one governed call.
 - upload is high impact: local files leave the device; approval names
-  the exact paths. download writes only into Ghost's download directory.
+  the exact paths. download writes only into Kaya's download directory.
 
 ## Fewest asks
 Reading never needs the owner's OK; typing, clicking and submitting do.

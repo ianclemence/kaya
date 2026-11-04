@@ -76,16 +76,16 @@ type ConnectorsConfig struct {
 // whisper-server sidecar is tried first ("auto"); cloud keys are only
 // a fallback, and "off" disables voice input entirely.
 type STTConfig struct {
-	Engine string `json:"engine" env:"GHOST_STT_ENGINE"` // auto|local|groq|moonshot|off
-	Port   int    `json:"port" env:"GHOST_STT_PORT"`     // sidecar loopback port
+	Engine string `json:"engine" env:"KAYA_STT_ENGINE"` // auto|local|groq|moonshot|off
+	Port   int    `json:"port" env:"KAYA_STT_PORT"`     // sidecar loopback port
 }
 
 // TTSConfig controls speech-synthesis engine selection. The local
 // sherpa/Piper voice is tried first ("auto"); edge-tts is only a
 // fallback, and "off" disables voice replies entirely.
 type TTSConfig struct {
-	Engine string  `json:"engine" env:"GHOST_TTS_ENGINE"` // auto|local|edge|off
-	Speed  float32 `json:"speed" env:"GHOST_TTS_SPEED"`   // 1.0 is normal
+	Engine string  `json:"engine" env:"KAYA_TTS_ENGINE"` // auto|local|edge|off
+	Speed  float32 `json:"speed" env:"KAYA_TTS_SPEED"`   // 1.0 is normal
 }
 
 type SkillsConfig struct {
@@ -94,26 +94,26 @@ type SkillsConfig struct {
 }
 
 type ClawHubConfig struct {
-	BaseURL      string `json:"base_url" env:"GHOST_SKILLS_CLAWHUB_BASE_URL"`
-	AuthToken    string `json:"auth_token" env:"GHOST_SKILLS_CLAWHUB_AUTH_TOKEN"`
-	SearchPath   string `json:"search_path" env:"GHOST_SKILLS_CLAWHUB_SEARCH_PATH"`
-	SkillsPath   string `json:"skills_path" env:"GHOST_SKILLS_CLAWHUB_SKILLS_PATH"`
-	DownloadPath string `json:"download_path" env:"GHOST_SKILLS_CLAWHUB_DOWNLOAD_PATH"`
-	Timeout      int    `json:"timeout" env:"GHOST_SKILLS_CLAWHUB_TIMEOUT"`
+	BaseURL      string `json:"base_url" env:"KAYA_SKILLS_CLAWHUB_BASE_URL"`
+	AuthToken    string `json:"auth_token" env:"KAYA_SKILLS_CLAWHUB_AUTH_TOKEN"`
+	SearchPath   string `json:"search_path" env:"KAYA_SKILLS_CLAWHUB_SEARCH_PATH"`
+	SkillsPath   string `json:"skills_path" env:"KAYA_SKILLS_CLAWHUB_SKILLS_PATH"`
+	DownloadPath string `json:"download_path" env:"KAYA_SKILLS_CLAWHUB_DOWNLOAD_PATH"`
+	Timeout      int    `json:"timeout" env:"KAYA_SKILLS_CLAWHUB_TIMEOUT"`
 }
 
 type HonchoConfig struct {
-	Enabled   bool   `json:"enabled" env:"GHOST_HONCHO_ENABLED"`
-	APIKey    string `json:"api_key" env:"GHOST_HONCHO_API_KEY"`
-	ProjectID string `json:"project_id" env:"GHOST_HONCHO_PROJECT_ID"`
-	BaseURL   string `json:"base_url" env:"GHOST_HONCHO_BASE_URL"`
+	Enabled   bool   `json:"enabled" env:"KAYA_HONCHO_ENABLED"`
+	APIKey    string `json:"api_key" env:"KAYA_HONCHO_API_KEY"`
+	ProjectID string `json:"project_id" env:"KAYA_HONCHO_PROJECT_ID"`
+	BaseURL   string `json:"base_url" env:"KAYA_HONCHO_BASE_URL"`
 }
 
 type RAGConfig struct {
-	Enabled        bool `json:"enabled" env:"GHOST_RAG_ENABLED"`
-	M              int  `json:"m" env:"GHOST_RAG_M"`                             // Max connections per layer (default 16)
-	EfConstruction int  `json:"ef_construction" env:"GHOST_RAG_EF_CONSTRUCTION"` // Size of dynamic candidate list during construction (default 200)
-	EfSearch       int  `json:"ef_search" env:"GHOST_RAG_EF_SEARCH"`             // Size of dynamic candidate list during search (default 10)
+	Enabled        bool `json:"enabled" env:"KAYA_RAG_ENABLED"`
+	M              int  `json:"m" env:"KAYA_RAG_M"`                             // Max connections per layer (default 16)
+	EfConstruction int  `json:"ef_construction" env:"KAYA_RAG_EF_CONSTRUCTION"` // Size of dynamic candidate list during construction (default 200)
+	EfSearch       int  `json:"ef_search" env:"KAYA_RAG_EF_SEARCH"`             // Size of dynamic candidate list during search (default 10)
 }
 
 type AgentsConfig struct {
@@ -189,26 +189,26 @@ type ModelPreset struct {
 }
 
 type AgentDefaults struct {
-	Workspace           string   `json:"workspace" env:"GHOST_AGENTS_DEFAULTS_WORKSPACE"`
-	RestrictToWorkspace bool     `json:"restrict_to_workspace" env:"GHOST_AGENTS_DEFAULTS_RESTRICT_TO_WORKSPACE"`
-	SearchEnabled       bool     `json:"search_enabled" env:"GHOST_AGENTS_DEFAULTS_SEARCH_ENABLED"`
-	Provider            string   `json:"provider" env:"GHOST_AGENTS_DEFAULTS_PROVIDER"`
-	Model               string   `json:"model" env:"GHOST_AGENTS_DEFAULTS_MODEL"`
-	MaxTokens           int      `json:"max_tokens" env:"GHOST_AGENTS_DEFAULTS_MAX_TOKENS"`
-	Temperature         float64  `json:"temperature" env:"GHOST_AGENTS_DEFAULTS_TEMPERATURE"`
-	MaxToolIterations   int      `json:"max_tool_iterations" env:"GHOST_AGENTS_DEFAULTS_MAX_TOOL_ITERATIONS"`
-	EmbeddingModel      string   `json:"embedding_model" env:"GHOST_AGENTS_DEFAULTS_EMBEDDING_MODEL"`
-	FallbackModels      []string `json:"fallback_models" env:"GHOST_AGENTS_DEFAULTS_FALLBACK_MODELS"`
-	FallbackCooldown    int      `json:"fallback_cooldown_seconds" env:"GHOST_AGENTS_DEFAULTS_FALLBACK_COOLDOWN_SECONDS"`
+	Workspace           string   `json:"workspace" env:"KAYA_AGENTS_DEFAULTS_WORKSPACE"`
+	RestrictToWorkspace bool     `json:"restrict_to_workspace" env:"KAYA_AGENTS_DEFAULTS_RESTRICT_TO_WORKSPACE"`
+	SearchEnabled       bool     `json:"search_enabled" env:"KAYA_AGENTS_DEFAULTS_SEARCH_ENABLED"`
+	Provider            string   `json:"provider" env:"KAYA_AGENTS_DEFAULTS_PROVIDER"`
+	Model               string   `json:"model" env:"KAYA_AGENTS_DEFAULTS_MODEL"`
+	MaxTokens           int      `json:"max_tokens" env:"KAYA_AGENTS_DEFAULTS_MAX_TOKENS"`
+	Temperature         float64  `json:"temperature" env:"KAYA_AGENTS_DEFAULTS_TEMPERATURE"`
+	MaxToolIterations   int      `json:"max_tool_iterations" env:"KAYA_AGENTS_DEFAULTS_MAX_TOOL_ITERATIONS"`
+	EmbeddingModel      string   `json:"embedding_model" env:"KAYA_AGENTS_DEFAULTS_EMBEDDING_MODEL"`
+	FallbackModels      []string `json:"fallback_models" env:"KAYA_AGENTS_DEFAULTS_FALLBACK_MODELS"`
+	FallbackCooldown    int      `json:"fallback_cooldown_seconds" env:"KAYA_AGENTS_DEFAULTS_FALLBACK_COOLDOWN_SECONDS"`
 	// StrictPin disables silent model fallback: the pinned model either
 	// serves or the turn fails visibly. No quiet hop to another model.
-	StrictPin    bool   `json:"strict_pin" env:"GHOST_AGENTS_DEFAULTS_STRICT_PIN"`
-	SessionStore string `json:"session_store" env:"GHOST_AGENTS_DEFAULTS_SESSION_STORE"`
+	StrictPin    bool   `json:"strict_pin" env:"KAYA_AGENTS_DEFAULTS_STRICT_PIN"`
+	SessionStore string `json:"session_store" env:"KAYA_AGENTS_DEFAULTS_SESSION_STORE"`
 }
 
 type RoutingConfig struct {
-	LightModel string  `json:"light_model" env:"GHOST_AGENTS_ROUTING_LIGHT_MODEL"`
-	Threshold  float64 `json:"threshold" env:"GHOST_AGENTS_ROUTING_THRESHOLD"`
+	LightModel string  `json:"light_model" env:"KAYA_AGENTS_ROUTING_LIGHT_MODEL"`
+	Threshold  float64 `json:"threshold" env:"KAYA_AGENTS_ROUTING_THRESHOLD"`
 	// User-facing preferences surfaced in the Web Console. These are
 	// hints; the router still falls back to local when the cloud provider
 	// is unavailable regardless of these toggles.
@@ -229,79 +229,79 @@ type ChannelsConfig struct {
 }
 
 type SMSConfig struct {
-	Enabled    bool                `json:"enabled" env:"GHOST_CHANNELS_SMS_ENABLED"`
-	AccountSID string              `json:"account_sid" env:"GHOST_CHANNELS_SMS_ACCOUNT_SID"`
-	AuthToken  string              `json:"auth_token" env:"GHOST_CHANNELS_SMS_AUTH_TOKEN"`
-	From       string              `json:"from" env:"GHOST_CHANNELS_SMS_FROM"`
-	WebhookURL string              `json:"webhook_url" env:"GHOST_CHANNELS_SMS_WEBHOOK_URL"`
-	AllowFrom  FlexibleStringSlice `json:"allow_from" env:"GHOST_CHANNELS_SMS_ALLOW_FROM"`
+	Enabled    bool                `json:"enabled" env:"KAYA_CHANNELS_SMS_ENABLED"`
+	AccountSID string              `json:"account_sid" env:"KAYA_CHANNELS_SMS_ACCOUNT_SID"`
+	AuthToken  string              `json:"auth_token" env:"KAYA_CHANNELS_SMS_AUTH_TOKEN"`
+	From       string              `json:"from" env:"KAYA_CHANNELS_SMS_FROM"`
+	WebhookURL string              `json:"webhook_url" env:"KAYA_CHANNELS_SMS_WEBHOOK_URL"`
+	AllowFrom  FlexibleStringSlice `json:"allow_from" env:"KAYA_CHANNELS_SMS_ALLOW_FROM"`
 }
 
 type WeChatConfig struct {
-	Enabled        bool                `json:"enabled" env:"GHOST_CHANNELS_WECHAT_ENABLED"`
-	CorpID         string              `json:"corp_id" env:"GHOST_CHANNELS_WECHAT_CORP_ID"`
-	AgentID        string              `json:"agent_id" env:"GHOST_CHANNELS_WECHAT_AGENT_ID"`
-	Secret         string              `json:"secret" env:"GHOST_CHANNELS_WECHAT_SECRET"`
-	Token          string              `json:"token" env:"GHOST_CHANNELS_WECHAT_TOKEN"`
-	EncodingAESKey string              `json:"encoding_aes_key" env:"GHOST_CHANNELS_WECHAT_ENCODING_AES_KEY"`
-	AllowFrom      FlexibleStringSlice `json:"allow_from" env:"GHOST_CHANNELS_WECHAT_ALLOW_FROM"`
+	Enabled        bool                `json:"enabled" env:"KAYA_CHANNELS_WECHAT_ENABLED"`
+	CorpID         string              `json:"corp_id" env:"KAYA_CHANNELS_WECHAT_CORP_ID"`
+	AgentID        string              `json:"agent_id" env:"KAYA_CHANNELS_WECHAT_AGENT_ID"`
+	Secret         string              `json:"secret" env:"KAYA_CHANNELS_WECHAT_SECRET"`
+	Token          string              `json:"token" env:"KAYA_CHANNELS_WECHAT_TOKEN"`
+	EncodingAESKey string              `json:"encoding_aes_key" env:"KAYA_CHANNELS_WECHAT_ENCODING_AES_KEY"`
+	AllowFrom      FlexibleStringSlice `json:"allow_from" env:"KAYA_CHANNELS_WECHAT_ALLOW_FROM"`
 }
 
 type WhatsAppConfig struct {
-	Enabled   bool                `json:"enabled" env:"GHOST_CHANNELS_WHATSAPP_ENABLED"`
-	BridgeURL string              `json:"bridge_url" env:"GHOST_CHANNELS_WHATSAPP_BRIDGE_URL"`
-	AllowFrom FlexibleStringSlice `json:"allow_from" env:"GHOST_CHANNELS_WHATSAPP_ALLOW_FROM"`
+	Enabled   bool                `json:"enabled" env:"KAYA_CHANNELS_WHATSAPP_ENABLED"`
+	BridgeURL string              `json:"bridge_url" env:"KAYA_CHANNELS_WHATSAPP_BRIDGE_URL"`
+	AllowFrom FlexibleStringSlice `json:"allow_from" env:"KAYA_CHANNELS_WHATSAPP_ALLOW_FROM"`
 }
 
 type TelegramConfig struct {
-	Enabled   bool                `json:"enabled" env:"GHOST_CHANNELS_TELEGRAM_ENABLED"`
-	Token     string              `json:"token" env:"GHOST_CHANNELS_TELEGRAM_TOKEN"`
-	Proxy     string              `json:"proxy" env:"GHOST_CHANNELS_TELEGRAM_PROXY"`
-	AllowFrom FlexibleStringSlice `json:"allow_from" env:"GHOST_CHANNELS_TELEGRAM_ALLOW_FROM"`
+	Enabled   bool                `json:"enabled" env:"KAYA_CHANNELS_TELEGRAM_ENABLED"`
+	Token     string              `json:"token" env:"KAYA_CHANNELS_TELEGRAM_TOKEN"`
+	Proxy     string              `json:"proxy" env:"KAYA_CHANNELS_TELEGRAM_PROXY"`
+	AllowFrom FlexibleStringSlice `json:"allow_from" env:"KAYA_CHANNELS_TELEGRAM_ALLOW_FROM"`
 }
 
 type DiscordConfig struct {
-	Enabled   bool                `json:"enabled" env:"GHOST_CHANNELS_DISCORD_ENABLED"`
-	Token     string              `json:"token" env:"GHOST_CHANNELS_DISCORD_TOKEN"`
-	AllowFrom FlexibleStringSlice `json:"allow_from" env:"GHOST_CHANNELS_DISCORD_ALLOW_FROM"`
+	Enabled   bool                `json:"enabled" env:"KAYA_CHANNELS_DISCORD_ENABLED"`
+	Token     string              `json:"token" env:"KAYA_CHANNELS_DISCORD_TOKEN"`
+	AllowFrom FlexibleStringSlice `json:"allow_from" env:"KAYA_CHANNELS_DISCORD_ALLOW_FROM"`
 }
 
 type SlackConfig struct {
-	Enabled   bool                `json:"enabled" env:"GHOST_CHANNELS_SLACK_ENABLED"`
-	BotToken  string              `json:"bot_token" env:"GHOST_CHANNELS_SLACK_BOT_TOKEN"`
-	AppToken  string              `json:"app_token" env:"GHOST_CHANNELS_SLACK_APP_TOKEN"`
-	AllowFrom FlexibleStringSlice `json:"allow_from" env:"GHOST_CHANNELS_SLACK_ALLOW_FROM"`
+	Enabled   bool                `json:"enabled" env:"KAYA_CHANNELS_SLACK_ENABLED"`
+	BotToken  string              `json:"bot_token" env:"KAYA_CHANNELS_SLACK_BOT_TOKEN"`
+	AppToken  string              `json:"app_token" env:"KAYA_CHANNELS_SLACK_APP_TOKEN"`
+	AllowFrom FlexibleStringSlice `json:"allow_from" env:"KAYA_CHANNELS_SLACK_ALLOW_FROM"`
 }
 
 type LINEConfig struct {
-	Enabled            bool                `json:"enabled" env:"GHOST_CHANNELS_LINE_ENABLED"`
-	ChannelSecret      string              `json:"channel_secret" env:"GHOST_CHANNELS_LINE_CHANNEL_SECRET"`
-	ChannelAccessToken string              `json:"channel_access_token" env:"GHOST_CHANNELS_LINE_CHANNEL_ACCESS_TOKEN"`
-	WebhookHost        string              `json:"webhook_host" env:"GHOST_CHANNELS_LINE_WEBHOOK_HOST"`
-	WebhookPort        int                 `json:"webhook_port" env:"GHOST_CHANNELS_LINE_WEBHOOK_PORT"`
-	WebhookPath        string              `json:"webhook_path" env:"GHOST_CHANNELS_LINE_WEBHOOK_PATH"`
-	AllowFrom          FlexibleStringSlice `json:"allow_from" env:"GHOST_CHANNELS_LINE_ALLOW_FROM"`
+	Enabled            bool                `json:"enabled" env:"KAYA_CHANNELS_LINE_ENABLED"`
+	ChannelSecret      string              `json:"channel_secret" env:"KAYA_CHANNELS_LINE_CHANNEL_SECRET"`
+	ChannelAccessToken string              `json:"channel_access_token" env:"KAYA_CHANNELS_LINE_CHANNEL_ACCESS_TOKEN"`
+	WebhookHost        string              `json:"webhook_host" env:"KAYA_CHANNELS_LINE_WEBHOOK_HOST"`
+	WebhookPort        int                 `json:"webhook_port" env:"KAYA_CHANNELS_LINE_WEBHOOK_PORT"`
+	WebhookPath        string              `json:"webhook_path" env:"KAYA_CHANNELS_LINE_WEBHOOK_PATH"`
+	AllowFrom          FlexibleStringSlice `json:"allow_from" env:"KAYA_CHANNELS_LINE_ALLOW_FROM"`
 }
 
 type EmailConfig struct {
-	Enabled   bool                `json:"enabled" env:"GHOST_CHANNELS_EMAIL_ENABLED"`
-	SMTPHost  string              `json:"smtp_host" env:"GHOST_CHANNELS_EMAIL_SMTP_HOST"`
-	SMTPPort  int                 `json:"smtp_port" env:"GHOST_CHANNELS_EMAIL_SMTP_PORT"`
-	Username  string              `json:"username" env:"GHOST_CHANNELS_EMAIL_USERNAME"`
-	Password  string              `json:"password" env:"GHOST_CHANNELS_EMAIL_PASSWORD"`
-	From      string              `json:"from" env:"GHOST_CHANNELS_EMAIL_FROM"`
-	To        string              `json:"to" env:"GHOST_CHANNELS_EMAIL_TO"`
-	AllowFrom FlexibleStringSlice `json:"allow_from" env:"GHOST_CHANNELS_EMAIL_ALLOW_FROM"`
+	Enabled   bool                `json:"enabled" env:"KAYA_CHANNELS_EMAIL_ENABLED"`
+	SMTPHost  string              `json:"smtp_host" env:"KAYA_CHANNELS_EMAIL_SMTP_HOST"`
+	SMTPPort  int                 `json:"smtp_port" env:"KAYA_CHANNELS_EMAIL_SMTP_PORT"`
+	Username  string              `json:"username" env:"KAYA_CHANNELS_EMAIL_USERNAME"`
+	Password  string              `json:"password" env:"KAYA_CHANNELS_EMAIL_PASSWORD"`
+	From      string              `json:"from" env:"KAYA_CHANNELS_EMAIL_FROM"`
+	To        string              `json:"to" env:"KAYA_CHANNELS_EMAIL_TO"`
+	AllowFrom FlexibleStringSlice `json:"allow_from" env:"KAYA_CHANNELS_EMAIL_ALLOW_FROM"`
 }
 
 type HeartbeatConfig struct {
-	Enabled  bool `json:"enabled" env:"GHOST_HEARTBEAT_ENABLED"`
-	Interval int  `json:"interval" env:"GHOST_HEARTBEAT_INTERVAL"` // minutes, min 5
+	Enabled  bool `json:"enabled" env:"KAYA_HEARTBEAT_ENABLED"`
+	Interval int  `json:"interval" env:"KAYA_HEARTBEAT_INTERVAL"` // minutes, min 5
 }
 
 type DevicesConfig struct {
-	Enabled    bool `json:"enabled" env:"GHOST_DEVICES_ENABLED"`
-	MonitorUSB bool `json:"monitor_usb" env:"GHOST_DEVICES_MONITOR_USB"`
+	Enabled    bool `json:"enabled" env:"KAYA_DEVICES_ENABLED"`
+	MonitorUSB bool `json:"monitor_usb" env:"KAYA_DEVICES_MONITOR_USB"`
 }
 
 type ProvidersConfig struct {
@@ -322,56 +322,56 @@ type ProvidersConfig struct {
 }
 
 type ProviderConfig struct {
-	APIKey      string `json:"api_key" env:"GHOST_PROVIDERS_{{.Name}}_API_KEY"`
-	APIBase     string `json:"api_base" env:"GHOST_PROVIDERS_{{.Name}}_API_BASE"`
-	Proxy       string `json:"proxy,omitempty" env:"GHOST_PROVIDERS_{{.Name}}_PROXY"`
-	AuthMethod  string `json:"auth_method,omitempty" env:"GHOST_PROVIDERS_{{.Name}}_AUTH_METHOD"`
-	ConnectMode string `json:"connect_mode,omitempty" env:"GHOST_PROVIDERS_{{.Name}}_CONNECT_MODE"` //only for Github Copilot, `stdio` or `grpc`
+	APIKey      string `json:"api_key" env:"KAYA_PROVIDERS_{{.Name}}_API_KEY"`
+	APIBase     string `json:"api_base" env:"KAYA_PROVIDERS_{{.Name}}_API_BASE"`
+	Proxy       string `json:"proxy,omitempty" env:"KAYA_PROVIDERS_{{.Name}}_PROXY"`
+	AuthMethod  string `json:"auth_method,omitempty" env:"KAYA_PROVIDERS_{{.Name}}_AUTH_METHOD"`
+	ConnectMode string `json:"connect_mode,omitempty" env:"KAYA_PROVIDERS_{{.Name}}_CONNECT_MODE"` //only for Github Copilot, `stdio` or `grpc`
 }
 
 type GatewayConfig struct {
-	Host string `json:"host" env:"GHOST_GATEWAY_HOST"`
-	Port int    `json:"port" env:"GHOST_GATEWAY_PORT"`
+	Host string `json:"host" env:"KAYA_GATEWAY_HOST"`
+	Port int    `json:"port" env:"KAYA_GATEWAY_PORT"`
 }
 
 type RelayConfig struct {
-	Enabled      bool   `json:"enabled" env:"GHOST_RELAY_ENABLED"`
-	Server       string `json:"server" env:"GHOST_RELAY_SERVER"`
-	GatewayURL   string `json:"gateway_url" env:"GHOST_RELAY_GATEWAY_URL"`
-	ReconnectMin int    `json:"reconnect_min_s" env:"GHOST_RELAY_RECONNECT_MIN"`
-	ReconnectMax int    `json:"reconnect_max_s" env:"GHOST_RELAY_RECONNECT_MAX"`
+	Enabled      bool   `json:"enabled" env:"KAYA_RELAY_ENABLED"`
+	Server       string `json:"server" env:"KAYA_RELAY_SERVER"`
+	GatewayURL   string `json:"gateway_url" env:"KAYA_RELAY_GATEWAY_URL"`
+	ReconnectMin int    `json:"reconnect_min_s" env:"KAYA_RELAY_RECONNECT_MIN"`
+	ReconnectMax int    `json:"reconnect_max_s" env:"KAYA_RELAY_RECONNECT_MAX"`
 	DeviceSecret string `json:"-"` // loaded from .secrets.json, never in config.json
 
 	// IdentityKey is the Pod's X25519 private key (hex), the one end-to-end
 	// encryption through a relay is pinned to. Sealed with the other secrets.
 	IdentityKey string `json:"-"`
 	// RequireSealed makes the Pod answer relayed traffic only when it is
-	// end-to-end encrypted. On for Ghost Connect, where the relay is run by
+	// end-to-end encrypted. On for Kaya Connect, where the relay is run by
 	// someone else.
 	RequireSealed bool `json:"require_sealed"`
 	// Managed means the Pod runs the relay connection itself, as part of the
-	// daemon, because it is linked to Ghost Connect. Without it the relay
-	// client is started by hand with `ghost relay run`.
+	// daemon, because it is linked to Kaya Connect. Without it the relay
+	// client is started by hand with `kaya relay run`.
 	Managed bool `json:"managed"`
-	// Site is the Ghost Connect website this Pod is linked to.
+	// Site is the Kaya Connect website this Pod is linked to.
 	Site string `json:"site"`
 }
 
 type BraveConfig struct {
-	Enabled    bool   `json:"enabled" env:"GHOST_TOOLS_WEB_BRAVE_ENABLED"`
-	APIKey     string `json:"api_key" env:"GHOST_TOOLS_WEB_BRAVE_API_KEY"`
-	MaxResults int    `json:"max_results" env:"GHOST_TOOLS_WEB_BRAVE_MAX_RESULTS"`
+	Enabled    bool   `json:"enabled" env:"KAYA_TOOLS_WEB_BRAVE_ENABLED"`
+	APIKey     string `json:"api_key" env:"KAYA_TOOLS_WEB_BRAVE_API_KEY"`
+	MaxResults int    `json:"max_results" env:"KAYA_TOOLS_WEB_BRAVE_MAX_RESULTS"`
 }
 
 type DuckDuckGoConfig struct {
-	Enabled    bool `json:"enabled" env:"GHOST_TOOLS_WEB_DUCKDUCKGO_ENABLED"`
-	MaxResults int  `json:"max_results" env:"GHOST_TOOLS_WEB_DUCKDUCKGO_MAX_RESULTS"`
+	Enabled    bool `json:"enabled" env:"KAYA_TOOLS_WEB_DUCKDUCKGO_ENABLED"`
+	MaxResults int  `json:"max_results" env:"KAYA_TOOLS_WEB_DUCKDUCKGO_MAX_RESULTS"`
 }
 
 type FirecrawlConfig struct {
-	Enabled    bool   `json:"enabled" env:"GHOST_TOOLS_WEB_FIRECRAWL_ENABLED"`
-	APIKey     string `json:"api_key" env:"GHOST_TOOLS_WEB_FIRECRAWL_API_KEY"`
-	MaxResults int    `json:"max_results" env:"GHOST_TOOLS_WEB_FIRECRAWL_MAX_RESULTS"`
+	Enabled    bool   `json:"enabled" env:"KAYA_TOOLS_WEB_FIRECRAWL_ENABLED"`
+	APIKey     string `json:"api_key" env:"KAYA_TOOLS_WEB_FIRECRAWL_API_KEY"`
+	MaxResults int    `json:"max_results" env:"KAYA_TOOLS_WEB_FIRECRAWL_MAX_RESULTS"`
 }
 
 type WebToolsConfig struct {
@@ -381,31 +381,31 @@ type WebToolsConfig struct {
 }
 
 type NudgeConfig struct {
-	Enabled        bool `json:"enabled" env:"GHOST_NUDGE_ENABLED"`
-	MemoryInterval int  `json:"memory_interval" env:"GHOST_NUDGE_MEMORY_INTERVAL"`
-	SkillInterval  int  `json:"skill_interval" env:"GHOST_NUDGE_SKILL_INTERVAL"`
+	Enabled        bool `json:"enabled" env:"KAYA_NUDGE_ENABLED"`
+	MemoryInterval int  `json:"memory_interval" env:"KAYA_NUDGE_MEMORY_INTERVAL"`
+	SkillInterval  int  `json:"skill_interval" env:"KAYA_NUDGE_SKILL_INTERVAL"`
 }
 
 type PersonalityConfig struct {
-	Active string `json:"active" env:"GHOST_PERSONALITY_ACTIVE"`
+	Active string `json:"active" env:"KAYA_PERSONALITY_ACTIVE"`
 }
 
 type ToolsetsConfig struct {
-	Active string `json:"active" env:"GHOST_TOOLSETS_ACTIVE"`
+	Active string `json:"active" env:"KAYA_TOOLSETS_ACTIVE"`
 }
 
 type CuratorConfig struct {
-	Enabled           bool `json:"enabled" env:"GHOST_CURATOR_ENABLED"`
-	StaleAfterDays    int  `json:"stale_after_days" env:"GHOST_CURATOR_STALE_AFTER_DAYS"`
-	ArchiveAfterDays  int  `json:"archive_after_days" env:"GHOST_CURATOR_ARCHIVE_AFTER_DAYS"`
-	CheckIntervalMins int  `json:"check_interval_mins" env:"GHOST_CURATOR_CHECK_INTERVAL_MINS"`
+	Enabled           bool `json:"enabled" env:"KAYA_CURATOR_ENABLED"`
+	StaleAfterDays    int  `json:"stale_after_days" env:"KAYA_CURATOR_STALE_AFTER_DAYS"`
+	ArchiveAfterDays  int  `json:"archive_after_days" env:"KAYA_CURATOR_ARCHIVE_AFTER_DAYS"`
+	CheckIntervalMins int  `json:"check_interval_mins" env:"KAYA_CURATOR_CHECK_INTERVAL_MINS"`
 }
 
 type DelegationConfig struct {
-	Enabled       bool `json:"enabled" env:"GHOST_DELEGATION_ENABLED"`
-	MaxConcurrent int  `json:"max_concurrent" env:"GHOST_DELEGATION_MAX_CONCURRENT"`
-	MaxTasks      int  `json:"max_tasks" env:"GHOST_DELEGATION_MAX_TASKS"`
-	BudgetTokens  int  `json:"budget_tokens" env:"GHOST_DELEGATION_BUDGET_TOKENS"`
+	Enabled       bool `json:"enabled" env:"KAYA_DELEGATION_ENABLED"`
+	MaxConcurrent int  `json:"max_concurrent" env:"KAYA_DELEGATION_MAX_CONCURRENT"`
+	MaxTasks      int  `json:"max_tasks" env:"KAYA_DELEGATION_MAX_TASKS"`
+	BudgetTokens  int  `json:"budget_tokens" env:"KAYA_DELEGATION_BUDGET_TOKENS"`
 }
 
 type ToolsConfig struct {
@@ -416,7 +416,7 @@ type ToolsConfig struct {
 }
 
 type MCPConfig struct {
-	Enabled bool                       `json:"enabled" env:"GHOST_TOOLS_MCP_ENABLED"`
+	Enabled bool                       `json:"enabled" env:"KAYA_TOOLS_MCP_ENABLED"`
 	Servers map[string]MCPServerConfig `json:"servers"`
 }
 
@@ -436,7 +436,7 @@ func DefaultConfig() *Config {
 	return &Config{
 		Agents: AgentsConfig{
 			Defaults: AgentDefaults{
-				Workspace:           "~/.ghost/workspace",
+				Workspace:           "~/.kaya/workspace",
 				RestrictToWorkspace: true,
 				SearchEnabled:       true,
 				Provider:            "deepseek",
@@ -614,9 +614,9 @@ func LoadConfig(path string) (*Config, error) {
 
 	// RAG is a core memory capability and is always on for the personal AI.
 	// A config that omits the "rag" block, or that was built without one,
-	// must never silently disable it. Only an explicit GHOST_RAG_ENABLED=
+	// must never silently disable it. Only an explicit KAYA_RAG_ENABLED=
 	// false (advanced operator escape hatch) disables RAG.
-	if strings.ToLower(strings.TrimSpace(os.Getenv("GHOST_RAG_ENABLED"))) != "false" {
+	if strings.ToLower(strings.TrimSpace(os.Getenv("KAYA_RAG_ENABLED"))) != "false" {
 		cfg.RAG.Enabled = true
 	}
 
@@ -720,7 +720,7 @@ func SaveConfig(path string, cfg *Config) error {
 // permissions, so a crash never leaves a truncated file.
 func writeFileAtomic(path string, data []byte, perm os.FileMode) error {
 	dir := filepath.Dir(path)
-	tmp, err := os.CreateTemp(dir, ".ghost-config-*")
+	tmp, err := os.CreateTemp(dir, ".kaya-config-*")
 	if err != nil {
 		return err
 	}

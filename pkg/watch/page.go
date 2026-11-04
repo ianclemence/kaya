@@ -16,7 +16,7 @@ import (
 	"time"
 )
 
-// A page watch is the owner asking Ghost to keep an eye on a web page: a
+// A page watch is the owner asking Kaya to keep an eye on a web page: a
 // price to drop (or fall under a number they named), something to come back
 // in stock, an appointment slot or a ticket to appear, or the page simply to
 // change. It follows the package's rules: it exists only because the owner
@@ -24,7 +24,7 @@ import (
 // words (never chosen by a model), the probe is one bounded HTTPS GET, and a
 // change is a diff of observed values filtered by that rule.
 
-// KindPage is a web page the owner asked Ghost to watch.
+// KindPage is a web page the owner asked Kaya to watch.
 const KindPage Kind = "page"
 
 // PageRule is what about a page the owner cares about.
@@ -150,7 +150,7 @@ func (p *PageProbe) Fetch(ctx context.Context, w Watch) (map[string]string, stri
 	if err != nil {
 		return nil, "", failf(FailInvalid, "%v", err)
 	}
-	req.Header.Set("User-Agent", "Mozilla/5.0 (X11; Linux aarch64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126 Safari/537.36 Ghost")
+	req.Header.Set("User-Agent", "Mozilla/5.0 (X11; Linux aarch64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126 Safari/537.36 Kaya")
 	req.Header.Set("Accept", "text/html,application/xhtml+xml")
 	req.Header.Set("Accept-Language", "en")
 	resp, err := p.client.Do(req)

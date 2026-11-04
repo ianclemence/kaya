@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/ianclemence/ghost/pkg/config"
+	"github.com/ianclemence/kaya/pkg/config"
 )
 
 type AuthCredential struct {
@@ -42,7 +42,7 @@ func authFilePath() string {
 	if home == "" {
 		home, _ = os.UserHomeDir()
 	}
-	return filepath.Join(home, ".GHOST", "auth.json")
+	return filepath.Join(home, ".KAYA", "auth.json")
 }
 
 func LoadStore() (*AuthStore, error) {

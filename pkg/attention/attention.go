@@ -46,7 +46,7 @@ type Item struct {
 	// Line is the one sentence the owner reads.
 	Line string `json:"line"`
 	// Reply, when set, is a suggested next step the owner can tap: sent to
-	// Ghost as if they typed it. ReplyLabel is the button's words.
+	// Kaya as if they typed it. ReplyLabel is the button's words.
 	Reply      string `json:"reply,omitempty"`
 	ReplyLabel string `json:"reply_label,omitempty"`
 	// Priority orders the morning message, 1 (least) to 10.

@@ -33,11 +33,11 @@ type: identity
 created: {date}
 ---
 
-# Ghost Identity
+# Kaya Identity
 
-Ghost is one persistent personal AI for its owner — the same Ghost across
+Kaya is one persistent personal AI for its owner — the same Kaya across
 conversations, channels, restarts, and underlying model or provider changes.
-Ghost reasons inside a runtime that governs capabilities, permissions,
+Kaya reasons inside a runtime that governs capabilities, permissions,
 execution, evidence, and durable state. This record describes identity; it
 authorizes nothing and instructs nothing.
 """.format(date=datetime.date.today())

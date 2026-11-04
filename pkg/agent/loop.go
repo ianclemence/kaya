@@ -1,8 +1,8 @@
-// Ghost - Ultra-lightweight personal AI agent
-// Inspired by and based on GHOST: https://github.com/ianclemence/ghost
+// Kaya - Ultra-lightweight personal AI agent
+// Inspired by and based on KAYA: https://github.com/ianclemence/kaya
 // License: MIT
 //
-// Copyright (c) 2026 Ghost contributors
+// Copyright (c) 2026 Kaya contributors
 
 package agent
 
@@ -11,7 +11,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
-	"github.com/ianclemence/ghost/pkg/uploads"
+	"github.com/ianclemence/kaya/pkg/uploads"
 	"net"
 	"net/url"
 	"os"
@@ -24,56 +24,56 @@ import (
 	"time"
 	"unicode/utf8"
 
-	"github.com/ianclemence/ghost/pkg/artifacts"
-	"github.com/ianclemence/ghost/pkg/browser"
-	"github.com/ianclemence/ghost/pkg/bus"
-	"github.com/ianclemence/ghost/pkg/canvascheck"
-	"github.com/ianclemence/ghost/pkg/capability"
-	"github.com/ianclemence/ghost/pkg/cards"
-	"github.com/ianclemence/ghost/pkg/cevents"
-	"github.com/ianclemence/ghost/pkg/channels"
-	"github.com/ianclemence/ghost/pkg/commands"
-	"github.com/ianclemence/ghost/pkg/commitments"
-	"github.com/ianclemence/ghost/pkg/computer"
-	"github.com/ianclemence/ghost/pkg/config"
-	"github.com/ianclemence/ghost/pkg/constants"
-	"github.com/ianclemence/ghost/pkg/contextcache"
-	"github.com/ianclemence/ghost/pkg/credentials"
-	"github.com/ianclemence/ghost/pkg/db"
-	"github.com/ianclemence/ghost/pkg/doctor"
-	"github.com/ianclemence/ghost/pkg/effort"
-	"github.com/ianclemence/ghost/pkg/evolution"
-	"github.com/ianclemence/ghost/pkg/failurecorpus"
-	"github.com/ianclemence/ghost/pkg/film"
-	"github.com/ianclemence/ghost/pkg/hardware"
-	"github.com/ianclemence/ghost/pkg/life"
-	"github.com/ianclemence/ghost/pkg/live"
-	"github.com/ianclemence/ghost/pkg/logger"
-	"github.com/ianclemence/ghost/pkg/media"
-	"github.com/ianclemence/ghost/pkg/modelhealth"
-	"github.com/ianclemence/ghost/pkg/modes"
-	"github.com/ianclemence/ghost/pkg/motion"
-	"github.com/ianclemence/ghost/pkg/permissions"
-	"github.com/ianclemence/ghost/pkg/personalcontext"
-	"github.com/ianclemence/ghost/pkg/proactive"
-	"github.com/ianclemence/ghost/pkg/product"
-	"github.com/ianclemence/ghost/pkg/providers"
-	"github.com/ianclemence/ghost/pkg/rag"
-	"github.com/ianclemence/ghost/pkg/routines"
-	"github.com/ianclemence/ghost/pkg/routing"
-	"github.com/ianclemence/ghost/pkg/scheduled"
-	"github.com/ianclemence/ghost/pkg/session"
-	"github.com/ianclemence/ghost/pkg/skills"
-	"github.com/ianclemence/ghost/pkg/state"
-	"github.com/ianclemence/ghost/pkg/tasks"
-	"github.com/ianclemence/ghost/pkg/telemetry"
-	"github.com/ianclemence/ghost/pkg/tools"
-	"github.com/ianclemence/ghost/pkg/turnlog"
-	"github.com/ianclemence/ghost/pkg/utils"
+	"github.com/ianclemence/kaya/pkg/artifacts"
+	"github.com/ianclemence/kaya/pkg/browser"
+	"github.com/ianclemence/kaya/pkg/bus"
+	"github.com/ianclemence/kaya/pkg/canvascheck"
+	"github.com/ianclemence/kaya/pkg/capability"
+	"github.com/ianclemence/kaya/pkg/cards"
+	"github.com/ianclemence/kaya/pkg/cevents"
+	"github.com/ianclemence/kaya/pkg/channels"
+	"github.com/ianclemence/kaya/pkg/commands"
+	"github.com/ianclemence/kaya/pkg/commitments"
+	"github.com/ianclemence/kaya/pkg/computer"
+	"github.com/ianclemence/kaya/pkg/config"
+	"github.com/ianclemence/kaya/pkg/constants"
+	"github.com/ianclemence/kaya/pkg/contextcache"
+	"github.com/ianclemence/kaya/pkg/credentials"
+	"github.com/ianclemence/kaya/pkg/db"
+	"github.com/ianclemence/kaya/pkg/doctor"
+	"github.com/ianclemence/kaya/pkg/effort"
+	"github.com/ianclemence/kaya/pkg/evolution"
+	"github.com/ianclemence/kaya/pkg/failurecorpus"
+	"github.com/ianclemence/kaya/pkg/film"
+	"github.com/ianclemence/kaya/pkg/hardware"
+	"github.com/ianclemence/kaya/pkg/life"
+	"github.com/ianclemence/kaya/pkg/live"
+	"github.com/ianclemence/kaya/pkg/logger"
+	"github.com/ianclemence/kaya/pkg/media"
+	"github.com/ianclemence/kaya/pkg/modelhealth"
+	"github.com/ianclemence/kaya/pkg/modes"
+	"github.com/ianclemence/kaya/pkg/motion"
+	"github.com/ianclemence/kaya/pkg/permissions"
+	"github.com/ianclemence/kaya/pkg/personalcontext"
+	"github.com/ianclemence/kaya/pkg/proactive"
+	"github.com/ianclemence/kaya/pkg/product"
+	"github.com/ianclemence/kaya/pkg/providers"
+	"github.com/ianclemence/kaya/pkg/rag"
+	"github.com/ianclemence/kaya/pkg/routines"
+	"github.com/ianclemence/kaya/pkg/routing"
+	"github.com/ianclemence/kaya/pkg/scheduled"
+	"github.com/ianclemence/kaya/pkg/session"
+	"github.com/ianclemence/kaya/pkg/skills"
+	"github.com/ianclemence/kaya/pkg/state"
+	"github.com/ianclemence/kaya/pkg/tasks"
+	"github.com/ianclemence/kaya/pkg/telemetry"
+	"github.com/ianclemence/kaya/pkg/tools"
+	"github.com/ianclemence/kaya/pkg/turnlog"
+	"github.com/ianclemence/kaya/pkg/utils"
 )
 
 type AgentLoop struct {
-	// ownerSession decides which sessions may teach Ghost about its owner; nil
+	// ownerSession decides which sessions may teach Kaya about its owner; nil
 	// means the production rule. Tests that exercise memory across many
 	// sessions replace it.
 	ownerSession func(sessionKey string) bool
@@ -138,14 +138,14 @@ type AgentLoop struct {
 	// events is the typed internal event bus (see events.go).
 	events *EventBus
 
-	// governance connects the turn to the Ghost substrate: canonical
+	// governance connects the turn to the Kaya substrate: canonical
 	// identity, permission broker, canonical event stream. Nil-safe:
 	// an unwired loop behaves exactly as before.
 	governance *Governance
 
 	// livePlane is the Live Surface plane (browser/computer). When set, the
 	// browser/computer gates consult it BEFORE executing so a human takeover
-	// pauses Ghost. Nil-safe: without a plane the gates behave exactly as
+	// pauses Kaya. Nil-safe: without a plane the gates behave exactly as
 	// before. Set by the gateway.
 	livePlane *live.Registry
 
@@ -153,7 +153,7 @@ type AgentLoop struct {
 	// (same SQLite file as the gateway singleton, so both see one truth).
 	standingBrokerOnce sync.Once
 	standingBrokerInst *permissions.Broker
-	// jobs is the durable task store (SQLite-backed, part of Ghost State).
+	// jobs is the durable task store (SQLite-backed, part of Kaya State).
 	jobs *tasks.Store
 	// jobRunner claims due jobs and executes them. It is what makes the
 	// store more than a record: without it nothing ever starts, retries,
@@ -254,7 +254,7 @@ type processOptions struct {
 	// approval reply ("always allow"), so no user turn is persisted and
 	// none of the memory/journal/affect machinery runs on it. The payload
 	// rides the current-message slot only — evidence for the model, never
-	// speech by the owner and never Ghost's reply.
+	// speech by the owner and never Kaya's reply.
 	ContinuationOutput string
 	// ResumePrompt carries a restart's continuation into the one turn that
 	// owes the owner a finished answer. Like ContinuationOutput it marks
@@ -336,7 +336,7 @@ func createToolRegistry(workspace string, restrict bool, cfg *config.Config, msg
 	// Interaction granularity: dropdowns, checkboxes, hover, drag, batch
 	// form fill, dialogs, and file transfer. All act-class (broker
 	// decides); upload is high impact because local files leave the
-	// device, and downloads land only in Ghost's managed directory.
+	// device, and downloads land only in Kaya's managed directory.
 	registerBrowser("select")
 	registerBrowser("check")
 	registerBrowser("hover")
@@ -516,7 +516,7 @@ func createToolRegistry(workspace string, restrict bool, cfg *config.Config, msg
 	})
 	registry.Register(draft)
 
-	// The Vault: what the owner keeps for Ghost to use (read as much as Ghost
+	// The Vault: what the owner keeps for Kaya to use (read as much as Kaya
 	// may), and the private form that asks for a sign-in it does not have.
 	registry.Register(tools.NewVaultItemsTool())
 	askSignIn := tools.NewRequestCredentialsTool()
@@ -673,7 +673,7 @@ func NewAgentLoop(cfg *config.Config, msgBus *bus.MessageBus, provider providers
 		if t, ok := toolsRegistry.Get("canvas"); ok {
 			if ct, ok := t.(*tools.CanvasTool); ok {
 				ct.SetPublisher(artifactStore)
-				if os.Getenv("GHOST_CANVAS_CHECK") != "off" {
+				if os.Getenv("KAYA_CANVAS_CHECK") != "off" {
 					ct.SetChecker(canvascheck.Check)
 				}
 			}
@@ -693,7 +693,7 @@ func NewAgentLoop(cfg *config.Config, msgBus *bus.MessageBus, provider providers
 				dt.SetPublisher(artifactStore)
 			}
 		}
-		// So is a document: a PDF laid out from what Ghost wrote.
+		// So is a document: a PDF laid out from what Kaya wrote.
 		toolsRegistry.Register(tools.NewDocumentTool(workspace, artifactStore))
 	} else {
 		logger.WarnC("agent", "Artifact store unavailable, publish_artifact disabled")
@@ -860,7 +860,7 @@ func NewAgentLoop(cfg *config.Config, msgBus *bus.MessageBus, provider providers
 		if pcStore != nil {
 			fmt.Fprintf(&b, "pc:%d;", pcStore.Version())
 		}
-		for _, f := range []string{"GHOST.md", "USER.md", "HEARTBEAT.md", "SOUL.md", "AGENTS.md"} {
+		for _, f := range []string{"KAYA.md", "USER.md", "HEARTBEAT.md", "SOUL.md", "AGENTS.md"} {
 			if fi, err := os.Stat(filepath.Join(workspace, f)); err == nil {
 				fmt.Fprintf(&b, "%s:%d;", f, fi.ModTime().UnixNano())
 			}
@@ -1010,7 +1010,7 @@ func NewAgentLoop(cfg *config.Config, msgBus *bus.MessageBus, provider providers
 	}
 	doctorRunner.SetRetrievalSource(al.retrieval.snapshot)
 
-	// Ghost can run its own health check from a conversation: the same one
+	// Kaya can run its own health check from a conversation: the same one
 	// the console and /v1/doctor run, read-only.
 	al.tools.Register(tools.NewSelfCheckTool(al.SelfCheckRows))
 
@@ -1161,7 +1161,7 @@ func NewAgentLoop(cfg *config.Config, msgBus *bus.MessageBus, provider providers
 	// removed belief left no trace the owner could see.
 	al.wireMemoryAudit()
 
-	// Value-gated proactivity: Ghost only interrupts when usefulness is high
+	// Value-gated proactivity: Kaya only interrupts when usefulness is high
 	// (threshold + confidence) and never spams (daily budget, per-topic
 	// cooldown, dedupe). Approved notices are DELIVERED to the last active
 	// channel — the gate is the single throat to choke for all proactive
@@ -1269,7 +1269,7 @@ func NewAgentLoop(cfg *config.Config, msgBus *bus.MessageBus, provider providers
 }
 
 // PersonalContext returns the live Personal Context store the agent reads
-// from. Anything that changes beliefs while Ghost is running (the console's
+// from. Anything that changes beliefs while Kaya is running (the console's
 // Forget and Correct) must write through this instance: a second copy opened
 // from the same file would change the log but leave the agent still believing
 // the old value until a restart.
@@ -1487,7 +1487,7 @@ func (al *AgentLoop) Run(ctx context.Context) error {
 				switch {
 				case alreadySent:
 				case isAutomationSession(msg.SessionKey):
-					// Ghost speaking on a timer speaks to the owner, in the
+					// Kaya speaking on a timer speaks to the owner, in the
 					// one conversation, not into a private automation session.
 					al.DeliverToOwner(msg.Channel, msg.ChatID, response, nil)
 				default:
@@ -1516,7 +1516,7 @@ func (al *AgentLoop) Events() *EventBus {
 
 // MaybeNotify offers a proactive message through the value gate. It returns the
 // gate decision and only delivers when usefulness is high and the budget/cooldown
-// allow it — the mechanism that keeps Ghost genuinely proactive without being
+// allow it — the mechanism that keeps Kaya genuinely proactive without being
 // noisy.
 func (al *AgentLoop) MaybeNotify(notice Notice) Decision {
 	if al.noticer == nil {
@@ -1693,7 +1693,7 @@ func (al *AgentLoop) SetGovernance(g *Governance) {
 	}
 }
 
-// SetLivePlane attaches the Live Surface plane used to pause Ghost during
+// SetLivePlane attaches the Live Surface plane used to pause Kaya during
 // a human takeover of a browser/computer surface. Nil-safe and additive:
 // existing loops without a plane behave exactly as before.
 func (al *AgentLoop) SetLivePlane(p *live.Registry) {
@@ -1721,7 +1721,7 @@ func (al *AgentLoop) ClearRoutineContext(sessionKey string) {
 }
 
 // AuthorizeScheduledCommand resolves a scheduled shell command through the
-// Permission Broker. The scheduler wakes Ghost; it does not grant authority.
+// Permission Broker. The scheduler wakes Kaya; it does not grant authority.
 // On success it returns a context carrying the execution grant so the
 // registry's default-deny policy admits the call. Ask/deny, or an unwired
 // loop, refuses — a scheduled command cannot self-authorize.
@@ -1917,7 +1917,7 @@ func (al *AgentLoop) processMessageInner(ctx context.Context, msg bus.InboundMes
 
 	// Process as user message
 	isCronTriggered := strings.HasPrefix(msg.SessionKey, "cron-")
-	// A machine turn is one whose "message" Ghost generated itself: a
+	// A machine turn is one whose "message" Kaya generated itself: a
 	// scheduler-fired automation, a routine's instruction, the heartbeat, or a
 	// delegated turn from the proactive runtime. Owner-intent fast paths
 	// (routine capture, standing-permission capture, readiness probes,
@@ -1947,7 +1947,7 @@ func (al *AgentLoop) processMessageInner(ctx context.Context, msg bus.InboundMes
 		}
 	}
 	// Authoritative state queries: "what reminders do I have", "what needs
-	// me", "is Ghost healthy", "how much disk is left". SQLite and the event
+	// me", "is Kaya healthy", "how much disk is left". SQLite and the event
 	// stream already hold the answer, so a model turn (a ~0.9 s cloud round
 	// trip plus a ~22k-token prompt) buys nothing but a paraphrase. Every
 	// renderer is state-bound: if the store is unwired or the data cannot be
@@ -2037,7 +2037,7 @@ func (al *AgentLoop) processMessageInner(ctx context.Context, msg bus.InboundMes
 			return endTurn(ans, nil)
 		}
 	}
-	// Standing-permission fast-path: "always/never let Ghost …" proposes
+	// Standing-permission fast-path: "always/never let Kaya …" proposes
 	// narrowly scoped grants through runtime validation — never the LLM.
 	// Runs BEFORE the readiness fast-path so grant-management phrases are
 	// never intercepted by a capability's "not connected" readiness reply.
@@ -2290,7 +2290,7 @@ func (al *AgentLoop) processSystemMessage(ctx context.Context, msg bus.InboundMe
 // disposable: a low-priority goroutine that runs once shortly after start and
 // then roughly daily. It only strips exact duplicate memories (preserving
 // provenance) and never blocks a conversation or requires cloud AI. If it
-// fails, Ghost keeps working and the next run retries.
+// fails, Kaya keeps working and the next run retries.
 func (al *AgentLoop) StartLearningWorker(ctx context.Context) {
 	go func() {
 		timer := time.NewTimer(5 * time.Minute)
@@ -2313,7 +2313,7 @@ func (al *AgentLoop) StartLearningWorker(ctx context.Context) {
 }
 
 // consolidatePersonalContext runs the conservative memory consolidation. It is
-// a maintenance operation only; errors are logged and never break Ghost.
+// a maintenance operation only; errors are logged and never break Kaya.
 func (al *AgentLoop) consolidatePersonalContext() {
 	if al.pcStore == nil {
 		return
@@ -2333,7 +2333,7 @@ func (al *AgentLoop) consolidatePersonalContext() {
 		logger.InfoCF("agent", "Personal Context compounded", map[string]interface{}{
 			"conflicts": c.ConflictsDeclared, "expired": c.Expired, "decayed": c.Decayed})
 	}
-	// Lines about something the owner asked Ghost to forget leave its notes,
+	// Lines about something the owner asked Kaya to forget leave its notes,
 	// including ones written before the forget.
 	if n := personalcontext.ScrubForgottenNotes(al.workspace); n > 0 {
 		logger.InfoCF("agent", "Forgotten facts removed from notes", map[string]interface{}{"lines": n})
@@ -2351,7 +2351,7 @@ func (al *AgentLoop) consolidatePersonalContext() {
 			logger.InfoCF("agent", "Forgotten facts removed from the search index", map[string]interface{}{"chunks": purged})
 		}
 	}
-	// Keep the curated (always-injected) profile in sync with Ghost's
+	// Keep the curated (always-injected) profile in sync with Kaya's
 	// structured memory, so the curated layer is actually used.
 	if n, err := personalcontext.MaterializeCuratedProfile(al.workspace, al.pcStore); err != nil {
 		logger.WarnCF("agent", "Curated profile materialization failed", map[string]interface{}{"error": err.Error()})
@@ -2686,7 +2686,7 @@ func (al *AgentLoop) backfillMemoryFromPC() (int, error) {
 }
 
 func (al *AgentLoop) extractPersonalContext(opts processOptions) {
-	// Scheduler/routine turns are Ghost talking to itself on a timer.
+	// Scheduler/routine turns are Kaya talking to itself on a timer.
 	// Their content (e.g. an automation's own prompt) must never become
 	// user memory, and their prose must not score as relational signal.
 	// The scheduled item itself is the durable record of that intent.
@@ -2756,7 +2756,7 @@ func (al *AgentLoop) extractPersonalContext(opts processOptions) {
 				}
 				al.governance.Events.Publish(&cevents.Event{
 					Type: typ, RequestID: opts.RequestID, SessionID: opts.SessionKey,
-					GhostID: al.governance.GhostID, AgentID: al.governance.AgentID,
+					KayaID: al.governance.KayaID, AgentID: al.governance.AgentID,
 					Payload: map[string]interface{}{
 						"summary": memoryActionSummary(a),
 					},
@@ -2830,10 +2830,10 @@ var quickCaptureRE = regexp.MustCompile(`(?i)^\s*(?:remember this|note that|note
 // isAutomationSession reports whether a session key belongs to a
 // machine-scheduled turn rather than a human conversation. Scheduler
 // dispatches run under "automation:<item-id>"; routines under
-// "routine:<id>". Both are Ghost talking to itself on a timer — their
+// "routine:<id>". Both are Kaya talking to itself on a timer — their
 // content must never be ingested as user memory, nor scored as
 // relational signal.
-// learnsAboutOwner reports whether a turn may teach Ghost about its owner.
+// learnsAboutOwner reports whether a turn may teach Kaya about its owner.
 // Every surface the owner uses talks into the one shared conversation, so a
 // turn under any other key is somebody else's: a test client, a sub-agent, a
 // scripted probe. Without this its text became facts about the owner (a
@@ -2844,13 +2844,13 @@ func (al *AgentLoop) learnsAboutOwner(sessionKey string) bool {
 	return !isMachineTurn(sessionKey) && al.ownerKey(sessionKey)
 }
 
-// ownerRecordReaders are the tools that only read back what Ghost already
+// ownerRecordReaders are the tools that only read back what Kaya already
 // keeps about its owner.
 var ownerRecordReaders = map[string]bool{
 	"context_get": true, "memory_recall": true, "session_search": true, "session_state": true, "find_tools": true,
 }
 
-// onlyReadBackTheOwnerRecord reports whether a turn did nothing but read Ghost's
+// onlyReadBackTheOwnerRecord reports whether a turn did nothing but read Kaya's
 // records of its owner. Journaling such a turn adds no fact: it files a second
 // copy of the record, with whatever the model said about it, and the next
 // disclosure then reads that commentary back as though it had been recorded.
@@ -2911,7 +2911,7 @@ func isAutomationSession(sessionKey string) bool {
 
 // isMachineTurn reports whether a session belongs to a timer rather than the
 // owner: scheduler-fired automation, cron-fired work, and the heartbeat. Their
-// prose is Ghost talking to itself, so it can never be the owner's promise.
+// prose is Kaya talking to itself, so it can never be the owner's promise.
 // It deliberately does not widen isAutomationSession, which other guards rely
 // on for its narrower meaning.
 func isMachineTurn(sessionKey string) bool {
@@ -2973,7 +2973,7 @@ func (al *AgentLoop) captureQuickNote(msg, channel string) {
 }
 
 // toolIntentText is the text the turn's tools are chosen from. A short reply
-// ("yes, run it", "do it", "the second one") means what Ghost just offered:
+// ("yes, run it", "do it", "the second one") means what Kaya just offered:
 // read alone, "yes, run it" named no browser, so the model reached for a shell
 // command through a third-party page reader instead of the browser it had
 // offered to use. Visibility only; the gates still decide every call.
@@ -3199,7 +3199,7 @@ func (al *AgentLoop) runAgentLoop(ctx context.Context, opts processOptions) (str
 					Type:      cevents.VerificationFailed,
 					RequestID: opts.RequestID,
 					SessionID: opts.SessionKey,
-					GhostID:   al.governance.GhostID,
+					KayaID:   al.governance.KayaID,
 					AgentID:   al.governance.AgentID,
 					Status:    "failed",
 					Payload:   map[string]interface{}{"reason": reason, "stage": "attestation"},
@@ -3226,7 +3226,7 @@ func (al *AgentLoop) runAgentLoop(ctx context.Context, opts processOptions) (str
 					Type:      cevents.VerificationFailed,
 					RequestID: opts.RequestID,
 					SessionID: opts.SessionKey,
-					GhostID:   al.governance.GhostID,
+					KayaID:   al.governance.KayaID,
 					AgentID:   al.governance.AgentID,
 					Status:    "failed",
 					Payload:   map[string]interface{}{"reason": violation, "stage": "completion_claim"},
@@ -3592,7 +3592,7 @@ func (al *AgentLoop) runLLMIteration(ctx context.Context, messages []providers.M
 					"iteration": iteration,
 					"error":     err.Error(),
 				})
-			// If Ghost's own background work hit something only the owner can
+			// If Kaya's own background work hit something only the owner can
 			// fix (an empty balance), say so instead of failing in silence.
 			al.noteModelFailure(opts.SessionKey, err)
 			return "", iteration, fmt.Errorf("LLM call failed: %w", err)
@@ -3735,7 +3735,7 @@ func (al *AgentLoop) runLLMIteration(ctx context.Context, messages []providers.M
 				continue
 			}
 
-			// Generic capability enforcement: once Ghost commits to a
+			// Generic capability enforcement: once Kaya commits to a
 			// capability (skill SKILL.md read), only that capability's
 			// AllowedTools may run. This is generic — no per-skill branches.
 			// It bounds external-API wandering (weather never explores
@@ -3964,7 +3964,7 @@ func (al *AgentLoop) runLLMIteration(ctx context.Context, messages []providers.M
 					messages = append(messages, imgMsg)
 				}
 				// When the owner asked to see the page, put the image in front
-				// of them as a file. A screenshot Ghost takes to look at a page
+				// of them as a file. A screenshot Kaya takes to look at a page
 				// for itself is not a delivery: it is already the browser card's
 				// picture, and posting each one as a file filled the thread with
 				// "Browser screenshot" cards nobody asked for.
@@ -4412,7 +4412,7 @@ func sanitizeAssistantOutput(content string) (string, bool) {
 	// Manifest / filesystem probes.
 	hasManifest := strings.Contains(lower, ".bundled") || strings.Contains(lower, "bundled manifest")
 	hasDirListing := strings.Contains(lower, "dir:") && strings.Contains(lower, "file:")
-	hasAbsPath := strings.Contains(content, "/var/lib/ghost") || strings.Contains(content, "/var/lib/ghost/workspace")
+	hasAbsPath := strings.Contains(content, "/var/lib/kaya") || strings.Contains(content, "/var/lib/kaya/workspace")
 	hasToolDump := strings.Contains(lower, "tool instructions") && strings.Contains(lower, "exec")
 	if hasFrontmatter || hasManifest || hasDirListing || hasAbsPath {
 		_ = hasToolDump
@@ -4501,7 +4501,7 @@ func (al *AgentLoop) hasCloudKey() bool {
 	return false
 }
 
-// LearningsSummary returns a small, user-facing digest of Ghost's self-
+// LearningsSummary returns a small, user-facing digest of Kaya's self-
 // improvement: how many task turns were recorded, how many skill drafts the
 // evolution pipeline produced, and recently proposed skill names. It surfaces
 // the learning loop without exposing internals.
@@ -4612,7 +4612,7 @@ func (al *AgentLoop) Recall(ctx context.Context, query string) RecallResult {
 	}
 	resp, err := al.provider.Chat(ctx, []providers.Message{{
 		Role:    "user",
-		Content: fmt.Sprintf("From Ghost's past conversations, synthesize a short, helpful recall summary answering: %q\n\nRelevant matches:\n%s", query, digest.String()),
+		Content: fmt.Sprintf("From Kaya's past conversations, synthesize a short, helpful recall summary answering: %q\n\nRelevant matches:\n%s", query, digest.String()),
 	}}, nil, al.model, map[string]interface{}{"max_tokens": 400, "temperature": 0})
 	if err != nil {
 		logger.WarnCF("agent", "Recall summary failed", map[string]interface{}{"error": err.Error()})
@@ -4666,7 +4666,7 @@ func (al *AgentLoop) SetModel(target string) error {
 		provider = preset.Provider
 		model = preset.Model
 	} else if conn, cerr := al.cfg.ResolveConnection(target); cerr == nil {
-		// Named connection (same resolution `ghost model use` performs):
+		// Named connection (same resolution `kaya model use` performs):
 		// the credential stays in the environment — activation writes
 		// provider/model only, never secrets.
 		provider = conn.Provider
@@ -4752,7 +4752,7 @@ func (al *AgentLoop) rebuildFallbackChain() {
 // chain: the active model, the owner's configured fallbacks, the light model,
 // and — only when none of those exist — one available model from another
 // provider as a last resort. Without that last resort a single upstream
-// failure (out of credit, a revoked key) left Ghost with nothing to answer
+// failure (out of credit, a revoked key) left Kaya with nothing to answer
 // with, which is what "out of credit" looked like to the owner.
 func deriveFallbackChain(cfg *config.Config, provider providers.LLMProvider) ([]providers.FallbackCandidate, map[string]providers.LLMProvider) {
 	byModel := map[string]providers.LLMProvider{}
@@ -5274,7 +5274,7 @@ func summarizePrompt(batch []providers.Message, existingSummary string, now time
 		"This summary continues the same task — it is not a restart. Assume details missing from it, do not redo completed work, and treat the thread as one logical chain.\n" +
 		"Current date and time: " + now.Format("Monday, 2006-01-02 15:04") + ".\n" +
 		"Write dates as absolute dates only — \"Thu, Sep 24, 2026 at 09:00\", never \"today\", \"tomorrow\", \"yesterday\", \"tonight\", or a bare \"later\". This summary will be read days or weeks from now, when those words would name the wrong day. Each message below is stamped with when it was written; convert every relative reference against the current date.\n"
-	prompt += "Record what was asked, decided and done, in the owner's own facts. Do not record judgments about the owner's personality, mood, habits, motives or character, and do not record the assistant's own analysis of them: those are readings, not facts, and a summary is read back later as if it were remembered. If the conversation was the owner asking what Ghost knows or infers about them, record only that the request happened and what was disclosed from stored records.\n"
+	prompt += "Record what was asked, decided and done, in the owner's own facts. Do not record judgments about the owner's personality, mood, habits, motives or character, and do not record the assistant's own analysis of them: those are readings, not facts, and a summary is read back later as if it were remembered. If the conversation was the owner asking what Kaya knows or infers about them, record only that the request happened and what was disclosed from stored records.\n"
 	if existingSummary != "" {
 		prompt += "Existing context (rewrite any relative dates in it to absolute dates): " + existingSummary + "\n"
 	}
@@ -5321,7 +5321,7 @@ func (al *AgentLoop) estimateTokens(messages []providers.Message) int {
 	return total
 }
 
-// committedSkill returns the skill Ghost committed to via SKILL.md read.
+// committedSkill returns the skill Kaya committed to via SKILL.md read.
 // Generic: extracts the name from any skills/<name>/SKILL.md path or from
 // frontmatter, with no per-skill branches.
 // authorizeStandaloneTool is the broker boundary for standalone
@@ -5330,7 +5330,7 @@ func (al *AgentLoop) estimateTokens(messages []providers.Message) int {
 // otherwise the broker decides allow/ask/deny with the risk the runtime
 // table declares — never the model.
 func (al *AgentLoop) authorizeStandaloneTool(requestID, sessionKey, tool string, args map[string]interface{}) (AuthorizeResult, bool) {
-	// skill_manage modifies Ghost's durable procedural behavior (its skill
+	// skill_manage modifies Kaya's durable procedural behavior (its skill
 	// set). It is a consequential runtime operation and is NEVER governed by
 	// a skill's own AllowedTools or the model. Risk is derived from the
 	// runtime by action: create/patch/delete are high_impact (they can alter
@@ -5409,7 +5409,7 @@ func skillManageRisk(args map[string]interface{}) permissions.Risk {
 	}
 }
 
-// committedSkill returns the skill Ghost committed to via SKILL.md read.
+// committedSkill returns the skill Kaya committed to via SKILL.md read.
 // Commitment is TURN-SCOPED: it scans back to the start of the current user
 // turn, not a fixed message count. A fixed window let a long tool chain
 // scroll the commitment out and silently drop the capability's restrictions
@@ -5535,7 +5535,7 @@ func scopeTag(scopes []string) string {
 
 // autoJournal summarizes the session and appends it to the daily note.
 func (al *AgentLoop) autoJournal(sessionKey string) {
-	// Ghost's own scheduled work is journaled; a session that is neither the
+	// Kaya's own scheduled work is journaled; a session that is neither the
 	// owner's nor a timer's is a probe, and its test persona would end up in
 	// the owner's daily notes as if it were their life.
 	if !al.journalsSession(sessionKey) {
@@ -5643,10 +5643,10 @@ func surfaceToolBlocked(profile tools.ToolProfile, reg *tools.ToolRegistry, name
 		where = "this surface"
 	}
 	if profile != "" && !profile.Allows(name) {
-		return fmt.Sprintf("The %s tool isn't available on %s. Use a web tool (web_search, web_fetch) or the browser to read a page, or run it from the Ghost terminal.", name, where), true
+		return fmt.Sprintf("The %s tool isn't available on %s. Use a web tool (web_search, web_fetch) or the browser to read a page, or run it from the Kaya terminal.", name, where), true
 	}
 	if reg != nil && !reg.AllowedFor(name, channel, sessionKey) {
-		return fmt.Sprintf("The %s tool is disabled on %s. Use a web tool (web_search, web_fetch) or the browser instead, or run it from the Ghost terminal.", name, where), true
+		return fmt.Sprintf("The %s tool is disabled on %s. Use a web tool (web_search, web_fetch) or the browser instead, or run it from the Kaya terminal.", name, where), true
 	}
 	return "", false
 }
@@ -5682,7 +5682,7 @@ func attemptHiddenPrimitive(profile tools.ToolProfile, reg, active *tools.ToolRe
 	return true
 }
 
-// commandRequestRE matches an owner explicitly asking Ghost to run a shell
+// commandRequestRE matches an owner explicitly asking Kaya to run a shell
 // command: "run df -h on this machine", "run the command uname -a",
 // "execute `ls -la`", or a bare command line with a flag/path ("ls -la /var").
 // Vague follow-ups ("run it") are deliberately NOT matches: those are answered

@@ -8,8 +8,8 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/ianclemence/ghost/pkg/db"
-	"github.com/ianclemence/ghost/pkg/providers"
+	"github.com/ianclemence/kaya/pkg/db"
+	"github.com/ianclemence/kaya/pkg/providers"
 )
 
 type SQLiteStore struct {
@@ -261,7 +261,7 @@ func (s *SQLiteStore) DeleteSession(key string) error {
 
 // ResolveNotice marks every still-open alert or notice in the conversation
 // that reports condition noticeKey as resolved, and returns their ids. The
-// words stay in the transcript (it is a record of what Ghost said); surfaces
+// words stay in the transcript (it is a record of what Kaya said); surfaces
 // show them as settled instead of as something that still needs the owner.
 func (s *SQLiteStore) ResolveNotice(sessionKey, noticeKey string) []string {
 	if noticeKey == "" {
@@ -304,7 +304,7 @@ func (s *SQLiteStore) ResolveNotice(sessionKey, noticeKey string) []string {
 
 // TagNotices gives a key to alerts and notices written before alerts carried
 // one, found by the fixed opening of their words, so they can be resolved like
-// any other. It touches only messages Ghost started itself that have no key,
+// any other. It touches only messages Kaya started itself that have no key,
 // and is safe to run on every start.
 func (s *SQLiteStore) TagNotices(sessionKey, contentPrefix, noticeKey string) int {
 	res, err := s.db.Exec(`UPDATE messages SET meta = json_set(meta, '$.notice_key', ?)

@@ -18,7 +18,7 @@ const (
 )
 
 // Lease binds one computer to one task. Owner+context scope it to the
-// right Ghost principal: a lease never authorizes a different owner or
+// right Kaya principal: a lease never authorizes a different owner or
 // context, even if the resource ID matches.
 type Lease struct {
 	ID         string

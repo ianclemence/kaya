@@ -7,7 +7,7 @@ import (
 
 func TestDatabasesAreSealedAndScrubbed(t *testing.T) {
 	dir := t.TempDir()
-	t.Setenv("GHOST_CONFIG_DIR", dir)
+	t.Setenv("KAYA_CONFIG_DIR", dir)
 	if err := SaveDatabase(Database{Name: "Shop Sales", URL: "postgres://reader:s3cret-pass@db.example.com:5432/shop"}); err != nil {
 		t.Fatal(err)
 	}

@@ -1,8 +1,8 @@
-// Package pairing implements secure device pairing for Ghost.
+// Package pairing implements secure device pairing for Kaya.
 //
 // Flow:
-//  1. Ghost Pod (web UI) calls POST /v1/pairing/invitations → gets short-lived token + pairing_id
-//  2. Ghost Pod displays token as QR code (ghost://pair?v=1&pod=...&transport=lan&host=...&port=...&token=...)
+//  1. Kaya Pod (web UI) calls POST /v1/pairing/invitations → gets short-lived token + pairing_id
+//  2. Kaya Pod displays token as QR code (kaya://pair?v=1&pod=...&transport=lan&host=...&port=...&token=...)
 //  3. Mobile app scans QR, calls POST /v1/pairing/complete with token + device metadata
 //  4. Backend validates token, creates paired_device, returns device credential
 //  5. Mobile stores credential in SecureStore
@@ -95,7 +95,7 @@ type PairingResult struct {
 	DeviceID   string `json:"device_id"`
 	Credential string `json:"credential"` // plaintext, shown once
 	PairedAt   string `json:"paired_at"`
-	GhostName  string `json:"ghost_name"` // human-friendly Ghost identity
+	KayaName  string `json:"kaya_name"` // human-friendly Kaya identity
 }
 
 // CreatePairingInvitation generates a new short-lived pairing token.

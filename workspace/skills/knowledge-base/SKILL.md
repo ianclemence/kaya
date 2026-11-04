@@ -2,10 +2,10 @@
 name: knowledge-base
 description: Build and traverse a persistent personal knowledge graph ("Second Brain"). Invoke when user asks to "add to my memory", "remember this", "what do you know about X", "build a knowledge graph", or "initialize my notes". Manages self/, notes/, and ops/ spaces.
 version: 1.1.0
-author: Ghost
+author: Kaya
 license: MIT
 metadata:
-  ghost:
+  kaya:
     tags: [knowledge, memory, graph, notes, wiki, rag]
 prerequisites:
   commands: [python]
@@ -13,11 +13,11 @@ prerequisites:
 
 # Knowledge Base
 
-This skill maintains Ghost's persistent knowledge: durable domain notes plus
+This skill maintains Kaya's persistent knowledge: durable domain notes plus
 a capture workflow. The contract lives in `workspace/knowledge/README.md` —
 read it before restructuring anything. Three principles govern every change:
 
-1.  **self/**: Ghost's persistent self-state (identity record, runtime-mirrored
+1.  **self/**: Kaya's persistent self-state (identity record, runtime-mirrored
     owner profile, heartbeat telemetry). Describe, never instruct.
 2.  **notes/**: Durable domain knowledge (connected by `[[wikilinks]]`).
     Keep what stays useful; groom what went stale.
@@ -127,7 +127,7 @@ Add-Content workspace/knowledge/ops/inbox.md "- [ ] Check out the new API docume
 workspace/knowledge/
 ├── README.md           # The knowledge contract (read first)
 ├── self/               # Persistent self-state
-│   ├── identity.md     # Who Ghost is (describes, never instructs)
+│   ├── identity.md     # Who Kaya is (describes, never instructs)
 │   ├── user-profile.md # Runtime-mirrored owner profile (hands off)
 │   ├── context.md      # Heartbeat-maintained snapshot (transient)
 │   └── skills-state.md # Skill health (transient)

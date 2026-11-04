@@ -22,16 +22,16 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ianclemence/ghost/pkg/credentials"
-	"github.com/ianclemence/ghost/pkg/product"
-	"github.com/ianclemence/ghost/pkg/provider"
-	"github.com/ianclemence/ghost/pkg/providers/aqi"
-	"github.com/ianclemence/ghost/pkg/providers/crypto"
-	"github.com/ianclemence/ghost/pkg/providers/currency"
-	"github.com/ianclemence/ghost/pkg/providers/flight"
-	"github.com/ianclemence/ghost/pkg/providers/hass"
-	"github.com/ianclemence/ghost/pkg/providers/nearby"
-	"github.com/ianclemence/ghost/pkg/providers/weather"
+	"github.com/ianclemence/kaya/pkg/credentials"
+	"github.com/ianclemence/kaya/pkg/product"
+	"github.com/ianclemence/kaya/pkg/provider"
+	"github.com/ianclemence/kaya/pkg/providers/aqi"
+	"github.com/ianclemence/kaya/pkg/providers/crypto"
+	"github.com/ianclemence/kaya/pkg/providers/currency"
+	"github.com/ianclemence/kaya/pkg/providers/flight"
+	"github.com/ianclemence/kaya/pkg/providers/hass"
+	"github.com/ianclemence/kaya/pkg/providers/nearby"
+	"github.com/ianclemence/kaya/pkg/providers/weather"
 )
 
 const providerToolTimeout = 30 * time.Second

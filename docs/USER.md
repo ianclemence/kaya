@@ -1,20 +1,20 @@
 # User
 
-The user is the owner and operator of Ghost. Everything Ghost does exists to
+The user is the owner and operator of Kaya. Everything Kaya does exists to
 serve the user's goals while protecting the user's trust.
 
 ## The human as owner
 
-Ghost is a personal runtime, not a shared service. It has one persistent
+Kaya is a personal runtime, not a shared service. It has one persistent
 relationship with its owner. That relationship is durable: identity, memory,
 preferences, routines, and artifacts persist across sessions and restarts.
 
 The user is the source of goals and the final authority on intent. The user
-expresses what they want; Ghost decides how to accomplish it safely.
+expresses what they want; Kaya decides how to accomplish it safely.
 
 ## Natural-language interaction
 
-The user interacts with Ghost in ordinary language — through a chat channel,
+The user interacts with Kaya in ordinary language — through a chat channel,
 the Web Console, or a paired device. They do not issue structured commands to
 internal machinery.
 
@@ -28,7 +28,7 @@ Examples:
 
 | The user says | The user means |
 |---|---|
-| "Remember that I prefer morning flights." | A durable preference Ghost should honor later |
+| "Remember that I prefer morning flights." | A durable preference Kaya should honor later |
 | "Book me the cheapest reasonable flight tomorrow." | A goal that requires a real external action |
 | "Turn off the bedroom light." | A device-control goal |
 | "Remind me every Friday." | A recurring routine |
@@ -58,39 +58,39 @@ is sophisticated.
 
 ## Approvals
 
-When an action is consequential, Ghost may ask for approval before proceeding.
-The user answers in natural language ("yes", "always", or "no"). Ghost's
+When an action is consequential, Kaya may ask for approval before proceeding.
+The user answers in natural language ("yes", "always", or "no"). Kaya's
 Permission Broker records the decision and, when the user chooses "always",
 stores a scoped standing grant.
 
-The user is never asked to approve something Ghost is not actually going to do,
+The user is never asked to approve something Kaya is not actually going to do,
 and never has authority applied on their behalf without a decision.
 
 ## Corrections
 
-The user can correct Ghost: change a preference, retract a fact, or tell Ghost
-it misunderstood. Corrections update memory and behavior through Ghost's
+The user can correct Kaya: change a preference, retract a fact, or tell Kaya
+it misunderstood. Corrections update memory and behavior through Kaya's
 governed memory system, not through silent overwrites.
 
 ## Preferences
 
-Preferences are durable facts about how the user wants Ghost to behave. They
-are stored as memory entries with provenance, so Ghost can distinguish a
+Preferences are durable facts about how the user wants Kaya to behave. They
+are stored as memory entries with provenance, so Kaya can distinguish a
 user-declared preference from an inferred one.
 
 ## The persistent relationship
 
-Because Ghost is persistent, the user should experience continuity: Ghost
+Because Kaya is persistent, the user should experience continuity: Kaya
 remembers what matters, honors standing grants within their scope, and can be
 taken over or paused on a live surface (browser or computer) when the user
 wants direct control.
 
-## How user intent enters Ghost
+## How user intent enters Kaya
 
 ```
 User request (natural language)
         ↓
-Ghost receives the message with channel/session context
+Kaya receives the message with channel/session context
         ↓
 Intent / reasoning interprets it
         ↓
@@ -105,9 +105,9 @@ The user's words are input to reasoning. They are not commands to execution.
 
 The user should know:
 
-- what Ghost can help with;
-- when Ghost needs approval;
-- what Ghost actually did (through activity);
+- what Kaya can help with;
+- when Kaya needs approval;
+- what Kaya actually did (through activity);
 - how to correct or forget something.
 
 The user should not need to know:
@@ -124,28 +124,28 @@ strength.
 
 ## Related concepts
 
-See [Ghost](GHOST.md) for the runtime that owns the relationship, and
+See [Kaya](KAYA.md) for the runtime that owns the relationship, and
 [Intent & Reasoning](INTENT-REASONING.md) for how requests become capability
 requests.
 
 ## Backups and recovery
 
-Ghost saves a recovery snapshot of its memory, files, settings and secrets
-before every update, and `ghost state backup` takes one on demand (the newest
+Kaya saves a recovery snapshot of its memory, files, settings and secrets
+before every update, and `kaya state backup` takes one on demand (the newest
 five are kept, in the Pod's `backups` folder). Two things to know:
 
 - **A backup on the Pod dies with the Pod.** Copy the newest `.gst` file to
   another computer now and then.
 - **A backup can only be opened with the Pod's key.** The key is
-  `GHOST_MASTER_KEY` in `.master-env` in the Ghost config directory. Keep a copy
+  `KAYA_MASTER_KEY` in `.master-env` in the Kaya config directory. Keep a copy
   of it somewhere safe and separate from the backup, such as a password manager.
 
-To restore onto a fresh install of Ghost:
+To restore onto a fresh install of Kaya:
 
 ```bash
-GHOST_MASTER_KEY=<your key> ghost state import ghost-20260930-081926.gst
+KAYA_MASTER_KEY=<your key> kaya state import kaya-20260930-081926.gst
 ```
 
 Memory, conversation history, files and settings come back. Paired phones do not
-(re-pair with `ghost pair`), and neither do notification tokens; the app
+(re-pair with `kaya pair`), and neither do notification tokens; the app
 registers again on its own.

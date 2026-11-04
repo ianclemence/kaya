@@ -1,8 +1,8 @@
-// Ghost - Ultra-lightweight personal AI agent
-// Inspired by and based on GHOST: https://github.com/ianclemence/ghost
+// Kaya - Ultra-lightweight personal AI agent
+// Inspired by and based on KAYA: https://github.com/ianclemence/kaya
 // License: MIT
 //
-// Copyright (c) 2026 Ghost contributors
+// Copyright (c) 2026 Kaya contributors
 
 package providers
 
@@ -18,8 +18,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ianclemence/ghost/pkg/auth"
-	"github.com/ianclemence/ghost/pkg/config"
+	"github.com/ianclemence/kaya/pkg/auth"
+	"github.com/ianclemence/kaya/pkg/config"
 )
 
 type HTTPProvider struct {
@@ -153,7 +153,7 @@ func (p *HTTPProvider) StreamChat(ctx context.Context, messages []Message, tools
 
 	// Thinking mode: DeepSeek enables it by default (effort high), which makes
 	// responses slow and, worse, breaks tool loops that do not echo
-	// reasoning_content (the API 400s). Ghost keeps thinking OFF unless the
+	// reasoning_content (the API 400s). Kaya keeps thinking OFF unless the
 	// caller explicitly opts in (options["thinking"]=true or a non-"off"
 	// options["thinking_level"]), and always states the choice explicitly in
 	// the provider's own format so the default never depends on server-side
@@ -753,7 +753,7 @@ func createClaudeAuthProvider() (LLMProvider, error) {
 		return nil, fmt.Errorf("loading auth credentials: %w", err)
 	}
 	if cred == nil {
-		return nil, fmt.Errorf("no credentials for anthropic. Run: GHOST auth login --provider anthropic")
+		return nil, fmt.Errorf("no credentials for anthropic. Run: KAYA auth login --provider anthropic")
 	}
 	return NewClaudeProviderWithTokenSource(cred.AccessToken, createClaudeTokenSource()), nil
 }
@@ -764,7 +764,7 @@ func createCodexAuthProvider() (LLMProvider, error) {
 		return nil, fmt.Errorf("loading auth credentials: %w", err)
 	}
 	if cred == nil {
-		return nil, fmt.Errorf("no credentials for openai. Run: GHOST auth login --provider openai")
+		return nil, fmt.Errorf("no credentials for openai. Run: KAYA auth login --provider openai")
 	}
 	return NewCodexProviderWithTokenSource(cred.AccessToken, cred.AccountID, createCodexTokenSource()), nil
 }

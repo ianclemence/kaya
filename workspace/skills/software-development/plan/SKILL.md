@@ -1,11 +1,11 @@
 ---
 name: plan
-description: Plan mode for Ghost — inspect context, write a markdown plan into the active workspace's `.ghost/plans/` directory, and do not execute the work.
+description: Plan mode for Kaya — inspect context, write a markdown plan into the active workspace's `.kaya/plans/` directory, and do not execute the work.
 version: 1.0.0
-author: Ghost
+author: Kaya
 license: MIT
 metadata:
-  ghost:
+  kaya:
     tags: [planning, plan-mode, implementation, workflow]
     related_skills: [writing-plans, subagent-driven-development]
 ---
@@ -22,7 +22,7 @@ For this turn, you are planning only.
 - Do not edit project files except the plan markdown file.
 - Do not run mutating terminal commands, commit, push, or perform external actions.
 - You may inspect the repo or other context with read-only commands/tools when needed.
-- Your deliverable is a markdown plan saved inside the active workspace under `.ghost/plans/`.
+- Your deliverable is a markdown plan saved inside the active workspace under `.kaya/plans/`.
 
 ## Output requirements
 
@@ -44,12 +44,12 @@ If the task is code-related, include exact file paths, likely test targets, and 
 
 Save the plan with `write_file` under:
 
-- `.ghost/plans/YYYY-MM-DD_HHMMSS-<slug>.md`
+- `.kaya/plans/YYYY-MM-DD_HHMMSS-<slug>.md`
 
-Treat that as relative to the active working directory / backend workspace. Ghost file tools are backend-aware, so using this relative path keeps the plan with the workspace on local, docker, ssh, modal, and daytona backends.
+Treat that as relative to the active working directory / backend workspace. Kaya file tools are backend-aware, so using this relative path keeps the plan with the workspace on local, docker, ssh, modal, and daytona backends.
 
 If the runtime provides a specific target path, use that exact path.
-If not, create a sensible timestamped filename yourself under `.ghost/plans/`.
+If not, create a sensible timestamped filename yourself under `.kaya/plans/`.
 
 ## Interaction style
 

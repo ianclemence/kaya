@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/ianclemence/ghost/pkg/credentials"
+	"github.com/ianclemence/kaya/pkg/credentials"
 )
 
 func TestConnectionEntriesCoverCatalog(t *testing.T) {
@@ -85,7 +85,7 @@ func TestConnectionsExecute(t *testing.T) {
 // secret — so "is my X login set up?" is answered by checking, not by
 // doubting the owner or by claiming the vault unlocks nothing.
 func TestConnectionsSeesSealedWebLogins(t *testing.T) {
-	t.Setenv("GHOST_CONFIG_DIR", t.TempDir())
+	t.Setenv("KAYA_CONFIG_DIR", t.TempDir())
 	if err := credentials.SaveWebLogin(credentials.WebLogin{
 		URL: "https://x.com/login", Username: "icmosha", Password: "hunter2",
 	}); err != nil {

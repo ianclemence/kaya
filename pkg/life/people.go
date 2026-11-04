@@ -10,7 +10,7 @@ import (
 	"time"
 )
 
-// Person is someone in the owner's life, as the owner has told Ghost about
+// Person is someone in the owner's life, as the owner has told Kaya about
 // them: who they are to the owner, the dates that matter, how to reach them,
 // what they like, and when they last spoke. Every note keeps its source.
 type Person struct {
@@ -186,7 +186,7 @@ func (s *People) Remember(id string, u PersonUpdate, now time.Time) (Person, boo
 			p = (*d)[idx]
 		} else {
 			if len(*d) >= maxPeople {
-				return errors.New("Ghost already keeps the most people it can")
+				return errors.New("Kaya already keeps the most people it can")
 			}
 			name, err := text("name", u.Name, 80, true)
 			if err != nil {

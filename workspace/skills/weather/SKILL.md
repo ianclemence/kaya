@@ -2,10 +2,10 @@
 name: weather
 description: Get current weather conditions and forecasts for any location. Invoke when user asks "what's the weather", "is it going to rain", "weather forecast", "temperature in X", "will I need an umbrella", or "how hot will it be tomorrow". Uses the weather_now tool: wttr.in primary, Open-Meteo as the keyless fallback. No API key required.
 version: 1.1.0
-author: Ghost
+author: Kaya
 license: MIT
 metadata:
-  ghost:
+  kaya:
     tags: [weather, forecast, temperature, rain, conditions]
 prerequisites:
   commands: [curl]

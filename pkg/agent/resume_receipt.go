@@ -4,12 +4,12 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/ianclemence/ghost/pkg/tools"
+	"github.com/ianclemence/kaya/pkg/tools"
 )
 
 // receiptMaxChars bounds a receipt that reaches the owner verbatim. The
 // model normally writes the reply; this text only fires when no model
-// turn is available, and a payload pasted at the owner as Ghost's words
+// turn is available, and a payload pasted at the owner as Kaya's words
 // is the exact failure this bound exists to stop.
 const receiptMaxChars = 600
 
@@ -26,7 +26,7 @@ func resumeContinuationLabel(tool string) string {
 // resumeContinuationPrompt frames a resumed execution's raw output as the
 // evidence for the one model turn that owes the owner an answer. The
 // payload travels as the current message and nowhere else: never
-// persisted as speech, never streamed as Ghost's reply — the owner reads
+// persisted as speech, never streamed as Kaya's reply — the owner reads
 // the model's words, not the tool's bytes.
 func resumeContinuationPrompt(label, output string) string {
 	body := strings.TrimSpace(output)
@@ -51,7 +51,7 @@ func (al *AgentLoop) canContinueResume() bool {
 // resumeReceiptText returns the user-facing text for a resumed execution
 // when the model could not write the reply: the tool's own words, or an
 // evidence-grounded fallback — never silence, and never an unbounded
-// payload pasted at the owner as something Ghost said.
+// payload pasted at the owner as something Kaya said.
 func resumeReceiptText(toolResult *tools.ToolResult) string {
 	text := strings.TrimSpace(toolResult.ForLLM)
 	if toolResult.IsError {

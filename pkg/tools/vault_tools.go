@@ -6,13 +6,13 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ianclemence/ghost/pkg/cards"
-	"github.com/ianclemence/ghost/pkg/credentials"
+	"github.com/ianclemence/kaya/pkg/cards"
+	"github.com/ianclemence/kaya/pkg/credentials"
 )
 
-// VaultItemsTool lets Ghost see what the owner keeps in their Vault, as much as
+// VaultItemsTool lets Kaya see what the owner keeps in their Vault, as much as
 // it is allowed to and no more. The line it reads for each item is built in the
-// credentials package (ModelItems), which is where "Ghost never sees a card's
+// credentials package (ModelItems), which is where "Kaya never sees a card's
 // number" is decided; this tool only prints it.
 type VaultItemsTool struct{}
 
@@ -24,7 +24,7 @@ func (t *VaultItemsTool) Description() string {
 	return "See what the owner has saved in their Vault that you can use: logins (the site and the username), contacts (their details in full), cards (a nickname, the brand and the last four digits) and keys (their names). " +
 		"Passwords, card numbers, security codes and key values are never shown to you and cannot be. Use it before signing in to a site or filling in a form with the owner's details. " +
 		"To sign in to a site that has a login, use browser_login. If it has none, use request_credentials. " +
-		"To use a key in a command, name its variable in the command exactly as the Vault lists it (for example `DEEPSEEK_API_KEY=$DEEPSEEK_API_KEY ./build/scout doctor`); Ghost supplies the value only to a command that names it. Never print a key, write it to a file, or ask the owner for it."
+		"To use a key in a command, name its variable in the command exactly as the Vault lists it (for example `DEEPSEEK_API_KEY=$DEEPSEEK_API_KEY ./build/scout doctor`); Kaya supplies the value only to a command that names it. Never print a key, write it to a file, or ask the owner for it."
 }
 
 func (t *VaultItemsTool) Parameters() map[string]interface{} {
@@ -74,10 +74,10 @@ func (t *VaultItemsTool) Execute(_ context.Context, args map[string]interface{})
 	return NewToolResult(strings.TrimSpace(sb.String()))
 }
 
-// RequestCredentialsTool asks the owner for a sign-in Ghost does not have, with
+// RequestCredentialsTool asks the owner for a sign-in Kaya does not have, with
 // a private form on their phone. The password goes from the phone to the Vault;
 // it is never typed into the conversation and the model never reads it. The tool
-// returns at once: the owner fills the form in their own time and tells Ghost to
+// returns at once: the owner fills the form in their own time and tells Kaya to
 // carry on.
 type RequestCredentialsTool struct {
 	channel string
@@ -131,7 +131,7 @@ func (t *RequestCredentialsTool) Execute(ctx context.Context, args map[string]in
 		return NewToolResult(fmt.Sprintf("A sign-in for %s is already saved. Use browser_login with host %s; do not ask the owner for it again.", host, host))
 	}
 	if t.publish == nil || t.channel != "mobile" || t.chatID == "" {
-		return NewToolResult(fmt.Sprintf("This surface cannot show a private form. Tell the owner you need to sign in to %s and that they can add the login in the Ghost app under Settings, Vault, then ask you again. Never ask for the password here.", host))
+		return NewToolResult(fmt.Sprintf("This surface cannot show a private form. Tell the owner you need to sign in to %s and that they can add the login in the Kaya app under Settings, Vault, then ask you again. Never ask for the password here.", host))
 	}
 	// One form per site at a time: asking twice in a turn is noise, and a form
 	// still open is the answer.

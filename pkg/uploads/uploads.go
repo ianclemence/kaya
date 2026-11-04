@@ -1,11 +1,11 @@
-// Package uploads is where files an owner sends to Ghost live.
+// Package uploads is where files an owner sends to Kaya live.
 //
 // An attachment used to become an extensionless temp file that the file tools
 // then refused to open (outside the workspace) and that was deleted seconds
 // after the turn. Uploads now live in the workspace, keep their real name and
 // a detected type, can be listed, and are deleted on request (or after the
-// retention window). Ghost opens them with the ordinary workspace-confined
-// file tools, so nothing about reading an upload widens what Ghost can reach.
+// retention window). Kaya opens them with the ordinary workspace-confined
+// file tools, so nothing about reading an upload widens what Kaya can reach.
 package uploads
 
 import (
@@ -246,7 +246,7 @@ func Sniff(data []byte, name, hint string) string {
 	return strings.TrimSpace(strings.SplitN(m, ";", 2)[0])
 }
 
-// Kind groups a type for the UI and for choosing how Ghost should read it.
+// Kind groups a type for the UI and for choosing how Kaya should read it.
 func Kind(name, mime string) string {
 	switch {
 	case strings.HasPrefix(mime, "image/"):

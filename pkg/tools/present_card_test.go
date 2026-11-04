@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/ianclemence/ghost/pkg/cards"
+	"github.com/ianclemence/kaya/pkg/cards"
 )
 
 // args as the model delivers them: decoded JSON, so numbers are float64 and

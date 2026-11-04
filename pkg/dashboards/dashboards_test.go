@@ -8,8 +8,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ianclemence/ghost/pkg/life"
-	"github.com/ianclemence/ghost/pkg/uploads"
+	"github.com/ianclemence/kaya/pkg/life"
+	"github.com/ianclemence/kaya/pkg/uploads"
 )
 
 func TestOnlyReadingQueriesRun(t *testing.T) {

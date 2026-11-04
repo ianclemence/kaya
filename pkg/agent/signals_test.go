@@ -8,8 +8,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ianclemence/ghost/pkg/routines"
-	"github.com/ianclemence/ghost/pkg/scheduled"
+	"github.com/ianclemence/kaya/pkg/routines"
+	"github.com/ianclemence/kaya/pkg/scheduled"
 	_ "modernc.org/sqlite"
 )
 
@@ -37,7 +37,7 @@ func signalLoop(t *testing.T) (*AgentLoop, *routines.Service, *scheduled.Service
 
 func mkRoutine(t *testing.T, rsvc *routines.Service, name string) string {
 	t.Helper()
-	r, err := rsvc.Create("ghost-local", "owner", name, "do "+name,
+	r, err := rsvc.Create("kaya-local", "owner", name, "do "+name,
 		"UTC", scheduled.Schedule{Kind: scheduled.ScheduleEvery, Every: time.Hour}, nil)
 	if err != nil {
 		t.Fatal(err)

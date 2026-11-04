@@ -1,12 +1,12 @@
-// Package capability is Ghost's canonical capability contract. A capability
-// is a Ghost-owned semantic ability to accomplish a bounded task
+// Package capability is Kaya's canonical capability contract. A capability
+// is a Kaya-owned semantic ability to accomplish a bounded task
 // ("calendar.modify", "message.send", "device.control"). It is the identity
 // that authorization, evidence, and canonical events operate on.
 //
 // Tools, providers, integrations, MCP servers, and skills are all
 // implementation details beneath a capability. Nothing external defines
 // capability semantics: everything that varies is replaceable, everything
-// that defines trust is owned by Ghost.
+// that defines trust is owned by Kaya.
 //
 // This is a semantic registry, not a framework. It is deliberately small:
 // identity, risk, evidence requirement, and the tool implementations that
@@ -31,7 +31,7 @@ const (
 	RiskHighImpact    Risk = "high_impact"
 )
 
-// EvidenceKind names the shape of proof required before Ghost may tell the
+// EvidenceKind names the shape of proof required before Kaya may tell the
 // user a consequential capability succeeded. Empty means no evidence is
 // required (read-only or purely local state).
 type EvidenceKind string
@@ -54,7 +54,7 @@ const (
 	EvidenceAction EvidenceKind = "action"
 )
 
-// Spec is the Ghost-owned contract for one capability.
+// Spec is the Kaya-owned contract for one capability.
 type Spec struct {
 	// ID is the canonical semantic identity, e.g. "calendar.modify".
 	ID string
@@ -223,7 +223,7 @@ func InScope(scope []string, tool string, args map[string]interface{}) bool {
 }
 
 // mcpCapabilityFor maps a small, well-understood set of MCP tool name shapes
-// to a Ghost capability. It is deliberately conservative: an unmatched tool
+// to a Kaya capability. It is deliberately conservative: an unmatched tool
 // returns "" and is governed as mcp.execute. It never maps a write-shaped
 // tool onto a read capability.
 func mcpCapabilityFor(tool string) string {
@@ -256,7 +256,7 @@ func (r *Registry) IDs() []string {
 	return out
 }
 
-// defaultRegistry is the Ghost-owned capability set. It covers the
+// defaultRegistry is the Kaya-owned capability set. It covers the
 // capabilities the audit identified as product-meaningful and the
 // consequential operations that must carry evidence. Additional
 // capabilities are migrated here over time; the contract is stable.
@@ -265,11 +265,11 @@ var defaultRegistry = buildDefault()
 func buildDefault() *Registry {
 	r := NewRegistry()
 	specs := []Spec{
-		// --- Memory (Ghost-owned knowledge) ---
+		// --- Memory (Kaya-owned knowledge) ---
 		{ID: "memory.remember", Title: "Remember", Risk: RiskLow, Tools: []string{"remember"},
 			Description: "Store a durable fact or preference about the user."},
 		{ID: "memory.recall", Title: "Recall", Risk: RiskReadOnly, Tools: []string{"memory_recall", "context_get", "session_search", "session_state"},
-			Description: "Retrieve what Ghost knows or remembers."},
+			Description: "Retrieve what Kaya knows or remembers."},
 		{ID: "memory.forget", Title: "Forget", Risk: RiskLow, Tools: []string{"memory_curate"},
 			Description: "Retire a belief or memory entry."},
 		{ID: "memory.summarize", Title: "Summarize", Risk: RiskReadOnly, Tools: []string{"compact_context"},
@@ -313,7 +313,7 @@ func buildDefault() *Registry {
 		// --- Payments (connected-app, high impact, acknowledgement required) ---
 		{ID: "payments.charge", Title: "Take a payment", Risk: RiskHighImpact, Evidence: EvidenceAcknowledgement,
 			Tools:       []string{"payment_charge"},
-			Description: "Charge a payment method on the owner's behalf through the owner's own connected payment connector. Every charge asks first and is proven by the provider acknowledgement. Ghost takes no cut and ranks no connector for pay."},
+			Description: "Charge a payment method on the owner's behalf through the owner's own connected payment connector. Every charge asks first and is proven by the provider acknowledgement. Kaya takes no cut and ranks no connector for pay."},
 
 		// --- Media (connected-app, e.g. Spotify) ---
 		{ID: "media.playback", Title: "Media playback", Risk: RiskLow,
@@ -390,7 +390,7 @@ func buildDefault() *Registry {
 		{ID: "exec.sandbox", Title: "Sandboxed code", Risk: RiskHighImpact, Tools: []string{"sandbox"},
 			Description: "Run code in a sandbox."},
 		{ID: "system.update", Title: "System update", Risk: RiskHighImpact, Tools: []string{"update"},
-			Description: "Update Ghost."},
+			Description: "Update Kaya."},
 		{ID: "exec.scheduled", Title: "Scheduled command", Risk: RiskHighImpact,
 			Description: "Run a shell command from a schedule."},
 		{ID: "device.io", Title: "Device IO", Risk: RiskConsequential, Tools: []string{"i2c", "spi"},
@@ -405,7 +405,7 @@ func buildDefault() *Registry {
 		// and evidence are designed once: single-use virtual card bound to
 		// merchant + amount + expiry, per-purchase human approval, receipt
 		// evidence before any success claim. Tools is intentionally empty —
-		// with no signed partner there is no execution path, and Ghost must
+		// with no signed partner there is no execution path, and Kaya must
 		// refuse rather than improvise one. Until a partner lands, money
 		// moves only via browser_submit preparation with a human paying.
 		{ID: "wallet.pay", Title: "Pay (wallet)", Risk: RiskHighImpact, Evidence: EvidenceAction,
@@ -418,7 +418,7 @@ func buildDefault() *Registry {
 	return r
 }
 
-// Default returns the process-wide Ghost capability registry.
+// Default returns the process-wide Kaya capability registry.
 func Default() *Registry { return defaultRegistry }
 
 // ForTool resolves the capability for a model-facing tool from the default

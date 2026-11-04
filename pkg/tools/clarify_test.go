@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ianclemence/ghost/pkg/bus"
+	"github.com/ianclemence/kaya/pkg/bus"
 )
 
 func TestClarifyToolName(t *testing.T) {

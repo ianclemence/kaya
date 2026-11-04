@@ -12,15 +12,15 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ianclemence/ghost/pkg/config"
+	"github.com/ianclemence/kaya/pkg/config"
 )
 
 // RecoveryServer provides a minimal web UI for recovery mode.
-// It runs when Ghost fails to start properly, allowing users to
-// view logs, reset config, or retry starting Ghost.
+// It runs when Kaya fails to start properly, allowing users to
+// view logs, reset config, or retry starting Kaya.
 type RecoveryServer struct {
 	Port        int
-	GhostDir    string
+	KayaDir    string
 	ConfigPath  string
 	LogsCommand string
 	Timeout     time.Duration
@@ -29,16 +29,16 @@ type RecoveryServer struct {
 // NewRecoveryServer creates a RecoveryServer with default settings.
 func NewRecoveryServer() *RecoveryServer {
 	port := 8766
-	ghostDir := os.Getenv("GHOST_DIR")
-	if ghostDir == "" {
-		ghostDir = DefaultGhostDir
+	kayaDir := os.Getenv("KAYA_DIR")
+	if kayaDir == "" {
+		kayaDir = DefaultKayaDir
 	}
 
 	return &RecoveryServer{
 		Port:        port,
-		GhostDir:    ghostDir,
-		ConfigPath:  filepath.Join(ghostDir, "config", "config.json"),
-		LogsCommand: "journalctl -u ghost --no-pager -n 100",
+		KayaDir:    kayaDir,
+		ConfigPath:  filepath.Join(kayaDir, "config", "config.json"),
+		LogsCommand: "journalctl -u kaya --no-pager -n 100",
 		Timeout:     15 * time.Minute,
 	}
 }
@@ -50,7 +50,7 @@ type RecoveryStatus struct {
 	ErrorCount   int    `json:"error_count"`
 	LastError    string `json:"last_error"`
 	ConfigExists bool   `json:"config_exists"`
-	GhostRunning bool   `json:"ghost_running"`
+	KayaRunning bool   `json:"kaya_running"`
 }
 
 // Start begins listening for recovery requests. If Timeout > 0, the server
@@ -95,11 +95,11 @@ func (rs *RecoveryServer) handleStatus(w http.ResponseWriter, r *http.Request) {
 	status := RecoveryStatus{
 		Version:      "unknown",
 		ConfigExists: fileExists(rs.ConfigPath),
-		GhostRunning: isGhostRunning(),
+		KayaRunning: isKayaRunning(),
 	}
 
 	// Try to get version from binary
-	if out, err := exec.Command("ghost", "version").Output(); err == nil {
+	if out, err := exec.Command("kaya", "version").Output(); err == nil {
 		status.Version = string(out)
 	}
 
@@ -111,7 +111,7 @@ func (rs *RecoveryServer) handleLogs(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 
 	if runtime.GOOS == "linux" {
-		out, err := exec.Command("journalctl", "-u", "ghost", "--no-pager", "-n", "200").CombinedOutput()
+		out, err := exec.Command("journalctl", "-u", "kaya", "--no-pager", "-n", "200").CombinedOutput()
 		if err != nil {
 			fmt.Fprintf(w, "Error fetching logs: %v\n", err)
 			return
@@ -121,7 +121,7 @@ func (rs *RecoveryServer) handleLogs(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Fallback: read log file if it exists
-	logPath := filepath.Join(rs.GhostDir, "ghost.log")
+	logPath := filepath.Join(rs.KayaDir, "kaya.log")
 	if data, err := os.ReadFile(logPath); err == nil {
 		// Show last 200 lines
 		lines := splitLines(string(data))
@@ -135,7 +135,7 @@ func (rs *RecoveryServer) handleLogs(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fmt.Fprint(w, "No logs available. Start Ghost to generate logs.")
+	fmt.Fprint(w, "No logs available. Start Kaya to generate logs.")
 }
 
 func (rs *RecoveryServer) handleConfig(w http.ResponseWriter, r *http.Request) {
@@ -175,7 +175,7 @@ func (rs *RecoveryServer) handleReset(w http.ResponseWriter, r *http.Request) {
 	}
 
 	fb := NewSetupState()
-	fb.GhostDir = rs.GhostDir
+	fb.KayaDir = rs.KayaDir
 	if err := fb.ResetSetup(); err != nil {
 		http.Error(w, `{"error":"failed to reset"}`, http.StatusInternalServerError)
 		return
@@ -184,7 +184,7 @@ func (rs *RecoveryServer) handleReset(w http.ResponseWriter, r *http.Request) {
 	// Remove config and the admin credential so the setup wizard re-runs
 	// from scratch (no stale password demanded on next boot).
 	os.Remove(rs.ConfigPath)
-	if err := RemoveAdminPassword(rs.GhostDir); err != nil {
+	if err := RemoveAdminPassword(rs.KayaDir); err != nil {
 		http.Error(w, `{"error":"failed to clear admin credential"}`, http.StatusInternalServerError)
 		return
 	}
@@ -217,7 +217,7 @@ func (rs *RecoveryServer) handleResetPassword(w http.ResponseWriter, r *http.Req
 		http.Error(w, `{"ok":false,"error":"`+err.Error()+`"}`, http.StatusBadRequest)
 		return
 	}
-	if err := SetAdminPassword(rs.GhostDir, req.Password); err != nil {
+	if err := SetAdminPassword(rs.KayaDir, req.Password); err != nil {
 		http.Error(w, `{"ok":false,"error":"failed to set password"}`, http.StatusInternalServerError)
 		return
 	}
@@ -225,7 +225,7 @@ func (rs *RecoveryServer) handleResetPassword(w http.ResponseWriter, r *http.Req
 	log.Printf("Admin password reset from recovery mode")
 	go func() {
 		time.Sleep(1 * time.Second)
-		exec.Command("systemctl", "restart", "ghost-web").Run()
+		exec.Command("systemctl", "restart", "kaya-web").Run()
 	}()
 
 	w.Header().Set("Content-Type", "application/json")
@@ -241,7 +241,7 @@ func (rs *RecoveryServer) handleRestart(w http.ResponseWriter, r *http.Request) 
 	if runtime.GOOS == "linux" {
 		go func() {
 			time.Sleep(1 * time.Second)
-			exec.Command("systemctl", "restart", "ghost").Run()
+			exec.Command("systemctl", "restart", "kaya").Run()
 		}()
 	}
 
@@ -254,9 +254,9 @@ func fileExists(path string) bool {
 	return err == nil
 }
 
-func isGhostRunning() bool {
+func isKayaRunning() bool {
 	if runtime.GOOS == "linux" {
-		out, err := exec.Command("systemctl", "is-active", "ghost").Output()
+		out, err := exec.Command("systemctl", "is-active", "kaya").Output()
 		return err == nil && string(out) == "active\n"
 	}
 	return false
@@ -272,7 +272,7 @@ const recoveryHTML = `<!DOCTYPE html>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="theme-color" content="#000000">
-    <title>Ghost Recovery Mode</title>
+    <title>Kaya Recovery Mode</title>
     <style>
         :root {
             --bg: #000000;
@@ -461,7 +461,7 @@ const recoveryHTML = `<!DOCTYPE html>
 </head>
 <body>
     <div class="container">
-        <div class="brand"><span class="ember" id="orb" aria-hidden="true"></span>Ghost<span class="badge">Recovery</span></div>
+        <div class="brand"><span class="ember" id="orb" aria-hidden="true"></span>Kaya<span class="badge">Recovery</span></div>
         <p class="subtitle">Something went wrong. Use this panel to look, then fix.</p>
 
         <div class="card">
@@ -474,7 +474,7 @@ const recoveryHTML = `<!DOCTYPE html>
         <div class="card">
             <h2>Actions</h2>
             <div class="actions">
-                <button class="btn primary" id="btn-restart" type="button">Restart Ghost</button>
+                <button class="btn primary" id="btn-restart" type="button">Restart Kaya</button>
                 <button class="btn" id="btn-refresh" type="button">Refresh logs</button>
                 <button class="btn danger" id="btn-reset" type="button">Reset setup</button>
             </div>
@@ -547,7 +547,7 @@ const recoveryHTML = `<!DOCTYPE html>
                 var res = await fetch('/api/status');
                 var data = await res.json();
                 var items = '';
-                items += statusItem('Ghost running', data.ghost_running ? 'Yes' : 'No', data.ghost_running ? 'ok' : 'error');
+                items += statusItem('Kaya running', data.kaya_running ? 'Yes' : 'No', data.kaya_running ? 'ok' : 'error');
                 items += statusItem('Config exists', data.config_exists ? 'Yes' : 'No', data.config_exists ? 'ok' : 'warning');
                 items += statusItem('Version', data.version || 'unknown', '');
                 items += statusItem('Uptime', data.uptime || '—', '');
@@ -556,7 +556,7 @@ const recoveryHTML = `<!DOCTYPE html>
                     if (data.last_error) items += '<div class="status-item" style="grid-column:1/-1"><div class="label">Last error</div><div class="value" style="font-size:13px;font-weight:500;white-space:pre-wrap">' + esc(data.last_error) + '</div></div>';
                 }
                 document.getElementById('status').innerHTML = items;
-                document.getElementById('orb').classList.toggle('ember--off', !data.ghost_running);
+                document.getElementById('orb').classList.toggle('ember--off', !data.kaya_running);
             } catch (e) {
                 document.getElementById('status').innerHTML = '<div class="status-item"><div class="label">Checking</div><div class="value error">Unreachable</div></div>';
             }
@@ -577,8 +577,8 @@ const recoveryHTML = `<!DOCTYPE html>
             }
         }
 
-        async function restartGhost() {
-            var yes = await confirmModal('Restart Ghost?', 'The service will restart. This page will reload shortly.', 'Restart');
+        async function restartKaya() {
+            var yes = await confirmModal('Restart Kaya?', 'The service will restart. This page will reload shortly.', 'Restart');
             if (!yes) return;
             try {
                 await fetch('/api/restart', { method: 'POST' });
@@ -592,7 +592,7 @@ const recoveryHTML = `<!DOCTYPE html>
         async function resetSetup() {
             var yes = await confirmModal('Reset setup?', 'This erases all configuration and memory. It cannot be undone.', 'Reset');
             if (!yes) return;
-            var sure = await confirmModal('Are you absolutely sure?', 'Every setting, channel and memory will be lost. Your Ghost returns to an unconfigured state.', 'Erase everything');
+            var sure = await confirmModal('Are you absolutely sure?', 'Every setting, channel and memory will be lost. Your Kaya returns to an unconfigured state.', 'Erase everything');
             if (!sure) return;
             try {
                 var res = await fetch('/api/reset', { method: 'POST' });
@@ -629,7 +629,7 @@ const recoveryHTML = `<!DOCTYPE html>
             }
         }
 
-        document.getElementById('btn-restart').addEventListener('click', restartGhost);
+        document.getElementById('btn-restart').addEventListener('click', restartKaya);
         document.getElementById('btn-refresh').addEventListener('click', loadLogs);
         document.getElementById('btn-reset').addEventListener('click', resetSetup);
         document.getElementById('btn-reset-password').addEventListener('click', resetPassword);

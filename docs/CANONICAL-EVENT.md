@@ -1,7 +1,7 @@
 # Canonical Events
 
-Canonical events are the durable, structured record of significant Ghost
-activity. They are runtime-owned facts about what Ghost did.
+Canonical events are the durable, structured record of significant Kaya
+activity. They are runtime-owned facts about what Kaya did.
 
 ## Why they exist
 
@@ -40,7 +40,7 @@ identifiers:
 - a **request ID** linking the events of one turn;
 - a **trajectory ID** linking the events of one execution trace.
 
-Correlation is what lets Ghost reconstruct "what happened during this turn"
+Correlation is what lets Kaya reconstruct "what happened during this turn"
 rather than merely "what events exist".
 
 ## Persistence
@@ -60,7 +60,7 @@ names, schemas, prompts, and secrets cannot reach user-visible projections.
 
 Canonical events feed:
 
-- **Activity** — the human-facing "what is Ghost doing?" narrative;
+- **Activity** — the human-facing "what is Kaya doing?" narrative;
 - **Memory** — significant memory changes are recorded;
 - **Routines** — routine lifecycle is recorded;
 - **UI** — live and historical views;

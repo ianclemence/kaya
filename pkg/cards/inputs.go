@@ -413,7 +413,7 @@ func (c Card) Asks() bool {
 }
 
 // Answer is the owner's answer to a card, checked and in two forms: the values
-// by key (what is stored) and the sentence that is sent on (what Ghost reads).
+// by key (what is stored) and the sentence that is sent on (what Kaya reads).
 type Answer struct {
 	Values map[string]interface{}
 	Text   string
@@ -667,7 +667,7 @@ const (
 	OtherKey    = "other"
 )
 
-// NewQuestion builds the card for something Ghost needs to ask to go on: the
+// NewQuestion builds the card for something Kaya needs to ask to go on: the
 // question as its title, the choices (when there are some) as one tap each,
 // with a box for something else, or a box alone for an open question.
 func NewQuestion(question string, choices []string, questionID string) (Card, error) {

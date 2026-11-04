@@ -1,4 +1,4 @@
-// Package migrations is Ghost's tiny deterministic schema-evolution
+// Package migrations is Kaya's tiny deterministic schema-evolution
 // engine. SQLite DDL is transactional, so each migration runs inside its
 // own transaction and is recorded only after it commits: a crash or error
 // mid-migration leaves the version untouched and the next startup retries
@@ -86,7 +86,7 @@ func appliedVersions(db *sql.DB) (map[int]bool, error) {
 // CurrentVersion returns the highest recorded migration version (0 when
 // nothing has run yet). Cheap enough for startup sanity checks.
 //
-// Strictly read-only: callers like `ghost status` open the database
+// Strictly read-only: callers like `kaya status` open the database
 // ?mode=ro, so creating the version table here fails those handles with
 // "attempt to write a readonly database". Table creation belongs to Migrate
 // (which ensures it explicitly); a missing table simply means version 0.

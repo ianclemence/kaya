@@ -10,7 +10,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/ianclemence/ghost/pkg/config"
+	"github.com/ianclemence/kaya/pkg/config"
 )
 
 const (
@@ -18,17 +18,17 @@ const (
 	// SetupCodeFileName holds the one-time setup code that gates the first
 	// configure. It proves local presence: only someone who can read the
 	// device's console output (journal/terminal) or its filesystem can claim
-	// an unconfigured Ghost.
+	// an unconfigured Kaya.
 	SetupCodeFileName = ".setup-code"
-	DefaultGhostDir   = "/var/ghost"
-	DefaultConfigDir  = "/var/ghost/config"
-	DefaultDataDir    = "/var/ghost/data"
-	DefaultWorkspace  = "/var/ghost/workspace"
+	DefaultKayaDir   = "/var/kaya"
+	DefaultConfigDir  = "/var/kaya/config"
+	DefaultDataDir    = "/var/kaya/data"
+	DefaultWorkspace  = "/var/kaya/workspace"
 )
 
-// SetupState detects whether Ghost has been configured.
+// SetupState detects whether Kaya has been configured.
 type SetupState struct {
-	GhostDir   string
+	KayaDir   string
 	ConfigDir  string
 	DataDir    string
 	Workspace  string
@@ -38,25 +38,25 @@ type SetupState struct {
 
 // NewSetupState creates a SetupState with default paths.
 func NewSetupState() *SetupState {
-	ghostDir := os.Getenv("GHOST_DIR")
-	if ghostDir == "" {
-		ghostDir = DefaultGhostDir
+	kayaDir := os.Getenv("KAYA_DIR")
+	if kayaDir == "" {
+		kayaDir = DefaultKayaDir
 	}
 
 	return &SetupState{
-		GhostDir:   ghostDir,
-		ConfigDir:  filepath.Join(ghostDir, "config"),
-		DataDir:    filepath.Join(ghostDir, "data"),
-		Workspace:  filepath.Join(ghostDir, "workspace"),
-		ConfigPath: filepath.Join(ghostDir, "config", "config.json"),
-		EnvPath:    filepath.Join(ghostDir, ".env"),
+		KayaDir:   kayaDir,
+		ConfigDir:  filepath.Join(kayaDir, "config"),
+		DataDir:    filepath.Join(kayaDir, "data"),
+		Workspace:  filepath.Join(kayaDir, "workspace"),
+		ConfigPath: filepath.Join(kayaDir, "config", "config.json"),
+		EnvPath:    filepath.Join(kayaDir, ".env"),
 	}
 }
 
-// NeedsSetup returns true if Ghost has not been configured yet.
+// NeedsSetup returns true if Kaya has not been configured yet.
 func (fb *SetupState) NeedsSetup() bool {
 	// Check 1: setup-complete flag file
-	flagPath := filepath.Join(fb.GhostDir, SetupCompleteFlag)
+	flagPath := filepath.Join(fb.KayaDir, SetupCompleteFlag)
 	if _, err := os.Stat(flagPath); err == nil {
 		return false
 	}
@@ -74,13 +74,13 @@ func (fb *SetupState) NeedsSetup() bool {
 
 // MarkSetupComplete writes the flag file to indicate setup is done.
 func (fb *SetupState) MarkSetupComplete() error {
-	flagPath := filepath.Join(fb.GhostDir, SetupCompleteFlag)
+	flagPath := filepath.Join(fb.KayaDir, SetupCompleteFlag)
 	return os.WriteFile(flagPath, []byte("setup complete\n"), 0644)
 }
 
 // ResetSetup removes the flag file and resets config to defaults.
 func (fb *SetupState) ResetSetup() error {
-	flagPath := filepath.Join(fb.GhostDir, SetupCompleteFlag)
+	flagPath := filepath.Join(fb.KayaDir, SetupCompleteFlag)
 	os.Remove(flagPath)
 	return nil
 }
@@ -89,7 +89,7 @@ func (fb *SetupState) ResetSetup() error {
 func (fb *SetupState) EnsureDirectories() error {
 	// Sensitive directories use 0700 (owner-only access).
 	sensitiveDirs := []string{
-		fb.GhostDir,
+		fb.KayaDir,
 		fb.ConfigDir,
 		fb.DataDir,
 	}
@@ -143,15 +143,15 @@ func isConfigCustomized(cfg *config.Config) bool {
 }
 
 // RotateSetupCode mints a fresh setup code and persists it (0600) so the first
-// configure can prove local presence. It is called on every ghost-web start
-// while Ghost is unconfigured, so a code leaked in an older log is invalidated
+// configure can prove local presence. It is called on every kaya-web start
+// while Kaya is unconfigured, so a code leaked in an older log is invalidated
 // by the next restart.
 func (fb *SetupState) RotateSetupCode() (string, error) {
 	// A code the factory put on the SD card's boot partition (and printed in
 	// the box) is fixed: it is not rotated, because its whole purpose is to be
 	// read by someone holding the card.
 	if code, ok := factorySetupCode(); ok {
-		if err := os.WriteFile(filepath.Join(fb.GhostDir, SetupCodeFileName), []byte(code+"\n"), 0600); err != nil {
+		if err := os.WriteFile(filepath.Join(fb.KayaDir, SetupCodeFileName), []byte(code+"\n"), 0600); err != nil {
 			return "", err
 		}
 		return code, nil
@@ -160,7 +160,7 @@ func (fb *SetupState) RotateSetupCode() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	if err := os.WriteFile(filepath.Join(fb.GhostDir, SetupCodeFileName), []byte(code+"\n"), 0600); err != nil {
+	if err := os.WriteFile(filepath.Join(fb.KayaDir, SetupCodeFileName), []byte(code+"\n"), 0600); err != nil {
 		return "", err
 	}
 	// A Pod with no screen and no shell needs another way to show the code.
@@ -173,7 +173,7 @@ func (fb *SetupState) RotateSetupCode() (string, error) {
 // VerifySetupCode reports whether code matches the stored setup code, compared
 // in constant time. A missing or empty code file never verifies.
 func (fb *SetupState) VerifySetupCode(code string) bool {
-	stored, err := os.ReadFile(filepath.Join(fb.GhostDir, SetupCodeFileName))
+	stored, err := os.ReadFile(filepath.Join(fb.KayaDir, SetupCodeFileName))
 	if err != nil {
 		return false
 	}
@@ -187,7 +187,7 @@ func (fb *SetupState) VerifySetupCode(code string) bool {
 
 // ClearSetupCode removes the setup code once setup is complete.
 func (fb *SetupState) ClearSetupCode() {
-	os.Remove(filepath.Join(fb.GhostDir, SetupCodeFileName))
+	os.Remove(filepath.Join(fb.KayaDir, SetupCodeFileName))
 	for _, p := range bootCodePaths {
 		os.Remove(p)
 	}
@@ -196,7 +196,7 @@ func (fb *SetupState) ClearSetupCode() {
 // bootCodePaths are where a setup code may live on the SD card's boot
 // partition (readable from any computer, and from the Pod's own shell). It is a
 // variable so tests can point it elsewhere.
-var bootCodePaths = []string{"/boot/firmware/ghost-setup-code", "/boot/ghost-setup-code"}
+var bootCodePaths = []string{"/boot/firmware/kaya-setup-code", "/boot/kaya-setup-code"}
 
 const generatedMarker = "# generated"
 
@@ -231,7 +231,7 @@ func mirrorSetupCode(code string) {
 			continue
 		}
 		body := code + "\n" + generatedMarker + "\n" +
-			"# Your Ghost's one-time setup code. Enter it on the setup page. It is removed when setup finishes.\n"
+			"# Your Kaya's one-time setup code. Enter it on the setup page. It is removed when setup finishes.\n"
 		if os.WriteFile(p, []byte(body), 0644) == nil {
 			return
 		}

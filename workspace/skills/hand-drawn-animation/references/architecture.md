@@ -214,7 +214,7 @@ function sceneRoom(c, tau, i) {
 - `selfDraw` needs the real perimeter for the dash pattern; `pathLength`
   computes it.
 - `getImageData` fails on a canvas that ever drew a cross-origin image. Use embedded or same-origin assets and await image decoding.
-- Ghost copies at alpha 0.34 each stack to near-opaque; divide by the count.
+- Kaya copies at alpha 0.34 each stack to near-opaque; divide by the count.
 - The in-page PNG export needs a click (File System Access API); automated
   renders go through the `film` tool.
 - `blot`, `iris`, `mosaic`, `badges` work in screen coordinates and reset the

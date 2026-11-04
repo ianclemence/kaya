@@ -3,8 +3,8 @@ package agent
 import (
 	"strings"
 
-	"github.com/ianclemence/ghost/pkg/connector"
-	"github.com/ianclemence/ghost/pkg/credentials"
+	"github.com/ianclemence/kaya/pkg/connector"
+	"github.com/ianclemence/kaya/pkg/credentials"
 )
 
 // connectorAuthHeaders supplies the auth header for an installed connector from

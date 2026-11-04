@@ -4,8 +4,8 @@ import (
 	"database/sql"
 	"testing"
 
-	"github.com/ianclemence/ghost/pkg/cevents"
-	"github.com/ianclemence/ghost/pkg/permissions"
+	"github.com/ianclemence/kaya/pkg/cevents"
+	"github.com/ianclemence/kaya/pkg/permissions"
 	_ "modernc.org/sqlite"
 )
 
@@ -20,7 +20,7 @@ func openTraceGovernance(t *testing.T) (*Governance, *cevents.Stream) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	return &Governance{Events: st, GhostID: "g1", AgentID: "agent-main", seenCaps: map[string]bool{}}, st
+	return &Governance{Events: st, KayaID: "g1", AgentID: "agent-main", seenCaps: map[string]bool{}}, st
 }
 
 // Every turn/trace event must carry the trajectory so one ID connects the

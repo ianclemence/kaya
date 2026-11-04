@@ -2,10 +2,10 @@
 name: email
 description: Read, search, send, and manage email via connected Gmail/Outlook apps or local IMAP/SMTP. Invoke when user asks to "check my email", "send an email", "list unread emails", "search emails", "reply to email", or "compose a new email". Prefers connected apps (Gmail/Outlook OAuth) when available; falls back to himalaya CLI with IMAP/SMTP credentials.
 version: 1.0.0
-author: Ghost
+author: Kaya
 license: MIT
 metadata:
-  ghost:
+  kaya:
     tags: [email, gmail, outlook, imap, smtp, communication]
     connector: true
 prerequisites:

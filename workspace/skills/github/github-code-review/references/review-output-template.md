@@ -39,7 +39,7 @@ Use this as the structure for PR review summary comments. Copy and fill in the s
 
 ---
 
-_Reviewed by Ghost_
+_Reviewed by Kaya_
 ```
 
 ## Severity Guide

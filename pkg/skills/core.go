@@ -1,6 +1,6 @@
 package skills
 
-// Core skills are built-in Ghost verbs. They stay in the runtime capability
+// Core skills are built-in Kaya verbs. They stay in the runtime capability
 // registry + tools but are never listed, toggled, or removed via UI.
 // Users import skills; they don't manage core.
 //

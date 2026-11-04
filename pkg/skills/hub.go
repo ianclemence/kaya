@@ -9,8 +9,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ianclemence/ghost/pkg/config"
-	"github.com/ianclemence/ghost/pkg/logger"
+	"github.com/ianclemence/kaya/pkg/config"
+	"github.com/ianclemence/kaya/pkg/logger"
 )
 
 // HubSyncState tracks the sync state of each skill with the hub.
@@ -21,7 +21,7 @@ type HubSyncState struct {
 	LocalPath  string    `json:"local_path"`
 	Source     string    `json:"source"` // "clawhub", "github", "local"
 	AutoUpdate bool      `json:"auto_update"`
-	// Requires records the Ghost capabilities the installed version
+	// Requires records the Kaya capabilities the installed version
 	// declares (`requires:` frontmatter). A request, never a grant — but
 	// recorded so readiness and evals can check it.
 	Requires []string `json:"requires,omitempty"`
@@ -49,8 +49,8 @@ type SkillsHub struct {
 func NewSkillsHub(cfg *config.Config, workspace string) *SkillsHub {
 	registry := NewClawHubRegistry(cfg.Skills.ClawHub)
 	loader := NewSkillsLoader(workspace,
-		filepath.Join(os.Getenv("HOME"), ".GHOST", "skills"),
-		filepath.Join(os.Getenv("HOME"), ".GHOST", "ghost", "skills"))
+		filepath.Join(os.Getenv("HOME"), ".KAYA", "skills"),
+		filepath.Join(os.Getenv("HOME"), ".KAYA", "kaya", "skills"))
 
 	syncFilePath := filepath.Join(workspace, ".skills-sync.json")
 	state := loadSyncFile(syncFilePath)
@@ -78,12 +78,12 @@ func (h *SkillsHub) Install(ctx context.Context, slug, version string) (*Install
 	}
 
 	// Capability-scoped install: the skill's declared `requires:` must name
-	// capabilities Ghost knows. An unknown name is a broken skill (typo or
+	// capabilities Kaya knows. An unknown name is a broken skill (typo or
 	// drift), so fail closed before recording sync state. This validates
 	// the request; granting still happens only through the broker at runtime.
 	requires := h.installedRequires(filepath.Join(targetDir, slug))
 	for _, req := range requires {
-		if !HasCapability(req) && !isKnownGhostCapability(req) {
+		if !HasCapability(req) && !isKnownKayaCapability(req) {
 			return nil, fmt.Errorf("skill %q requires unknown capability %q", slug, req)
 		}
 	}
@@ -131,10 +131,10 @@ func (h *SkillsHub) installedRequires(skillDir string) []string {
 	return nil
 }
 
-// isKnownGhostCapability reports whether id is a runtime capability outside
+// isKnownKayaCapability reports whether id is a runtime capability outside
 // the skill-codec registry (model-facing capabilities resolved by the
 // capability resolver, e.g. memory.recall, web.search, email.read).
-func isKnownGhostCapability(id string) bool {
+func isKnownKayaCapability(id string) bool {
 	switch id {
 	case "memory.recall", "memory.remember",
 		"web.search", "web.fetch",
@@ -207,7 +207,7 @@ func (h *SkillsHub) Update(ctx context.Context, slug string) (*InstallResult, er
 	// Unknown names mean a broken skill: roll back to the working version.
 	requires := h.installedRequires(filepath.Join(h.workspace, "skills", slug))
 	for _, req := range requires {
-		if !HasCapability(req) && !isKnownGhostCapability(req) {
+		if !HasCapability(req) && !isKnownKayaCapability(req) {
 			_ = os.RemoveAll(filepath.Join(h.workspace, "skills", slug))
 			_ = restoreSkillDir(backupDir, oldPath)
 			return nil, fmt.Errorf("skill %q v%s requires unknown capability %q, kept %s", slug, result.Version, req, oldVersion)
@@ -310,7 +310,7 @@ func snapshotSkillDir(src string) (string, error) {
 	if err != nil || !fi.IsDir() {
 		return "", nil
 	}
-	dst, err := os.MkdirTemp("", "ghost-skill-rollback-")
+	dst, err := os.MkdirTemp("", "kaya-skill-rollback-")
 	if err != nil {
 		return "", err
 	}

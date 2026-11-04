@@ -1,4 +1,4 @@
-// Package provider implements Ghost's generic, capability-agnostic
+// Package provider implements Kaya's generic, capability-agnostic
 // resilience strategy for every network-dependent capability.
 //
 // Design goals (deliberately small, not a framework):
@@ -62,7 +62,7 @@ func (f FailureClass) Retryable() bool {
 	}
 }
 
-// Status codes as model providers report them: Ghost's HTTP provider
+// Status codes as model providers report them: Kaya's HTTP provider
 // ("Status: 402") and the Anthropic SDK (`POST "https://…": 402 Payment
 // Required`).
 var (
@@ -528,13 +528,13 @@ func Explain(err error, provider string) string {
 	case FailBilling:
 		return "Your " + who + " account is out of credit or over its quota. Top it up, or switch to another model with /model."
 	case FailAuth, FailCredentialBad:
-		return who + " rejected Ghost's credentials. Reconnect it in settings, then try again."
+		return who + " rejected Kaya's credentials. Reconnect it in settings, then try again."
 	case FailAuthorization:
 		return who + " refused access for this key or model. Check the key's permissions, or pick another model with /model."
 	case FailRateLimited:
 		return who + " is rate-limiting requests right now. Try again in a moment."
 	case FailTimeout, FailNetwork, FailDNS:
-		return "Ghost couldn't reach " + who + ". Check the connection (or that your local AI is running), then try again."
+		return "Kaya couldn't reach " + who + ". Check the connection (or that your local AI is running), then try again."
 	case FailUnavailable, FailServer:
 		return who + " is having trouble right now. Try again shortly, or switch models with /model."
 	case FailRejected:

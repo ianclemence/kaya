@@ -13,7 +13,7 @@ import (
 func vaultDir(t *testing.T) string {
 	t.Helper()
 	dir := t.TempDir()
-	t.Setenv("GHOST_CONFIG_DIR", dir)
+	t.Setenv("KAYA_CONFIG_DIR", dir)
 	return dir
 }
 
@@ -108,7 +108,7 @@ func TestLoginInTheVaultIsTheOneTheBrowserUses(t *testing.T) {
 	}
 }
 
-func TestACardIsSealedAndGhostNeverSeesItsNumber(t *testing.T) {
+func TestACardIsSealedAndKayaNeverSeesItsNumber(t *testing.T) {
 	dir := vaultDir(t)
 	v, err := SaveItem(Item{Kind: KindCard, Title: "Personal Visa", Number: "4242 4242 4242 4242", ExpMonth: 8, ExpYear: 28, CVC: "123", Holder: "Ian Clemence"})
 	if err != nil {
@@ -127,7 +127,7 @@ func TestACardIsSealedAndGhostNeverSeesItsNumber(t *testing.T) {
 		}
 	}
 	if !strings.Contains(string(model), "ending 4242") {
-		t.Fatalf("Ghost should know which card it is: %s", model)
+		t.Fatalf("Kaya should know which card it is: %s", model)
 	}
 	raw, err := os.ReadFile(filepath.Join(dir, ".secrets.json"))
 	if err != nil {
@@ -167,7 +167,7 @@ func TestCardValidation(t *testing.T) {
 	}
 }
 
-func TestContactsAreReadableByGhost(t *testing.T) {
+func TestContactsAreReadableByKaya(t *testing.T) {
 	vaultDir(t)
 	if _, err := SaveItem(Item{Kind: KindContact, Name: "Amina Hassan", Email: "amina@example.com", Phone: "+254 700 000 000", City: "Nairobi", Country: "Kenya"}); err != nil {
 		t.Fatal(err)
@@ -175,7 +175,7 @@ func TestContactsAreReadableByGhost(t *testing.T) {
 	line := ModelItems(KindContact)[0].Line
 	for _, want := range []string{"Amina Hassan", "amina@example.com", "+254 700 000 000", "Nairobi"} {
 		if !strings.Contains(line, want) {
-			t.Errorf("Ghost should be able to read %q: %q", want, line)
+			t.Errorf("Kaya should be able to read %q: %q", want, line)
 		}
 	}
 	for _, bad := range []Item{{Kind: KindContact}, {Kind: KindContact, Name: "x", Email: "not an email"}, {Kind: KindContact, Name: "x", Phone: "call me"}} {
@@ -219,7 +219,7 @@ func TestAKeyReachesOnlyACommandThatNamesIt(t *testing.T) {
 	}
 	model, _ := json.Marshal(ModelItems(KindKey))
 	if bytes.Contains(model, []byte("sk_live")) || bytes.Contains(model, []byte("ck_live")) {
-		t.Fatalf("Ghost can read a key: %s", model)
+		t.Fatalf("Kaya can read a key: %s", model)
 	}
 }
 

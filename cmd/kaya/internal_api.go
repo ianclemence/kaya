@@ -1,0 +1,6698 @@
+// Kaya Internal API — lightweight HTTP server for agent routing
+// Exposes ProcessDirectWithChannel() via HTTP so the mobile app can talk directly
+// to the full Kaya agent runtime (tools, RAG, memory, skills).
+//
+// Listens on the LAN (0.0.0.0) with layered trust:
+//   - Loopback peers (web console proxy, relay client, TUI, CLI) are trusted.
+//   - LAN peers must present valid per-device credentials on every request,
+//     except the public pairing redemption endpoints where the short-lived
+//     pairing token itself is the authorization.
+
+package main
+
+import (
+	"bytes"
+	"context"
+	"database/sql"
+	"encoding/base64"
+	"encoding/json"
+	"errors"
+	"fmt"
+	"io"
+	"log"
+	"mime"
+	"mime/multipart"
+	"net"
+	"net/http"
+	"net/url"
+	"os"
+	"os/exec"
+	"path/filepath"
+	"runtime"
+	"sort"
+	"strconv"
+	"strings"
+	"sync"
+	"time"
+	"unicode/utf8"
+
+	"github.com/gorilla/websocket"
+	"github.com/ianclemence/kaya/pkg/activity"
+	"github.com/ianclemence/kaya/pkg/agent"
+	"github.com/ianclemence/kaya/pkg/awareness"
+	"github.com/ianclemence/kaya/pkg/bus"
+	"github.com/ianclemence/kaya/pkg/capability"
+	"github.com/ianclemence/kaya/pkg/cards"
+	"github.com/ianclemence/kaya/pkg/cevents"
+	"github.com/ianclemence/kaya/pkg/channels"
+	"github.com/ianclemence/kaya/pkg/config"
+	"github.com/ianclemence/kaya/pkg/connectedapp"
+	"github.com/ianclemence/kaya/pkg/contexts"
+	"github.com/ianclemence/kaya/pkg/credentials"
+	"github.com/ianclemence/kaya/pkg/documents"
+	"github.com/ianclemence/kaya/pkg/kayastate"
+	"github.com/ianclemence/kaya/pkg/goals"
+	"github.com/ianclemence/kaya/pkg/hardware"
+	"github.com/ianclemence/kaya/pkg/ideas"
+	"github.com/ianclemence/kaya/pkg/localtrust"
+	"github.com/ianclemence/kaya/pkg/logger"
+	"github.com/ianclemence/kaya/pkg/modes"
+	"github.com/ianclemence/kaya/pkg/pairing"
+	"github.com/ianclemence/kaya/pkg/permissions"
+	"github.com/ianclemence/kaya/pkg/personalcontext"
+	"github.com/ianclemence/kaya/pkg/provider"
+	"github.com/ianclemence/kaya/pkg/providers"
+	"github.com/ianclemence/kaya/pkg/routinefeed"
+	"github.com/ianclemence/kaya/pkg/routines"
+	"github.com/ianclemence/kaya/pkg/scheduled"
+	"github.com/ianclemence/kaya/pkg/skills"
+	"github.com/ianclemence/kaya/pkg/telemetry"
+	"github.com/ianclemence/kaya/pkg/tools"
+	"github.com/ianclemence/kaya/pkg/turnlog"
+	"github.com/ianclemence/kaya/pkg/uploads"
+	"github.com/ianclemence/kaya/pkg/utils"
+	"github.com/ianclemence/kaya/pkg/voice"
+)
+
+var upgrader = websocket.Upgrader{
+	// Browsers apply no CORS to WebSockets, so the origin check is the
+	// only thing standing between a cross-site page and the owner's live
+	// conversation stream. Native clients send no Origin.
+	CheckOrigin: func(r *http.Request) bool {
+		o := r.Header.Get("Origin")
+		return o == "" || isTrustedLocalOrigin(o)
+	},
+}
+
+var apiStartTime = time.Now()
+
+// emitUnstreamedReply is the /v1/chat transcript's safety net: a turn
+// that produced text but streamed nothing (deterministic answers,
+// approval resumes and denials, non-streaming providers) would otherwise
+// reach the SSE client as silence — the saved reply travels only on the
+// bus, never over this stream. Emit it as one frame so the transcript
+// shows what Kaya actually said. Turns that already streamed skip this —
+// their chunks carry the reply.
+func emitUnstreamedReply(response string, streamed bool, emit func(string)) {
+	if response != "" && !streamed {
+		emit(response)
+	}
+}
+
+// apiDB is the agent database used by peer authorization. It is set once in
+// startInternalAPI so the auth middlewares (which have uniform signatures
+// across many call sites) can validate device credentials.
+var apiDB *sql.DB
+
+// Substrate singletons: the permission broker, canonical event stream,
+// and routine service share apiDB (SQLite WAL), so chat turns, API
+// approvals, routines, and restarts all see one durable truth.
+var (
+	substrateOnce   sync.Once
+	substrateBroker *permissions.Broker
+	substrateEvents *cevents.Stream
+	substrateKaya  string
+	apiWorkspaceDir string
+)
+
+// InitAuthoritativeBroker opens the single runtime-owned Permission Broker
+// over db and wires its canonical-event emitter. Idempotent: called once at
+// runtime startup so the HTTP API, agent loop, scheduler, MCP, browser,
+// computer, routines, and subagents all converge on ONE authority. Prefer
+// this over letting each subsystem open its own broker over the same DB.
+func InitAuthoritativeBroker(db *sql.DB) (*permissions.Broker, error) {
+	if db == nil {
+		return nil, errors.New("permission broker unavailable: no state store")
+	}
+	apiDB = db
+	var initErr error
+	substrateOnce.Do(func() {
+		substrateBroker, initErr = permissions.Open(db, permissions.ModeAsk, 0)
+		if substrateBroker != nil {
+			if st, serr := cevents.Open(db, eventLogDir()); serr == nil {
+				substrateEvents = st
+				substrateBroker.SetEmitter(emitPermissionEvent)
+			}
+		}
+	})
+	if initErr != nil {
+		return nil, initErr
+	}
+	if substrateBroker == nil {
+		return nil, errors.New("permission broker unavailable")
+	}
+	return substrateBroker, nil
+}
+
+func permBroker() (*permissions.Broker, error) {
+	// The state store is assigned when the API starts. Calling this before
+	// then must fail closed, not panic on a nil handle.
+	if apiDB == nil {
+		return nil, errors.New("permission broker unavailable: state store not ready")
+	}
+	// One authoritative broker per runtime: InitAuthoritativeBroker is
+	// idempotent, so callers that reach here share the same instance.
+	return InitAuthoritativeBroker(apiDB)
+}
+
+func eventStream() (*cevents.Stream, error) {
+	if _, err := permBroker(); err != nil {
+		return nil, err
+	}
+	if substrateEvents == nil {
+		return nil, errors.New("event stream unavailable")
+	}
+	return substrateEvents, nil
+}
+
+func emitPermissionEvent(t string, r *permissions.Request) {
+	if substrateEvents == nil {
+		return
+	}
+	typ := cevents.PermissionRequested
+	switch t {
+	case "permission.approved":
+		typ = cevents.PermissionApproved
+	case "permission.denied":
+		typ = cevents.PermissionDenied
+	case "permission.expired":
+		typ = cevents.PermissionExpired
+	}
+	substrateEvents.Publish(&cevents.Event{
+		Type: typ, RequestID: r.RequestID, KayaID: substrateKaya, AgentID: "agent-main",
+		Payload: map[string]interface{}{
+			"capability": r.Capability, "action": r.Action,
+			"target": r.Target, "summary": r.Reason,
+			// Risk explains WHY the owner is being asked; see the activity
+			// projection (pkg/activity) which turns it into product language.
+			"risk": string(r.Risk),
+		},
+	})
+}
+
+// emitMemoryDeleted records an owner-initiated removal of a remembered
+// thing on the canonical stream, so it shows in the activity feed instead
+// of disappearing silently. Only the label and what was done go in — never
+// the removed content, which is the whole point of removing it.
+func emitMemoryDeleted(title string, summary string) {
+	if substrateEvents == nil {
+		return
+	}
+	title = strings.TrimSpace(title)
+	if len([]rune(title)) > 120 {
+		title = string([]rune(title)[:120])
+	}
+	substrateEvents.Publish(&cevents.Event{
+		Type:    cevents.MemoryDeleted,
+		KayaID: substrateKaya,
+		AgentID: "agent-main",
+		Payload: map[string]interface{}{
+			"title":   title,
+			"summary": summary,
+		},
+	})
+}
+
+// emitArtifactDeleted records an owner-initiated removal of something Kaya
+// made on the canonical stream, so clients watching the activity feed learn
+// to retract it instead of showing it forever. Only the identifier and the
+// title go in — never the removed content, which is the whole point of
+// removing it.
+func emitArtifactDeleted(artifactID, title, sessionKey string, all bool, count int) {
+	if substrateEvents == nil {
+		return
+	}
+	title = strings.TrimSpace(title)
+	if len([]rune(title)) > 120 {
+		title = string([]rune(title)[:120])
+	}
+	substrateEvents.Publish(&cevents.Event{
+		Type:      cevents.ArtifactDeleted,
+		SessionID: sessionKey,
+		KayaID:   substrateKaya,
+		AgentID:   "agent-main",
+		Payload: map[string]interface{}{
+			"artifact_id": artifactID,
+			"title":       title,
+			"all":         all,
+			"deleted":     count,
+		},
+	})
+}
+
+// normalizeCapabilityAllowlist cleans an owner's capability allowlist. An
+// unknown ID is refused rather than stored: a typo in an allowlist silently
+// denies the capability the owner meant to allow, and a deny-by-typo is
+// indistinguishable from a deliberate no. An empty list clears the
+// allowlist, which is the documented "all allowed".
+func normalizeCapabilityAllowlist(ids []string) ([]string, error) {
+	reg := capability.Default()
+	clean := make([]string, 0, len(ids))
+	seen := make(map[string]bool)
+	for _, id := range ids {
+		id = strings.TrimSpace(id)
+		if id == "" || seen[id] {
+			continue
+		}
+		if _, ok := reg.Get(id); !ok {
+			return nil, fmt.Errorf("unknown capability: %s", id)
+		}
+		seen[id] = true
+		clean = append(clean, id)
+	}
+	return clean, nil
+}
+
+func routineService() (*routines.Service, error) {
+	if apiDB == nil {
+		return nil, errors.New("database unavailable")
+	}
+	store := scheduled.NewStore(apiDB)
+	if err := store.InitSchema(); err != nil {
+		return nil, err
+	}
+	return routines.New(apiDB, store)
+}
+
+// buildRoutineFeed assembles the unified routines feed from the two backing
+// models. It is a pure read: it never mutates, never authorizes, and never
+// opens a new authority. Missing backends degrade to an empty slice rather
+// than failing the whole feed, so a partially-available Kaya still shows
+// whatever it can honestly show.
+func buildRoutineFeed(scheduledService *scheduled.Service) []routinefeed.Item {
+	var routineList []*routines.Routine
+	if svc, err := routineService(); err == nil {
+		routineList = svc.List(kayaID(), 100)
+	}
+	var scheduledList []*scheduled.ScheduledItem
+	if scheduledService != nil {
+		// Routine-sourced rows are represented by their routine view, which
+		// carries product metadata the raw row lacks. Excluding them here
+		// avoids showing the same work twice.
+		if items, err := scheduledService.ListItemsExcluding("", "", 200, "routine"); err == nil {
+			scheduledList = items
+		}
+	}
+	return routinefeed.List(routineList, scheduledList)
+}
+
+func contextStore() (*contexts.Store, error) {
+	if apiWorkspaceDir == "" {
+		return nil, errors.New("workspace unavailable")
+	}
+	return contexts.Open(apiWorkspaceDir, kayaID())
+}
+
+func kayaID() string {
+	if substrateKaya != "" {
+		return substrateKaya
+	}
+	if id, err := kayastate.LoadIdentity(apiWorkspaceDir); err == nil && id != nil {
+		substrateKaya = id.KayaID
+		return substrateKaya
+	}
+	return "kaya-local"
+}
+
+func configDir() string {
+	if d := os.Getenv("KAYA_CONFIG_DIR"); d != "" {
+		return d
+	}
+	if home, err := os.UserHomeDir(); err == nil && home != "" {
+		return filepath.Join(home, ".config", "kaya")
+	}
+	return "./config"
+}
+
+func eventLogDir() string {
+	if apiWorkspaceDir != "" {
+		return filepath.Join(apiWorkspaceDir, "events")
+	}
+	return "./events"
+}
+
+// isLoopbackRequest reports whether a request may be trusted as a local
+// program (TUI, CLI, relay client, the console's server-side proxy). A
+// loopback TCP peer is necessary but not sufficient: a web page open in the
+// owner's browser reaches 127.0.0.1 too. Two browser contexts are refused:
+//   - cross-site: an Origin that isn't this machine, or Sec-Fetch-Site
+//     "cross-site". CORS only hides responses; without this a no-preflight
+//     text/plain POST would run a chat turn (and its tools) as the owner.
+//   - DNS rebinding: a Host that names something other than this machine.
+//     After rebinding the attacker's page is same-origin with the gateway,
+//     so no CORS rule applies at all.
+func isLoopbackRequest(r *http.Request) bool {
+	// Traffic the relay client replays arrives from 127.0.0.1, but it came from
+	// the internet through a relay server. If that counted as "this machine" the
+	// relay would be the only thing between the world and owner-level access,
+	// and a hosted relay would hold the keys to every Pod. The relay client sets
+	// this header itself after copying the remote headers, so a relay cannot
+	// remove it: relayed requests must present valid device credentials like any
+	// other remote peer.
+	if strings.EqualFold(strings.TrimSpace(r.Header.Get("X-Kaya-Via")), "relay") {
+		return false
+	}
+	host, _, err := net.SplitHostPort(r.RemoteAddr)
+	if err != nil {
+		return false
+	}
+	ip := net.ParseIP(host)
+	if ip == nil || !ip.IsLoopback() {
+		return false
+	}
+	return !foreignBrowserContext(r)
+}
+
+// localTokenPrefixes are the parts of the gateway that grant authority, mint
+// or change credentials, change policy, or install code. A command the model
+// runs in its shell shares the Pod's network and so reaches loopback; for
+// these routes loopback alone is not trust. The caller must also present the
+// local token (pkg/localtrust), which the command sandbox cannot read.
+var localTokenPrefixes = []string{
+	"/v1/permissions/", "/v1/mode", "/v1/pairing/", "/v1/connect/",
+	"/v1/console/", "/v1/system/", "/v1/website-logins", "/v1/vault/", "/v1/connected-apps",
+	"/v1/connectors", "/v1/tool-servers", "/v1/skills", "/v1/providers",
+	"/v1/intelligence/", "/v1/reset", "/v1/exec", "/v1/live/surfaces/",
+	"/v1/browser/signout", "/v1/channels/reconnect",
+}
+
+// requiresLocalToken reports whether loopback trust for r needs the token.
+// Reading is allowed on loopback alone, except for the password-reset route
+// and website logins and the Vault, whose reads are themselves sensitive.
+func requiresLocalToken(r *http.Request) bool {
+	path := r.URL.Path
+	if strings.HasPrefix(path, "/v1/console/") || strings.HasPrefix(path, "/v1/website-logins") || strings.HasPrefix(path, "/v1/vault/") {
+		return true
+	}
+	switch r.Method {
+	case http.MethodGet, http.MethodHead, http.MethodOptions:
+		return false
+	}
+	for _, p := range localTokenPrefixes {
+		if strings.HasPrefix(path, p) {
+			return true
+		}
+	}
+	return false
+}
+
+// loopbackTrusted is isLoopbackRequest plus, for the routes above, the local
+// token. A loopback caller without it falls through to device credentials,
+// which a model-run command does not have.
+func loopbackTrusted(r *http.Request) bool {
+	if !isLoopbackRequest(r) {
+		return false
+	}
+	return !requiresLocalToken(r) || localtrust.Valid(r)
+}
+
+// foreignBrowserContext reports whether a request carries the marks of a
+// web page that is not this machine's own.
+func foreignBrowserContext(r *http.Request) bool {
+	if o, ok := r.Header["Origin"]; ok && (len(o) == 0 || !isTrustedLocalOrigin(o[0])) {
+		return true // includes the opaque "null" origin
+	}
+	if strings.EqualFold(r.Header.Get("Sec-Fetch-Site"), "cross-site") {
+		return true
+	}
+	return !isLocalHostHeader(r.Host)
+}
+
+// isLocalHostHeader reports whether a Host header names this machine. An
+// empty Host (HTTP/1.0, some native clients) carries no rebinding risk.
+func isLocalHostHeader(hostport string) bool {
+	if hostport == "" {
+		return true
+	}
+	h := hostport
+	if hh, _, err := net.SplitHostPort(hostport); err == nil {
+		h = hh
+	}
+	return isTrustedLocalOrigin("http://" + h)
+}
+
+// Trusted CORS origins. Kaya binds to 0.0.0.0 and treats loopback peers as
+// authenticated, so a browser page opened on the same host could otherwise call
+// the gateway directly (127.0.0.1) and read its responses. We therefore never
+// send a wildcard Access-Control-Allow-Origin: we only allow origins that refer
+// to this machine (loopback, this host's name, or a local interface IP). Native
+// apps ignore CORS entirely, and the Web Console talks to the gateway through
+// its own same-origin proxy, so permissive CORS was never required.
+var (
+	localHostnameOnce sync.Once
+	localHostnameVal  string
+	localIPOnce       sync.Once
+	localIPs          []net.IP
+)
+
+func localHostname() string {
+	localHostnameOnce.Do(func() {
+		if h, err := os.Hostname(); err == nil {
+			localHostnameVal = strings.ToLower(h)
+		}
+	})
+	return localHostnameVal
+}
+
+func localInterfaceIPs() []net.IP {
+	localIPOnce.Do(func() {
+		addrs, err := net.InterfaceAddrs()
+		if err != nil {
+			return
+		}
+		for _, a := range addrs {
+			if ipn, ok := a.(*net.IPNet); ok {
+				if ipn.IP.IsLoopback() || ipn.IP.IsPrivate() {
+					localIPs = append(localIPs, ipn.IP)
+				}
+			}
+		}
+	})
+	return localIPs
+}
+
+// isTrustedLocalOrigin reports whether a browser Origin refers to this machine.
+// Cross-site origins are rejected so a page the user opens cannot reach Kaya
+// over loopback and exfiltrate its state.
+func isTrustedLocalOrigin(origin string) bool {
+	u, err := url.Parse(origin)
+	if err != nil {
+		return false
+	}
+	hostname := strings.ToLower(u.Hostname())
+	if hostname == "" {
+		return false
+	}
+	if hostname == "localhost" {
+		return true
+	}
+	if ip := net.ParseIP(hostname); ip != nil && ip.IsLoopback() {
+		return true
+	}
+	if hn := localHostname(); hn != "" && (hostname == hn || hostname == hn+".local") {
+		return true // mDNS name the console is reached by
+	}
+	if ip := net.ParseIP(hostname); ip != nil {
+		for _, l := range localInterfaceIPs() {
+			if l.Equal(ip) {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+// setCORS applies CORS headers for a request. Access-Control-Allow-Origin is
+// only set when the request's Origin is a trusted local origin; otherwise it is
+// omitted so the browser blocks cross-origin reads. This is the security
+// boundary that prevents DNS-rebinding / cross-site access to the gateway.
+func setCORS(w http.ResponseWriter, r *http.Request, allowHeaders, allowMethods string) {
+	if o := r.Header.Get("Origin"); o != "" && isTrustedLocalOrigin(o) {
+		w.Header().Set("Access-Control-Allow-Origin", o)
+	}
+	if allowHeaders != "" {
+		w.Header().Set("Access-Control-Allow-Headers", allowHeaders)
+	}
+	if allowMethods != "" {
+		w.Header().Set("Access-Control-Allow-Methods", allowMethods)
+	}
+}
+
+// peerAuthorized reports whether the request may proceed.
+// Loopback peers (web proxy, relay client, TUI, CLI) are trusted. LAN peers
+// must present a valid per-device credential; validation also refreshes the
+// device's last-seen timestamp.
+func peerAuthorized(r *http.Request) bool {
+	if loopbackTrusted(r) {
+		return true
+	}
+	deviceID := r.Header.Get("X-Kaya-Device-ID")
+	credential := r.Header.Get("X-Kaya-Credential")
+	if deviceID == "" || credential == "" || apiDB == nil {
+		return false
+	}
+	valid, _ := pairing.ValidateCredential(apiDB, deviceID, credential)
+	if valid {
+		_ = pairing.UpdateLastSeen(apiDB, deviceID)
+	}
+	return valid
+}
+
+// detectLANAddress returns the IP of the interface that has a default route,
+// so pairing invitations carry a usable address instead of a placeholder.
+func detectLANAddress() string {
+	conn, err := net.Dial("udp", "8.8.8.8:80")
+	if err != nil {
+		return "127.0.0.1"
+	}
+	defer conn.Close()
+	addr, ok := conn.LocalAddr().(*net.UDPAddr)
+	if !ok || addr.IP == nil {
+		return "127.0.0.1"
+	}
+	return addr.IP.String()
+}
+
+func handleWebSocket(agentLoop *agent.AgentLoop) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		// Loopback peers (relay client, local tools) are trusted. LAN peers
+		// must present valid device credentials — credentials are never
+		// accepted via query parameters.
+		deviceID := r.Header.Get("X-Kaya-Device-ID")
+		credential := r.Header.Get("X-Kaya-Credential")
+		if !isLoopbackRequest(r) {
+			if deviceID == "" || credential == "" {
+				noteFailedAccess(r, awareness.AuthFailed)
+				http.Error(w, `{"error":{"code":"authentication_required","message":"Device authentication required."}}`, http.StatusUnauthorized)
+				return
+			}
+			if valid, _ := pairing.ValidateCredential(agentLoop.DB(), deviceID, credential); !valid {
+				noteFailedAccess(r, awareness.AuthFailed)
+				http.Error(w, `{"error":{"code":"authentication_failed","message":"Invalid device credentials."}}`, http.StatusUnauthorized)
+				return
+			}
+			_ = pairing.UpdateLastSeen(agentLoop.DB(), deviceID)
+		} else if deviceID != "" && credential != "" {
+			if valid, _ := pairing.ValidateCredential(agentLoop.DB(), deviceID, credential); valid {
+				_ = pairing.UpdateLastSeen(agentLoop.DB(), deviceID)
+			}
+		}
+
+		up := upgrader
+		// A paired phone sends its device credentials as headers, which a web
+		// page cannot do, so a credentialed connection cannot be a cross-site
+		// page. React Native adds an Origin of its own (the host it dialled),
+		// and when that host is a name the Pod does not know as its own
+		// (a tailnet or relay address) the origin check turned every live
+		// event, including the browser card, into a refused connection.
+		if deviceID != "" && credential != "" && !isLoopbackRequest(r) {
+			up.CheckOrigin = func(*http.Request) bool { return true }
+		}
+		conn, err := up.Upgrade(w, r, nil)
+		if err != nil {
+			log.Printf("❌ Failed to upgrade websocket: %v (origin %q, from %s)", err, r.Header.Get("Origin"), r.RemoteAddr)
+			return
+		}
+		defer conn.Close()
+
+		ctx, cancel := context.WithCancel(r.Context())
+		defer cancel()
+		outboundCh, unsubscribe := agentLoop.Bus().SubscribeOutbound("mobile-ws", false, 300)
+		defer unsubscribe()
+		// Replies in progress: what has been written so far, then the rest live.
+		liveSnap, liveCh, stopLive := turns.Subscribe()
+		defer stopLive()
+		for _, f := range liveSnap {
+			_ = conn.SetWriteDeadline(time.Now().Add(5 * time.Second))
+			if err := conn.WriteJSON(f); err != nil {
+				return
+			}
+		}
+		// Only a phone counts as "a phone is connected", which is what holds
+		// back push notifications. A terminal listening for reminders must not
+		// make the daemon think the phone is already being reached.
+		if !strings.EqualFold(r.Header.Get("X-Client-Type"), "cli") {
+			wsClients.Add(1)
+			defer wsClients.Add(-1)
+		}
+
+		// Read side. A connection that is never read can't answer pings or
+		// notice the phone going away, so a dead phone stayed "connected"
+		// (and suppressed push notifications) until some later write failed.
+		// The client sends nothing we act on; reading is how a close and a
+		// pong are seen.
+		const pongWait = 70 * time.Second
+		_ = conn.SetReadDeadline(time.Now().Add(pongWait))
+		conn.SetPongHandler(func(string) error {
+			return conn.SetReadDeadline(time.Now().Add(pongWait))
+		})
+		go func() {
+			defer cancel()
+			for {
+				if _, _, err := conn.ReadMessage(); err != nil {
+					return
+				}
+				_ = conn.SetReadDeadline(time.Now().Add(pongWait))
+			}
+		}()
+		pinger := time.NewTicker(25 * time.Second)
+		defer pinger.Stop()
+
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case <-pinger.C:
+				_ = conn.SetWriteDeadline(time.Now().Add(5 * time.Second))
+				if err := conn.WriteMessage(websocket.PingMessage, nil); err != nil {
+					return
+				}
+			case f, ok := <-liveCh:
+				if !ok {
+					return // fell behind; the client reconnects to a fresh snapshot
+				}
+				_ = conn.SetWriteDeadline(time.Now().Add(5 * time.Second))
+				if err := conn.WriteJSON(f); err != nil {
+					return
+				}
+			case msg, ok := <-outboundCh:
+				if !ok {
+					return
+				}
+				sessionID, _ := msg.Metadata["session_id"].(string)
+				messageID, _ := msg.Metadata["message_id"].(string)
+				logger.DebugCF("internal-api", "WS outbound dequeued", map[string]interface{}{
+					"channel":    msg.Channel,
+					"chat_id":    msg.ChatID,
+					"session_id": sessionID,
+					"message_id": messageID,
+				})
+
+				// One conversation, many surfaces: the app shows a turn because
+				// it belongs to its conversation, not because it arrived on the
+				// app's channel. A reply Kaya produced for a Telegram or CLI
+				// turn is still part of the shared conversation (`main`), so it
+				// must reach the app live. The payload keeps `channel` so the
+				// app can note the surface. Interactive/tool events are always
+				// forwarded.
+				metaType, _ := msg.Metadata["type"].(string)
+				interactive := false
+				switch metaType {
+				case "canvas_update", "cron_update", "clarify_request", "progress_event", "card_update", "surface_update", "notice_resolved", "background_started", "background_done":
+					interactive = true
+				}
+				if !interactive && !conversationEvent(msg) {
+					continue // routine/telemetry event outside the conversation
+				}
+
+				payload := map[string]interface{}{
+					"channel":  msg.Channel,
+					"chat_id":  msg.ChatID,
+					"content":  msg.Content,
+					"metadata": msg.Metadata,
+				}
+				if t, ok := msg.Metadata["type"].(string); ok && t != "" {
+					payload["type"] = t
+				}
+				if k, ok := msg.Metadata["kind"].(string); ok && k != "" {
+					payload["kind"] = k
+				}
+				if id, ok := msg.Metadata["message_id"].(string); ok && id != "" {
+					payload["id"] = id
+				}
+				if sid, ok := msg.Metadata["session_id"].(string); ok && sid != "" {
+					payload["session_id"] = sid
+				}
+				switch ts := msg.Metadata["timestamp"].(type) {
+				case int64:
+					payload["timestamp"] = ts
+				case int:
+					payload["timestamp"] = int64(ts)
+				case float64:
+					payload["timestamp"] = int64(ts)
+				}
+
+				_ = conn.SetWriteDeadline(time.Now().Add(5 * time.Second))
+				if err := conn.WriteJSON(payload); err != nil {
+					log.Printf("❌ WebSocket write error: %v", err)
+					return
+				}
+			}
+		}
+	}
+}
+
+// conversationEvent reports whether an outbound message belongs to the
+// shared conversation. The conversation, not the channel, decides whether a
+// surface shows a turn: a main-conversation message (or one whose type is a
+// chat message) is part of every surface's transcript, while routine/telemetry
+// events from other subsystems are not.
+func conversationEvent(msg bus.OutboundMessage) bool {
+	switch t, _ := msg.Metadata["type"].(string); t {
+	case "assistant_message", "user_message", "":
+		// fall through to the session check
+	default:
+		return false
+	}
+	sid, _ := msg.Metadata["session_id"].(string)
+	if sid == "" {
+		// No session tag: treat channel-based chat surfaces as conversation.
+		return msg.Channel == "mobile" || msg.Channel == "web" || msg.Channel == "cli"
+	}
+	return canonicalSessionID(sid) == MainSessionID
+}
+
+const defaultInternalAPIPort = 8766
+
+func authMiddleware(next http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodOptions {
+			setCORS(w, r, "Content-Type, X-Kaya-Session, X-Kaya-Device-ID, X-Kaya-Credential, X-Kaya-Client-Id, X-Kaya-Client-Token", "GET, POST, PATCH, DELETE, OPTIONS")
+			w.WriteHeader(http.StatusNoContent)
+			return
+		}
+		// Loopback peers are trusted; LAN peers must present device credentials.
+		if !peerAuthorized(r) {
+			noteFailedAccess(r, awareness.AuthFailed)
+			jsonResponse(w, http.StatusUnauthorized, map[string]interface{}{
+				"error": map[string]string{
+					"code":    pairing.ErrCodeAuthRequired,
+					"message": "Device authentication required.",
+				},
+			})
+			return
+		}
+		setCORS(w, r, "", "")
+		next(w, r)
+	}
+}
+
+// deviceAuthMiddleware is authMiddleware with an explicit database handle.
+// Used on endpoints where the database may not yet be wired into apiDB.
+func deviceAuthMiddleware(db *sql.DB, next http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodOptions {
+			setCORS(w, r, "Content-Type, X-Kaya-Session, X-Kaya-Device-ID, X-Kaya-Credential, X-Kaya-Client-Id, X-Kaya-Client-Token", "GET, POST, PATCH, DELETE, OPTIONS")
+			w.WriteHeader(http.StatusNoContent)
+			return
+		}
+		if !loopbackTrusted(r) {
+			deviceID := r.Header.Get("X-Kaya-Device-ID")
+			credential := r.Header.Get("X-Kaya-Credential")
+			if deviceID == "" || credential == "" || db == nil {
+				jsonResponse(w, http.StatusUnauthorized, map[string]interface{}{
+					"error": map[string]string{
+						"code":    pairing.ErrCodeAuthRequired,
+						"message": "Device authentication required.",
+					},
+				})
+				return
+			}
+			valid, _ := pairing.ValidateCredential(db, deviceID, credential)
+			if !valid {
+				jsonResponse(w, http.StatusUnauthorized, map[string]interface{}{
+					"error": map[string]string{
+						"code":    pairing.ErrCodeAuthFailed,
+						"message": "Invalid device credentials.",
+					},
+				})
+				return
+			}
+			_ = pairing.UpdateLastSeen(db, deviceID)
+		}
+		setCORS(w, r, "", "")
+		next(w, r)
+	}
+}
+
+// publicHandler wraps a handler with CORS headers but no authentication.
+// Used for endpoints that must be accessible without credentials (e.g., pairing/redeem).
+func publicHandler(next http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodOptions {
+			setCORS(w, r, "Content-Type", "POST, OPTIONS")
+			w.WriteHeader(http.StatusNoContent)
+			return
+		}
+		setCORS(w, r, "", "")
+		next(w, r)
+	}
+}
+
+func jsonResponse(w http.ResponseWriter, status int, payload interface{}) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(status)
+	_ = json.NewEncoder(w).Encode(payload)
+}
+
+func jsonError(w http.ResponseWriter, status int, kind, message string) {
+	jsonResponse(w, status, map[string]interface{}{
+		"error": map[string]string{
+			"kind":    kind,
+			"message": message,
+		},
+	})
+}
+
+// resolveStaleKind names why a resolve failed with "not pending": the row
+// exists but left the answerable state. The card the owner tapped was
+// superseded, answered elsewhere, denied, or swept after expiry.
+func resolveStaleKind(b *permissions.Broker, id string) string {
+	if b == nil {
+		return "resolve_failed"
+	}
+	status, ok := b.StatusOf(id)
+	if !ok {
+		return "approval_unknown"
+	}
+	switch status {
+	case permissions.StatusApproved, permissions.StatusConsumed:
+		return "approval_answered"
+	case permissions.StatusDenied:
+		return "approval_denied"
+	case permissions.StatusExpired:
+		return "approval_expired"
+	case permissions.StatusCancelled:
+		return "approval_cancelled"
+	default:
+		return "resolve_failed"
+	}
+}
+
+// resolveStaleMessage is the owner-words companion to resolveStaleKind.
+func resolveStaleMessage(kind string) string {
+	switch kind {
+	case "approval_answered":
+		return "that approval was already answered — a second tap has nothing left to run"
+	case "approval_denied":
+		return "that approval was denied — nothing will run"
+	case "approval_expired":
+		return "that approval expired — please make the request again"
+	case "approval_cancelled":
+		return "that approval was cancelled — please make the request again"
+	case "approval_unknown":
+		return "that approval doesn't exist — it may have been superseded by a newer request"
+	default:
+		return "that approval is no longer answerable"
+	}
+}
+
+// MainSessionID is the one shared conversation: terminal, app, and
+// gateway resolve to the same rows. Surface-neutral by design — it used
+// to be called mobile:default, which lied about who it belongs to.
+const MainSessionID = "main"
+
+// legacySessionIDs are pre-unification names for the main conversation.
+// Old apps, scripts, and stored rows still reference them; they resolve
+// to MainSessionID so no history is ever stranded behind a rename.
+var legacySessionIDs = map[string]bool{"mobile:default": true, "cli:default": true}
+
+func resolveSession(r *http.Request) string {
+	if s := r.Header.Get("X-Kaya-Session"); s != "" {
+		return canonicalSessionID(s)
+	}
+	if s := r.URL.Query().Get("session"); s != "" {
+		return canonicalSessionID(s)
+	}
+	return MainSessionID
+}
+
+// canonicalSessionID folds legacy main-conversation names onto
+// MainSessionID. Explicit side threads (voice:, operator:, cli:<id>)
+// pass through untouched.
+func canonicalSessionID(s string) string {
+	s = strings.TrimSpace(s)
+	if legacySessionIDs[s] {
+		return MainSessionID
+	}
+	if s == "" {
+		return MainSessionID
+	}
+	return s
+}
+
+func isUserVisibleHistoryMessage(role, content string, metaJSON []byte) bool {
+	trimmed := strings.TrimSpace(content)
+	if trimmed == "" {
+		return false
+	}
+	// Only user and assistant messages are user-visible. Tool results,
+	// including skill SKILL.md reads, directory listings, and internal
+	// filesystem data, must never appear in the mobile history stream.
+	if role == "tool" || role == "system" {
+		return false
+	}
+	if role != "assistant" && role != "user" {
+		return false
+	}
+	if role != "assistant" {
+		return true
+	}
+	var meta map[string]interface{}
+	if len(metaJSON) > 0 {
+		_ = json.Unmarshal(metaJSON, &meta)
+		if tc, ok := meta["tool_calls"]; ok {
+			if arr, ok := tc.([]interface{}); ok && len(arr) > 0 {
+				return false
+			}
+		}
+	}
+	lower := strings.ToLower(trimmed)
+	if strings.Contains(lower, "<skills>") || strings.Contains(lower, "</skills>") {
+		return false
+	}
+	if strings.Contains(lower, "skills/{skill-name}/skill.md") {
+		return false
+	}
+	if strings.Contains(lower, "```json") && strings.Contains(lower, "\"metadata\"") && strings.Contains(lower, "\"homepage\"") {
+		return false
+	}
+	if strings.HasPrefix(lower, "name:") && strings.Contains(lower, "\ndescription:") {
+		return false
+	}
+	// Manifest / filesystem leakage: DIR:/FILE: listings and .bundled
+	if strings.Contains(lower, "file: .bundled") || strings.Contains(lower, ".bundled_manifest") {
+		return false
+	}
+	if strings.Contains(lower, "dir:") && strings.Contains(lower, "file:") {
+		// Heuristic for list_dir tool output leaking as assistant message
+		return false
+	}
+	if strings.Contains(trimmed, "tool \"clarify\" timed out") {
+		return false
+	}
+	return true
+}
+
+// toolStatusLabel returns a human-readable label for a tool call.
+// Sent to the mobile app as a tool_status SSE event so the user can see
+// exactly what Kaya is doing during long multi-step operations.
+func toolStatusLabel(name, args string) string {
+	// Streams show phases, never machinery: no tool names, file names,
+	// commands, queries, or URLs reach the user. The TUI's collapsed rows
+	// and the mobile app's live line both read this same string.
+	_ = args
+	if strings.HasPrefix(name, "browser_") {
+		return browserToolLabel(name[len("browser_"):])
+	}
+	switch name {
+	case "web_search":
+		return "Searching the web…"
+	case "web_fetch":
+		return "Reading the page…"
+	case "exec", "sandbox", "spawn", "subagent":
+		return "Working on it…"
+	case "read_file":
+		return "Reading…"
+	case "write_file":
+		return "Writing…"
+	case "edit_file":
+		return "Editing…"
+	case "list_dir":
+		return "Looking through your files…"
+	case "canvas":
+		return "Putting it together…"
+	case "oracle":
+		return "Gathering context…"
+	case "remember", "memory_recall", "memory_curate", "memory_correct", "session_search", "context_get":
+		return "Checking memory…"
+	case "screenshot":
+		return "Taking a screenshot…"
+	case "vision":
+		return "Looking at the image…"
+	case "image_generate":
+		return "Making an image…"
+	case "system_status":
+		return "Checking your Pod…"
+	case "networking":
+		return "Checking the network…"
+	case "weather_now":
+		return "Checking the weather…"
+	case "aqi_now":
+		return "Checking the air…"
+	case "flight_status":
+		return "Checking the flight…"
+	case "currency_convert":
+		return "Converting…"
+	case "crypto_price":
+		return "Checking the price…"
+	case "places_nearby":
+		return "Looking nearby…"
+	case "connections":
+		return "Checking your connected apps…"
+	case "email_search":
+		return "Looking through your email…"
+	case "email_send", "message":
+		return "Sending…"
+	case "docs_search":
+		return "Looking through your documents…"
+	case "code_search":
+		return "Looking through your code…"
+	case "calendar":
+		return "Checking your calendar…"
+	case "media_play":
+		return "Starting playback…"
+	case "device", "hass":
+		return "Talking to your devices…"
+	case "memory_explain":
+		return "Checking memory…"
+	case "append_file":
+		return "Writing…"
+	case "doc_parser":
+		return "Reading the document…"
+	case "video_frames":
+		return "Watching the video…"
+	case "schedule":
+		return "Setting that up…"
+	case "publish_artifact", "present_card":
+		return "Putting it together…"
+	case "tts":
+		return "Recording it…"
+	case "todo", "goal":
+		return "Updating the plan…"
+	case "batch_delegate":
+		return "Splitting up the work…"
+	case "clarify":
+		return "Checking with you…"
+	case "skill_manage":
+		return "Updating skills…"
+	case "update":
+		return "Updating Kaya…"
+	}
+	return "Working on it…"
+}
+
+// browserToolLabel names a browser_* action for the collapsed TUI row and
+// the mobile app's tool_status stream. Args surface only what helps the
+// user orient (target URL, field text, ref) and are truncated to one
+// line; everything else stays in the tool result the model reads.
+func browserToolLabel(action string) string {
+	switch action {
+	case "navigate":
+		return "Browsing the web…"
+	case "snapshot":
+		return "Reading the page…"
+	case "wait":
+		return "Waiting for the page…"
+	case "find":
+		return "Searching the page…"
+	case "screenshot":
+		return "Capturing the page…"
+	case "scroll":
+		return "Scrolling…"
+	case "console", "network", "a11y", "errors":
+		return "Checking the page…"
+	case "click":
+		return "Clicking…"
+	case "fill_form":
+		return "Filling in a form…"
+	case "fill":
+		return "Filling a field…"
+	case "type":
+		return "Typing…"
+	case "press":
+		return "Pressing a key…"
+	case "select":
+		return "Choosing an option…"
+	case "check":
+		return "Toggling a setting…"
+	case "hover":
+		return "Hovering…"
+	case "drag":
+		return "Dragging…"
+	case "dialog":
+		return "Handling a dialog…"
+	case "submit":
+		return "Submitting…"
+	case "upload":
+		return "Uploading…"
+	case "download":
+		return "Downloading…"
+	}
+	return "Working on it…"
+}
+
+type internalAPIRequest struct {
+	RequestID  string            `json:"request_id,omitempty"`
+	Content    string            `json:"content"`
+	SessionKey string            `json:"session_key"`
+	Media      []MediaItem       `json:"media,omitempty"`
+	MediaItems []MediaItem       `json:"media_items,omitempty"`
+	Channel    string            `json:"channel,omitempty"`
+	ChatID     string            `json:"chat_id,omitempty"`
+	Metadata   map[string]string `json:"metadata,omitempty"`
+}
+
+type MediaItem struct {
+	Base64   string `json:"base64"`
+	MimeType string `json:"mime_type,omitempty"`
+	Filename string `json:"filename,omitempty"`
+}
+
+// UnmarshalJSON accepts an attachment as a bare base64 string (the original
+// wire shape) or as an object. The phone app sends objects under "media";
+// decoding them into strings rejected every photo with a 400.
+func (m *MediaItem) UnmarshalJSON(b []byte) error {
+	var s string
+	if err := json.Unmarshal(b, &s); err == nil {
+		*m = MediaItem{Base64: s}
+		return nil
+	}
+	type plain MediaItem
+	var p plain
+	if err := json.Unmarshal(b, &p); err != nil {
+		return err
+	}
+	*m = MediaItem(p)
+	return nil
+}
+
+type ExecRequest struct {
+	Command string `json:"command"`
+	Timeout int    `json:"timeout"`
+}
+
+type ExecResponse struct {
+	Stdout   string `json:"stdout"`
+	Stderr   string `json:"stderr"`
+	ExitCode int    `json:"exit_code"`
+	Duration int64  `json:"duration_ms"`
+}
+
+type OpenRequest struct {
+	Target string `json:"target"`
+}
+
+type Message struct {
+	ID        string `json:"id"`
+	Role      string `json:"role"`
+	Content   string `json:"content"`
+	Timestamp int64  `json:"timestamp"`
+	MediaType string `json:"media_type,omitempty"`
+	MediaURL  string `json:"media_url,omitempty"`
+	// Attachments are the stored uploads sent with this message; the phone
+	// fetches each by id from /v1/files/<id>/thumb or /content.
+	Attachments []providers.Attachment `json:"attachments,omitempty"`
+	// Channel is the surface the message arrived on (mobile, cli, telegram,
+	// voice, …). Provenance only — every surface shares one conversation.
+	Channel string `json:"channel,omitempty"`
+	// Kind is set for messages Kaya started itself: "reminder", "notice" or
+	// "alert". Absent for ordinary conversation.
+	Kind string `json:"kind,omitempty"`
+	// NoticeKey names the condition an alert reports; Resolved is true once
+	// that condition has cleared, so surfaces show it as settled.
+	NoticeKey string `json:"notice_key,omitempty"`
+	Resolved  bool   `json:"resolved,omitempty"`
+	// Interrupted marks a reply a restart cut off mid-sentence, which the
+	// runtime put back into the transcript so nothing said was lost.
+	// Surfaces show it as cut short rather than as an answer that simply
+	// stopped.
+	Interrupted bool `json:"interrupted,omitempty"`
+}
+
+type HistoryResponse struct {
+	Messages []Message `json:"messages"`
+	Total    int       `json:"total"`
+}
+
+type SearchResult struct {
+	ID        string  `json:"id"`
+	SessionID string  `json:"session_id"`
+	Role      string  `json:"role"`
+	Content   string  `json:"content"`
+	Timestamp int64   `json:"timestamp"`
+	Rank      float64 `json:"rank"`
+}
+
+type DoctorResponse struct {
+	Status    string               `json:"status"`
+	Checks    []DoctorCheckPayload `json:"checks"`
+	Timestamp int64                `json:"timestamp"`
+	Uptime    int64                `json:"uptime"`
+	Version   string               `json:"version"`
+	Profile   ProfileInfo          `json:"profile"`
+}
+
+type ProfileInfo struct {
+	Name        string   `json:"name"`
+	Permissions []string `json:"permissions"`
+}
+
+type DoctorCheckPayload struct {
+	Name      string `json:"name"`
+	Label     string `json:"label,omitempty"`
+	Status    string `json:"status"`
+	Message   string `json:"message,omitempty"`
+	LatencyMS int64  `json:"latency_ms,omitempty"`
+}
+
+func resolveRequestChannel(existing, clientType, userAgent string) string {
+	if strings.TrimSpace(existing) != "" {
+		return existing
+	}
+	if strings.EqualFold(strings.TrimSpace(clientType), "mobile") || strings.Contains(strings.ToLower(userAgent), "expo") {
+		return "mobile"
+	}
+	return "cli"
+}
+
+// skillSummaryMD extracts a one-line description from a SKILL.md file,
+// preferring the frontmatter description field.
+func skillSummaryMD(text string) string {
+	for _, line := range strings.Split(text, "\n") {
+		line = strings.TrimSpace(line)
+		if line == "---" {
+			continue
+		}
+		if strings.HasPrefix(line, "description:") {
+			desc := strings.TrimSpace(strings.TrimPrefix(line, "description:"))
+			desc = strings.Trim(desc, "\"'")
+			if desc != "" {
+				return desc
+			}
+		}
+	}
+	if strings.HasPrefix(strings.TrimSpace(text), "---") {
+		if idx := strings.Index(text[3:], "\n---"); idx != -1 {
+			text = text[3+idx+4:]
+		}
+	}
+	for _, line := range strings.Split(text, "\n") {
+		line = strings.TrimSpace(line)
+		line = strings.TrimSpace(strings.TrimPrefix(line, "#"))
+		line = strings.TrimSpace(strings.TrimPrefix(line, ">"))
+		if line != "" && !strings.HasPrefix(line, "-") {
+			if len(line) > 200 {
+				return line[:200]
+			}
+			return line
+		}
+	}
+	return ""
+}
+
+// validSkillName guards against path traversal in skill operations.
+func validSkillName(name string) bool {
+	return name != "" && name != "." && name != ".." &&
+		!strings.Contains(name, "/") && !strings.Contains(name, "\\") &&
+		!strings.Contains(name, "..")
+}
+
+// listWorkspaceSkills returns installed skills (enabled and disabled).
+func listWorkspaceSkills(skillsDir string) []map[string]string {
+	entries, err := os.ReadDir(skillsDir)
+	if err != nil {
+		return []map[string]string{}
+	}
+	manifest, _ := skills.LoadManifest(skillsDir)
+	result := []map[string]string{}
+	for _, e := range entries {
+		if !e.IsDir() {
+			continue
+		}
+		name := e.Name()
+		if strings.HasPrefix(name, ".") {
+			continue
+		}
+		skillPath := filepath.Join(skillsDir, name)
+		enabled := false
+		desc := ""
+		if b, err := os.ReadFile(filepath.Join(skillPath, "SKILL.md")); err == nil {
+			enabled = true
+			desc = skillSummaryMD(string(b))
+		} else if b, err := os.ReadFile(filepath.Join(skillPath, "SKILL.md.disabled")); err == nil {
+			enabled = false
+			desc = skillSummaryMD(string(b))
+		} else {
+			continue
+		}
+		entry, bundled := manifest.Skills[name]
+		// Real readiness (enabled != configured != ready) so the UI can
+		// show an honest badge instead of the coarse optional flag.
+		// CheckReadiness with no extra inputs: missing-input states fall
+		// back to ready here (the chat flow asks naturally when needed).
+		readiness := "ready"
+		needsSetup := "false"
+		if !enabled {
+			readiness = "disabled"
+		} else {
+			wsDir := filepath.Dir(strings.TrimSuffix(skillsDir, string(filepath.Separator)))
+			switch r := skills.CheckReadiness(name, wsDir, nil); r.Status {
+			case skills.StatusReady:
+				readiness = "ready"
+			case skills.StatusNeedsUserInput:
+				readiness = "ready" // ask-at-use, not setup
+			default:
+				readiness = string(r.Status)
+				needsSetup = "true"
+			}
+		}
+		result = append(result, map[string]string{
+			"name":          name,
+			"description":   desc,
+			"bundled":       strconv.FormatBool(bundled),
+			"user_modified": strconv.FormatBool(bundled && entry.UserModified),
+			"enabled":       strconv.FormatBool(enabled),
+			"optional":      strconv.FormatBool(skills.IsOptionalSkill(name)),
+			"readiness":     readiness,
+			"needs_setup":   needsSetup,
+		})
+	}
+	sort.Slice(result, func(i, j int) bool { return result[i]["name"] < result[j]["name"] })
+	return result
+}
+
+// setSkillEnabled enables/disables a skill by renaming SKILL.md <-> SKILL.md.disabled.
+func setSkillEnabled(skillsDir, name string, enabled bool) error {
+	if !validSkillName(name) {
+		return fmt.Errorf("invalid skill name")
+	}
+	skillPath := filepath.Join(skillsDir, name)
+	if !strings.HasPrefix(skillPath, skillsDir+string(filepath.Separator)) {
+		return fmt.Errorf("invalid skill name")
+	}
+	src := filepath.Join(skillPath, "SKILL.md")
+	dst := filepath.Join(skillPath, "SKILL.md.disabled")
+	renamed := false
+	if enabled {
+		if _, err := os.Stat(dst); err == nil {
+			if err := os.Rename(dst, src); err != nil {
+				return err
+			}
+			renamed = true
+		} else {
+			return nil
+		}
+	} else {
+		if _, err := os.Stat(src); err == nil {
+			if err := os.Rename(src, dst); err != nil {
+				return err
+			}
+			renamed = true
+		} else {
+			return fmt.Errorf("skill not found")
+		}
+	}
+	if renamed {
+		// A toggle is an explicit user choice: record it so future syncs
+		// can never misread intent and re-enable/re-disable behind them.
+		if manifest, err := skills.LoadManifest(skillsDir); err == nil {
+			if entry, ok := manifest.Skills[name]; ok {
+				entry.UserModified = true
+				manifest.Skills[name] = entry
+				_ = manifest.SaveManifest(skillsDir)
+			}
+		}
+	}
+	return nil
+}
+
+// readSkillDetail returns a skill's files and metadata.
+func readSkillDetail(skillsDir, name string) (map[string]interface{}, error) {
+	if !validSkillName(name) {
+		return nil, fmt.Errorf("invalid skill name")
+	}
+	skillPath := filepath.Join(skillsDir, name)
+	if !strings.HasPrefix(skillPath, skillsDir+string(filepath.Separator)) {
+		return nil, fmt.Errorf("invalid skill name")
+	}
+	manifest, _ := skills.LoadManifest(skillsDir)
+	entry, bundled := manifest.Skills[name]
+	files := []map[string]string{}
+	_ = filepath.Walk(skillPath, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return nil
+		}
+		if info.IsDir() {
+			return nil
+		}
+		if info.Name() == skills.BundledManifestFile {
+			return nil
+		}
+		rel, err := filepath.Rel(skillPath, path)
+		if err != nil {
+			return nil
+		}
+		b, _ := os.ReadFile(path)
+		files = append(files, map[string]string{"path": filepath.ToSlash(rel), "content": string(b)})
+		return nil
+	})
+	sort.Slice(files, func(i, j int) bool { return files[i]["path"] < files[j]["path"] })
+	desc := ""
+	for _, f := range files {
+		if f["path"] == "SKILL.md" || f["path"] == "SKILL.md.disabled" {
+			desc = skillSummaryMD(f["content"])
+		}
+	}
+	enabled := false
+	if _, err := os.Stat(filepath.Join(skillPath, "SKILL.md")); err == nil {
+		enabled = true
+	}
+	out := map[string]interface{}{
+		"name":          name,
+		"bundled":       bundled,
+		"user_modified": bundled && entry.UserModified,
+		"description":   desc,
+		"optional":      skills.IsOptionalSkill(name),
+		"enabled":       enabled,
+		"files":         files,
+	}
+	// External-skill provenance: only present for GitHub-installed skills.
+	if prov, err := skills.ReadProvenance(skillPath); err == nil && prov != nil {
+		out["source"] = map[string]interface{}{
+			"owner": prov.Owner, "repo": prov.Repo, "branch": prov.Branch,
+			"path": prov.Path, "commit_sha": prov.CommitSHA,
+			"installed_at": prov.InstalledAt,
+		}
+	}
+	return out, nil
+}
+
+// emitSkillEvent records a canonical skill-lifecycle event. Emission is
+// best-effort: a failing stream must never make a lifecycle operation look
+// failed (listeners are isolated).
+func emitSkillEvent(typ cevents.Type, name string) {
+	st, err := eventStream()
+	if err != nil || st == nil {
+		return
+	}
+	st.Publish(&cevents.Event{
+		Type: typ, KayaID: kayaID(), AgentID: "agent-main",
+		Payload: map[string]interface{}{"name": name},
+	})
+}
+
+// removeWorkspaceSkill removes an external (non-bundled) skill directory.
+// Built-in skills cannot be removed — they are part of Kaya's trusted
+// runtime — and are re-seeded by startup sync, so removal is refused.
+func removeWorkspaceSkill(skillsDir, name string) error {
+	if !validSkillName(name) {
+		return fmt.Errorf("invalid skill name")
+	}
+	if m, err := skills.LoadManifest(skillsDir); err == nil && m != nil {
+		if e, ok := m.Skills[name]; ok && !e.UserModified {
+			return fmt.Errorf("'%s' is a built-in skill; disable it instead of removing", name)
+		}
+	}
+	return os.RemoveAll(filepath.Join(skillsDir, name))
+}
+
+// gitHubSkillTree lists blob paths under prefix for owner/repo on branch.
+func gitHubSkillTree(owner, repo, branch, prefix string) ([]string, error) {
+	url := fmt.Sprintf("https://api.github.com/repos/%s/%s/git/trees/%s?recursive=1", owner, repo, branch)
+	client := &http.Client{Timeout: 30 * time.Second}
+	resp, err := client.Get(url)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != 200 {
+		return nil, fmt.Errorf("skills.sh: repo lookup failed (HTTP %d)", resp.StatusCode)
+	}
+	var tree struct {
+		Tree []struct {
+			Path string `json:"path"`
+			Type string `json:"type"`
+		} `json:"tree"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&tree); err != nil {
+		return nil, err
+	}
+	var paths []string
+	for _, t := range tree.Tree {
+		if t.Type == "blob" && strings.HasPrefix(t.Path, prefix) {
+			paths = append(paths, t.Path)
+		}
+	}
+	return paths, nil
+}
+
+// installSkillFromGitHub downloads a skill directory into the workspace
+// skills dir, bounded by the shared external-skill policy and recorded with
+// provenance. Skills are text/instructions only: binary extensions are
+// blocked, file count/size are capped, and a root SKILL.md with name +
+// description must exist before anything is written.
+func installSkillFromGitHub(skillsDir, owner, repo, branch, prefix, destName string) error {
+	if !validSkillName(destName) {
+		return fmt.Errorf("invalid skill name")
+	}
+	paths, err := gitHubSkillTree(owner, repo, branch, prefix)
+	if err != nil {
+		return err
+	}
+	if len(paths) == 0 {
+		return fmt.Errorf("no skill files found at %s/%s", repo, prefix)
+	}
+	dest := filepath.Join(skillsDir, destName)
+	if _, err := os.Stat(dest); err == nil {
+		return fmt.Errorf("skill '%s' already exists", destName)
+	}
+
+	client := &http.Client{Timeout: 30 * time.Second}
+	downloaded := map[string][]byte{}
+	relOrder := []string{}
+	for _, p := range paths {
+		rel := strings.Trim(strings.TrimPrefix(p, prefix), "/")
+		if skills.SkillFileBlocked(rel) {
+			return fmt.Errorf("skill contains a blocked file type (%s)", rel)
+		}
+		url := fmt.Sprintf("https://raw.githubusercontent.com/%s/%s/%s/%s", owner, repo, branch, p)
+		resp, err := client.Get(url)
+		if err != nil {
+			return err
+		}
+		if resp.StatusCode != 200 {
+			resp.Body.Close()
+			return fmt.Errorf("failed to download %s (HTTP %d)", p, resp.StatusCode)
+		}
+		body, err := io.ReadAll(io.LimitReader(resp.Body, skills.MaxSkillFileSize+1))
+		resp.Body.Close()
+		if err != nil {
+			return err
+		}
+		if len(body) > skills.MaxSkillFileSize {
+			return fmt.Errorf("skill file %s exceeds %d bytes", p, skills.MaxSkillFileSize)
+		}
+		downloaded[rel] = body
+		relOrder = append(relOrder, rel)
+	}
+	// Validate the whole set before writing anything to disk.
+	if err := skills.ValidateSkillDownloadBounds(relOrder, func(rel string) ([]byte, error) {
+		b, ok := downloaded[rel]
+		if !ok {
+			return nil, fmt.Errorf("missing %s", rel)
+		}
+		return b, nil
+	}); err != nil {
+		return fmt.Errorf("refusing skill: %w", err)
+	}
+	if err := os.MkdirAll(dest, 0o755); err != nil {
+		return err
+	}
+	for _, rel := range relOrder {
+		target := filepath.Join(dest, filepath.FromSlash(rel))
+		if err := os.MkdirAll(filepath.Dir(target), 0o755); err != nil {
+			return err
+		}
+		if err := os.WriteFile(target, downloaded[rel], 0o644); err != nil {
+			return err
+		}
+	}
+	_ = skills.WriteProvenance(dest, skills.Provenance{
+		Type: "github", Owner: owner, Repo: repo, Branch: branch, Path: prefix,
+		CommitSHA: gitHubBranchCommit(owner, repo, branch),
+	})
+	return nil
+}
+
+// gitHubBranchCommit resolves the immutable commit SHA for a branch,
+// best-effort. If GitHub cannot be reached or the ref is not found, an empty
+// SHA is returned so provenance is recorded honestly (branch only) instead of
+// fabricating a revision.
+func gitHubBranchCommit(owner, repo, branch string) string {
+	url := fmt.Sprintf("https://api.github.com/repos/%s/%s/git/ref/heads/%s", owner, repo, branch)
+	client := &http.Client{Timeout: 15 * time.Second}
+	resp, err := client.Get(url)
+	if err != nil {
+		return ""
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != 200 {
+		return ""
+	}
+	var ref struct {
+		Object struct {
+			SHA string `json:"sha"`
+		} `json:"object"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&ref); err != nil {
+		return ""
+	}
+	return ref.Object.SHA
+}
+
+func handleExec(allowedCmds []string) http.HandlerFunc {
+	policy := newExecPolicy(allowedCmds)
+	return func(w http.ResponseWriter, r *http.Request) {
+		var req ExecRequest
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil || req.Command == "" {
+			http.Error(w, `{"error":"bad request"}`, 400)
+			return
+		}
+
+		// argv-based allowlist, no shell. Metacharacters are refused,
+		// executables must be explicitly allowed, and sensitive
+		// executables validate their arguments. Fail closed.
+		argv, err := policy.resolve(req.Command)
+		if err != nil {
+			http.Error(w, fmt.Sprintf(`{"error":%q}`, err.Error()), 403)
+			return
+		}
+
+		timeout := req.Timeout
+		if timeout <= 0 || timeout > 30 {
+			timeout = 10
+		}
+
+		start := time.Now()
+		ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeout)*time.Second)
+		defer cancel()
+
+		cmd := exec.CommandContext(ctx, argv[0], argv[1:]...)
+		var stdout, stderr bytes.Buffer
+		cmd.Stdout = &stdout
+		cmd.Stderr = &stderr
+
+		exitCode := 0
+		if err := cmd.Run(); err != nil {
+			if exitErr, ok := err.(*exec.ExitError); ok {
+				exitCode = exitErr.ExitCode()
+			} else {
+				exitCode = -1
+			}
+		}
+
+		_ = json.NewEncoder(w).Encode(ExecResponse{
+			Stdout:   stdout.String(),
+			Stderr:   stderr.String(),
+			ExitCode: exitCode,
+			Duration: time.Since(start).Milliseconds(),
+		})
+	}
+}
+
+func handleScreenshot(screenshotCmd string) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		outPath := "/tmp/kaya-bridge-screen.png"
+		scmdStr := screenshotCmd
+
+		if scmdStr == "" {
+			isWayland := os.Getenv("WAYLAND_DISPLAY") != "" || os.Getenv("XDG_SESSION_TYPE") == "wayland"
+
+			if isWayland {
+				if _, err := exec.LookPath("grim"); err == nil {
+					scmdStr = "grim " + outPath
+				} else if _, err := exec.LookPath("gnome-screenshot"); err == nil {
+					scmdStr = "gnome-screenshot -f " + outPath
+				}
+			}
+
+			if scmdStr == "" {
+				for _, tool := range []string{"scrot", "import", "raspi2png"} {
+					if _, err := exec.LookPath(tool); err == nil {
+						switch tool {
+						case "scrot":
+							scmdStr = "scrot -z " + outPath
+						case "import":
+							scmdStr = "import -window root " + outPath
+						case "raspi2png":
+							scmdStr = "raspi2png -p " + outPath
+						}
+						break
+					}
+				}
+			}
+		}
+
+		if scmdStr == "" {
+			http.Error(w, `{"error":"no screenshot tool found (scrot, grim, or raspi2png)"}`, 500)
+			return
+		}
+
+		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer cancel()
+
+		cmd := exec.CommandContext(ctx, "bash", "-c", scmdStr)
+
+		env := os.Environ()
+		hasDisplay := false
+		hasWayland := false
+		for _, e := range env {
+			if strings.HasPrefix(e, "DISPLAY=") {
+				hasDisplay = true
+			}
+			if strings.HasPrefix(e, "WAYLAND_DISPLAY=") {
+				hasWayland = true
+			}
+		}
+
+		if !hasDisplay && !hasWayland {
+			cmd.Env = append(env, "DISPLAY=:0")
+		} else {
+			cmd.Env = env
+		}
+
+		if err := cmd.Run(); err != nil {
+			if !strings.Contains(scmdStr, "raspi2png") {
+				if _, errPath := exec.LookPath("raspi2png"); errPath == nil {
+					cmdFallback := exec.CommandContext(ctx, "raspi2png", "-p", outPath)
+					if errFallback := cmdFallback.Run(); errFallback == nil {
+						goto captureSuccess
+					}
+				}
+			}
+			http.Error(w, fmt.Sprintf(`{"error":"screenshot failed: %s"}`, err.Error()), 500)
+			return
+		}
+
+	captureSuccess:
+		imgBytes, err := os.ReadFile(outPath)
+		if err != nil {
+			http.Error(w, `{"error":"could not read screenshot result"}`, 500)
+			return
+		}
+		_ = os.Remove(outPath)
+
+		b64 := base64.StdEncoding.EncodeToString(imgBytes)
+		_ = json.NewEncoder(w).Encode(map[string]string{
+			"image":     b64,
+			"mime_type": "image/png",
+		})
+	}
+}
+
+// localIP returns the machine's preferred outbound IPv4 address.
+func localIP() string {
+	conn, err := net.Dial("udp", "8.8.8.8:80")
+	if err == nil {
+		defer conn.Close()
+		if udp, ok := conn.LocalAddr().(*net.UDPAddr); ok {
+			return udp.IP.String()
+		}
+	}
+	if addrs, err := net.InterfaceAddrs(); err == nil {
+		for _, a := range addrs {
+			if ipnet, ok := a.(*net.IPNet); ok && !ipnet.IP.IsLoopback() {
+				if ip4 := ipnet.IP.To4(); ip4 != nil {
+					return ip4.String()
+				}
+			}
+		}
+	}
+	return "127.0.0.1"
+}
+
+// systemUptime returns the system uptime as a short human-readable string,
+// e.g. "11h 34m", matching the web console's format.
+func systemUptime() string {
+	data, err := os.ReadFile("/proc/uptime")
+	if err != nil {
+		return time.Since(apiStartTime).String()
+	}
+	fields := strings.Fields(string(data))
+	if len(fields) < 1 {
+		return time.Since(apiStartTime).String()
+	}
+	uptimeSec, err := strconv.ParseFloat(fields[0], 64)
+	if err != nil {
+		return time.Since(apiStartTime).String()
+	}
+	d := time.Duration(uptimeSec * float64(time.Second))
+	days := int(d.Hours()) / 24
+	hours := int(d.Hours()) % 24
+	mins := int(d.Minutes()) % 60
+	if days > 0 {
+		return fmt.Sprintf("%dd %dh %dm", days, hours, mins)
+	}
+	if hours > 0 {
+		return fmt.Sprintf("%dh %dm", hours, mins)
+	}
+	return fmt.Sprintf("%dm", mins)
+}
+
+// cpuUsagePercent samples /proc/stat twice and returns the CPU busy
+// percentage between the two samples.
+func cpuUsagePercent() float64 {
+	readCPU := func() (idle, total uint64) {
+		b, err := os.ReadFile("/proc/stat")
+		if err != nil {
+			return 0, 0
+		}
+		fields := strings.Fields(strings.Split(string(b), "\n")[0])
+		if len(fields) < 5 || fields[0] != "cpu" {
+			return 0, 0
+		}
+		for _, f := range fields[1:] {
+			var v uint64
+			fmt.Sscanf(f, "%d", &v)
+			total += v
+		}
+		var idleU uint64
+		fmt.Sscanf(fields[4], "%d", &idleU)
+		return idleU, total
+	}
+	idle1, total1 := readCPU()
+	time.Sleep(500 * time.Millisecond)
+	idle2, total2 := readCPU()
+	dTotal := total2 - total1
+	if dTotal == 0 {
+		return 0
+	}
+	return float64(dTotal-(idle2-idle1)) / float64(dTotal) * 100
+}
+
+// memoryInfo returns used and total system memory in bytes.
+func memoryInfo() (usedBytes, totalBytes uint64) {
+	b, err := os.ReadFile("/proc/meminfo")
+	if err != nil {
+		return 0, 0
+	}
+	for _, line := range strings.Split(string(b), "\n") {
+		fields := strings.Fields(line)
+		if len(fields) < 2 {
+			continue
+		}
+		var v uint64
+		fmt.Sscanf(fields[1], "%d", &v)
+		v *= 1024
+		switch fields[0] {
+		case "MemTotal:":
+			totalBytes = v
+		case "MemAvailable:":
+			usedBytes = totalBytes - v
+		}
+	}
+	return usedBytes, totalBytes
+}
+
+// diskUsage returns used and total bytes for the given filesystem path.
+func diskUsage(path string) (used, total uint64) {
+	return hardware.DiskUsage(path)
+}
+
+// loadAverages reads the 1/5/15 minute load averages from /proc/loadavg.
+func loadAverages() (one, five, fifteen float64) {
+	b, err := os.ReadFile("/proc/loadavg")
+	if err != nil {
+		return 0, 0, 0
+	}
+	parts := strings.Fields(string(b))
+	if len(parts) >= 3 {
+		fmt.Sscanf(parts[0], "%f", &one)
+		fmt.Sscanf(parts[1], "%f", &five)
+		fmt.Sscanf(parts[2], "%f", &fifteen)
+	}
+	return
+}
+
+func handleStats(w http.ResponseWriter, r *http.Request) {
+	usedMem, totalMem := memoryInfo()
+	usedDisk, totalDisk := diskUsage("/")
+	one, five, fifteen := loadAverages()
+	hostname, _ := os.Hostname()
+	stats := map[string]interface{}{
+		"version":     version,
+		"uptime":      systemUptime(),
+		"ip":          localIP(),
+		"hostname":    hostname,
+		"cpu_percent": cpuUsagePercent(),
+		"cpu_count":   runtime.NumCPU(),
+		"load":        map[string]float64{"one": one, "five": five, "fifteen": fifteen},
+		"memory":      map[string]uint64{"used": usedMem, "total": totalMem},
+		"disk":        map[string]uint64{"used": usedDisk, "total": totalDisk},
+		"timestamp":   time.Now().Unix(),
+	}
+	_ = json.NewEncoder(w).Encode(stats)
+}
+
+func handleOpen(w http.ResponseWriter, r *http.Request) {
+	var req OpenRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil || req.Target == "" {
+		http.Error(w, `{"error":"bad request"}`, 400)
+		return
+	}
+	target := req.Target
+	isURL := strings.HasPrefix(target, "http://") || strings.HasPrefix(target, "https://")
+
+	knownApps := map[string]string{
+		"firefox":    "firefox",
+		"chromium":   "chromium-browser",
+		"chrome":     "chromium-browser",
+		"terminal":   "x-terminal-emulator",
+		"files":      "xdg-open /home",
+		"spotify":    "spotify",
+		"vlc":        "vlc",
+		"gedit":      "gedit",
+		"calculator": "gnome-calculator",
+	}
+
+	var cmdStr string
+	if isURL {
+		cmdStr = "xdg-open " + shellescape(target)
+	} else if appCmd, ok := knownApps[strings.ToLower(target)]; ok {
+		cmdStr = appCmd + " &"
+	} else {
+		http.Error(w, `{"error":"unknown app or invalid URL"}`, 400)
+		return
+	}
+
+	cmd := exec.Command("bash", "-c", "DISPLAY=:0 "+cmdStr)
+	cmd.Env = append(os.Environ(), "DISPLAY=:0")
+	err := cmd.Start()
+	if err != nil {
+		_ = json.NewEncoder(w).Encode(map[string]interface{}{"ok": false, "error": err.Error()})
+		return
+	}
+	_ = json.NewEncoder(w).Encode(map[string]interface{}{"ok": true, "launched": target})
+}
+
+func shellescape(s string) string {
+	return "'" + strings.ReplaceAll(s, "'", "'\\''") + "'"
+}
+
+// startInternalAPI starts the Kaya API server.
+// Listens on the LAN (0.0.0.0) so paired mobile apps can connect over Wi-Fi.
+// Loopback peers (web console proxy, relay client, TUI, CLI) are trusted;
+// LAN peers must present valid per-device credentials on every request.
+// One port (KAYA_API_PORT, default 8766) handles everything:
+// chat, history, memory, transcription, remote control, and WebSocket.
+
+// parseMemoryMeta extracts a human title, kind, summary, and source from
+// the first chunk of a memory markdown file. Supports simple YAML-ish
+// frontmatter delimited by --- lines, and falls back to the first H1
+// heading if no frontmatter is present. Returns empty strings when a
+// field is not present so callers can detect "unknown" without errors.
+func parseMemoryMeta(head string) (title, kind, summary, source string) {
+	// Frontmatter: ---\n key: value\n ---\n
+	if strings.HasPrefix(strings.TrimLeft(head, "\n"), "---") {
+		rest := strings.TrimLeft(head, "\n")
+		rest = strings.TrimPrefix(rest, "---")
+		// Find closing ---
+		end := strings.Index(rest, "\n---")
+		if end >= 0 {
+			block := rest[:end]
+			for _, line := range strings.Split(block, "\n") {
+				line = strings.TrimSpace(line)
+				if line == "" || strings.HasPrefix(line, "#") {
+					continue
+				}
+				idx := strings.Index(line, ":")
+				if idx <= 0 {
+					continue
+				}
+				k := strings.TrimSpace(line[:idx])
+				v := strings.TrimSpace(line[idx+1:])
+				v = strings.Trim(v, "\"'`")
+				switch strings.ToLower(k) {
+				case "title":
+					title = v
+				case "kind":
+					kind = strings.ToLower(v)
+				case "summary":
+					summary = v
+				case "source":
+					source = v
+				}
+			}
+			// If no title in frontmatter, scan for first H1 after it.
+			if title == "" {
+				after := rest[end+4:]
+				for _, line := range strings.Split(after, "\n") {
+					line = strings.TrimSpace(line)
+					if strings.HasPrefix(line, "# ") {
+						title = strings.TrimSpace(strings.TrimPrefix(line, "# "))
+						break
+					}
+				}
+			}
+		}
+	}
+	// No frontmatter or no title yet — first H1 in head.
+	if title == "" {
+		for _, line := range strings.Split(head, "\n") {
+			line = strings.TrimSpace(line)
+			if strings.HasPrefix(line, "# ") {
+				title = strings.TrimSpace(strings.TrimPrefix(line, "# "))
+				break
+			}
+		}
+	}
+	// First paragraph as summary fallback.
+	if summary == "" {
+		inPara := false
+		var b strings.Builder
+		for _, line := range strings.Split(head, "\n") {
+			trim := strings.TrimSpace(line)
+			if trim == "" {
+				if inPara {
+					break
+				}
+				continue
+			}
+			if strings.HasPrefix(trim, "#") {
+				continue
+			}
+			inPara = true
+			if b.Len() > 0 {
+				b.WriteString(" ")
+			}
+			b.WriteString(trim)
+			if b.Len() > 140 {
+				break
+			}
+		}
+		summary = strings.TrimSpace(b.String())
+		if len(summary) > 140 {
+			summary = summary[:137] + "…"
+		}
+	}
+	// Kind default.
+	if kind == "" {
+		kind = "fact"
+	}
+	return
+}
+
+// workspaceFileProtected reports whether a workspace-relative path is part of
+// Kaya's internal memory/runtime estate and must never be exposed through the
+// generic workspace-file surface. Memory is read through the dedicated
+// sanitized endpoints (/v1/memory/self, /v1/memory/files); raw access to the
+// memory journal, runtime state, event logs, database files, or curated note
+// stores is not a product surface and must not leak scopes, provenance, or
+// internal structure to a (potentially compromised) device credential.
+func workspaceFileProtected(rel string) bool {
+	r := filepath.ToSlash(strings.TrimPrefix(filepath.Clean(rel), "./"))
+	lower := strings.ToLower(r)
+	if r == "personal-context" || strings.HasPrefix(r, "personal-context/") {
+		return true
+	}
+	if r == "state" || strings.HasPrefix(r, "state/") {
+		return true
+	}
+	if r == "events" || strings.HasPrefix(r, "events/") {
+		return true
+	}
+	if r == "knowledge/self" || strings.HasPrefix(r, "knowledge/self/") {
+		return true
+	}
+	for _, ext := range []string{".db", ".db-wal", ".db-shm", ".sqlite", ".sqlite3"} {
+		if strings.HasSuffix(lower, ext) {
+			return true
+		}
+	}
+	return false
+}
+
+// providerListPayload is what GET /v1/providers answers per provider: whether
+// it is configured, the models it serves, where that list came from ("live",
+// or "catalog" when the provider could not be reached) and, for a configured
+// cloud provider that failed, why. Pure so it can be tested without a network.
+func providerListPayload(cfg *config.Config, discovered map[string]providers.ProviderModels, ollama []string) map[string]interface{} {
+	out := map[string]interface{}{}
+	for name, models := range knownProviderModels {
+		pc := intelligenceProviderConfig(cfg, name)
+		configured := pc != nil && pc.APIKey != ""
+		list, source, errText := models, "catalog", ""
+		if pm, ok := discovered[name]; ok {
+			if len(pm.Models) > 0 {
+				list = pm.Models
+			}
+			if pm.Source != "" {
+				source = pm.Source
+			}
+			if configured && name != "ollama" {
+				errText = pm.Error
+			}
+		}
+		if name == "ollama" {
+			list, source = ollama, "live"
+		}
+		if list == nil {
+			list = []string{}
+		}
+		entry := map[string]interface{}{
+			"configured": configured,
+			"models":     list,
+			"local":      name == "ollama" || name == "vllm",
+			"source":     source,
+		}
+		if errText != "" {
+			entry["error"] = errText
+		}
+		out[name] = entry
+	}
+	return out
+}
+
+// knownProviderModels mirrors the web console's recommended models per
+// provider (used for the provider list and as test defaults). Single
+// source of truth lives in pkg/providers; this alias keeps existing
+// references working.
+var knownProviderModels = providers.KnownProviderModels
+
+// intelligenceProviderConfig returns the stored credentials for a provider,
+// or nil for unknown names.
+func intelligenceProviderConfig(cfg *config.Config, name string) *config.ProviderConfig {
+	if cfg == nil {
+		return nil
+	}
+	switch strings.ToLower(strings.TrimSpace(name)) {
+	case "openai":
+		return &cfg.Providers.OpenAI
+	case "anthropic":
+		return &cfg.Providers.Anthropic
+	case "moonshot":
+		return &cfg.Providers.Moonshot
+	case "groq":
+		return &cfg.Providers.Groq
+	case "deepseek":
+		return &cfg.Providers.DeepSeek
+	case "gemini":
+		return &cfg.Providers.Gemini
+	case "zhipu":
+		return &cfg.Providers.Zhipu
+	case "openrouter":
+		return &cfg.Providers.OpenRouter
+	case "ollama":
+		return &cfg.Providers.Ollama
+	case "qwen":
+		return &cfg.Providers.Qwen
+	case "nvidia":
+		return &cfg.Providers.Nvidia
+	case "shengsuanyun":
+		return &cfg.Providers.ShengSuanYun
+	}
+	return nil
+}
+
+// maskDeviceKey hides a key except for the last 4 characters ("" stays "").
+func maskDeviceKey(key string) string {
+	if key == "" {
+		return ""
+	}
+	if len(key) <= 8 {
+		return "••••••••"
+	}
+	return "••••••••" + key[len(key)-4:]
+}
+
+// listGatewayOllamaModels lists models installed in the local Ollama daemon.
+func listGatewayOllamaModels() ([]string, error) {
+	out, err := exec.Command("ollama", "list").CombinedOutput()
+	if err != nil {
+		return nil, fmt.Errorf("failed to list models: %w", err)
+	}
+	models := []string{}
+	for i, line := range strings.Split(string(out), "\n") {
+		if i == 0 {
+			continue // Skip header
+		}
+		if parts := strings.Fields(line); len(parts) > 0 {
+			models = append(models, parts[0])
+		}
+	}
+	return models, nil
+}
+
+// pullGatewayOllamaModel downloads an Ollama model; callers run it in the
+// background and return immediately.
+func pullGatewayOllamaModel(model string) error {
+	cmd := exec.Command("ollama", "pull", model)
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	return cmd.Run()
+}
+
+// resolveApiWorkspace resolves the runtime STATE workspace (turns,
+// device-ops, artifacts, desk): the env override wins so live conversation
+// history never moves when config and units disagree.
+//
+// Content the agent reads and writes (skills, memory, personal context,
+// workspace files) must NOT come from here — see resolveContentWorkspace.
+//
+// Precedence: explicit env override (KAYA_WORKSPACE_DIR / MEMORY_DIR),
+// then the loaded config's workspace, then $HOME/kaya/workspace.
+func resolveApiWorkspace(cfg *config.Config) (workspaceDir, memoryDir string) {
+	workspaceDir = os.Getenv("KAYA_WORKSPACE_DIR")
+	if workspaceDir == "" && cfg != nil {
+		workspaceDir = cfg.WorkspacePath()
+	}
+	if workspaceDir == "" {
+		home := os.Getenv("HOME")
+		workspaceDir = filepath.Join(home, "kaya", "workspace")
+	}
+	memoryDir = os.Getenv("MEMORY_DIR")
+	if memoryDir == "" {
+		memoryDir = filepath.Join(workspaceDir, "memory")
+	}
+	return workspaceDir, memoryDir
+}
+
+// resolveContentWorkspace returns the workspace the agent's CONTENT lives
+// in (skills, memory, personal context, files). Config first, matching the
+// agent's own resolution (cfg.WorkspacePath): the owner-facing Skills,
+// Memory, and Files views and the model must never split. The env override
+// applies only when config leaves the workspace empty. Runtime state
+// (turns, device-ops) intentionally stays on resolveApiWorkspace so
+// conversation history never moves.
+func resolveContentWorkspace(cfg *config.Config) string {
+	if cfg != nil {
+		if w := cfg.WorkspacePath(); w != "" {
+			return w
+		}
+	}
+	if w := os.Getenv("KAYA_WORKSPACE_DIR"); w != "" {
+		return w
+	}
+	return filepath.Join(os.Getenv("HOME"), "kaya", "workspace")
+}
+
+func startInternalAPI(agentLoop *agent.AgentLoop, scheduledService *scheduled.Service, channelManager *channels.Manager) {
+	port := agentLoop.Config().Gateway.Port
+	if p := os.Getenv("KAYA_API_PORT"); p != "" {
+		fmt.Sscanf(p, "%d", &port)
+	}
+
+	// Without the local token the owner's own programs still work for
+	// everything ordinary, and the sensitive routes refuse them (and anything
+	// else on loopback), so a failure here is loud but not fatal.
+	if _, err := localtrust.Ensure(filepath.Dir(getConfigPath())); err != nil {
+		log.Printf("⚠️ local trust token unavailable (%v): the console and CLI cannot change permissions or pair devices until it is fixed", err)
+	}
+
+	allowedCmds := []string{}
+	if raw := os.Getenv("ALLOWED_CMDS"); raw != "" {
+		allowedCmds = strings.Split(raw, ",")
+	}
+	screenshotCmd := os.Getenv("SCREENSHOT_CMD")
+
+	// State (turns/device-ops/artifacts) keeps the env-first workspace so
+	// live conversation history never moves. Content views (skills,
+	// memory, files, personal context) follow the agent's configured
+	// workspace so the owner's screens and the model can't split.
+	stateWorkspace, _ := resolveApiWorkspace(agentLoop.Config())
+	workspaceDir := resolveContentWorkspace(agentLoop.Config())
+	memoryDir := os.Getenv("MEMORY_DIR")
+	if memoryDir == "" {
+		memoryDir = filepath.Join(workspaceDir, "memory")
+	}
+	skillsDir := filepath.Join(workspaceDir, "skills")
+
+	db := agentLoop.DB()
+	apiDB = db
+	// Boot-time sweep of expired authorization state, now that the state
+	// store is ready. Safe to call here; permBroker fails closed if not.
+	if b, err := permBroker(); err == nil {
+		if n := b.SweepExpires(); n > 0 {
+			logger.InfoCF("lifecycle", "expired stale permission requests", map[string]interface{}{"count": n})
+		}
+	}
+	apiWorkspaceDir = stateWorkspace
+	// Cards stay where they were shown: the store survives a restart, so the
+	// conversation reads the same after one.
+	if err := cards.DefaultStore.Persist(filepath.Join(stateWorkspace, "cards.json")); err != nil {
+		log.Printf("⚠️ cards could not be restored (%v); new cards will still be kept", err)
+	}
+	// Connect the agent loop to the substrate: canonical identity,
+	// permission broker, canonical event stream. Turns now emit events
+	// and consequential tools gate on the broker (nil-safe elsewhere).
+	if b, err := permBroker(); err == nil {
+		if st, err := eventStream(); err == nil {
+			gov := agent.NewGovernance(st, b, kayaID(), "agent-main")
+			if cs, err := contextStore(); err == nil {
+				gov.Contexts = cs
+			}
+			// Capability resolver: runtime-owned capability→implementation
+			// mapping with credential-aware availability. The model never
+			// selects a provider; the resolver does.
+			gov.Resolver = buildCapabilityResolver(agentLoop.Config())
+			agentLoop.SetGovernance(gov)
+			// Event-driven awareness: from here on, meaningful state changes
+			// ask for an evaluation immediately instead of waiting for the
+			// heartbeat's reconciliation pass.
+			agentLoop.StartProactiveWatcher()
+		}
+	}
+	if channelManager != nil {
+		channelManager.SetDeliveryObserver(func(msg bus.OutboundMessage, target string, ok bool, errText string) {
+			// Now handled directly in Manager using telemetry.Global
+		})
+	}
+
+	mux := http.NewServeMux()
+
+	// ── 1. Health ─────────────────────────────────────────────────────────
+	mux.HandleFunc("/v1/health", deviceAuthMiddleware(db, func(w http.ResponseWriter, r *http.Request) {
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"status":    "ok",
+			"timestamp": time.Now().Unix(),
+			"version":   version,
+			"uptime_s":  int64(time.Since(apiStartTime).Seconds()),
+		})
+	}))
+
+	// ── OAuth callbacks ───────────────────────────────────────────────
+	// Deliberately outside authMiddleware: Google (directly or via the
+	// relay) redirects a plain browser GET carrying no Kaya credentials.
+	// The single-use, session-bound, expiring OAuth state is the
+	// authorization mechanism — a forged code fails closed and marks
+	// nothing ready. Responses carry product status only, never secrets.
+	mux.HandleFunc("/oauth/calendar/callback", func(w http.ResponseWriter, r *http.Request) {
+		cfg := skills.CalendarOAuthConfig{
+			ClientID:     strings.TrimSpace(os.Getenv("KAYA_GOOGLE_CLIENT_ID")),
+			ClientSecret: strings.TrimSpace(os.Getenv("KAYA_GOOGLE_CLIENT_SECRET")),
+			RedirectURL:  strings.TrimSpace(os.Getenv("KAYA_CALENDAR_REDIRECT_URL")),
+		}
+		q := r.URL.Query()
+		if errStr := q.Get("error"); errStr != "" {
+			jsonResponse(w, http.StatusOK, map[string]interface{}{
+				"ok": true, "status": "cancelled",
+				"message": "Calendar sign-in was cancelled. You can try again any time.",
+			})
+			return
+		}
+		pendingID, err := skills.CalendarOAuthComplete(cfg, q.Get("state"), q.Get("code"), nil, nil)
+		if err != nil {
+			jsonResponse(w, http.StatusOK, map[string]interface{}{
+				"ok": true, "status": "needs_authorization",
+				"message": "That sign-in didn't complete. Please try connecting again.",
+				"action":  "connect_calendar",
+			})
+			return
+		}
+		jsonResponse(w, http.StatusOK, map[string]interface{}{
+			"ok": true, "status": "ready",
+			"message":    "Your calendar is connected.",
+			"pending_id": pendingID,
+		})
+	})
+	mux.HandleFunc("/oauth/gmail/callback", func(w http.ResponseWriter, r *http.Request) {
+		cfg := skills.GmailOAuthConfig{
+			ClientID:     strings.TrimSpace(os.Getenv("KAYA_GOOGLE_CLIENT_ID")),
+			ClientSecret: strings.TrimSpace(os.Getenv("KAYA_GOOGLE_CLIENT_SECRET")),
+			RedirectURL:  strings.TrimSpace(os.Getenv("KAYA_GMAIL_REDIRECT_URL")),
+		}
+		q := r.URL.Query()
+		if errStr := q.Get("error"); errStr != "" {
+			jsonResponse(w, http.StatusOK, map[string]interface{}{
+				"ok": true, "status": "cancelled",
+				"message": "Gmail sign-in was cancelled. You can try again any time.",
+			})
+			return
+		}
+		pendingID, err := skills.GmailOAuthComplete(cfg, q.Get("state"), q.Get("code"), nil, nil)
+		if err != nil {
+			jsonResponse(w, http.StatusOK, map[string]interface{}{
+				"ok": true, "status": "needs_authorization",
+				"message": "That sign-in didn't complete. Please try connecting again.",
+				"action":  "connect_gmail",
+			})
+			return
+		}
+		jsonResponse(w, http.StatusOK, map[string]interface{}{
+			"ok": true, "status": "ready",
+			"message":    "Your Gmail is connected.",
+			"pending_id": pendingID,
+		})
+	})
+	mux.HandleFunc("/oauth/outlook/callback", func(w http.ResponseWriter, r *http.Request) {
+		cfg := skills.OutlookOAuthConfig{
+			ClientID:     strings.TrimSpace(os.Getenv("KAYA_OUTLOOK_CLIENT_ID")),
+			ClientSecret: strings.TrimSpace(os.Getenv("KAYA_OUTLOOK_CLIENT_SECRET")),
+			RedirectURL:  strings.TrimSpace(os.Getenv("KAYA_OUTLOOK_REDIRECT_URL")),
+			Tenant:       strings.TrimSpace(os.Getenv("KAYA_OUTLOOK_TENANT")),
+		}
+		q := r.URL.Query()
+		if errStr := q.Get("error"); errStr != "" {
+			jsonResponse(w, http.StatusOK, map[string]interface{}{
+				"ok": true, "status": "cancelled",
+				"message": "Outlook sign-in was cancelled. You can try again any time.",
+			})
+			return
+		}
+		pendingID, err := skills.OutlookOAuthComplete(cfg, q.Get("state"), q.Get("code"), nil, nil)
+		if err != nil {
+			jsonResponse(w, http.StatusOK, map[string]interface{}{
+				"ok": true, "status": "needs_authorization",
+				"message": "That sign-in didn't complete. Please try connecting again.",
+				"action":  "connect_outlook",
+			})
+			return
+		}
+		jsonResponse(w, http.StatusOK, map[string]interface{}{
+			"ok": true, "status": "ready",
+			"message":    "Your Outlook is connected.",
+			"pending_id": pendingID,
+		})
+	})
+	mux.HandleFunc("/oauth/spotify/callback", func(w http.ResponseWriter, r *http.Request) {
+		cfg := skills.SpotifyOAuthConfig{
+			ClientID:     strings.TrimSpace(os.Getenv("KAYA_SPOTIFY_CLIENT_ID")),
+			ClientSecret: strings.TrimSpace(os.Getenv("KAYA_SPOTIFY_CLIENT_SECRET")),
+			RedirectURL:  strings.TrimSpace(os.Getenv("KAYA_SPOTIFY_REDIRECT_URL")),
+		}
+		q := r.URL.Query()
+		if errStr := q.Get("error"); errStr != "" {
+			jsonResponse(w, http.StatusOK, map[string]interface{}{
+				"ok": true, "status": "cancelled",
+				"message": "Spotify sign-in was cancelled. You can try again any time.",
+			})
+			return
+		}
+		pendingID, err := skills.SpotifyOAuthComplete(cfg, q.Get("state"), q.Get("code"), nil, nil)
+		if err != nil {
+			jsonResponse(w, http.StatusOK, map[string]interface{}{
+				"ok": true, "status": "needs_authorization",
+				"message": "That sign-in didn't complete. Please try connecting again.",
+				"action":  "connect_spotify",
+			})
+			return
+		}
+		jsonResponse(w, http.StatusOK, map[string]interface{}{
+			"ok": true, "status": "ready",
+			"message":    "Your Spotify is connected.",
+			"pending_id": pendingID,
+		})
+	})
+
+	mux.HandleFunc("/v1/telemetry", authMiddleware(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodGet {
+			http.Error(w, `{"error":"method not allowed"}`, http.StatusMethodNotAllowed)
+			return
+		}
+
+		var mem runtime.MemStats
+		runtime.ReadMemStats(&mem)
+		system := map[string]interface{}{
+			"memory_alloc_mb": float64(mem.Alloc) / 1024 / 1024,
+			"num_goroutine":   runtime.NumGoroutine(),
+		}
+
+		fileCount := 0
+		var sizeBytes int64 = 0
+		if workspaceDir != "" {
+			filepath.Walk(workspaceDir, func(path string, info os.FileInfo, err error) error {
+				if err == nil && !info.IsDir() {
+					fileCount++
+					sizeBytes += info.Size()
+				}
+				return nil
+			})
+		}
+		workspace := map[string]interface{}{
+			"file_count": fileCount,
+			"size_bytes": sizeBytes,
+		}
+
+		database := map[string]interface{}{
+			"active_sessions_24h": 0,
+			"messages_24h":        0,
+		}
+		if db != nil {
+			row := db.QueryRow(`
+				SELECT COUNT(DISTINCT session_id), COUNT(*) 
+				FROM messages 
+				WHERE created_at > datetime('now', '-24 hours')`)
+			var sessions, msgs int
+			if err := row.Scan(&sessions, &msgs); err == nil {
+				database["active_sessions_24h"] = sessions
+				database["messages_24h"] = msgs
+			}
+		}
+
+		_ = json.NewEncoder(w).Encode(map[string]interface{}{
+			"system":    system,
+			"workspace": workspace,
+			"database":  database,
+			"timestamp": time.Now().Unix(),
+		})
+	}))
+
+	mux.HandleFunc("/v1/doctor", authMiddleware(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodGet {
+			http.Error(w, `{"error":"method not allowed"}`, http.StatusMethodNotAllowed)
+			return
+		}
+		doctorRunner := agentLoop.Doctor()
+		if doctorRunner == nil {
+			http.Error(w, `{"error":"doctor unavailable"}`, http.StatusServiceUnavailable)
+			return
+		}
+		// Re-read config + credentials from disk so health reflects a key the
+		// owner just saved (estate/credential flags are otherwise cached from
+		// startup or the last model switch).
+		agentLoop.RefreshDoctor()
+		results := doctorRunner.RunAll(r.Context())
+		overall := "ok"
+		checks := make([]DoctorCheckPayload, 0, len(results))
+		for _, check := range results {
+			checks = append(checks, DoctorCheckPayload{
+				Name:      check.Name,
+				Label:     check.Label,
+				Status:    check.Status,
+				Message:   check.Message,
+				LatencyMS: check.Latency,
+			})
+			if check.Status == "error" {
+				overall = "error"
+				continue
+			}
+			if check.Status == "warning" && overall != "error" {
+				overall = "warning"
+			}
+		}
+
+		profileName := agentLoop.GetToolProfile()
+		permissions := tools.ProfileAllowlists[profileName]
+		if permissions == nil {
+			permissions = []string{"*"} // Full access
+		}
+
+		if channelManager != nil {
+			statuses := channelManager.GetOperationalStatus()
+			for name, raw := range statuses {
+				statusMap, _ := raw.(map[string]interface{})
+				failureCount, _ := statusMap["failure_count"].(int)
+				lastErr, _ := statusMap["last_send_error"].(string)
+				if failureCount >= 3 && lastErr != "" {
+					level := "warning"
+					if failureCount >= 5 {
+						level = "error"
+						overall = "error"
+					} else if overall == "ok" {
+						overall = "warning"
+					}
+					checks = append(checks, DoctorCheckPayload{
+						Name:    "channel_" + name + "_delivery",
+						Status:  level,
+						Message: fmt.Sprintf("Repeated send failures (%d): %s", failureCount, lastErr),
+					})
+				}
+			}
+		}
+
+		// Retrieval observations were already collected by the runtime; until
+		// now nothing read them. Exposing them makes the memory gate visible:
+		// a query count with a large skip count is the embedding cost Kaya
+		// did not pay.
+		retrieval := map[string]interface{}{}
+		if src := doctorRunner.RetrievalStats(); src != nil {
+			retrieval = map[string]interface{}{"rag": src.RAG, "memo": src.Memo}
+		}
+		_ = json.NewEncoder(w).Encode(map[string]interface{}{
+			"status":    overall,
+			"checks":    checks,
+			"timestamp": time.Now().Unix(),
+			"uptime":    int64(time.Since(apiStartTime).Seconds()),
+			"version":   version,
+			"retrieval": retrieval,
+			"profile": ProfileInfo{
+				Name:        string(profileName),
+				Permissions: permissions,
+			},
+			"channels": func() map[string]interface{} {
+				if channelManager == nil {
+					return map[string]interface{}{}
+				}
+				return channelManager.GetOperationalStatus()
+			}(),
+		})
+	}))
+
+	mux.HandleFunc("/v1/channels/status", authMiddleware(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodGet {
+			jsonError(w, http.StatusMethodNotAllowed, "method_not_allowed", "method not allowed")
+			return
+		}
+		if channelManager == nil {
+			jsonResponse(w, http.StatusOK, map[string]interface{}{"channels": map[string]interface{}{}})
+			return
+		}
+		jsonResponse(w, http.StatusOK, map[string]interface{}{
+			"channels":  channelManager.GetOperationalStatus(),
+			"timestamp": time.Now().Unix(),
+		})
+	}))
+
+	mux.HandleFunc("/v1/channels/reconnect", authMiddleware(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			jsonError(w, http.StatusMethodNotAllowed, "method_not_allowed", "method not allowed")
+			return
+		}
+		if channelManager == nil {
+			jsonError(w, http.StatusServiceUnavailable, "unavailable", "channel manager unavailable")
+			return
+		}
+		// Channel transports only (telegram, whatsapp, ...). This restarts
+		// the messaging transport. It never re-authenticates a connected
+		// app — use /v1/connected-apps/{id}/connect for that.
+		var req struct {
+			Channel   string `json:"channel"`
+			Transport string `json:"transport"`
+		}
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+			jsonError(w, http.StatusBadRequest, "invalid_request", "invalid json body")
+			return
+		}
+		channel := strings.ToLower(strings.TrimSpace(req.Channel))
+		if channel == "" {
+			channel = strings.ToLower(strings.TrimSpace(req.Transport))
+		}
+		if channel == "" {
+			jsonError(w, http.StatusBadRequest, "invalid_request", "channel (message transport) is required")
+			return
+		}
+		if err := channelManager.RestartChannel(r.Context(), channel); err != nil {
+			jsonError(w, http.StatusBadRequest, "restart_failed", err.Error())
+			return
+		}
+		jsonResponse(w, http.StatusOK, map[string]interface{}{
+			"ok":        true,
+			"channel":   channel,
+			"status":    channelManager.GetOperationalStatus(),
+			"timestamp": time.Now().Unix(),
+		})
+	}))
+
+	mux.HandleFunc("/v1/session/inspect", authMiddleware(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodGet {
+			jsonError(w, http.StatusMethodNotAllowed, "method_not_allowed", "method not allowed")
+			return
+		}
+		session := resolveSession(r)
+		channel := strings.TrimSpace(r.URL.Query().Get("channel"))
+		if channel == "" {
+			channel = "mobile"
+		}
+		chatID := strings.TrimSpace(r.URL.Query().Get("chat_id"))
+		if chatID == "" {
+			chatID = "default"
+		}
+		lastChannel, lastChatID := agentLoop.GetLastActiveSession()
+		target := channel
+		if channelManager != nil {
+			target = channelManager.ResolveTarget(bus.OutboundMessage{
+				Channel: channel,
+				ChatID:  chatID,
+				Metadata: map[string]interface{}{
+					"session_id": session,
+				},
+			})
+		}
+		lastReq := telemetry.Global.GetLastRequestID(session)
+		jsonResponse(w, http.StatusOK, map[string]interface{}{
+			"requested_session": session,
+			"active_session": map[string]string{
+				"channel": lastChannel,
+				"chat_id": lastChatID,
+			},
+			"delivery_target": target,
+			"last_request_id": lastReq,
+			"timestamp":       time.Now().Unix(),
+		})
+	}))
+
+	mux.HandleFunc("/v1/traces", authMiddleware(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodGet {
+			jsonError(w, http.StatusMethodNotAllowed, "method_not_allowed", "method not allowed")
+			return
+		}
+		requestID := strings.TrimSpace(r.URL.Query().Get("request_id"))
+		session := strings.TrimSpace(r.URL.Query().Get("session"))
+		if requestID == "" && session != "" {
+			requestID = telemetry.Global.GetLastRequestID(session)
+		}
+
+		var traces []telemetry.TraceEvent
+		if requestID != "" {
+			traces = telemetry.Global.GetTraces(requestID)
+		} else {
+			// If no request/session specified, return the most recent global events
+			traces = telemetry.Global.GetGlobalTraces(50)
+		}
+		incidents := telemetry.Global.GetIncidents()
+		jsonResponse(w, http.StatusOK, map[string]interface{}{
+			"request_id": requestID,
+			"events":     traces,
+			"incidents":  incidents,
+		})
+	}))
+
+	mux.HandleFunc("/v1/scheduled", authMiddleware(func(w http.ResponseWriter, r *http.Request) {
+		if scheduledService == nil {
+			jsonError(w, http.StatusServiceUnavailable, "unavailable", "scheduled service unavailable")
+			return
+		}
+
+		switch r.Method {
+		case http.MethodGet:
+			// List scheduled items. exclude_source optionally omits one
+			// source (e.g. routines) so product surfaces stay disjoint.
+			itemType := scheduled.ItemType(r.URL.Query().Get("type"))
+			state := scheduled.ItemState(r.URL.Query().Get("state"))
+			excludeSource := strings.TrimSpace(r.URL.Query().Get("exclude_source"))
+			limit := 50
+			if l := r.URL.Query().Get("limit"); l != "" {
+				fmt.Sscanf(l, "%d", &limit)
+			}
+			items, err := scheduledService.ListItemsExcluding(itemType, state, limit, excludeSource)
+			if err != nil {
+				jsonError(w, http.StatusInternalServerError, "list_failed", err.Error())
+				return
+			}
+			jsonResponse(w, http.StatusOK, map[string]interface{}{
+				"items": items,
+			})
+
+		case http.MethodPost:
+			// Create new scheduled item
+			var req struct {
+				Type        string `json:"type"`
+				Title       string `json:"title"`
+				Description string `json:"description"`
+				Schedule    struct {
+					Kind     string  `json:"kind"`
+					At       *string `json:"at"`
+					Every    *string `json:"every"`
+					Expr     string  `json:"expr"`
+					Timezone string  `json:"tz"`
+				} `json:"schedule"`
+				Action struct {
+					Kind    string   `json:"kind"`
+					Content string   `json:"content"`
+					Command string   `json:"command"`
+					Deliver bool     `json:"deliver"`
+					Skills  []string `json:"skills"`
+				} `json:"action"`
+				Channel string `json:"channel"`
+				ChatID  string `json:"chat_id"`
+			}
+			if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+				jsonError(w, http.StatusBadRequest, "invalid_request", "invalid json body")
+				return
+			}
+			req.Title = strings.TrimSpace(req.Title)
+			if req.Title == "" {
+				jsonError(w, http.StatusBadRequest, "invalid_request", "title is required")
+				return
+			}
+			itemType := scheduled.ItemType(req.Type)
+			if itemType == "" {
+				itemType = scheduled.TypeAutomation
+			}
+			item := &scheduled.ScheduledItem{
+				Type:         itemType,
+				Title:        req.Title,
+				Description:  req.Description,
+				State:        scheduled.StateScheduled,
+				Timezone:     "UTC",
+				Channel:      req.Channel,
+				ChatID:       req.ChatID,
+				DeliveryMode: scheduled.DeliverySmart,
+				Source:       "user",
+				CreatedBy:    "api",
+				MaxRetries:   3,
+			}
+			// Parse schedule
+			switch req.Schedule.Kind {
+			case "at":
+				item.Schedule.Kind = scheduled.ScheduleAt
+				if req.Schedule.At != nil {
+					t, err := time.Parse(time.RFC3339, *req.Schedule.At)
+					if err != nil {
+						jsonError(w, http.StatusBadRequest, "invalid_request", "invalid at time")
+						return
+					}
+					item.Schedule.At = &t
+					item.NextRunAt = &t
+				}
+			case "every":
+				item.Schedule.Kind = scheduled.ScheduleEvery
+				if req.Schedule.Every != nil {
+					d, err := time.ParseDuration(*req.Schedule.Every)
+					if err != nil {
+						jsonError(w, http.StatusBadRequest, "invalid_request", "invalid every duration")
+						return
+					}
+					item.Schedule.Every = d
+					next := time.Now().UTC().Add(d)
+					item.NextRunAt = &next
+				}
+			case "cron":
+				item.Schedule.Kind = scheduled.ScheduleCron
+				item.Schedule.Expr = req.Schedule.Expr
+				if req.Schedule.Timezone != "" {
+					item.Timezone = req.Schedule.Timezone
+				}
+				// Compute the next run from the cron expression in the item's timezone.
+				item.NextRunAt = scheduled.NextCronRun(item.Schedule.Expr, item.Timezone, time.Now())
+			default:
+				jsonError(w, http.StatusBadRequest, "invalid_request", "schedule.kind is required (at, every, cron)")
+				return
+			}
+			// Parse action
+			item.Action = scheduled.Action{
+				Kind:    scheduled.ActionKind(req.Action.Kind),
+				Content: req.Action.Content,
+				Command: req.Action.Command,
+				Deliver: req.Action.Deliver,
+				Skills:  req.Action.Skills,
+			}
+			if item.Action.Kind == "" {
+				item.Action.Kind = scheduled.ActionAgentTurn
+			}
+			if err := scheduledService.CreateItem(item); err != nil {
+				jsonError(w, http.StatusInternalServerError, "create_failed", err.Error())
+				return
+			}
+			jsonResponse(w, http.StatusOK, map[string]interface{}{"ok": true, "item": item})
+
+		default:
+			jsonError(w, http.StatusMethodNotAllowed, "method_not_allowed", "method not allowed")
+		}
+	}))
+
+	// /v1/routinefeed is the one product feed for the owner's Routines.
+	// It merges routines and scheduled items into a single normalized shape
+	// at the presentation boundary; storage and scheduling authority stay in
+	// pkg/scheduled and pkg/routines. Product surfaces read this instead of
+	// splitting the owner's intent across two lists.
+	mux.HandleFunc("/v1/routinefeed", authMiddleware(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodGet {
+			jsonError(w, http.StatusMethodNotAllowed, "method_not_allowed", "method not allowed")
+			return
+		}
+		jsonResponse(w, http.StatusOK, map[string]interface{}{
+			"ok":       true,
+			"routines": buildRoutineFeed(scheduledService),
+		})
+	}))
+	registerCommitmentRoutes(mux, apiWorkspaceDir, agentLoop, authMiddleware)
+	registerWatchRoutes(mux, apiWorkspaceDir, agentLoop, authMiddleware)
+	mux.HandleFunc("/v1/ideas", authMiddleware(func(w http.ResponseWriter, r *http.Request) {
+		if apiWorkspaceDir == "" {
+			jsonError(w, http.StatusInternalServerError, "unavailable", "ideas are unavailable right now")
+			return
+		}
+		store, err := ideas.New(apiWorkspaceDir)
+		if err != nil {
+			jsonError(w, http.StatusInternalServerError, "unavailable", "ideas are unavailable right now")
+			return
+		}
+		if r.Method != http.MethodGet {
+			jsonError(w, http.StatusMethodNotAllowed, "method_not_allowed", "method not allowed")
+			return
+		}
+		status := ideas.Status("")
+		switch strings.ToLower(strings.TrimSpace(r.URL.Query().Get("status"))) {
+		case "", "open":
+			// Default: everything the owner can still act on. Proactive
+			// proposals are "presented", so a pending-only filter would hide
+			// exactly the things this surface exists to show.
+			list, err := store.Open(50)
+			if err != nil {
+				jsonError(w, http.StatusInternalServerError, "unavailable", "ideas are unavailable right now")
+				return
+			}
+			jsonResponse(w, http.StatusOK, map[string]interface{}{"ok": true, "ideas": list})
+			return
+		case "resolved":
+			list, err := store.Resolved(50)
+			if err != nil {
+				jsonError(w, http.StatusInternalServerError, "unavailable", "ideas are unavailable right now")
+				return
+			}
+			jsonResponse(w, http.StatusOK, map[string]interface{}{"ok": true, "ideas": list})
+			return
+		case "accepted":
+			status = ideas.StatusAccepted
+		case "dismissed":
+			status = ideas.StatusDismissed
+		case "pending":
+			status = ideas.StatusPending
+		case "presented":
+			status = ideas.StatusPresented
+		case "snoozed":
+			status = ideas.StatusSnoozed
+		case "completed":
+			status = ideas.StatusCompleted
+		case "failed":
+			status = ideas.StatusFailed
+		case "all":
+			status = ""
+		default:
+			jsonError(w, http.StatusBadRequest, "invalid_request", "status must be open, resolved, all, or a known idea status")
+			return
+		}
+		list, err := store.List(status, 50)
+		if err != nil {
+			jsonError(w, http.StatusInternalServerError, "unavailable", "ideas are unavailable right now")
+			return
+		}
+		jsonResponse(w, http.StatusOK, map[string]interface{}{"ok": true, "ideas": list})
+	}))
+	mux.HandleFunc("/v1/ideas/", authMiddleware(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			jsonError(w, http.StatusMethodNotAllowed, "method_not_allowed", "method not allowed")
+			return
+		}
+		if apiWorkspaceDir == "" {
+			jsonError(w, http.StatusInternalServerError, "unavailable", "ideas are unavailable right now")
+			return
+		}
+		rest := strings.TrimPrefix(r.URL.Path, "/v1/ideas/")
+		parts := strings.Split(strings.Trim(rest, "/"), "/")
+		if len(parts) != 2 {
+			jsonError(w, http.StatusBadRequest, "invalid_request", "use /v1/ideas/{id}/{approve,dismiss,snooze}")
+			return
+		}
+		verb := strings.ToLower(parts[1])
+		switch verb {
+		case "approve", "accept", "dismiss", "snooze":
+		default:
+			jsonError(w, http.StatusBadRequest, "invalid_request", "use /v1/ideas/{id}/{approve,dismiss,snooze}")
+			return
+		}
+		store, err := ideas.New(apiWorkspaceDir)
+		if err != nil {
+			jsonError(w, http.StatusInternalServerError, "unavailable", "ideas are unavailable right now")
+			return
+		}
+		idea, err := store.Get(parts[0])
+		if err != nil {
+			jsonError(w, http.StatusNotFound, "not_found", "no such idea")
+			return
+		}
+
+		// Proactive proposals carry a lifecycle and an action. Deciding one
+		// goes through the runtime, which revalidates the situation, resolves
+		// the bound broker request and executes through the real path.
+		// Legacy advice ideas keep the original, side-effect-free behaviour.
+		if idea.Kind != "" && agentLoop != nil {
+			decision := verb
+			if decision == "accept" {
+				decision = "approve"
+			}
+			snoozeFor := time.Duration(0)
+			if decision == "snooze" {
+				if h := strings.TrimSpace(r.URL.Query().Get("hours")); h != "" {
+					if n, convErr := strconv.Atoi(h); convErr == nil && n > 0 && n <= 168 {
+						snoozeFor = time.Duration(n) * time.Hour
+					}
+				}
+			}
+			decided, result, decErr := agentLoop.DecideIdea(r.Context(), idea.ID, decision, snoozeFor)
+			if decErr != nil {
+				// A refused decision (stale, expired, already used) is a real
+				// product answer, not a server fault: report it with the
+				// record so the owner sees what happened.
+				resp := map[string]interface{}{"ok": false, "idea": decided, "error": decErr.Error()}
+				if result != "" {
+					resp["result"] = result
+				}
+				jsonResponse(w, http.StatusOK, resp)
+				return
+			}
+			body := map[string]interface{}{"ok": true, "idea": decided}
+			if result != "" {
+				body["result"] = result
+			}
+			jsonResponse(w, http.StatusOK, body)
+			return
+		}
+
+		decided, err := store.Decide(idea.ID, verb == "accept")
+		if err != nil {
+			jsonError(w, http.StatusInternalServerError, "unavailable", "could not record the decision")
+			return
+		}
+		jsonResponse(w, http.StatusOK, map[string]interface{}{"ok": true, "idea": decided})
+	}))
+
+	// Scheduled item by ID
+	mux.HandleFunc("/v1/scheduled/", authMiddleware(func(w http.ResponseWriter, r *http.Request) {
+		if scheduledService == nil {
+			jsonError(w, http.StatusServiceUnavailable, "unavailable", "scheduled service unavailable")
+			return
+		}
+
+		path := strings.TrimPrefix(r.URL.Path, "/v1/scheduled/")
+		parts := strings.Split(strings.Trim(path, "/"), "/")
+		if len(parts) < 1 || parts[0] == "" {
+			jsonError(w, http.StatusBadRequest, "invalid_request", "invalid item path")
+			return
+		}
+
+		itemID := parts[0]
+		action := ""
+		if len(parts) > 1 {
+			action = parts[1]
+		}
+
+		switch r.Method {
+		case http.MethodGet:
+			item, err := scheduledService.GetItem(itemID)
+			if err != nil {
+				jsonError(w, http.StatusNotFound, "not_found", "item not found")
+				return
+			}
+			jsonResponse(w, http.StatusOK, map[string]interface{}{"item": item})
+
+		case http.MethodPatch:
+			// Update item
+			var req struct {
+				Title       *string `json:"title"`
+				Description *string `json:"description"`
+				State       *string `json:"state"`
+			}
+			if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+				jsonError(w, http.StatusBadRequest, "invalid_request", "invalid json body")
+				return
+			}
+			item, err := scheduledService.GetItem(itemID)
+			if err != nil {
+				jsonError(w, http.StatusNotFound, "not_found", "item not found")
+				return
+			}
+			if req.Title != nil {
+				item.Title = *req.Title
+			}
+			if req.Description != nil {
+				item.Description = *req.Description
+			}
+			if req.State != nil {
+				item.State = scheduled.ItemState(*req.State)
+			}
+			if err := scheduledService.UpdateItem(item); err != nil {
+				jsonError(w, http.StatusInternalServerError, "update_failed", err.Error())
+				return
+			}
+			jsonResponse(w, http.StatusOK, map[string]interface{}{"ok": true, "item": item})
+
+		case http.MethodDelete:
+			if err := scheduledService.CancelItem(itemID); err != nil {
+				jsonError(w, http.StatusNotFound, "not_found", "item not found")
+				return
+			}
+			// The scheduled row is shared with routines: retiring it here
+			// must also drop the routine sidecar (plus any pre-existing
+			// orphans), or dead routines linger in the Routines list.
+			if rs, rerr := routineService(); rerr == nil {
+				if derr := rs.DeleteMeta(itemID); derr != nil {
+					log.Printf("routine sidecar cleanup failed for %s: %v", itemID, derr)
+				}
+				if n, perr := rs.PruneOrphaned(); perr != nil {
+					log.Printf("routine orphan prune failed: %v", perr)
+				} else if n > 0 {
+					log.Printf("pruned %d orphaned routine sidecars", n)
+				}
+			}
+			jsonResponse(w, http.StatusOK, map[string]interface{}{"ok": true, "id": itemID})
+
+		default:
+			// Handle actions like pause, resume, run
+			if action != "" && r.Method == http.MethodPost {
+				switch action {
+				case "pause":
+					if err := scheduledService.PauseItem(itemID); err != nil {
+						jsonError(w, http.StatusNotFound, "not_found", err.Error())
+						return
+					}
+					jsonResponse(w, http.StatusOK, map[string]interface{}{"ok": true, "state": "paused"})
+				case "resume":
+					if err := scheduledService.ResumeItem(itemID); err != nil {
+						jsonError(w, http.StatusNotFound, "not_found", err.Error())
+						return
+					}
+					jsonResponse(w, http.StatusOK, map[string]interface{}{"ok": true, "state": "scheduled"})
+				case "cancel":
+					// The app's Routines screen offers Stop for reminders and
+					// automations (anything not routine-sourced) and posts
+					// {id}/cancel here; only DELETE existed, so Stop answered
+					// 400 "unsupported action" and the row never stopped.
+					if err := scheduledService.CancelItem(itemID); err != nil {
+						jsonError(w, http.StatusNotFound, "not_found", err.Error())
+						return
+					}
+					jsonResponse(w, http.StatusOK, map[string]interface{}{"ok": true, "state": "cancelled"})
+				case "run":
+					if err := scheduledService.RunNow(itemID); err != nil {
+						jsonError(w, http.StatusNotFound, "not_found", err.Error())
+						return
+					}
+					jsonResponse(w, http.StatusOK, map[string]interface{}{"ok": true, "message": "triggered"})
+				default:
+					jsonError(w, http.StatusBadRequest, "invalid_action", "unsupported action")
+				}
+				return
+			}
+			jsonError(w, http.StatusMethodNotAllowed, "method_not_allowed", "method not allowed")
+		}
+	}))
+
+	// Scheduled execution history
+	mux.HandleFunc("/v1/scheduled/history", authMiddleware(func(w http.ResponseWriter, r *http.Request) {
+		if scheduledService == nil {
+			jsonError(w, http.StatusServiceUnavailable, "unavailable", "scheduled service unavailable")
+			return
+		}
+
+		if r.Method != http.MethodGet {
+			jsonError(w, http.StatusMethodNotAllowed, "method_not_allowed", "method not allowed")
+			return
+		}
+
+		itemID := r.URL.Query().Get("item_id")
+		if itemID == "" {
+			jsonError(w, http.StatusBadRequest, "invalid_request", "item_id is required")
+			return
+		}
+		limit := 50
+		if l := r.URL.Query().Get("limit"); l != "" {
+			fmt.Sscanf(l, "%d", &limit)
+		}
+		history, err := scheduledService.GetHistory(itemID, limit)
+		if err != nil {
+			jsonError(w, http.StatusInternalServerError, "history_failed", err.Error())
+			return
+		}
+		jsonResponse(w, http.StatusOK, map[string]interface{}{
+			"history": history,
+		})
+	}))
+
+	// ── 2. Chat (streaming SSE) ───────────────────────────────────────────
+	mux.HandleFunc("/v1/chat", authMiddleware(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			http.Error(w, `{"error":"method not allowed"}`, http.StatusMethodNotAllowed)
+			return
+		}
+
+		// A chat body carries attachments as base64 (about a third larger than
+		// the file), so cap it well above the largest allowed upload but far
+		// below what could exhaust a Pod's memory.
+		r.Body = http.MaxBytesReader(w, r.Body, chatBodyLimit)
+		var req internalAPIRequest
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+			var tooBig *http.MaxBytesError
+			if errors.As(err, &tooBig) {
+				http.Error(w, fmt.Sprintf(`{"error":"That attachment is too large. The limit is %d MB per file."}`, uploads.MaxBytes>>20), http.StatusRequestEntityTooLarge)
+				return
+			}
+			http.Error(w, fmt.Sprintf(`{"error":"invalid request: %s"}`, err.Error()), http.StatusBadRequest)
+			return
+		}
+		if req.Content == "" {
+			http.Error(w, `{"error":"content is required"}`, http.StatusBadRequest)
+			return
+		}
+
+		if req.SessionKey == "" {
+			req.SessionKey = resolveSession(r)
+		}
+		clientType := strings.TrimSpace(r.Header.Get("X-Client-Type"))
+		req.Channel = resolveRequestChannel(req.Channel, clientType, r.UserAgent())
+		if req.ChatID == "" {
+			req.ChatID = "default"
+		}
+		if strings.TrimSpace(req.RequestID) == "" {
+			req.RequestID = fmt.Sprintf("req-%d", time.Now().UnixNano())
+		}
+
+		// A resend with a fresh request id is still the same request: the
+		// phone may post a long prompt twice (a double tap, a retry while the
+		// first answer is still coming). Answer the first turn instead of
+		// starting a second pipeline on the same conversation. Attachments
+		// and short deliberate repeats are left alone.
+		fingerprint := ""
+		if len(req.Media) == 0 && len(req.MediaItems) == 0 && len(strings.TrimSpace(req.Content)) >= minDuplicateChars {
+			fingerprint = chatContentFingerprint(req.SessionKey, req.Channel, req.ChatID, req.Content)
+			if prior, dup := duplicateChatRequest(fingerprint, req.RequestID); dup && chatTurns != nil {
+				if t, err := chatTurns.Get(req.SessionKey, prior); err == nil && t != nil {
+					switch t.Status {
+					case turnlog.StatusCompleted:
+						jsonResponse(w, http.StatusOK, map[string]interface{}{
+							"ok": true, "replay": true, "duplicate": true,
+							"request_id": prior, "status": "completed", "outcome": t.Outcome,
+						})
+						return
+					case turnlog.StatusPending, turnlog.StatusRunning, turnlog.StatusWaiting:
+						jsonError(w, http.StatusConflict, "duplicate_turn",
+							"that message is already being answered; attach to that turn instead of resending")
+						return
+					}
+				}
+			}
+		}
+
+		// Durable turn identity: an identical request_id for the same
+		// conversation must never start a second execution (reconnect is
+		// observation, not re-submission). Terminal turns reply with their
+		// stored outcome; live/waiting turns are refused with 409.
+		// One trajectory per turn: the claim mints the execution-trace ID
+		// that links this turn's model calls, tools, and verification.
+		// A repeat claim returns the existing turn (handled above), so a
+		// reconnect observes the same trajectory instead of forking one.
+		trajectoryID := ""
+		if chatTurns != nil {
+			claim, cerr := chatTurns.Claim(req.SessionKey, req.RequestID)
+			if cerr == nil && claim.Turn != nil {
+				trajectoryID = claim.Turn.TrajectoryID
+			}
+			if cerr == nil && !claim.Created {
+				switch claim.Status {
+				case "completed":
+					jsonResponse(w, http.StatusOK, map[string]interface{}{
+						"ok": true, "replay": true, "request_id": req.RequestID,
+						"status": claim.Status, "outcome": claim.Turn.Outcome,
+					})
+					return
+				case "failed":
+					jsonResponse(w, http.StatusOK, map[string]interface{}{
+						"ok": true, "replay": true, "request_id": req.RequestID,
+						"status": claim.Status,
+					})
+					return
+				case turnlog.StatusInterrupted:
+					// The process died mid-reply. Recovery already put
+					// whatever was said into the transcript (and finished
+					// it, if it was still worth finishing), so this is not
+					// a live turn to attach to and never will be. Say so
+					// distinctly instead of claiming it is running: a
+					// client that believes that waits forever.
+					jsonError(w, http.StatusConflict, "turn_interrupted",
+						"Kaya restarted while answering that. The reply is in the conversation.")
+					return
+				default:
+					jsonError(w, http.StatusConflict, "turn_in_progress",
+						"that turn is already running or waiting; attach to it instead of resending")
+					return
+				}
+			}
+			if cerr == nil && claim.Created {
+				if fingerprint != "" {
+					noteChatRequest(fingerprint, req.RequestID)
+				}
+				// Where the question came from, recorded once so a turn
+				// that has to be finished later answers on the same
+				// surface instead of appearing somewhere the owner never
+				// looks.
+				_ = chatTurns.SetOrigin(req.SessionKey, req.RequestID, req.Content, req.Channel, req.ChatID)
+			}
+		}
+
+		logger.InfoCF("internal-api", "Processing chat request", map[string]interface{}{
+			"session_key":    req.SessionKey,
+			"channel":        req.Channel,
+			"content_length": len(req.Content),
+			"has_media":      len(req.Media) > 0 || len(req.MediaItems) > 0,
+		})
+
+		// Prepare SSE
+		w.Header().Set("Content-Type", "text/event-stream")
+		w.Header().Set("Cache-Control", "no-cache")
+		w.Header().Set("Connection", "keep-alive")
+		flusher, ok := w.(http.Flusher)
+		if !ok {
+			http.Error(w, "Streaming unsupported!", http.StatusInternalServerError)
+			return
+		}
+		// Every frame — turn, keep-alive, clarify forwarder — goes through
+		// one serialized writer; the seal on return makes a straggling
+		// goroutine unable to write into a finished response.
+		sw := &sseWriter{w: w, flush: flusher}
+		defer sw.seal()
+		emitObject := func(payload interface{}) {
+			sw.event(payload)
+		}
+		// Let every other connected surface follow this reply as it is
+		// written (the app opened after the message was sent from the
+		// terminal, say). The requester keeps reading it over this response.
+		liveID := req.RequestID
+		if liveID == "" {
+			liveID = fmt.Sprintf("live-%d", time.Now().UnixNano())
+		}
+		liveOutcome := "success"
+		turns.Begin(req.SessionKey, liveID, req.Channel, req.Content)
+		defer func() { turns.End(req.SessionKey, liveID, liveOutcome) }()
+		emitObject(map[string]interface{}{
+			"type":       "lifecycle",
+			"request_id": req.RequestID,
+			"state":      "queued",
+		})
+
+		// Media handling
+		// Attachments are stored as real uploads (real name, detected type,
+		// listable and deletable), not anonymous temp files. A refused
+		// attachment is said out loud instead of silently dropped.
+		mediaPaths := []string{}
+		wsDir, _ := resolveApiWorkspace(agentLoop.Config())
+		for _, m := range req.Media {
+			if it, err := storeUploadedBase64(wsDir, m.Base64, m.Filename, m.MimeType, req.Channel); err == nil {
+				mediaPaths = append(mediaPaths, filepath.Join(wsDir, it.Path))
+			} else {
+				sw.event("I couldn't take that attachment: " + err.Error() + "\n\n")
+			}
+		}
+		for _, item := range req.MediaItems {
+			if it, err := storeUploadedBase64(wsDir, item.Base64, item.Filename, item.MimeType, req.Channel); err == nil {
+				mediaPaths = append(mediaPaths, filepath.Join(wsDir, it.Path))
+			} else {
+				sw.event("I couldn't take that attachment: " + err.Error() + "\n\n")
+			}
+		}
+
+		// onChunk — streams text tokens to the mobile app as JSON-encoded strings
+		streamedText := false
+		onChunk := func(chunk string) {
+			streamedText = true
+			sw.event(chunk)
+			turns.Delta(req.SessionKey, liveID, chunk)
+		}
+
+		// onToolCall — sends a tool_status event so the app can show
+		// "Kaya is searching…", "Reading file…" etc. in real time.
+		// These are JSON objects, NOT text chunks — the app routes them
+		// to the status badge, not the message bubble.
+		onToolCall := func(name, args string) {
+			label := toolStatusLabel(name, args)
+			turns.Tool(req.SessionKey, liveID, label)
+			sw.event(map[string]string{
+				"type":  "tool_status",
+				"tool":  name,
+				"label": label,
+			})
+		}
+
+		// Keep-alive ticker — prevents the mobile HTTP client from timing out
+		// during long tool chains (web fetches, sandbox runs, multi-step reasoning).
+		// Sends an SSE comment every 15 seconds; the app silently ignores these.
+		keepAliveDone := make(chan struct{})
+		go func() {
+			ticker := time.NewTicker(15 * time.Second)
+			defer ticker.Stop()
+			for {
+				select {
+				case <-ticker.C:
+					sw.keepalive()
+				case <-keepAliveDone:
+					return
+				}
+			}
+		}()
+
+		ctx := r.Context()
+		// Carry the turn's trajectory ID into the agent loop, tool
+		// execution, and verification so every event for this turn lands
+		// on one trace (kaya replay <trajectory-id>).
+		ctx = turnlog.WithTrajectoryID(ctx, trajectoryID)
+		// What each tool call did and how it ended, and when a message the
+		// owner sent into this turn is read: the phone draws them as the run.
+		ctx = agent.WithTurnObserver(ctx, func(ev map[string]interface{}) { emitObject(ev) })
+
+		// Subscribe to outbound bus during this request to forward
+		// clarify_request and other interactive events over SSE. Without
+		// this, the clarify tool blocks the turn for 5 minutes while the
+		// mobile app never sees the prompt (root cause of
+		// "tool clarify timed out after 5m0s").
+		clarifyCh, unsubClarify := agentLoop.Bus().SubscribeOutbound("sse-clarify:"+req.RequestID, false, 50)
+		defer unsubClarify()
+		clarifyDone := make(chan struct{})
+		go func() {
+			for {
+				select {
+				case <-ctx.Done():
+					return
+				case <-clarifyDone:
+					return
+				case msg, ok := <-clarifyCh:
+					if !ok {
+						return
+					}
+					if t, _ := msg.Metadata["type"].(string); t == "clarify_request" {
+						qid, _ := msg.Metadata["question_id"].(string)
+						question := msg.Content
+						choices, _ := msg.Metadata["choices"]
+						emitObject(map[string]interface{}{
+							"type":        "clarify_request",
+							"question_id": qid,
+							"question":    question,
+							"choices":     choices,
+							"request_id":  req.RequestID,
+						})
+					}
+				}
+			}
+		}()
+
+		// Carry the client's device timezone (IANA name, validated) into the
+		// agent turn so scheduling parses "9 AM" in the user's zone. Falls
+		// back to the tool default (UTC) when absent or unknown.
+		// Carry the owner's own words so tools can check a model's
+		// restatement against them (scheduling never stores a time the owner
+		// did not name).
+		ctx = tools.WithRequestMessage(ctx, req.Content)
+		// Honest progress: the client is told when Kaya is genuinely
+		// retrieving memory or waiting on the model, so the silent stretch
+		// between "processing" and the first token is never a blank screen.
+		// No phase claims completion — that stays bound to evidence.
+		// Where this turn actually ran, from execution: every model call
+		// that served reports itself, and the stream states the aggregate
+		// once the turn succeeds (never inferred from settings).
+		var servedMu sync.Mutex
+		var served []agent.ServedBy
+		ctx = agent.WithServedBySink(ctx, func(sb agent.ServedBy) {
+			servedMu.Lock()
+			served = append(served, sb)
+			servedMu.Unlock()
+		})
+		ctx = agent.WithPhaseSink(ctx, func(phase, detail string) {
+			frame := map[string]string{"type": "phase", "phase": phase}
+			if detail != "" {
+				frame["detail"] = detail
+			}
+			sw.event(frame)
+		})
+		if req.Metadata != nil {
+			ctx = tools.WithRequestTimezone(ctx, strings.TrimSpace(req.Metadata["timezone"]))
+			// Carry the device location on the turn context so the runtime
+			// resolves it directly (weather/aqi/nearby) instead of appending
+			// location prose to the user message, which the model could echo.
+			ctx = tools.WithRequestLocation(ctx, tools.RequestLocationFromMetadata(req.Metadata))
+		}
+		emitObject(map[string]interface{}{
+			"type":       "lifecycle",
+			"request_id": req.RequestID,
+			"state":      "agent_processing",
+		})
+		ctx = agent.WithRequestID(ctx, req.RequestID)
+		response, err := agentLoop.ProcessDirectWithChannel(
+			ctx,
+			req.Content,
+			req.SessionKey,
+			req.Channel,
+			req.ChatID,
+			mediaPaths,
+			onChunk,
+			onToolCall,
+		)
+		close(clarifyDone)
+
+		// Stop keep-alive before writing [DONE] to avoid write-after-close race
+		close(keepAliveDone)
+
+		// A message the owner sent into this turn that the model never got to
+		// (the turn finished without another tool call) is handed back, so the
+		// phone sends it as the next message instead of leaving it waiting.
+		if sm := agentLoop.Steering(); sm != nil {
+			var back []string
+			// The queue may hand out one message per drain: take until empty.
+			for {
+				batch := sm.DrainPending(req.SessionKey)
+				if len(batch) == 0 {
+					break
+				}
+				for _, m := range batch {
+					if !m.IsInterrupt && !m.IsHardAbort && strings.TrimSpace(m.Content) != "" {
+						back = append(back, m.Content)
+					}
+				}
+			}
+			if len(back) > 0 {
+				emitObject(map[string]interface{}{"type": "steer_returned", "contents": back})
+			}
+		}
+
+		// Terminal product outcome: the runtime states success/waiting/failed;
+		// the client renders it and never infers success from prose. Draining
+		// the clarify channel after the turn guarantees a clarify that raced
+		// the forwarder is still counted as waiting_for_user.
+		lifecycleCompleted := func(outcome string) {
+			emitObject(map[string]interface{}{
+				"type":       "lifecycle",
+				"request_id": req.RequestID,
+				"state":      "completed",
+				"outcome":    outcome,
+			})
+		}
+		clarifySeen := func() bool {
+			seen := false
+			for {
+				select {
+				case msg, ok := <-clarifyCh:
+					if !ok {
+						return true // channel closed mid-drain: assume interactive
+					}
+					if t, _ := msg.Metadata["type"].(string); t == "clarify_request" {
+						seen = true
+					}
+				default:
+					return seen
+				}
+			}
+		}()
+
+		if err != nil {
+			logger.ErrorCF("internal-api", "Error processing chat", map[string]interface{}{"error": err.Error()})
+
+			// Clean up any empty/partial assistant message that may have been
+			// written to the session before the error occurred.
+			if db != nil {
+				db.Exec(`
+					DELETE FROM messages 
+					WHERE session_id = ? 
+					  AND role = 'assistant' 
+					  AND (content = '' OR content IS NULL)
+					  AND created_at > datetime('now', '-2 minutes')
+				`, req.SessionKey)
+			}
+
+			// Model failures are explained in the owner's terms (out of
+			// credit, bad key, provider down) — never the raw provider body.
+			name := ""
+			if cfg := agentLoop.Config(); cfg != nil {
+				name = cfg.Agents.Defaults.Provider
+			}
+			sw.event("Error: " + provider.TurnErrorText(err, name))
+			liveOutcome = "failed"
+			lifecycleCompleted("failed")
+			if chatTurns != nil {
+				_, _ = chatTurns.Set(req.SessionKey, req.RequestID, "failed", "failed")
+			}
+			agentLoop.SettleSessionSurfaces(req.SessionKey, "failed")
+			return
+		}
+		emitUnstreamedReply(response, streamedText, onChunk)
+		servedMu.Lock()
+		agg, haveServed := agent.AggregateServedBy(served)
+		servedMu.Unlock()
+		if haveServed {
+			emitObject(map[string]interface{}{
+				"type":       "served_by",
+				"provider":   agg.Provider,
+				"model":      agg.Model,
+				"local":      agg.Local,
+				"request_id": req.RequestID,
+			})
+		}
+		// Terminal outcome (backend-stated, additive frame).
+		outcome := "success"
+		if clarifySeen {
+			outcome = "waiting_for_user"
+		} else if b, berr := permBroker(); berr == nil && b != nil {
+			if _, pending := b.PendingForRequest(req.RequestID); pending {
+				outcome = "waiting_for_permission"
+			}
+		}
+		if outcome != "success" {
+			liveOutcome = "waiting"
+		}
+		if chatTurns != nil {
+			switch outcome {
+			case "success":
+				_, _ = chatTurns.Set(req.SessionKey, req.RequestID, "completed", "success")
+			case "waiting_for_user", "waiting_for_permission":
+				_, _ = chatTurns.Set(req.SessionKey, req.RequestID, "waiting", outcome)
+			default:
+				_, _ = chatTurns.Set(req.SessionKey, req.RequestID, "failed", outcome)
+			}
+		}
+		// Retire this turn's live surfaces with the same terminal outcome:
+		// success completes them, failure fails them, waiting leaves them.
+		agentLoop.SettleSessionSurfaces(req.SessionKey, outcome)
+		// agent_completed is recorded in AgentLoop
+		meta := map[string]interface{}{
+			"type":       "assistant_message",
+			"request_id": req.RequestID,
+		}
+		if db != nil {
+			var messageID string
+			var timestamp int64
+			err := db.QueryRow(`
+					SELECT id, COALESCE(unixepoch(created_at), 0)
+					FROM messages
+					WHERE session_id = ? AND role = 'assistant'
+					ORDER BY datetime(created_at) DESC, rowid DESC
+					LIMIT 1
+				`, req.SessionKey).Scan(&messageID, &timestamp)
+			if err == nil && messageID != "" {
+				meta["message_id"] = messageID
+				meta["session_id"] = req.SessionKey
+				meta["timestamp"] = timestamp
+			}
+		}
+		if _, ok := meta["session_id"]; !ok {
+			meta["session_id"] = req.SessionKey
+		}
+		agentLoop.Bus().PublishOutbound(bus.OutboundMessage{
+			Channel:  req.Channel,
+			ChatID:   req.ChatID,
+			Content:  response,
+			Metadata: meta,
+		})
+		// channel_delivery is recorded in channels.Manager
+		emitObject(map[string]interface{}{
+			"type":       "lifecycle",
+			"request_id": req.RequestID,
+			"state":      "channel_delivery",
+		})
+		lifecycleCompleted(outcome)
+		sw.finish()
+	}))
+
+	// ── 3. History ────────────────────────────────────────────────────────
+	mux.HandleFunc("/v1/history", authMiddleware(func(w http.ResponseWriter, r *http.Request) {
+		session := resolveSession(r)
+		limit := 50
+		offset := 0
+		since := int64(0)
+		fmt.Sscanf(r.URL.Query().Get("limit"), "%d", &limit)
+		fmt.Sscanf(r.URL.Query().Get("offset"), "%d", &offset)
+		if raw := strings.TrimSpace(r.URL.Query().Get("since")); raw != "" {
+			if ts, err := strconv.ParseInt(raw, 10, 64); err == nil && ts > 0 {
+				since = ts
+			}
+		}
+		// Page budget: clamp page size and cap page bytes so long
+		// transcripts stay responsive on phones. has_more tells the
+		// client older pages exist; total counts the visible window.
+		const maxHistoryLimit = 100
+		const maxHistoryPageBytes = 1 << 20
+		if limit <= 0 {
+			limit = 50
+		}
+		if limit > maxHistoryLimit {
+			limit = maxHistoryLimit
+		}
+		if offset < 0 {
+			offset = 0
+		}
+
+		if db == nil {
+			http.Error(w, `{"error":"database not available"}`, http.StatusInternalServerError)
+			return
+		}
+
+		var rows *sql.Rows
+		var err error
+		if since > 0 {
+			rows, err = db.Query(`
+				SELECT id, role, content, created_at, meta
+				FROM messages
+				WHERE session_id = ? 
+				  AND (archived IS NULL OR archived = 0)
+				  AND content IS NOT NULL
+				  AND TRIM(content) != ''
+				  AND LENGTH(content) > 0
+				  AND unixepoch(created_at) > ?
+				ORDER BY datetime(created_at) ASC, rowid ASC
+				LIMIT ?`, session, since, limit)
+		} else {
+			rows, err = db.Query(`
+				SELECT id, role, content, created_at, meta
+				FROM messages
+				WHERE session_id = ? 
+				  AND (archived IS NULL OR archived = 0)
+				  AND content IS NOT NULL
+				  AND TRIM(content) != ''
+				  AND LENGTH(content) > 0
+				ORDER BY datetime(created_at) DESC, rowid DESC
+				LIMIT ? OFFSET ?`, session, limit, offset)
+		}
+		if err != nil {
+			http.Error(w, fmt.Sprintf(`{"error":"db error: %s"}`, err.Error()), http.StatusInternalServerError)
+			return
+		}
+		defer rows.Close()
+
+		var messages []Message
+		for rows.Next() {
+			var m Message
+			var createdAt time.Time
+			var metaJSON []byte
+			if err := rows.Scan(&m.ID, &m.Role, &m.Content, &createdAt, &metaJSON); err != nil {
+				continue
+			}
+			// An older model turn may have stored the internal date label
+			// with its reply; display surfaces never show it.
+			if m.Role == "assistant" {
+				m.Content = utils.StripDateStamp(m.Content)
+			}
+			if !isUserVisibleHistoryMessage(m.Role, m.Content, metaJSON) {
+				continue
+			}
+			m.Timestamp = createdAt.Unix()
+			if len(metaJSON) > 0 {
+				var meta map[string]interface{}
+				if json.Unmarshal(metaJSON, &meta) == nil {
+					if ch, ok := meta["source_channel"].(string); ok {
+						m.Channel = ch
+					}
+					if k, ok := meta["kind"].(string); ok {
+						m.Kind = k
+					}
+					if v, ok := meta["interrupted"].(bool); ok {
+						m.Interrupted = v
+					}
+					if k, ok := meta["notice_key"].(string); ok {
+						m.NoticeKey = k
+					}
+					if v, ok := meta["resolved"].(bool); ok {
+						m.Resolved = v
+					}
+					if at, ok := meta["attachments"]; ok {
+						atJSON, _ := json.Marshal(at)
+						_ = json.Unmarshal(atJSON, &m.Attachments)
+					}
+				}
+			}
+			messages = append(messages, m)
+		}
+
+		if since <= 0 {
+			for i, j := 0, len(messages)-1; i < j; i, j = i+1, j-1 {
+				messages[i], messages[j] = messages[j], messages[i]
+			}
+		}
+		if messages == nil {
+			messages = []Message{}
+		}
+
+		// Byte-budget the page: truncate overlong messages in place so one
+		// huge turn can't stall the client. has_more reports whether an
+		// older page exists (COUNT is cheap next to payload fetch).
+		budget := maxHistoryPageBytes
+		for i := range messages {
+			if budget <= 0 {
+				messages = messages[:i]
+				break
+			}
+			if len(messages[i].Content) > budget {
+				messages[i].Content = messages[i].Content[:budget] + "…"
+				budget = 0
+			} else {
+				budget -= len(messages[i].Content)
+			}
+		}
+		// hasMore must count with the same filters the page query uses
+		// (non-empty, non-archived). Counting unfiltered rows reports a
+		// next page that never materializes, so clients fetch again for
+		// nothing.
+		hasMore := false
+		if db != nil {
+			var remaining int
+			if since > 0 {
+				_ = db.QueryRow(`SELECT COUNT(*) FROM messages WHERE session_id = ? AND (archived IS NULL OR archived = 0) AND content IS NOT NULL AND TRIM(content) != '' AND LENGTH(content) > 0 AND unixepoch(created_at) <= ?`, session, since).Scan(&remaining)
+			} else {
+				_ = db.QueryRow(`SELECT COUNT(*) FROM messages WHERE session_id = ? AND (archived IS NULL OR archived = 0) AND content IS NOT NULL AND TRIM(content) != '' AND LENGTH(content) > 0`, session).Scan(&remaining)
+			}
+			hasMore = remaining > offset+len(messages)
+		}
+
+		total := len(messages)
+
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"messages": messages,
+			"total":    total,
+			"has_more": hasMore,
+		})
+	}))
+
+	// ── 4. Search ─────────────────────────────────────────────────────────
+	mux.HandleFunc("/v1/search", authMiddleware(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodGet {
+			jsonError(w, http.StatusMethodNotAllowed, "method_not_allowed", "method not allowed")
+			return
+		}
+		q := r.URL.Query().Get("q")
+		if q == "" {
+			jsonError(w, http.StatusBadRequest, "invalid_request", "missing query")
+			return
+		}
+		if db == nil {
+			jsonError(w, http.StatusInternalServerError, "internal_error", "database not available")
+			return
+		}
+
+		limit := 20
+		if raw := strings.TrimSpace(r.URL.Query().Get("limit")); raw != "" {
+			if n, err := strconv.Atoi(raw); err == nil && n > 0 && n <= 100 {
+				limit = n
+			}
+		}
+
+		var session string
+		if _, hasSession := r.URL.Query()["session"]; hasSession {
+			session = strings.TrimSpace(r.URL.Query().Get("session"))
+		} else {
+			session = resolveSession(r)
+		}
+
+		rows, err := db.Query(`
+			SELECT
+				m.id,
+				m.session_id,
+				m.role,
+				snippet(messages_fts, 0, '[', ']', '…', 32) AS content,
+				COALESCE(unixepoch(m.created_at), 0) AS ts,
+				bm25(messages_fts) AS rank
+			FROM messages_fts
+			JOIN messages m ON m.rowid = messages_fts.rowid
+			WHERE messages_fts MATCH ?
+			  AND (m.archived IS NULL OR m.archived = 0)
+			  AND (? = '' OR m.session_id = ?)
+			ORDER BY rank
+			LIMIT ?`, q, session, session, limit)
+		if err != nil {
+			rows, err = db.Query(`
+				SELECT
+					id,
+					session_id,
+					role,
+					content,
+					COALESCE(unixepoch(created_at), 0) AS ts,
+					0.0 AS rank
+				FROM messages
+				WHERE content LIKE ?
+				  AND (archived IS NULL OR archived = 0)
+				  AND (? = '' OR session_id = ?)
+				ORDER BY datetime(created_at) DESC
+				LIMIT ?`, "%"+q+"%", session, session, limit)
+		}
+		if err != nil {
+			jsonError(w, http.StatusInternalServerError, "db_error", err.Error())
+			return
+		}
+		defer rows.Close()
+
+		var results []SearchResult
+		for rows.Next() {
+			var item SearchResult
+			if err := rows.Scan(&item.ID, &item.SessionID, &item.Role, &item.Content, &item.Timestamp, &item.Rank); err != nil {
+				continue
+			}
+			results = append(results, item)
+		}
+		if results == nil {
+			results = []SearchResult{}
+		}
+		jsonResponse(w, http.StatusOK, results)
+	}))
+
+	mux.HandleFunc("/v1/tools", authMiddleware(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodGet {
+			jsonError(w, http.StatusMethodNotAllowed, "method_not_allowed", "method not allowed")
+			return
+		}
+		type toolEntry struct {
+			Name string `json:"name"`
+		}
+		info := agentLoop.GetStartupInfo()
+		// "tools" is {count:int, names:[]string} in startup info.
+		var names []string
+		if toolsInfo, ok := info["tools"].(map[string]interface{}); ok {
+			if n, ok := toolsInfo["names"].([]string); ok {
+				names = n
+			}
+		}
+		toolsList := make([]toolEntry, 0, len(names))
+		for _, name := range names {
+			toolsList = append(toolsList, toolEntry{Name: name})
+		}
+		jsonResponse(w, http.StatusOK, map[string]interface{}{
+			"tools": toolsList,
+		})
+	}))
+
+	// ── 4b. Skills ───────────────────────────────────────────────────────
+	mux.HandleFunc("/v1/skills", authMiddleware(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodGet {
+			jsonError(w, http.StatusMethodNotAllowed, "method_not_allowed", "method not allowed")
+			return
+		}
+		jsonResponse(w, http.StatusOK, map[string]interface{}{
+			"ok":     true,
+			"skills": listWorkspaceSkills(skillsDir),
+		})
+	}))
+
+	mux.HandleFunc("/v1/skills/toggle", authMiddleware(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			jsonError(w, http.StatusMethodNotAllowed, "method_not_allowed", "method not allowed")
+			return
+		}
+		var req struct {
+			Name    string `json:"name"`
+			Enabled bool   `json:"enabled"`
+		}
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil || req.Name == "" {
+			jsonError(w, http.StatusBadRequest, "invalid_request", "name is required")
+			return
+		}
+		if err := setSkillEnabled(skillsDir, req.Name, req.Enabled); err != nil {
+			jsonError(w, http.StatusBadRequest, "toggle_failed", err.Error())
+			return
+		}
+		if req.Enabled {
+			emitSkillEvent(cevents.SkillEnabled, req.Name)
+		} else {
+			emitSkillEvent(cevents.SkillDisabled, req.Name)
+		}
+		jsonResponse(w, http.StatusOK, map[string]interface{}{"ok": true, "name": req.Name, "enabled": req.Enabled})
+	}))
+
+	mux.HandleFunc("/v1/skills/remove", authMiddleware(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			jsonError(w, http.StatusMethodNotAllowed, "method_not_allowed", "method not allowed")
+			return
+		}
+		var req struct {
+			Name string `json:"name"`
+		}
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil || req.Name == "" {
+			jsonError(w, http.StatusBadRequest, "invalid_request", "name is required")
+			return
+		}
+		if err := removeWorkspaceSkill(skillsDir, req.Name); err != nil {
+			jsonError(w, http.StatusBadRequest, "remove_failed", err.Error())
+			return
+		}
+		emitSkillEvent(cevents.SkillRemoved, req.Name)
+		jsonResponse(w, http.StatusOK, map[string]interface{}{"ok": true, "name": req.Name})
+	}))
+
+	mux.HandleFunc("/v1/skills/read", authMiddleware(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodGet {
+			jsonError(w, http.StatusMethodNotAllowed, "method_not_allowed", "method not allowed")
+			return
+		}
+		name := r.URL.Query().Get("name")
+		detail, err := readSkillDetail(skillsDir, name)
+		if err != nil {
+			jsonError(w, http.StatusNotFound, "not_found", err.Error())
+			return
+		}
+		detail["ok"] = true
+		jsonResponse(w, http.StatusOK, detail)
+	}))
+
+	mux.HandleFunc("/v1/skills/install", authMiddleware(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			jsonError(w, http.StatusMethodNotAllowed, "method_not_allowed", "method not allowed")
+			return
+		}
+		var req struct {
+			Owner  string `json:"owner"`
+			Repo   string `json:"repo"`
+			Path   string `json:"path"`
+			Name   string `json:"name"`
+			Branch string `json:"branch"`
+		}
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+			jsonError(w, http.StatusBadRequest, "invalid_request", "invalid json body")
+			return
+		}
+		if req.Owner == "" || req.Repo == "" || req.Path == "" {
+			jsonError(w, http.StatusBadRequest, "invalid_request", "owner, repo and path are required")
+			return
+		}
+		if req.Name == "" {
+			req.Name = filepath.Base(strings.TrimSuffix(req.Path, "/"))
+		}
+		if req.Branch == "" {
+			req.Branch = "main"
+		}
+		if err := installSkillFromGitHub(skillsDir, req.Owner, req.Repo, req.Branch, req.Path, req.Name); err != nil {
+			jsonError(w, http.StatusInternalServerError, "install_failed", err.Error())
+			return
+		}
+		emitSkillEvent(cevents.SkillInstalled, req.Name)
+		jsonResponse(w, http.StatusOK, map[string]interface{}{"ok": true, "name": req.Name, "message": "Skill installed"})
+	}))
+
+	// ── 5. Memory files ───────────────────────────────────────────────────
+	mux.HandleFunc("/v1/memory/files", authMiddleware(func(w http.ResponseWriter, r *http.Request) {
+		type FileInfo struct {
+			Name     string `json:"name"`
+			Modified int64  `json:"modified"`
+			Size     int64  `json:"size"`
+			Title    string `json:"title"`
+			Kind     string `json:"kind"`
+			Summary  string `json:"summary"`
+			Source   string `json:"source"`
+		}
+		var files []FileInfo
+
+		// Optional query: filter by file name OR note content, so "search
+		// memories" can find a note by what it says, not just its name.
+		q := strings.ToLower(strings.TrimSpace(r.URL.Query().Get("q")))
+
+		if _, err := os.Stat(memoryDir); err != nil {
+			json.NewEncoder(w).Encode([]FileInfo{})
+			return
+		}
+
+		filepath.Walk(memoryDir, func(path string, info os.FileInfo, err error) error {
+			if err != nil || info.IsDir() {
+				return nil
+			}
+			if !strings.HasSuffix(info.Name(), ".md") {
+				return nil
+			}
+			rel, _ := filepath.Rel(memoryDir, path)
+			// Hide internal directory structure from user-visible
+			// Activity — Mobile was rendering the raw path as
+			// "202609/20260903 21.13 Saved To Memory". Expose only the file
+			// name; keep rel for internal use if needed but don't leak it.
+			displayName := filepath.Base(rel)
+			entry := FileInfo{
+				Name:     displayName,
+				Modified: info.ModTime().Unix(),
+				Size:     info.Size(),
+			}
+			// Read just the first 4KB to extract metadata without scanning
+			// the whole file for every entry.
+			if f, err := os.Open(path); err == nil {
+				defer f.Close()
+				buf := make([]byte, 4096)
+				n, _ := f.Read(buf)
+				entry.Title, entry.Kind, entry.Summary, entry.Source = parseMemoryMeta(string(buf[:n]))
+			}
+			// When searching, match against the file name or its content.
+			if q != "" {
+				content := ""
+				if b, err := os.ReadFile(path); err == nil {
+					content = string(b)
+				}
+				if !strings.Contains(strings.ToLower(entry.Name), q) && !strings.Contains(strings.ToLower(content), q) && !strings.Contains(strings.ToLower(entry.Title), q) {
+					return nil
+				}
+			}
+			files = append(files, entry)
+			return nil
+		})
+		if files == nil {
+			files = []FileInfo{}
+		}
+		json.NewEncoder(w).Encode(files)
+	}))
+
+	// ── 6. Memory file content ────────────────────────────────────────────
+	mux.HandleFunc("/v1/memory/file", authMiddleware(func(w http.ResponseWriter, r *http.Request) {
+		name := r.URL.Query().Get("name")
+		if name == "" {
+			jsonError(w, http.StatusBadRequest, "invalid_request", "name required")
+			return
+		}
+		clean := filepath.Clean(name)
+		if strings.Contains(clean, "..") || strings.HasPrefix(clean, "/") || strings.HasPrefix(clean, "\\") {
+			jsonError(w, http.StatusForbidden, "forbidden", "invalid path")
+			return
+		}
+		// Support canonical flat names (2026-09-03.md) and legacy rels
+		// (202609/20260903.md) so old clients stay compatible.
+		full := filepath.Join(memoryDir, clean)
+		if _, err := os.Stat(full); os.IsNotExist(err) && !strings.Contains(clean, string(filepath.Separator)) {
+			// Try to locate by base name anywhere under memoryDir
+			var found string
+			_ = filepath.Walk(memoryDir, func(p string, info os.FileInfo, err error) error {
+				if err == nil && !info.IsDir() && info.Name() == clean {
+					found = p
+				}
+				return nil
+			})
+			if found != "" {
+				full = found
+			}
+		}
+		if r.Method == http.MethodDelete {
+			if err := os.Remove(full); err != nil {
+				if os.IsNotExist(err) {
+					jsonError(w, http.StatusNotFound, "not_found", "memory not found")
+					return
+				}
+				jsonError(w, http.StatusInternalServerError, "io_error", "could not forget memory")
+				return
+			}
+			jsonResponse(w, http.StatusOK, map[string]interface{}{"ok": true})
+			return
+		}
+		if r.Method != http.MethodGet {
+			jsonError(w, http.StatusMethodNotAllowed, "method_not_allowed", "method not allowed")
+			return
+		}
+		content, err := os.ReadFile(full)
+		if err != nil {
+			jsonError(w, http.StatusNotFound, "not_found", "file not found")
+			return
+		}
+		jsonResponse(w, http.StatusOK, map[string]string{"content": string(content)})
+	}))
+
+	// ── 6b. Curated personal state ("what Kaya knows about you") ─────────
+	// Surfaces the structured personal-context store (auto-extracted from
+	// conversation) plus the curated-memory notes (the model's own notes) so a
+	// user can see and manage what Kaya has learned about them. The personal
+	// context is always injected into the system prompt (consult + apply); this
+	// makes it visible and editable.
+	// ── Recall: cross-session "what did we talk about earlier?" ────────────
+	// Surfaces Kaya's own session history: raw matches offline, or a concise
+	// LLM summary when a cloud model is available.
+	mux.HandleFunc("/v1/recall", authMiddleware(func(w http.ResponseWriter, r *http.Request) {
+		q := strings.TrimSpace(r.URL.Query().Get("query"))
+		if q == "" {
+			jsonError(w, http.StatusBadRequest, "invalid_request", "query is required")
+			return
+		}
+		jsonResponse(w, http.StatusOK, agentLoop.Recall(r.Context(), q))
+	}))
+
+	// ── Learnings: a readable digest of Kaya's self-improvement ───────────
+	mux.HandleFunc("/v1/learnings", authMiddleware(func(w http.ResponseWriter, r *http.Request) {
+		jsonResponse(w, http.StatusOK, agentLoop.LearningsSummary())
+	}))
+
+	// ── 6c. Kaya substrate: activity, permissions, connections, routines ──
+	// One execution substrate behind chat, routines, and future channels:
+	// canonical events → activity chips; broker → approvals; vault →
+	// connections; scheduler → routines. All behind device auth.
+	mux.HandleFunc("/v1/activity", authMiddleware(func(w http.ResponseWriter, r *http.Request) {
+		st, err := eventStream()
+		if err != nil {
+			jsonError(w, http.StatusInternalServerError, "unavailable", "activity is unavailable right now")
+			return
+		}
+		limit := 50
+		if v := strings.TrimSpace(r.URL.Query().Get("limit")); v != "" {
+			fmt.Sscanf(v, "%d", &limit)
+		}
+		if limit < 1 {
+			limit = 1
+		}
+		if limit > 500 {
+			limit = 500
+		}
+		// Resumable subscription: ?since_seq=N returns only newer events
+		// (read-only replay — never executes).
+		var events []*cevents.Event
+		f := cevents.Filter{
+			KayaID: kayaID(), ConversationID: strings.TrimSpace(r.URL.Query().Get("conversation_id")),
+			UserVisibleOnly: true,
+		}
+		if since := strings.TrimSpace(r.URL.Query().Get("since_seq")); since != "" {
+			var seq int64
+			fmt.Sscanf(since, "%d", &seq)
+			events = st.Since(seq, limit, f)
+		} else {
+			// `limit` is a promise about ROWS, not events: most canonical
+			// events are lifecycle or telemetry and never become a row, so
+			// reading only `limit` events and then projecting them could
+			// answer a request for 50 chips with three. Over-read, then cut
+			// to the number of chips asked for.
+			fetch := limit * 6
+			if fetch < 100 {
+				fetch = 100
+			}
+			if fetch > 500 {
+				fetch = 500
+			}
+			events = st.Recent(fetch, f)
+		}
+		// "Waiting for approval" is a claim about now, not about then: the
+		// event only records that Kaya asked. Drop the asks the owner has
+		// already answered so the feed never says eight things need them
+		// when none do — the decision event tells that half of the story.
+		var openApprovals map[string]bool
+		if b, err := permBroker(); err == nil {
+			openApprovals = permissions.OpenRequests(b)
+		}
+		events = activity.WithoutAnsweredApprovals(events, openApprovals)
+		chips := make([]*activity.Chip, 0, len(events))
+		for _, e := range events {
+			if len(chips) >= limit {
+				break
+			}
+			if chip, ok := activity.Project(e); ok {
+				chips = append(chips, chip)
+			}
+		}
+		jsonResponse(w, http.StatusOK, map[string]interface{}{"ok": true, "activity": chips})
+	}))
+
+	mux.HandleFunc("/v1/permissions/requests", authMiddleware(func(w http.ResponseWriter, r *http.Request) {
+		b, err := permBroker()
+		if err != nil {
+			jsonError(w, http.StatusInternalServerError, "unavailable", "permissions are unavailable right now")
+			return
+		}
+		status := permissions.RequestStatus(strings.TrimSpace(r.URL.Query().Get("status")))
+		list := b.Requests(status, 50)
+		// Product cards ride alongside raw requests (additive — existing
+		// mobile clients ignore unknown fields). Native cards render from
+		// "card"; no raw tool arguments or secrets are included.
+		type requestView struct {
+			*permissions.Request
+			Card *permissions.ApprovalCard `json:"card,omitempty"`
+		}
+		views := make([]requestView, 0, len(list))
+		for _, req := range list {
+			v := requestView{Request: req}
+			if card, ok := req.Card(); ok {
+				c := card
+				v.Card = &c
+			}
+			views = append(views, v)
+		}
+		jsonResponse(w, http.StatusOK, map[string]interface{}{"ok": true, "requests": views})
+	}))
+
+	mux.HandleFunc("/v1/permissions/resolve", authMiddleware(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			jsonError(w, http.StatusMethodNotAllowed, "method_not_allowed", "method not allowed")
+			return
+		}
+		var req struct {
+			ID    string `json:"id"`
+			Grant string `json:"grant"`
+			Scope string `json:"scope"`
+		}
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil || req.ID == "" {
+			jsonError(w, http.StatusBadRequest, "invalid_request", "id is required")
+			return
+		}
+		var grant permissions.GrantType
+		switch req.Grant {
+		case "allow_once":
+			grant = permissions.GrantOnce
+		case "allow_task":
+			grant = permissions.GrantTask
+		case "allow_always", "always_allow":
+			grant = permissions.GrantAlways
+		case "deny":
+			grant = permissions.GrantDeny
+		default:
+			jsonError(w, http.StatusBadRequest, "invalid_request", "grant must be allow_once, allow_task, allow_always, or deny")
+			return
+		}
+		b, err := permBroker()
+		if err != nil {
+			jsonError(w, http.StatusInternalServerError, "unavailable", "permissions are unavailable right now")
+			return
+		}
+		// An empty scope means "the scope this request was asked under":
+		// the broker derives the canonical grant scope from the request
+		// itself, so console approvals match exactly the runtime
+		// invocation they were intended to authorize. Explicit scopes
+		// keep working for callers that compute their own.
+		var resolved *permissions.Request
+		if strings.TrimSpace(req.Scope) == "" {
+			resolved, err = b.ResolveAuto(req.ID, grant)
+		} else {
+			resolved, err = b.Resolve(req.ID, grant, strings.TrimSpace(req.Scope))
+		}
+		if err != nil {
+			// A failed resolve is not one condition: expired, answered elsewhere and
+			// unknown ids each get their own message, so the owner is never left tapping
+			// a dead card with no idea why.
+			kind, msg := "resolve_failed", "that approval is no longer answerable"
+			switch {
+			case strings.Contains(err.Error(), "expired"):
+				kind, msg = "approval_expired", "that approval expired — please make the request again"
+			case strings.Contains(err.Error(), "not found"):
+				kind, msg = "approval_unknown", "that approval doesn't exist — it may have been superseded by a newer request"
+			case strings.Contains(err.Error(), "not pending"):
+				kind = resolveStaleKind(b, req.ID)
+				msg = resolveStaleMessage(kind)
+			}
+			jsonError(w, http.StatusBadRequest, kind, msg)
+			return
+		}
+		// Resolving answers the broker, but the paused call still has to
+		// run. Resolving alone cleared the card while the action never
+		// executed, which is why the conversation kept showing "waiting for
+		// your approval" after a tap. ExecuteApprovedRequest resumes through
+		// the same governed path a typed reply uses, exactly once. When it
+		// has nothing to resume, the owner gets a visible receipt in the
+		// conversation instead of silence.
+		resumed := true
+		resumeReason := ""
+		if grant != permissions.GrantDeny && agentLoop != nil {
+			var ok bool
+			ok, resumeReason = agentLoop.ExecuteApprovedRequest(resolved, grant, "mobile", "default")
+			resumed = ok
+			if !ok {
+				logger.WarnCF("internal-api", "approval recorded but nothing to resume",
+					map[string]interface{}{"request_id": resolved.RequestID, "grant": req.Grant, "reason": resumeReason})
+				title := ""
+				if card, ok := resolved.Card(); ok {
+					title = card.Title
+				}
+				agentLoop.PublishApprovalStall(resolved.SessionKey, title, resumeReason)
+			}
+		}
+		jsonResponse(w, http.StatusOK, map[string]interface{}{"ok": true, "request": resolved, "resumed": resumed, "resume_reason": resumeReason})
+	}))
+
+	mux.HandleFunc("/v1/permissions/grants", authMiddleware(func(w http.ResponseWriter, r *http.Request) {
+		b, err := permBroker()
+		if err != nil {
+			jsonError(w, http.StatusInternalServerError, "unavailable", "permissions are unavailable right now")
+			return
+		}
+		jsonResponse(w, http.StatusOK, map[string]interface{}{"ok": true, "grants": b.Grants()})
+	}))
+
+	mux.HandleFunc("/v1/permissions/revoke", authMiddleware(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			jsonError(w, http.StatusMethodNotAllowed, "method_not_allowed", "method not allowed")
+			return
+		}
+		var req struct {
+			Capability string `json:"capability"`
+			Action     string `json:"action"`
+			Scope      string `json:"scope"`
+		}
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+			jsonError(w, http.StatusBadRequest, "invalid_request", "invalid request")
+			return
+		}
+		b, err := permBroker()
+		if err != nil {
+			jsonError(w, http.StatusInternalServerError, "unavailable", "permissions are unavailable right now")
+			return
+		}
+		if err := b.Revoke(req.Capability, req.Action, req.Scope); err != nil {
+			jsonError(w, http.StatusInternalServerError, "revoke_failed", "could not revoke that permission")
+			return
+		}
+		jsonResponse(w, http.StatusOK, map[string]interface{}{"ok": true})
+	}))
+
+	mux.HandleFunc("/v1/connected-apps", authMiddleware(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodGet {
+			jsonError(w, http.StatusMethodNotAllowed, "method_not_allowed", "use GET")
+			return
+		}
+		jsonResponse(w, http.StatusOK, map[string]interface{}{"ok": true, "connected_apps": connectedAppsList()})
+	}))
+
+	// ── Portable connectors: the directory (list/install/uninstall/review) ──
+	mux.HandleFunc("/v1/connectors", authMiddleware(func(w http.ResponseWriter, r *http.Request) {
+		connectorsListHandler(w, r, agentLoop)
+	}))
+	mux.HandleFunc("/v1/connectors/install", authMiddleware(func(w http.ResponseWriter, r *http.Request) {
+		connectorsInstallHandler(w, r, agentLoop)
+	}))
+	mux.HandleFunc("/v1/connectors/uninstall", authMiddleware(func(w http.ResponseWriter, r *http.Request) {
+		connectorsUninstallHandler(w, r, agentLoop)
+	}))
+	mux.HandleFunc("/v1/connectors/review", authMiddleware(func(w http.ResponseWriter, r *http.Request) {
+		connectorsReviewHandler(w, r)
+	}))
+
+	mux.HandleFunc("/v1/routines", authMiddleware(func(w http.ResponseWriter, r *http.Request) {
+		svc, err := routineService()
+		if err != nil {
+			jsonError(w, http.StatusInternalServerError, "unavailable", "routines are unavailable right now")
+			return
+		}
+		switch r.Method {
+		case http.MethodGet:
+			jsonResponse(w, http.StatusOK, map[string]interface{}{"ok": true, "routines": svc.List(kayaID(), 50)})
+		case http.MethodPost:
+			var req struct {
+				Name        string   `json:"name"`
+				Instruction string   `json:"instruction"`
+				Timezone    string   `json:"timezone"`
+				Kind        string   `json:"kind"`
+				Expr        string   `json:"expr"`
+				Every       int64    `json:"every_seconds"`
+				At          string   `json:"at"`
+				Allowed     []string `json:"allowed_capabilities"`
+			}
+			if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+				jsonError(w, http.StatusBadRequest, "invalid_request", "invalid request")
+				return
+			}
+			var sched scheduled.Schedule
+			switch req.Kind {
+			case "cron":
+				sched = scheduled.Schedule{Kind: scheduled.ScheduleCron, Expr: req.Expr}
+			case "every":
+				sched = scheduled.Schedule{Kind: scheduled.ScheduleEvery, Every: time.Duration(req.Every) * time.Second}
+			case "at":
+				at, err := time.Parse(time.RFC3339, req.At)
+				if err != nil {
+					jsonError(w, http.StatusBadRequest, "invalid_request", "at must be RFC3339")
+					return
+				}
+				sched = scheduled.Schedule{Kind: scheduled.ScheduleAt, At: &at}
+			default:
+				jsonError(w, http.StatusBadRequest, "invalid_request", "kind must be cron, every, or at")
+				return
+			}
+			routine, err := svc.Create(kayaID(), "owner", req.Name, req.Instruction, req.Timezone, sched, req.Allowed)
+			if err != nil {
+				jsonError(w, http.StatusBadRequest, "create_failed", "couldn't create that routine")
+				return
+			}
+			jsonResponse(w, http.StatusOK, map[string]interface{}{"ok": true, "routine": routine})
+		default:
+			jsonError(w, http.StatusMethodNotAllowed, "method_not_allowed", "method not allowed")
+		}
+	}))
+
+	// ── Rich cards: fetch-on-open for phones that missed pushes ──
+	// openCards serves fetch-on-open (GET /v1/cards): unexpired cards the owner
+	// has not put away. Resolved cards stay stored as receipts but are never
+	// served again, so a dismissal survives refetch and restart on every device.
+	openCards := func(channel string, receipts bool) []cards.Card {
+		out := []cards.Card{}
+		for _, c := range cards.DefaultStore.List(channel) {
+			if c.Resolved != nil && !(receipts && keepsReceipt(c.Kind)) {
+				continue
+			}
+			out = append(out, c)
+		}
+		return out
+	}
+
+	mux.HandleFunc("/v1/cards", authMiddleware(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodGet {
+			jsonError(w, http.StatusMethodNotAllowed, "method_not_allowed", "use GET")
+			return
+		}
+		channel := strings.TrimSpace(r.URL.Query().Get("channel"))
+		if channel == "" {
+			channel = "mobile"
+		}
+		// receipts=1: answered cards of the kinds that stay in the conversation
+		// as one line (a sent draft, an answered question), so a phone that
+		// reloads shows what happened where it happened.
+		jsonResponse(w, http.StatusOK, map[string]interface{}{"ok": true, "cards": openCards(channel, r.URL.Query().Get("receipts") == "1")})
+	}))
+
+	// What the owner did with a card (an offered reply, or dismiss), remembered
+	// so it stays put away on every device and after a restart. The action must
+	// be one the card offered. Recording never runs anything: a reply is sent by
+	// the phone as an ordinary message the owner chose to send.
+	mux.HandleFunc("/v1/cards/resolve", authMiddleware(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			jsonError(w, http.StatusMethodNotAllowed, "method_not_allowed", "use POST")
+			return
+		}
+		var req struct {
+			Channel  string `json:"channel"`
+			ID       string `json:"id"`
+			ActionID string `json:"action_id"`
+		}
+		if err := json.NewDecoder(io.LimitReader(r.Body, 4096)).Decode(&req); err != nil || strings.TrimSpace(req.ID) == "" || strings.TrimSpace(req.ActionID) == "" {
+			jsonError(w, http.StatusBadRequest, "invalid_request", "a card id and an action id are required")
+			return
+		}
+		channel := strings.TrimSpace(req.Channel)
+		if channel == "" {
+			channel = "mobile"
+		}
+		// An "act" choice is carried out here, by the handler for the card's
+		// kind, before the card is marked resolved: a snooze that failed must
+		// leave the reminder's buttons where they were.
+		label := ""
+		if open, found := cards.DefaultStore.Find(channel, req.ID); found && open.Resolved == nil {
+			for _, a := range open.Actions {
+				if a.ID != req.ActionID || a.Kind != "act" {
+					continue
+				}
+				h, has := cards.HandlerFor(open.Kind)
+				if !has {
+					jsonError(w, http.StatusBadRequest, "unsupported", "that choice can't be carried out")
+					return
+				}
+				l, err := h(open, req.ActionID)
+				if err != nil {
+					jsonResponse(w, http.StatusConflict, map[string]interface{}{"ok": false, "card": open, "error": err.Error()})
+					return
+				}
+				label = l
+			}
+		}
+		card, ok := cards.DefaultStore.Resolve(channel, req.ID, req.ActionID)
+		if !ok {
+			// Already put away, expired, or not an action it offered: say so, and
+			// still hand back the card so the phone can show its real state.
+			jsonResponse(w, http.StatusConflict, map[string]interface{}{"ok": false, "card": card})
+			return
+		}
+		if label != "" {
+			cards.DefaultStore.Relabel(channel, card.ID, label)
+			card.Resolved.Label = label
+		}
+		cards.DefaultActionLog.Record(cards.ActionRecord{CardID: card.ID, CardKind: string(card.Kind), ActionID: req.ActionID, Actor: "owner", Result: "resolved"})
+		// Tapping a morning suggestion is the owner engaging with that kind
+		// of thing; the attention layer keeps those coming.
+		if card.Kind == cards.KindDigest && strings.HasPrefix(req.ActionID, "item_") {
+			if srcs, ok := card.Data["sources"].([]interface{}); ok {
+				var i int
+				if _, err := fmt.Sscanf(req.ActionID, "item_%d", &i); err == nil && i >= 0 && i < len(srcs) {
+					if src, _ := srcs[i].(string); src != "" {
+						agentLoop.AttentionAnswered(src)
+					}
+				}
+			}
+		}
+		jsonResponse(w, http.StatusOK, map[string]interface{}{"ok": true, "card": card})
+	}))
+
+	// ── Standing goals: durable owner intents the heartbeat evaluates ──
+	mux.HandleFunc("/v1/goals", authMiddleware(func(w http.ResponseWriter, r *http.Request) {
+		if apiWorkspaceDir == "" {
+			jsonError(w, http.StatusServiceUnavailable, "unavailable", "workspace unavailable")
+			return
+		}
+		store := goals.NewStore(apiWorkspaceDir)
+		switch r.Method {
+		case http.MethodGet:
+			list, err := store.List(time.Now())
+			if err != nil {
+				jsonError(w, http.StatusInternalServerError, "unavailable", "goals are unavailable right now")
+				return
+			}
+			jsonResponse(w, http.StatusOK, map[string]interface{}{"ok": true, "goals": list})
+		case http.MethodPost:
+			var req struct {
+				Text         string   `json:"text"`
+				Scope        string   `json:"scope"`
+				Success      string   `json:"success"`
+				Capabilities []string `json:"capabilities"`
+				ExpiresAt    string   `json:"expires_at,omitempty"`
+			}
+			if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+				jsonError(w, http.StatusBadRequest, "invalid_request", "invalid request")
+				return
+			}
+			var exp time.Time
+			if strings.TrimSpace(req.ExpiresAt) != "" {
+				var err error
+				exp, err = time.Parse(time.RFC3339, strings.TrimSpace(req.ExpiresAt))
+				if err != nil {
+					jsonError(w, http.StatusBadRequest, "invalid_request", "expires_at must be RFC3339")
+					return
+				}
+			}
+			g, err := store.Create(req.Text, req.Scope, req.Success, req.Capabilities, exp)
+			if err != nil {
+				jsonError(w, http.StatusBadRequest, "create_failed", err.Error())
+				return
+			}
+			publishGoalCard("created", g.ID, g.Text)
+			jsonResponse(w, http.StatusOK, map[string]interface{}{"ok": true, "goal": g})
+		default:
+			jsonError(w, http.StatusMethodNotAllowed, "method_not_allowed", "method not allowed")
+		}
+	}))
+	mux.HandleFunc("/v1/goals/", authMiddleware(func(w http.ResponseWriter, r *http.Request) {
+		if apiWorkspaceDir == "" {
+			jsonError(w, http.StatusServiceUnavailable, "unavailable", "workspace unavailable")
+			return
+		}
+		if r.Method != http.MethodPost {
+			jsonError(w, http.StatusMethodNotAllowed, "method_not_allowed", "use POST")
+			return
+		}
+		rest := strings.Trim(strings.TrimPrefix(r.URL.Path, "/v1/goals/"), "/")
+		parts := strings.Split(rest, "/")
+		if len(parts) != 2 || parts[0] == "" {
+			jsonError(w, http.StatusNotFound, "not_found", "use POST /v1/goals/{id}/{pause|resume|complete|progress}")
+			return
+		}
+		store := goals.NewStore(apiWorkspaceDir)
+		id, op := parts[0], parts[1]
+		switch op {
+		case "pause", "resume", "complete":
+			var (
+				g   goals.Goal
+				err error
+			)
+			switch op {
+			case "pause":
+				g, err = store.Pause(id)
+			case "resume":
+				g, err = store.Resume(id)
+			default:
+				g, err = store.Complete(id)
+			}
+			if err != nil {
+				jsonError(w, http.StatusBadRequest, op+"_failed", err.Error())
+				return
+			}
+			publishGoalCard(op+"d", g.ID, g.Text)
+			jsonResponse(w, http.StatusOK, map[string]interface{}{"ok": true, "goal": g})
+		case "progress":
+			var req struct {
+				Note string `json:"note"`
+			}
+			if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+				jsonError(w, http.StatusBadRequest, "invalid_request", "invalid request")
+				return
+			}
+			g, err := store.AppendProgress(id, req.Note)
+			if err != nil {
+				jsonError(w, http.StatusBadRequest, "progress_failed", err.Error())
+				return
+			}
+			publishGoalCard("progress", g.ID, g.Text+": "+req.Note)
+			jsonResponse(w, http.StatusOK, map[string]interface{}{"ok": true, "goal": g})
+		default:
+			jsonError(w, http.StatusNotFound, "not_found", "unknown goal action")
+		}
+	}))
+
+	// ── 6c1. Intelligence mode: the one user-facing control ──────────────
+	// Local / hybrid / cloud. The owner chooses an outcome; Kaya derives
+	// providers, routing, and models. Governance is identical in all modes.
+	mux.HandleFunc("/v1/mode", authMiddleware(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodPost {
+			var req struct {
+				Mode string `json:"mode"`
+			}
+			if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+				jsonError(w, http.StatusBadRequest, "invalid_request", "invalid request")
+				return
+			}
+			m := modes.Mode(strings.ToLower(strings.TrimSpace(req.Mode)))
+			if !modes.Valid(m) {
+				jsonError(w, http.StatusBadRequest, "invalid_request", "mode must be local, hybrid, or cloud")
+				return
+			}
+			if err := modes.Set(apiWorkspaceDir, m); err != nil {
+				jsonError(w, http.StatusInternalServerError, "save_failed", "couldn't save that choice")
+				return
+			}
+			jsonResponse(w, http.StatusOK, map[string]interface{}{"ok": true, "mode": string(m), "description": modes.Describe(m)})
+			return
+		}
+		m := modes.Resolve(apiWorkspaceDir, false)
+		jsonResponse(w, http.StatusOK, map[string]interface{}{"ok": true, "mode": string(m), "description": modes.Describe(m)})
+	}))
+
+	// ── 6c2. Identity: Kaya as one persistent contact ───────────────────	// Additive and mobile-safe: who this Kaya is (name, owner, status).
+	// Chat, activity, permissions, and routines all belong to this entity.
+	mux.HandleFunc("/v1/identity", authMiddleware(func(w http.ResponseWriter, r *http.Request) {
+		name, owner := "Kaya", ""
+		if id, err := kayastate.LoadIdentity(apiWorkspaceDir); err == nil && id != nil {
+			if strings.TrimSpace(id.KayaName) != "" {
+				name = id.KayaName
+			}
+			owner = id.OwnerName
+		}
+		if strings.TrimSpace(owner) == "" {
+			owner = kayastate.OwnerNameFromProfile(apiWorkspaceDir)
+		}
+		jsonResponse(w, http.StatusOK, map[string]interface{}{
+			"ok": true,
+			"kaya": map[string]interface{}{
+				"kaya_id": kayaID(), "name": name,
+				"owner": owner, "agent": "agent-main",
+			},
+		})
+	}))
+
+	// ── 6c. Files: what the owner has sent to Kaya ─────────────────────
+	// Listable and deletable from every surface. Deleting removes the bytes and
+	// the metadata; nothing else keeps a copy of an upload.
+	// What the owner is most likely to type next, for the empty message box.
+	// A suggestion is only text to accept or ignore; an empty one is normal.
+	mux.HandleFunc("/v1/suggest", authMiddleware(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodGet {
+			jsonError(w, http.StatusMethodNotAllowed, "method_not_allowed", "method not allowed")
+			return
+		}
+		key := canonicalSessionID(r.URL.Query().Get("session"))
+		sug := agentLoop.SuggestNext(r.Context(), key)
+		jsonResponse(w, http.StatusOK, map[string]interface{}{
+			"ok": true, "suggestion": sug.Text, "source": sug.Source, "for": sug.For,
+		})
+	}))
+
+	mux.HandleFunc("/v1/files", authMiddleware(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodGet {
+			jsonError(w, http.StatusMethodNotAllowed, "method_not_allowed", "method not allowed")
+			return
+		}
+		ws, _ := resolveApiWorkspace(agentLoop.Config())
+		items := uploads.List(ws)
+		if items == nil {
+			items = []uploads.Item{}
+		}
+		jsonResponse(w, http.StatusOK, map[string]interface{}{
+			"ok": true, "files": items, "retention_days": int(uploadRetention() / (24 * time.Hour)),
+		})
+	}))
+	mux.HandleFunc("/v1/files/", authMiddleware(func(w http.ResponseWriter, r *http.Request) {
+		rest := strings.Trim(strings.TrimPrefix(r.URL.Path, "/v1/files/"), "/")
+		id, action, _ := strings.Cut(rest, "/")
+		ws, _ := resolveApiWorkspace(agentLoop.Config())
+		if r.Method == http.MethodGet && action == "thumb" {
+			// A small JPEG for the gallery, so a page of photos does not mean
+			// downloading every original. Files with no picture get a 404 and
+			// the page draws a type tile instead.
+			it, ok := uploads.Find(ws, id)
+			if !ok {
+				jsonError(w, http.StatusNotFound, "not_found", "That file isn't stored on this Kaya.")
+				return
+			}
+			data, err := uploads.Thumbnail(ws, it, 480)
+			if err != nil {
+				jsonError(w, http.StatusNotFound, "not_found", "There is no picture to show for this file.")
+				return
+			}
+			w.Header().Set("Content-Type", "image/jpeg")
+			w.Header().Set("Cache-Control", "private, max-age=3600")
+			w.WriteHeader(http.StatusOK)
+			_, _ = w.Write(data)
+			return
+		}
+		if r.Method == http.MethodGet && action == "page" {
+			// A PDF page as it is printed (fonts, layout, images), not its
+			// text pulled out: the same renderer as Kaya's own documents.
+			it, ok := uploads.Find(ws, id)
+			if !ok {
+				jsonError(w, http.StatusNotFound, "not_found", "That file isn't stored on this Kaya.")
+				return
+			}
+			if !strings.HasSuffix(strings.ToLower(it.Name), ".pdf") && it.MIME != "application/pdf" {
+				jsonError(w, http.StatusBadRequest, "invalid_request", "only a PDF has pages")
+				return
+			}
+			n, _ := strconv.Atoi(r.URL.Query().Get("n"))
+			if n < 1 {
+				n = 1
+			}
+			width, _ := strconv.Atoi(r.URL.Query().Get("w"))
+			png, pages, err := documents.PageImage(r.Context(), ws, it.Path, n, width)
+			if err != nil {
+				status := http.StatusBadRequest
+				if errors.Is(err, documents.ErrUnavailable) || pages == 0 {
+					status = http.StatusServiceUnavailable
+				}
+				jsonResponse(w, status, map[string]interface{}{"ok": false, "pages": pages, "error": err.Error()})
+				return
+			}
+			jsonResponse(w, http.StatusOK, map[string]interface{}{
+				"ok": true, "page": n, "pages": pages, "mime_type": "image/png",
+				"image_base64": base64.StdEncoding.EncodeToString(png),
+			})
+			return
+		}
+		if r.Method == http.MethodGet && (action == "preview" || action == "content") {
+			it, ok := uploads.Find(ws, id)
+			if !ok {
+				jsonError(w, http.StatusNotFound, "not_found", "That file isn't stored on this Kaya.")
+				return
+			}
+			if action == "content" {
+				// The original bytes, for the phone to hand to its own viewer.
+				data, err := os.ReadFile(filepath.Join(ws, it.Path))
+				if err != nil {
+					jsonError(w, http.StatusNotFound, "not_found", "That file isn't stored on this Kaya.")
+					return
+				}
+				jsonResponse(w, http.StatusOK, map[string]interface{}{
+					"ok": true, "name": it.Name, "mime": it.MIME, "size": it.Size,
+					"base64": base64.StdEncoding.EncodeToString(data),
+				})
+				return
+			}
+			jsonResponse(w, http.StatusOK, previewUpload(ws, it))
+			return
+		}
+		switch r.Method {
+		case http.MethodDelete:
+			if err := uploads.Delete(ws, id); err != nil {
+				jsonError(w, http.StatusNotFound, "not_found", "That file isn't stored on this Kaya.")
+				return
+			}
+			jsonResponse(w, http.StatusOK, map[string]interface{}{"ok": true})
+		default:
+			jsonError(w, http.StatusMethodNotAllowed, "method_not_allowed", "method not allowed")
+		}
+	}))
+	go func() {
+		ws, _ := resolveApiWorkspace(agentLoop.Config())
+		for {
+			if n := uploads.Purge(ws, uploadRetention()); n > 0 {
+				log.Printf("uploads: removed %d file(s) older than the retention window", n)
+			}
+			time.Sleep(time.Hour)
+		}
+	}()
+
+	// ── 6d. Voice: push-to-talk into the SAME runtime ───────────────────	// Voice is a channel, not a brain: audio → transcript → canonical
+	// inbound → agent → response → optional speech. Raw audio is never
+	// stored. Unavailable providers produce honest product outcomes.
+	mux.HandleFunc("/v1/voice/turn", authMiddleware(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			jsonError(w, http.StatusMethodNotAllowed, "method_not_allowed", "method not allowed")
+			return
+		}
+		var req struct {
+			AudioBase64    string `json:"audio_base64"`
+			Mime           string `json:"mime"`
+			SessionKey     string `json:"session_key"`
+			ConversationID string `json:"conversation_id"`
+			Speak          bool   `json:"speak"`
+		}
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+			jsonError(w, http.StatusBadRequest, "invalid_request", "invalid request")
+			return
+		}
+		gcfg := agentLoop.Config()
+		engine := voice.EngineFromEnv(voice.SelectConfig{
+			Engine:      gcfg.STT.Engine,
+			LocalURL:    voice.LocalBaseURL(gcfg.STT.Port),
+			MoonshotKey: gcfg.Providers.Moonshot.APIKey,
+			GroqKey:     gcfg.Providers.Groq.APIKey,
+		}, voice.SynthConfig{
+			Engine: gcfg.TTS.Engine,
+			Speed:  gcfg.TTS.Speed,
+		})
+		if !engine.InputAvailable() {
+			jsonError(w, http.StatusServiceUnavailable, "voice_unavailable", "Voice input isn't set up yet.")
+			return
+		}
+		audio, err := base64.StdEncoding.DecodeString(req.AudioBase64)
+		if err != nil || len(audio) == 0 {
+			jsonError(w, http.StatusBadRequest, "invalid_request", "audio is required")
+			return
+		}
+		tr, err := engine.Transcribe(r.Context(), audio, req.Mime)
+		if err != nil {
+			jsonError(w, http.StatusServiceUnavailable, "transcribe_failed", "I couldn't hear that clearly. Try again?")
+			return
+		}
+		sessionKey := strings.TrimSpace(req.SessionKey)
+		if sessionKey == "" {
+			sessionKey = "voice:" + time.Now().Format("20060102-150405")
+		}
+		msg, err := voice.ToInbound(tr, "owner", req.ConversationID, sessionKey)
+		if err != nil {
+			jsonError(w, http.StatusBadRequest, "invalid_request", "I couldn't hear anything to act on.")
+			return
+		}
+		resp, err := agentLoop.ProcessDirectWithChannel(r.Context(), msg.Content, sessionKey, "voice", msg.ChatID, nil, nil, nil)
+		if err != nil {
+			jsonError(w, http.StatusInternalServerError, "execution_failed", "Something went wrong handling that.")
+			return
+		}
+		out := map[string]interface{}{"ok": true, "transcript": tr.Text, "response_text": resp}
+		if req.Speak {
+			if !engine.OutputAvailable() {
+				out["audio_base64"] = nil
+				out["speech"] = "Voice replies aren't set up yet — here's the text instead."
+			} else if audioOut, mime, err := engine.Speak(r.Context(), resp); err != nil {
+				out["audio_base64"] = nil
+			} else {
+				out["audio_base64"] = base64.StdEncoding.EncodeToString(audioOut)
+				out["mime"] = mime
+			}
+		}
+		jsonResponse(w, http.StatusOK, out)
+	}))
+
+	// ── 6e. Contexts: scoped environments in one Kaya ───────────────────
+	// Personal by default; work/project contexts constrain memory,
+	// capabilities, and conversations. Sessions stick to contexts;
+	// isolation is enforced at retrieval and execution, not by prompts.
+	mux.HandleFunc("/v1/contexts", authMiddleware(func(w http.ResponseWriter, r *http.Request) {
+		cs, err := contextStore()
+		if err != nil {
+			jsonError(w, http.StatusInternalServerError, "unavailable", "contexts are unavailable right now")
+			return
+		}
+		if r.Method == http.MethodGet {
+			out := map[string]interface{}{"ok": true, "contexts": cs.List()}
+			// Terminal clients show and switch the session's context from
+			// the same call (additive: existing clients ignore it).
+			if sk := strings.TrimSpace(r.URL.Query().Get("session_key")); sk != "" {
+				out["current"] = cs.SessionContext(sk)
+			}
+			jsonResponse(w, http.StatusOK, out)
+			return
+		}
+		if r.Method != http.MethodPost {
+			jsonError(w, http.StatusMethodNotAllowed, "method_not_allowed", "method not allowed")
+			return
+		}
+		var req struct {
+			Kind string `json:"kind"`
+			Name string `json:"name"`
+		}
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+			jsonError(w, http.StatusBadRequest, "invalid_request", "invalid request")
+			return
+		}
+		c, err := cs.Create(contexts.Kind(req.Kind), req.Name)
+		if err != nil {
+			jsonError(w, http.StatusBadRequest, "create_failed", "couldn't create that context")
+			return
+		}
+		jsonResponse(w, http.StatusOK, map[string]interface{}{"ok": true, "context": c})
+	}))
+
+	mux.HandleFunc("/v1/contexts/switch", authMiddleware(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			jsonError(w, http.StatusMethodNotAllowed, "method_not_allowed", "method not allowed")
+			return
+		}
+		var req struct {
+			SessionKey string `json:"session_key"`
+			ContextID  string `json:"context_id"`
+		}
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil || req.SessionKey == "" || req.ContextID == "" {
+			jsonError(w, http.StatusBadRequest, "invalid_request", "session_key and context_id are required")
+			return
+		}
+		cs, err := contextStore()
+		if err != nil {
+			jsonError(w, http.StatusInternalServerError, "unavailable", "contexts are unavailable right now")
+			return
+		}
+		if err := cs.SetSessionContext(req.SessionKey, req.ContextID); err != nil {
+			jsonError(w, http.StatusBadRequest, "switch_failed", "unknown context")
+			return
+		}
+		jsonResponse(w, http.StatusOK, map[string]interface{}{"ok": true, "context_id": req.ContextID})
+	}))
+
+	// ── Context capability allowlist ──────────────────────────────────────
+	// What a space may do. An empty list means all allowed; a non-empty one
+	// is an allowlist the broker enforces per call. This is how an owner
+	// says "this space may read, not write": list the read capabilities and
+	// the write ones are refused before anything runs.
+	mux.HandleFunc("/v1/contexts/capabilities", authMiddleware(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			jsonError(w, http.StatusMethodNotAllowed, "method_not_allowed", "method not allowed")
+			return
+		}
+		var req struct {
+			ContextID    string   `json:"context_id"`
+			Capabilities []string `json:"capabilities"`
+		}
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil || strings.TrimSpace(req.ContextID) == "" {
+			jsonError(w, http.StatusBadRequest, "invalid_request", "context_id is required")
+			return
+		}
+		cs, err := contextStore()
+		if err != nil {
+			jsonError(w, http.StatusInternalServerError, "unavailable", "contexts are unavailable right now")
+			return
+		}
+		clean, err := normalizeCapabilityAllowlist(req.Capabilities)
+		if err != nil {
+			jsonError(w, http.StatusBadRequest, "unknown_capability", err.Error())
+			return
+		}
+		if err := cs.SetCapabilities(req.ContextID, clean); err != nil {
+			jsonError(w, http.StatusBadRequest, "unknown_context", "unknown context")
+			return
+		}
+		jsonResponse(w, http.StatusOK, map[string]interface{}{
+			"ok": true, "context_id": req.ContextID, "capabilities": clean,
+		})
+	}))
+
+	mux.HandleFunc("/v1/routines/", authMiddleware(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			jsonError(w, http.StatusMethodNotAllowed, "method_not_allowed", "method not allowed")
+			return
+		}
+		rest := strings.TrimPrefix(r.URL.Path, "/v1/routines/")
+		parts := strings.SplitN(rest, "/", 2)
+		if len(parts) != 2 {
+			jsonError(w, http.StatusBadRequest, "invalid_request", "routine id and action required")
+			return
+		}
+		svc, err := routineService()
+		if err != nil {
+			jsonError(w, http.StatusInternalServerError, "unavailable", "routines are unavailable right now")
+			return
+		}
+		var opErr error
+		switch parts[1] {
+		case "pause":
+			opErr = svc.Pause(parts[0])
+		case "resume":
+			opErr = svc.Resume(parts[0])
+		case "cancel":
+			opErr = svc.Cancel(parts[0])
+		case "delete":
+			opErr = svc.Delete(parts[0])
+		default:
+			jsonError(w, http.StatusBadRequest, "invalid_request", "unknown routine action")
+			return
+		}
+		if opErr != nil {
+			jsonError(w, http.StatusBadRequest, "action_failed", "couldn't do that with the routine")
+			return
+		}
+		jsonResponse(w, http.StatusOK, map[string]interface{}{"ok": true})
+	}))
+
+	mux.HandleFunc("/v1/memory/self", authMiddleware(func(w http.ResponseWriter, r *http.Request) {
+		type entryView struct {
+			ID             string     `json:"id"`
+			Kind           string     `json:"kind"`
+			Label          string     `json:"label"`
+			Title          string     `json:"title"`
+			Summary        string     `json:"summary"`
+			Quote          string     `json:"quote,omitempty"`
+			Confidence     float64    `json:"confidence,omitempty"`
+			Status         string     `json:"status,omitempty"`
+			Source         string     `json:"source,omitempty"`
+			SupersededBy   string     `json:"superseded_by,omitempty"`
+			RetractedAt    *time.Time `json:"retracted_at,omitempty"`
+			RetractReason  string     `json:"retract_reason,omitempty"`
+			Domain         string     `json:"domain"`
+			DomainLabel    string     `json:"domain_label"`
+			About          string     `json:"about,omitempty"`
+			Sensitive      bool       `json:"sensitive,omitempty"`
+			ValidUntil     *time.Time `json:"valid_until,omitempty"`
+			Value          string     `json:"value"`
+			CreatedAt      time.Time  `json:"created_at,omitempty"`
+			ReinforceCount int        `json:"reinforce_count,omitempty"`
+			ReinforcedAt   *time.Time `json:"reinforced_at,omitempty"`
+			// SaidBy is "you" (the owner stated it) or "kaya" (inferred);
+			// LearnedAt is when it was first heard; Field marks a labelled
+			// value ("Name" → "Ian") to show as a field, not a sentence.
+			SaidBy    string    `json:"said_by"`
+			LearnedAt time.Time `json:"learned_at"`
+			Field     bool      `json:"field,omitempty"`
+		}
+		store, err := personalcontext.Open(workspaceDir)
+		if err != nil {
+			jsonError(w, http.StatusInternalServerError, "io_error", "could not read saved facts")
+			return
+		}
+		// Owner management surface: all entries by default. Optional
+		// ?context=work filters to one context's view (global + scoped).
+		// ?history=1 widens it from what Kaya believes now to everything it has
+		// believed and what it was told to forget, so a correction or a removal is
+		// inspectable where the owner looks. Model retrieval paths are always
+		// scope-filtered; this endpoint is the owner, not the model.
+		q := strings.ToLower(strings.TrimSpace(r.URL.Query().Get("history")))
+		includeHistory := q == "1" || q == "true" || q == "all"
+		all := store.Current()
+		if includeHistory {
+			all = store.All()
+		}
+		if ctxParam := strings.TrimSpace(r.URL.Query().Get("context")); ctxParam != "" {
+			scopes := []string{"context:" + ctxParam}
+			filtered := all[:0:0]
+			for _, e := range all {
+				if personalcontext.VisibleTo(e, scopes) {
+					filtered = append(filtered, e)
+				}
+			}
+			all = filtered
+		}
+		entries := make([]entryView, 0)
+		for _, e := range all {
+			domain := personalcontext.ClassifyEntryDomain(e)
+			entries = append(entries, entryView{
+				ID:             e.ID,
+				Kind:           string(e.Kind),
+				Label:          personalcontext.Label(e.Predicate),
+				Title:          personalcontext.Title(e),
+				Summary:        personalcontext.Summary(e),
+				Quote:          e.Quote,
+				Confidence:     e.Confidence,
+				Status:         string(e.Status),
+				Source:         firstSourceRef(e.Sources),
+				SupersededBy:   derefString(e.SupersededBy),
+				RetractedAt:    e.RetractedAt,
+				RetractReason:  e.RetractReason,
+				Domain:         string(domain),
+				DomainLabel:    personalcontext.DomainLabel(domain),
+				About:          aboutOf(e),
+				Sensitive:      e.Sensitive,
+				ValidUntil:     e.ValidUntil,
+				Value:          personalcontext.Value(e),
+				CreatedAt:      e.CreatedAt,
+				ReinforceCount: e.ReinforceCount,
+				ReinforcedAt:   e.ReinforcedAt,
+				SaidBy:         personalcontext.SaidBy(e),
+				LearnedAt:      personalcontext.LearnedAt(e),
+				Field:          personalcontext.IsField(e),
+			})
+		}
+		curate := tools.NewMemoryCurateTool(workspaceDir)
+		notes := curate.Entries("memory")
+		you := curate.Entries("user")
+		resp := map[string]interface{}{
+			"entries": entries,
+			"notes":   notes,
+			"you":     you,
+		}
+		if includeHistory {
+			// What Kaya was told to forget, and why it cannot come back.
+			// Tombstones carry no value — only the label and the reason —
+			// so inspecting the record is not another way to recover it.
+			type forgottenView struct {
+				ID        string    `json:"id"`
+				Subject   string    `json:"subject,omitempty"`
+				Predicate string    `json:"predicate,omitempty"`
+				Label     string    `json:"label,omitempty"`
+				Reason    string    `json:"reason,omitempty"`
+				At        time.Time `json:"at"`
+			}
+			forgotten := make([]forgottenView, 0)
+			for _, tw := range store.Tombstones() {
+				forgotten = append(forgotten, forgottenView{
+					ID: tw.ID, Subject: tw.Subject, Predicate: tw.Predicate,
+					Label: personalcontext.Label(tw.Predicate), Reason: tw.Reason, At: tw.At,
+				})
+			}
+			resp["forgotten"] = forgotten
+		}
+		jsonResponse(w, http.StatusOK, resp)
+	}))
+
+	mux.HandleFunc("/v1/memory/explain", authMiddleware(func(w http.ResponseWriter, r *http.Request) {
+		id := strings.TrimSpace(r.URL.Query().Get("id"))
+		if id == "" {
+			jsonError(w, http.StatusBadRequest, "invalid_request", "id required")
+			return
+		}
+		store, err := personalcontext.Open(workspaceDir)
+		if err != nil {
+			jsonError(w, http.StatusInternalServerError, "io_error", "could not read saved facts")
+			return
+		}
+		ex, err := store.Explain(id)
+		if err != nil {
+			jsonError(w, http.StatusNotFound, "not_found", "that memory wasn't found")
+			return
+		}
+		jsonResponse(w, http.StatusOK, map[string]interface{}{"ok": true, "explanation": ex})
+	}))
+
+	mux.HandleFunc("/v1/memory/self/forget", authMiddleware(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			jsonError(w, http.StatusMethodNotAllowed, "method_not_allowed", "method not allowed")
+			return
+		}
+		var req struct {
+			ID     string `json:"id"`     // auto-extracted personal-context entry
+			Target string `json:"target"` // "user" or "memory" for curated notes
+			Entry  string `json:"entry"`
+			Reason string `json:"reason"` // optional owner reason, recorded on the receipt
+		}
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+			jsonError(w, http.StatusBadRequest, "invalid_request", "invalid request")
+			return
+		}
+		if req.ID != "" {
+			var (
+				report personalcontext.ForgetReport
+				err    error
+			)
+			if live := agentLoop.PersonalContext(); live != nil {
+				report, err = personalcontext.ForgetPipelineWith(live, workspaceDir, req.ID, req.Reason)
+			} else {
+				report, err = personalcontext.ForgetPipeline(workspaceDir, req.ID, req.Reason)
+			}
+			if err != nil {
+				jsonError(w, http.StatusNotFound, "not_found", "that fact wasn't found")
+				return
+			}
+			jsonResponse(w, http.StatusOK, map[string]interface{}{"ok": true, "forget": report})
+			return
+		}
+		curate := tools.NewMemoryCurateTool(workspaceDir)
+		count, err := curate.Delete(req.Target, req.Entry)
+		if err != nil {
+			jsonError(w, http.StatusBadRequest, "not_found", err.Error())
+			return
+		}
+		emitMemoryDeleted(req.Entry, "Removed from what Kaya remembers.")
+		jsonResponse(w, http.StatusOK, map[string]interface{}{"ok": true, "remaining": count})
+	}))
+
+	// Owner correction from the console: replace what Kaya believes with what
+	// the owner types. The old value stays in history; the new one carries the
+	// owner's words as its receipt.
+	mux.HandleFunc("/v1/memory/self/correct", authMiddleware(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			jsonError(w, http.StatusMethodNotAllowed, "method_not_allowed", "method not allowed")
+			return
+		}
+		var req struct {
+			ID    string `json:"id"`
+			Value string `json:"value"`
+		}
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil || req.ID == "" {
+			jsonError(w, http.StatusBadRequest, "invalid_request", "invalid request")
+			return
+		}
+		store := agentLoop.PersonalContext()
+		if store == nil {
+			var oerr error
+			if store, oerr = personalcontext.Open(workspaceDir); oerr != nil {
+				jsonError(w, http.StatusInternalServerError, "io_error", "could not read saved facts")
+				return
+			}
+		}
+		old, next, err := store.Correct(req.ID, req.Value, req.Value, "console")
+		switch {
+		case errors.Is(err, personalcontext.ErrBadCorrection):
+			jsonError(w, http.StatusBadRequest, "invalid_request", "type a different value, up to 300 characters")
+			return
+		case errors.Is(err, personalcontext.ErrNotFound), errors.Is(err, personalcontext.ErrNoCurrentEntry):
+			jsonError(w, http.StatusNotFound, "not_found", "that fact wasn't found or has already changed")
+			return
+		case err != nil:
+			jsonError(w, http.StatusInternalServerError, "io_error", "could not save the correction")
+			return
+		}
+		jsonResponse(w, http.StatusOK, map[string]interface{}{"ok": true, "was": personalcontext.Value(old), "now": personalcontext.Value(next), "id": next.ID})
+	}))
+
+	// workspaceFileProtected (package function below) filters the generic
+	// workspace-file surface so the internal memory/runtime estate never
+	// reaches a device client.
+
+	mux.HandleFunc("/v1/workspace/files", authMiddleware(func(w http.ResponseWriter, r *http.Request) {
+		type FileInfo struct {
+			Name     string `json:"name"`
+			Modified int64  `json:"modified"`
+			Size     int64  `json:"size"`
+		}
+		var files []FileInfo
+
+		if _, err := os.Stat(workspaceDir); err != nil {
+			json.NewEncoder(w).Encode([]FileInfo{})
+			return
+		}
+
+		filepath.Walk(workspaceDir, func(path string, info os.FileInfo, err error) error {
+			if err != nil || info.IsDir() {
+				return nil
+			}
+			rel, err := filepath.Rel(workspaceDir, path)
+			if err != nil {
+				return nil
+			}
+			if workspaceFileProtected(rel) {
+				return nil
+			}
+			files = append(files, FileInfo{
+				Name:     rel,
+				Modified: info.ModTime().Unix(),
+				Size:     info.Size(),
+			})
+			return nil
+		})
+		if files == nil {
+			files = []FileInfo{}
+		}
+		json.NewEncoder(w).Encode(files)
+	}))
+
+	mux.HandleFunc("/v1/workspace/file", authMiddleware(func(w http.ResponseWriter, r *http.Request) {
+		name := r.URL.Query().Get("name")
+		if name == "" {
+			jsonError(w, http.StatusBadRequest, "invalid_request", "name required")
+			return
+		}
+		clean := filepath.Clean(name)
+		if strings.Contains(clean, "..") || strings.HasPrefix(clean, "/") || strings.HasPrefix(clean, "\\") {
+			jsonError(w, http.StatusForbidden, "forbidden", "invalid path")
+			return
+		}
+
+		fullPath := filepath.Join(workspaceDir, clean)
+		rel, err := filepath.Rel(workspaceDir, fullPath)
+		if err != nil || strings.HasPrefix(rel, "..") {
+			jsonError(w, http.StatusForbidden, "forbidden", "invalid path")
+			return
+		}
+		if workspaceFileProtected(rel) {
+			jsonError(w, http.StatusForbidden, "forbidden", "that file is internal")
+			return
+		}
+
+		info, err := os.Stat(fullPath)
+		if err != nil {
+			jsonError(w, http.StatusNotFound, "not_found", "file not found")
+			return
+		}
+		if info.IsDir() {
+			jsonError(w, http.StatusBadRequest, "invalid_request", "path is a directory")
+			return
+		}
+
+		const maxPreviewBytes int64 = 256 * 1024
+		data, err := os.ReadFile(fullPath)
+		if err != nil {
+			jsonError(w, http.StatusInternalServerError, "io_error", "failed to read file")
+			return
+		}
+
+		mimeType := ""
+		if ext := strings.ToLower(filepath.Ext(fullPath)); ext != "" {
+			mimeType = mime.TypeByExtension(ext)
+		}
+		if len(data) > 0 {
+			sniffLen := 512
+			if len(data) < sniffLen {
+				sniffLen = len(data)
+			}
+			detected := http.DetectContentType(data[:sniffLen])
+			if mimeType == "" || strings.HasPrefix(detected, "image/") {
+				mimeType = detected
+			}
+		}
+		if strings.HasPrefix(mimeType, "image/") {
+			const maxImagePreviewBytes int64 = 4 * 1024 * 1024
+			if int64(len(data)) > maxImagePreviewBytes {
+				jsonResponse(w, http.StatusOK, map[string]interface{}{
+					"previewable": false,
+					"kind":        "image",
+					"mime_type":   mimeType,
+					"reason":      "image_too_large",
+					"size":        info.Size(),
+					"truncated":   true,
+					"content":     "",
+				})
+				return
+			}
+			jsonResponse(w, http.StatusOK, map[string]interface{}{
+				"previewable":  true,
+				"kind":         "image",
+				"mime_type":    mimeType,
+				"reason":       "",
+				"size":         info.Size(),
+				"truncated":    false,
+				"content":      "",
+				"image_base64": base64.StdEncoding.EncodeToString(data),
+			})
+			return
+		}
+
+		preview := data
+		truncated := false
+		if int64(len(data)) > maxPreviewBytes {
+			preview = data[:maxPreviewBytes]
+			truncated = true
+		}
+
+		if bytes.Contains(preview, []byte{0x00}) || !utf8.Valid(preview) {
+			jsonResponse(w, http.StatusOK, map[string]interface{}{
+				"previewable": false,
+				"kind":        "binary",
+				"mime_type":   mimeType,
+				"reason":      "binary_or_unsupported_encoding",
+				"size":        info.Size(),
+				"truncated":   truncated,
+				"content":     "",
+			})
+			return
+		}
+
+		jsonResponse(w, http.StatusOK, map[string]interface{}{
+			"previewable": true,
+			"kind":        "text",
+			"mime_type":   mimeType,
+			"reason":      "",
+			"size":        info.Size(),
+			"truncated":   truncated,
+			"content":     string(preview),
+		})
+	}))
+
+	// ── 7. Transcribe ─────────────────────────────────────────────────────
+	mux.HandleFunc("/v1/transcribe", authMiddleware(func(w http.ResponseWriter, r *http.Request) {
+		file, _, err := r.FormFile("audio")
+		if err != nil {
+			http.Error(w, "audio field required", 400)
+			return
+		}
+		defer file.Close()
+
+		apiKey := os.Getenv("KIMI_API_KEY")
+		if apiKey == "" {
+			http.Error(w, "KIMI_API_KEY not set", 500)
+			return
+		}
+
+		body := &bytes.Buffer{}
+		writer := multipart.NewWriter(body)
+		part, _ := writer.CreateFormFile("file", "audio.webm")
+		io.Copy(part, file)
+		writer.WriteField("model", "moonshot-v1-auto")
+		writer.Close()
+
+		req, _ := http.NewRequest("POST", "https://api.moonshot.cn/v1/audio/transcriptions", body)
+		req.Header.Set("Authorization", "Bearer "+apiKey)
+		req.Header.Set("Content-Type", writer.FormDataContentType())
+
+		client := &http.Client{Timeout: 30 * time.Second}
+		resp, err := client.Do(req)
+		if err != nil || resp.StatusCode != http.StatusOK {
+			http.Error(w, "upstream error", 502)
+			return
+		}
+		defer resp.Body.Close()
+
+		respBytes, _ := io.ReadAll(resp.Body)
+		var parsed map[string]interface{}
+		if json.Unmarshal(respBytes, &parsed) == nil {
+			if text, ok := parsed["text"].(string); ok {
+				json.NewEncoder(w).Encode(map[string]string{"text": text})
+				return
+			}
+		}
+		http.Error(w, "upstream error", 502)
+	}))
+
+	// ── 8. Upload ─────────────────────────────────────────────────────────
+	mux.HandleFunc("/v1/upload", authMiddleware(func(w http.ResponseWriter, r *http.Request) {
+		file, header, err := r.FormFile("file")
+		if err != nil {
+			http.Error(w, "file field required", 400)
+			return
+		}
+		defer file.Close()
+		data, _ := io.ReadAll(file)
+		b64 := base64.StdEncoding.EncodeToString(data)
+		json.NewEncoder(w).Encode(map[string]string{
+			"b64":       b64,
+			"mime_type": header.Header.Get("Content-Type"),
+			"filename":  header.Filename,
+		})
+	}))
+
+	// ── 9. Delete message ─────────────────────────────────────────────────
+	mux.HandleFunc("/v1/message", authMiddleware(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodDelete {
+			http.Error(w, "method not allowed", 405)
+			return
+		}
+		id := r.URL.Query().Get("id")
+		session := resolveSession(r)
+		if db != nil && id != "" {
+			db.Exec("UPDATE messages SET archived = 1 WHERE id = ? AND session_id = ?", id, session)
+		}
+		json.NewEncoder(w).Encode(map[string]bool{"ok": true})
+	}))
+
+	// ── 10. Clear session ─────────────────────────────────────────────────
+	mux.HandleFunc("/v1/messages", authMiddleware(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodDelete {
+			http.Error(w, "method not allowed", 405)
+			return
+		}
+		session := resolveSession(r)
+		if db != nil {
+			db.Exec("UPDATE messages SET archived = 1 WHERE session_id = ?", session)
+		}
+		json.NewEncoder(w).Encode(map[string]bool{"ok": true})
+	}))
+
+	// ── 11. Delete session ────────────────────────────────────────────────
+	mux.HandleFunc("/v1/session", authMiddleware(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodDelete {
+			http.Error(w, "method not allowed", 405)
+			return
+		}
+		session := r.URL.Query().Get("id")
+		if session == "" {
+			http.Error(w, "id required", 400)
+			return
+		}
+		// Delete the conversation, not just its messages: the session row
+		// and its summary/title are part of what the owner asked to remove,
+		// and leaving them behind leaves a kaya of the conversation. The
+		// manager knows which store is live (SQLite or JSONL) and removes
+		// all of it; the raw delete is only a fallback.
+		if agentLoop != nil {
+			if sm := agentLoop.Sessions(); sm != nil {
+				if err := sm.DeleteSession(session); err != nil {
+					jsonError(w, http.StatusInternalServerError, "db_error", err.Error())
+					return
+				}
+				json.NewEncoder(w).Encode(map[string]bool{"ok": true})
+				return
+			}
+		}
+		if db != nil {
+			// Permanently delete all messages for this session
+			_, err := db.Exec("DELETE FROM messages WHERE session_id = ?", session)
+			if err != nil {
+				jsonError(w, http.StatusInternalServerError, "db_error", err.Error())
+				return
+			}
+		}
+		json.NewEncoder(w).Encode(map[string]bool{"ok": true})
+	}))
+
+	// ── 12. Rename session ────────────────────────────────────────────────
+	mux.HandleFunc("/v1/session/rename", authMiddleware(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			http.Error(w, "method not allowed", 405)
+			return
+		}
+
+		var req struct {
+			OldID string `json:"old_id"`
+			NewID string `json:"new_id"`
+		}
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+			jsonError(w, http.StatusBadRequest, "invalid_request", "invalid json body")
+			return
+		}
+		oldID := strings.TrimSpace(req.OldID)
+		newID := strings.TrimSpace(req.NewID)
+		if oldID == "" || newID == "" {
+			jsonError(w, http.StatusBadRequest, "invalid_request", "old_id and new_id are required")
+			return
+		}
+		if oldID == newID {
+			json.NewEncoder(w).Encode(map[string]bool{"ok": true})
+			return
+		}
+		if db == nil {
+			jsonError(w, http.StatusInternalServerError, "internal_error", "database not available")
+			return
+		}
+
+		tx, err := db.Begin()
+		if err != nil {
+			jsonError(w, http.StatusInternalServerError, "db_error", err.Error())
+			return
+		}
+		defer tx.Rollback()
+
+		var existing int
+		if err := tx.QueryRow("SELECT COUNT(1) FROM messages WHERE session_id = ?", newID).Scan(&existing); err != nil {
+			jsonError(w, http.StatusInternalServerError, "db_error", err.Error())
+			return
+		}
+		if existing > 0 {
+			jsonError(w, http.StatusConflict, "conflict", "target session id already exists")
+			return
+		}
+
+		res, err := tx.Exec("UPDATE messages SET session_id = ? WHERE session_id = ?", newID, oldID)
+		if err != nil {
+			jsonError(w, http.StatusInternalServerError, "db_error", err.Error())
+			return
+		}
+		if err := tx.Commit(); err != nil {
+			jsonError(w, http.StatusInternalServerError, "db_error", err.Error())
+			return
+		}
+
+		rowsAffected, _ := res.RowsAffected()
+		jsonResponse(w, http.StatusOK, map[string]interface{}{
+			"ok":            true,
+			"rows_affected": rowsAffected,
+		})
+	}))
+
+	// ── Remote control endpoints ──────────────────────────────────────────
+	mux.HandleFunc("/v1/exec", authMiddleware(handleExec(allowedCmds)))
+	mux.HandleFunc("/v1/screenshot", authMiddleware(handleScreenshot(screenshotCmd)))
+	mux.HandleFunc("/v1/stats", authMiddleware(handleStats))
+	mux.HandleFunc("/v1/open", authMiddleware(handleOpen))
+
+	// ── Mid-turn steering ─────────────────────────────────────────────────
+	mux.HandleFunc("/v1/steering", authMiddleware(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
+		var req struct {
+			SessionKey string `json:"session_key"`
+			Content    string `json:"content"`
+			Action     string `json:"action"` // "redirect" | "interrupt" | "abort"
+			Channel    string `json:"channel"`
+			ChatID     string `json:"chat_id"`
+		}
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+			http.Error(w, `{"ok":false,"error":"invalid request"}`, http.StatusBadRequest)
+			return
+		}
+		sm := agentLoop.Steering()
+		if sm == nil {
+			http.Error(w, `{"ok":false,"error":"steering unavailable"}`, http.StatusServiceUnavailable)
+			return
+		}
+		// A message steered into a turn that is not running would sit in the
+		// queue until some later turn read it out of context. Say so, and the
+		// phone sends it as the next message instead.
+		if req.Action != "abort" && req.Action != "interrupt" && !turns.Active(req.SessionKey) {
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusConflict)
+			fmt.Fprint(w, `{"ok":false,"error":"no_active_turn"}`)
+			return
+		}
+		switch req.Action {
+		case "abort":
+			sm.HardAbort(req.SessionKey)
+		case "interrupt":
+			sm.Interrupt(req.SessionKey)
+		default: // "redirect"
+			if req.Content == "" {
+				http.Error(w, `{"ok":false,"error":"content required for redirect"}`, http.StatusBadRequest)
+				return
+			}
+			sm.Inject(agent.SteeringMessage{
+				Content:    req.Content,
+				SessionKey: req.SessionKey,
+				Channel:    req.Channel,
+				ChatID:     req.ChatID,
+			})
+		}
+		w.Header().Set("Content-Type", "application/json")
+		fmt.Fprintf(w, `{"ok":true,"pending":%d}`, sm.PendingCount(req.SessionKey))
+	}))
+
+	// ── Clarify responses ─────────────────────────────────────────────────
+	// The clarify tool blocks the agent turn waiting for the user's answer.
+	// The mobile app renders the clarify_request as an interactive card and
+	// posts the answer here.
+	mux.HandleFunc("/v1/clarify/respond", authMiddleware(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			jsonError(w, http.StatusMethodNotAllowed, "method_not_allowed", "method not allowed")
+			return
+		}
+		var req struct {
+			QuestionID string `json:"question_id"`
+			Response   string `json:"response"`
+		}
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+			jsonError(w, http.StatusBadRequest, "invalid_request", "invalid json body")
+			return
+		}
+		req.QuestionID = strings.TrimSpace(req.QuestionID)
+		req.Response = strings.TrimSpace(req.Response)
+		if req.QuestionID == "" || req.Response == "" {
+			jsonError(w, http.StatusBadRequest, "invalid_request", "question_id and response are required")
+			return
+		}
+		registry := agentLoop.Tools()
+		if registry == nil {
+			jsonError(w, http.StatusServiceUnavailable, "unavailable", "tool registry unavailable")
+			return
+		}
+		tool, ok := registry.Get("clarify")
+		if !ok {
+			jsonError(w, http.StatusServiceUnavailable, "unavailable", "clarify tool unavailable")
+			return
+		}
+		ct, ok := tool.(*tools.ClarifyTool)
+		if !ok {
+			jsonError(w, http.StatusServiceUnavailable, "unavailable", "clarify tool unavailable")
+			return
+		}
+		if !ct.HandleResponse(req.QuestionID, req.Response) {
+			jsonError(w, http.StatusNotFound, "not_found", "question not found, already answered, or timed out")
+			return
+		}
+		jsonResponse(w, http.StatusOK, map[string]interface{}{"ok": true})
+	}))
+
+	// ── Model presets / live switching ────────────────────────────────────
+	mux.HandleFunc("/v1/model", authMiddleware(func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodGet:
+			// Model lists come from the providers themselves (cached).
+			// Give a cold cache a short, bounded chance to fill so a
+			// picker opens on live lists; ?refresh=1 re-asks every
+			// provider now.
+			if cfg := agentLoop.Config(); cfg != nil {
+				if r.URL.Query().Get("refresh") == "1" {
+					providers.InvalidateModelDiscovery()
+				}
+				dctx, dcancel := context.WithTimeout(r.Context(), 3*time.Second)
+				providers.DiscoverAll(dctx, cfg)
+				dcancel()
+			}
+			type presetPayload struct {
+				Name     string `json:"name"`
+				Provider string `json:"provider"`
+				Model    string `json:"model"`
+				// Capabilities gating: clients must not offer knobs the
+				// driver can't turn.
+				Available bool   `json:"available"`
+				Reason    string `json:"unavailable_reason,omitempty"`
+			}
+			presets := []presetPayload{}
+			if cfg := agentLoop.Config(); cfg != nil {
+				for _, p := range cfg.Agents.ModelList {
+					if p.Name == "" {
+						continue
+					}
+					ok, reason := providers.PresetAvailable(cfg, p.Provider, p.Model)
+					presets = append(presets, presetPayload{Name: p.Name, Provider: p.Provider, Model: p.Model, Available: ok, Reason: reason})
+				}
+			}
+			provider := ""
+			if cfg := agentLoop.Config(); cfg != nil {
+				provider = cfg.Agents.Defaults.Provider
+			}
+			jsonResponse(w, http.StatusOK, map[string]interface{}{
+				"active":   agentLoop.GetCurrentModel(),
+				"provider": provider,
+				"presets":  presets,
+				// Switchable set (usable only) for terminal pickers: additive,
+				// existing clients ignore it.
+				"options": providers.AvailableModelOptions(agentLoop.Config()),
+				// Full catalog (unusable entries marked) so clients can resolve
+				// exact references even when a provider is not yet configured.
+				"all_options": providers.AllModelOptions(agentLoop.Config()),
+			})
+		case http.MethodPost:
+			var req struct {
+				Model string `json:"model"`
+			}
+			if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+				jsonError(w, http.StatusBadRequest, "invalid_request", "invalid json body")
+				return
+			}
+			req.Model = strings.TrimSpace(req.Model)
+			if req.Model == "" {
+				jsonError(w, http.StatusBadRequest, "invalid_request", "model is required")
+				return
+			}
+			if err := agentLoop.SetModel(req.Model); err != nil {
+				jsonError(w, http.StatusBadRequest, "switch_failed", err.Error())
+				return
+			}
+			jsonResponse(w, http.StatusOK, map[string]interface{}{
+				"ok":     true,
+				"active": agentLoop.GetCurrentModel(),
+			})
+		default:
+			jsonError(w, http.StatusMethodNotAllowed, "method_not_allowed", "method not allowed")
+		}
+	}))
+
+	// Device-facing equivalents of the web console's AI section (which lives
+	// on the kaya-web server and is unreachable over the device relay).
+	// Provider keys are never returned in full (masked, as in the console)
+	// and blank key fields leave the saved value untouched.
+	mux.HandleFunc("/v1/providers", authMiddleware(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodGet {
+			jsonError(w, http.StatusMethodNotAllowed, "method_not_allowed", "method not allowed")
+			return
+		}
+		cfg := agentLoop.Config()
+		if cfg == nil {
+			jsonError(w, http.StatusServiceUnavailable, "unavailable", "configuration unavailable")
+			return
+		}
+		// The models each provider actually serves, asked of the provider's own
+		// API (cached; ?refresh=1 asks again now). A provider that cannot be
+		// reached falls back to Kaya's built-in list and says so, so the phone
+		// never presents a guess as the provider's answer.
+		if r.URL.Query().Get("refresh") == "1" {
+			providers.InvalidateModelDiscovery()
+		}
+		dctx, dcancel := context.WithTimeout(r.Context(), 5*time.Second)
+		discovered := providers.DiscoverAll(dctx, cfg)
+		dcancel()
+		ollamaModels := []string{}
+		if models, err := listGatewayOllamaModels(); err == nil {
+			ollamaModels = models
+		}
+		jsonResponse(w, http.StatusOK, map[string]interface{}{
+			"ok":        true,
+			"provider":  cfg.Agents.Defaults.Provider,
+			"model":     cfg.Agents.Defaults.Model,
+			"providers": providerListPayload(cfg, discovered, ollamaModels),
+		})
+	}))
+
+	mux.HandleFunc("/v1/providers/test", authMiddleware(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			jsonError(w, http.StatusMethodNotAllowed, "method_not_allowed", "method not allowed")
+			return
+		}
+		var req struct {
+			Provider string `json:"provider"`
+			APIKey   string `json:"api_key"`
+			Model    string `json:"model"`
+		}
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+			jsonError(w, http.StatusBadRequest, "invalid_request", "invalid json body")
+			return
+		}
+		req.Provider = strings.TrimSpace(req.Provider)
+		if req.Provider == "" {
+			jsonError(w, http.StatusBadRequest, "invalid_request", "provider is required")
+			return
+		}
+		// Test against a scratch copy reloaded from disk: the candidate key
+		// is never persisted and live loop state is never touched.
+		var cfg *config.Config
+		if path := agentLoop.ConfigPath(); path != "" {
+			if c, err := config.LoadConfig(path); err == nil && c != nil {
+				cfg = c
+			}
+		}
+		if cfg == nil {
+			jsonError(w, http.StatusServiceUnavailable, "unavailable", "configuration unavailable")
+			return
+		}
+		pc := intelligenceProviderConfig(cfg, req.Provider)
+		if pc == nil {
+			jsonError(w, http.StatusBadRequest, "invalid_request", "unknown provider")
+			return
+		}
+		if trimmed := strings.TrimSpace(req.APIKey); trimmed != "" {
+			pc.APIKey = trimmed
+		}
+		testModel := strings.TrimSpace(req.Model)
+		if testModel == "" {
+			if models, ok := knownProviderModels[req.Provider]; ok && len(models) > 0 {
+				testModel = models[0]
+			}
+		}
+		if testModel == "" {
+			jsonError(w, http.StatusBadRequest, "invalid_request", "no model to test")
+			return
+		}
+		cfg.Agents.Defaults.Provider = req.Provider
+		cfg.Agents.Defaults.Model = testModel
+		p, err := providers.CreateProvider(cfg)
+		if err != nil {
+			jsonResponse(w, http.StatusOK, map[string]interface{}{
+				"ok": false, "message": fmt.Sprintf("Couldn't create provider: %v", err),
+			})
+			return
+		}
+		ctx, cancel := context.WithTimeout(r.Context(), 30*time.Second)
+		defer cancel()
+		_, err = p.Chat(ctx, []providers.Message{
+			{Role: "user", Content: "Reply with only the word OK"},
+		}, nil, testModel, map[string]interface{}{
+			"max_tokens":  30,
+			"temperature": 0,
+		})
+		if err != nil {
+			jsonResponse(w, http.StatusOK, map[string]interface{}{
+				"ok": false, "message": fmt.Sprintf("Connection failed: %v", err),
+			})
+			return
+		}
+		jsonResponse(w, http.StatusOK, map[string]interface{}{
+			"ok": true, "message": "Connected successfully",
+		})
+	}))
+
+	mux.HandleFunc("/v1/intelligence/config", authMiddleware(func(w http.ResponseWriter, r *http.Request) {
+		cfg := agentLoop.Config()
+		if cfg == nil {
+			jsonError(w, http.StatusServiceUnavailable, "unavailable", "configuration unavailable")
+			return
+		}
+		switch r.Method {
+		case http.MethodGet:
+			providersMap := map[string]interface{}{}
+			for _, name := range []string{
+				"ollama", "openai", "anthropic", "moonshot", "groq",
+				"deepseek", "qwen", "gemini", "zhipu", "openrouter",
+				"nvidia", "shengsuanyun",
+			} {
+				pc := intelligenceProviderConfig(cfg, name)
+				if pc == nil {
+					continue
+				}
+				providersMap[name] = map[string]interface{}{
+					"has_key":    pc.APIKey != "",
+					"key_masked": maskDeviceKey(pc.APIKey),
+					"api_base":   pc.APIBase,
+				}
+			}
+			jsonResponse(w, http.StatusOK, map[string]interface{}{
+				"ok":         true,
+				"provider":   cfg.Agents.Defaults.Provider,
+				"model":      cfg.Agents.Defaults.Model,
+				"ollama_url": cfg.Providers.Ollama.APIBase,
+				"routing": map[string]interface{}{
+					"prefer_local":           cfg.Agents.Routing.PreferLocal,
+					"allow_cloud":            cfg.Agents.Routing.AllowCloud,
+					"cloud_when_local_fails": cfg.Agents.Routing.CloudWhenLocalFails,
+				},
+				"providers": providersMap,
+			})
+		case http.MethodPost:
+			var req struct {
+				APIKeys   map[string]string `json:"api_keys"`
+				OllamaURL string            `json:"ollama_url"`
+				Provider  string            `json:"provider"`
+				Model     string            `json:"model"`
+				Routing   *struct {
+					PreferLocal         bool `json:"prefer_local"`
+					AllowCloud          bool `json:"allow_cloud"`
+					CloudWhenLocalFails bool `json:"cloud_when_local_fails"`
+				} `json:"routing"`
+			}
+			if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+				jsonError(w, http.StatusBadRequest, "invalid_request", "invalid json body")
+				return
+			}
+			for name, key := range req.APIKeys {
+				trimmed := strings.TrimSpace(key)
+				if trimmed == "" {
+					continue
+				}
+				if pc := intelligenceProviderConfig(cfg, name); pc != nil {
+					pc.APIKey = trimmed
+				}
+			}
+			if trimmed := strings.TrimSpace(req.OllamaURL); trimmed != "" {
+				cfg.Providers.Ollama.APIBase = trimmed
+			}
+			if trimmed := strings.TrimSpace(req.Provider); trimmed != "" {
+				cfg.Agents.Defaults.Provider = trimmed
+			}
+			if trimmed := strings.TrimSpace(req.Model); trimmed != "" {
+				cfg.Agents.Defaults.Model = trimmed
+			}
+			if req.Routing != nil {
+				cfg.Agents.Routing.PreferLocal = req.Routing.PreferLocal
+				cfg.Agents.Routing.AllowCloud = req.Routing.AllowCloud
+				cfg.Agents.Routing.CloudWhenLocalFails = req.Routing.CloudWhenLocalFails
+			}
+			path := agentLoop.ConfigPath()
+			if path == "" {
+				jsonError(w, http.StatusServiceUnavailable, "unavailable", "config path unknown; cannot persist")
+				return
+			}
+			if err := config.SaveConfig(path, cfg); err != nil {
+				jsonError(w, http.StatusInternalServerError, "save_failed", err.Error())
+				return
+			}
+			// Health checks re-read from disk, so a key the owner just saved
+			// is reflected immediately instead of from a startup snapshot.
+			agentLoop.RefreshDoctor()
+			jsonResponse(w, http.StatusOK, map[string]interface{}{
+				"ok": true, "message": "AI configuration saved",
+			})
+		default:
+			jsonError(w, http.StatusMethodNotAllowed, "method_not_allowed", "method not allowed")
+		}
+	}))
+
+	mux.HandleFunc("/v1/ollama/models", authMiddleware(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodGet {
+			jsonError(w, http.StatusMethodNotAllowed, "method_not_allowed", "method not allowed")
+			return
+		}
+		models, err := listGatewayOllamaModels()
+		if err != nil {
+			jsonResponse(w, http.StatusOK, map[string]interface{}{
+				"ok": false, "error": err.Error(), "models": []string{},
+			})
+			return
+		}
+		jsonResponse(w, http.StatusOK, map[string]interface{}{"ok": true, "models": models})
+	}))
+
+	mux.HandleFunc("/v1/ollama/pull", authMiddleware(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			jsonError(w, http.StatusMethodNotAllowed, "method_not_allowed", "method not allowed")
+			return
+		}
+		var req struct {
+			Model string `json:"model"`
+		}
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil || strings.TrimSpace(req.Model) == "" {
+			jsonError(w, http.StatusBadRequest, "invalid_request", "model is required")
+			return
+		}
+		go pullGatewayOllamaModel(strings.TrimSpace(req.Model))
+		jsonResponse(w, http.StatusOK, map[string]interface{}{"ok": true, "message": "Download started"})
+	}))
+
+	// ── Session list ──────────────────────────────────────────────────────
+	mux.HandleFunc("/v1/sessions", authMiddleware(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodGet {
+			jsonError(w, http.StatusMethodNotAllowed, "method_not_allowed", "method not allowed")
+			return
+		}
+		if db == nil {
+			jsonError(w, http.StatusInternalServerError, "internal_error", "database not available")
+			return
+		}
+		rows, err := db.Query(`
+			SELECT m1.session_id,
+			       COUNT(*),
+			       COALESCE(unixepoch(MAX(m1.created_at)), 0),
+			       COALESCE(s.title, (
+			           SELECT m2.content FROM messages m2
+			           WHERE m2.session_id = m1.session_id
+			             AND m2.role = 'user'
+			             AND (m2.archived IS NULL OR m2.archived = 0)
+			             AND TRIM(COALESCE(m2.content, '')) != ''
+			           ORDER BY datetime(m2.created_at) ASC, m2.rowid ASC
+			           LIMIT 1
+			       ), '') AS title
+			FROM messages m1
+			LEFT JOIN sessions s ON s.id = m1.session_id
+			WHERE (m1.archived IS NULL OR m1.archived = 0)
+			  AND m1.session_id != 'heartbeat'
+			GROUP BY m1.session_id
+			ORDER BY MAX(m1.created_at) DESC
+			LIMIT 100`)
+		if err != nil {
+			jsonError(w, http.StatusInternalServerError, "db_error", err.Error())
+			return
+		}
+		defer rows.Close()
+
+		type sessionEntry struct {
+			ID           string `json:"id"`
+			Title        string `json:"title"`
+			MessageCount int    `json:"message_count"`
+			LastActivity int64  `json:"last_activity"`
+		}
+		sessions := []sessionEntry{}
+		for rows.Next() {
+			var e sessionEntry
+			if err := rows.Scan(&e.ID, &e.MessageCount, &e.LastActivity, &e.Title); err != nil {
+				continue
+			}
+			if len(e.Title) > 80 {
+				e.Title = e.Title[:80]
+			}
+			sessions = append(sessions, e)
+		}
+		jsonResponse(w, http.StatusOK, map[string]interface{}{
+			"sessions": sessions,
+		})
+	}))
+
+	// ── Pairing ────────────────────────────────────────────────────────────
+	// Cleanup expired tokens on startup (best-effort).
+	if db != nil {
+		_ = pairing.CleanupExpired(db)
+	}
+
+	// Helper to return structured pairing errors.
+	pairingErrorResponse := func(w http.ResponseWriter, status int, err error) {
+		if pe, ok := err.(*pairing.PairingError); ok {
+			jsonResponse(w, status, map[string]interface{}{
+				"error": map[string]string{
+					"code":    pe.Code,
+					"message": pe.Message,
+				},
+			})
+			return
+		}
+		jsonError(w, status, "internal_error", err.Error())
+	}
+
+	// POST /v1/pairing/invitations — generate a pairing invitation.
+	// Called by Kaya Pod web UI when user wants to pair a phone.
+	mux.HandleFunc("/v1/pairing/invitations", authMiddleware(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			http.Error(w, `{"error":"method not allowed"}`, http.StatusMethodNotAllowed)
+			return
+		}
+		if db == nil {
+			jsonError(w, http.StatusInternalServerError, "internal_error", "database not available")
+			return
+		}
+
+		// Get pod identity for the invitation.
+		workspace := agentLoop.Config().Agents.Defaults.Workspace
+		podID, _ := kayastate.GetPodID(workspace)
+
+		var req struct {
+			DisplayName string `json:"display_name"`
+			Transport   string `json:"transport"`
+			Host        string `json:"host"`
+			Port        string `json:"port"`
+		}
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+			req = struct {
+				DisplayName string `json:"display_name"`
+				Transport   string `json:"transport"`
+				Host        string `json:"host"`
+				Port        string `json:"port"`
+			}{DisplayName: "Phone", Transport: "lan", Host: detectLANAddress(), Port: "8766"}
+		}
+		if req.DisplayName == "" {
+			req.DisplayName = "Phone"
+		}
+		if req.Transport == "" {
+			req.Transport = "lan"
+		}
+		if req.Host == "" {
+			req.Host = detectLANAddress()
+		}
+		if req.Port == "" {
+			req.Port = fmt.Sprintf("%d", agentLoop.Config().Gateway.Port)
+		}
+
+		invitation, err := pairing.CreatePairingInvitation(db, podID, req.Transport, req.Host, req.Port, req.DisplayName)
+		if err != nil {
+			jsonError(w, http.StatusInternalServerError, "pairing_error", err.Error())
+			return
+		}
+
+		jsonResponse(w, http.StatusOK, invitation)
+	}))
+
+	registerConnectAPI(mux)
+
+	// Legacy: POST /v1/pairing/start — kept for backward compatibility.
+	mux.HandleFunc("/v1/pairing/start", authMiddleware(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			http.Error(w, `{"error":"method not allowed"}`, http.StatusMethodNotAllowed)
+			return
+		}
+		if db == nil {
+			jsonError(w, http.StatusInternalServerError, "internal_error", "database not available")
+			return
+		}
+		workspace := agentLoop.Config().Agents.Defaults.Workspace
+		podID, _ := kayastate.GetPodID(workspace)
+		port := fmt.Sprintf("%d", agentLoop.Config().Gateway.Port)
+
+		var req struct {
+			DisplayName string `json:"display_name"`
+		}
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil || req.DisplayName == "" {
+			req.DisplayName = "Phone"
+		}
+
+		invitation, err := pairing.CreatePairingInvitation(db, podID, "lan", detectLANAddress(), port, req.DisplayName)
+		if err != nil {
+			jsonError(w, http.StatusInternalServerError, "pairing_error", err.Error())
+			return
+		}
+
+		jsonResponse(w, http.StatusOK, invitation)
+	}))
+
+	// POST /v1/pairing/complete — mobile app presents token + device metadata, gets credentials.
+	// Single-use. Token expires after 5 minutes.
+	// PUBLIC endpoint — no auth required (the token itself is the authorization).
+	mux.HandleFunc("/v1/pairing/complete", publicHandler(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			http.Error(w, `{"error":"method not allowed"}`, http.StatusMethodNotAllowed)
+			return
+		}
+		if db == nil {
+			jsonError(w, http.StatusInternalServerError, "internal_error", "database not available")
+			return
+		}
+		var req struct {
+			Token       string `json:"token"`
+			DisplayName string `json:"display_name"`
+			Platform    string `json:"platform"`
+		}
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil || req.Token == "" {
+			jsonError(w, http.StatusBadRequest, "invalid_request", "token required")
+			return
+		}
+
+		result, err := pairing.RedeemPairing(db, req.Token, req.DisplayName, req.Platform)
+		if err != nil {
+			noteFailedAccess(r, awareness.PairFailed)
+			pairingErrorResponse(w, http.StatusUnauthorized, err)
+			return
+		}
+
+		// Include Kaya name in response.
+		workspace := agentLoop.Config().Agents.Defaults.Workspace
+		if id, err := kayastate.LoadIdentity(workspace); err == nil && id != nil {
+			result.KayaName = id.KayaName
+		}
+
+		jsonResponse(w, http.StatusOK, result)
+	}))
+
+	// Legacy: POST /v1/pairing/redeem — kept for backward compatibility.
+	mux.HandleFunc("/v1/pairing/redeem", publicHandler(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			http.Error(w, `{"error":"method not allowed"}`, http.StatusMethodNotAllowed)
+			return
+		}
+		if db == nil {
+			jsonError(w, http.StatusInternalServerError, "internal_error", "database not available")
+			return
+		}
+		var req struct {
+			Token string `json:"token"`
+		}
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil || req.Token == "" {
+			jsonError(w, http.StatusBadRequest, "invalid_request", "token required")
+			return
+		}
+
+		result, err := pairing.RedeemPairing(db, req.Token, "Phone", "unknown")
+		if err != nil {
+			pairingErrorResponse(w, http.StatusUnauthorized, err)
+			return
+		}
+
+		jsonResponse(w, http.StatusOK, result)
+	}))
+
+	// POST /v1/pairing/revoke — revoke a paired device.
+	mux.HandleFunc("/v1/pairing/revoke", authMiddleware(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			http.Error(w, `{"error":"method not allowed"}`, http.StatusMethodNotAllowed)
+			return
+		}
+		if db == nil {
+			jsonError(w, http.StatusInternalServerError, "internal_error", "database not available")
+			return
+		}
+		var req struct {
+			DeviceID string `json:"device_id"`
+		}
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil || req.DeviceID == "" {
+			jsonError(w, http.StatusBadRequest, "invalid_request", "device_id required")
+			return
+		}
+
+		if err := pairing.RevokeDevice(db, req.DeviceID); err != nil {
+			jsonError(w, http.StatusNotFound, "not_found", err.Error())
+			return
+		}
+
+		jsonResponse(w, http.StatusOK, map[string]interface{}{"ok": true})
+	}))
+
+	// GET /v1/pairing/devices — list all paired devices.
+	mux.HandleFunc("/v1/pairing/devices", authMiddleware(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodGet {
+			http.Error(w, `{"error":"method not allowed"}`, http.StatusMethodNotAllowed)
+			return
+		}
+		if db == nil {
+			jsonError(w, http.StatusInternalServerError, "internal_error", "database not available")
+			return
+		}
+
+		devices, err := pairing.ListDevices(db)
+		if err != nil {
+			jsonError(w, http.StatusInternalServerError, "db_error", err.Error())
+			return
+		}
+		if devices == nil {
+			devices = []pairing.PairedDevice{}
+		}
+
+		// Enrich with capabilities. Kaya Mobile exposes chat, memory and
+		// voice today; the per-device capability list will be tightened once
+		// the mobile app negotiates scopes at pairing time.
+		type deviceView struct {
+			pairing.PairedDevice
+			Capabilities []string `json:"capabilities"`
+		}
+		views := make([]deviceView, 0, len(devices))
+		for _, d := range devices {
+			views = append(views, deviceView{
+				PairedDevice: d,
+				Capabilities: []string{"chat", "memory", "voice"},
+			})
+		}
+
+		jsonResponse(w, http.StatusOK, map[string]interface{}{
+			"devices": views,
+		})
+	}))
+
+	// POST /v1/pairing/cancel — discard a pending pairing token.
+	mux.HandleFunc("/v1/pairing/cancel", authMiddleware(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			http.Error(w, `{"error":"method not allowed"}`, http.StatusMethodNotAllowed)
+			return
+		}
+		if db == nil {
+			jsonError(w, http.StatusInternalServerError, "internal_error", "database not available")
+			return
+		}
+		var req struct {
+			PairingID string `json:"pairing_id"`
+		}
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil || req.PairingID == "" {
+			jsonError(w, http.StatusBadRequest, "invalid_request", "pairing_id required")
+			return
+		}
+
+		_, err := db.Exec(`DELETE FROM pending_pairings WHERE id = ?`, req.PairingID)
+		if err != nil {
+			jsonError(w, http.StatusInternalServerError, "db_error", err.Error())
+			return
+		}
+
+		jsonResponse(w, http.StatusOK, map[string]interface{}{"ok": true})
+	}))
+
+	// ── WebSocket ─────────────────────────────────────────────────────────
+	mux.HandleFunc("/v1/ws", handleWebSocket(agentLoop))
+
+	// ── Factory reset (in-process, live state) ──────────────────────────
+	// Runs /reset inside the gateway so in-memory state (sessions, RAG
+	// index, personal context) is cleared synchronously — no restart
+	// needed. Loopback peers are trusted via authMiddleware; the CLI
+	// prefers this and only falls back to offline file/DB wipe when the
+	// daemon is unreachable.
+	mux.HandleFunc("/v1/reset", authMiddleware(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			jsonError(w, http.StatusMethodNotAllowed, "method_not_allowed", "method not allowed")
+			return
+		}
+		var req struct {
+			Text string   `json:"text"`
+			Args []string `json:"args"`
+		}
+		_ = json.NewDecoder(r.Body).Decode(&req)
+		text := strings.TrimSpace(req.Text)
+		if text == "" && len(req.Args) > 0 {
+			text = "/reset " + strings.Join(req.Args, " ")
+		}
+		if text == "" {
+			jsonError(w, http.StatusBadRequest, "invalid_request", "text or args is required (e.g. {\"text\": \"/reset all --exclude=devices,secrets\"})")
+			return
+		}
+		if !strings.HasPrefix(text, "/reset") {
+			jsonError(w, http.StatusBadRequest, "invalid_request", "only /reset is supported on this endpoint")
+			return
+		}
+		ctx, cancel := context.WithTimeout(r.Context(), 90*time.Second)
+		defer cancel()
+		resp, err := agentLoop.ProcessDirect(ctx, text, "cli:reset")
+		if err != nil {
+			jsonError(w, http.StatusInternalServerError, "reset_failed", err.Error())
+			return
+		}
+		jsonResponse(w, http.StatusOK, map[string]interface{}{"ok": true, "message": resp})
+	}))
+
+	// ── Live Surface plane (browser/computer control + observation) ──────
+	registerLiveSurfaceRoutes(mux, agentLoop)
+	registerPushRoutes(mux, startPushBridge(agentLoop))
+	registerReminderActions(mux, scheduledService, nil, agentLoop)
+	registerCardInputs(mux, agentLoop)
+	registerLifeRoutes(mux, agentLoop.OwnerLocation)
+	registerMeetingRoutes(mux, agentLoop)
+	registerPhoneRoutes(mux, agentLoop)
+	registerJobRoutes(mux, agentLoop)
+	registerDataSourceRoutes(mux)
+	registerSystemUpdateRoutes(mux)
+	registerConsoleResetRoute(mux, agentLoop)
+	registerToolServerRoutes(mux, agentLoop)
+	startSelfCare(agentLoop, workspaceDir)
+	registerBrowserStreamRoutes(mux, agentLoop)
+	registerLiveVoiceRoutes(mux, agentLoop)
+
+	// ── Artifacts (runtime-validated handoffs) ────────────────────────────
+	registerArtifactRoutes(mux)
+
+	// ── The Desk (read-only projection of Kaya's work) ───────────────────
+	registerDeskRoutes(mux, agentLoop)
+
+	// ── Proactive status (read-only view of Kaya's quiet work) ────────────
+	registerProactiveRoutes(mux, agentLoop)
+
+	// ── Device operations (restart/update) ───────────────────────────────
+	registerDeviceRoutes(mux)
+
+	// ── Durable chat turns, activity stream, connections ─────────────────
+	registerDurableTurns(mux, agentLoop)
+	registerActivityStream(mux)
+	registerConnectionsRoutes(mux)
+	registerWebsiteLoginRoutes(mux)
+	registerVaultRoutes(mux)
+	// Sign out everywhere: close every browser session and delete every
+	// profile (cookies, storage). The revocation counterpart to persistent
+	// browser profiles.
+	mux.HandleFunc("/v1/browser/signout", authMiddleware(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			jsonError(w, http.StatusMethodNotAllowed, "method_not_allowed", "use POST")
+			return
+		}
+		closed, removed, err := agentLoop.PurgeBrowserProfiles()
+		if err != nil {
+			jsonError(w, http.StatusInternalServerError, "io_error", "couldn't sign out of the browser")
+			return
+		}
+		jsonResponse(w, http.StatusOK, map[string]interface{}{
+			"ok": true, "sessions_closed": closed, "profiles_removed": removed,
+		})
+	}))
+
+	addr := fmt.Sprintf("0.0.0.0:%d", port)
+	log.Printf("🤖 Kaya Internal API listening on %s (chat + tools; loopback trusted, LAN requires device credentials)", addr)
+
+	if err := http.ListenAndServe(addr, mux); err != nil {
+		log.Printf("❌ Internal API failed: %v", err)
+	}
+}
+
+// previewUpload says what can be shown of a stored file inside the app:
+// photos as themselves, text as text, and documents and spreadsheets as the
+// text Kaya itself reads from them. Anything else is honestly not previewable
+// (it can still be opened in the phone's own viewer).
+func previewUpload(ws string, it uploads.Item) map[string]interface{} {
+	const maxText = 256 * 1024
+	out := map[string]interface{}{"ok": true, "kind": it.Kind, "mime": it.MIME, "size": it.Size, "name": it.Name}
+	full := filepath.Join(ws, it.Path)
+	switch it.Kind {
+	case "image":
+		if it.Size > 4*1024*1024 {
+			out["previewable"], out["reason"] = false, "That photo is too large to preview here. Open it instead."
+			return out
+		}
+		data, err := os.ReadFile(full)
+		if err != nil {
+			out["previewable"], out["reason"] = false, "The file couldn't be read."
+			return out
+		}
+		out["previewable"], out["image_base64"] = true, base64.StdEncoding.EncodeToString(data)
+	case "text":
+		data, err := os.ReadFile(full)
+		if err != nil {
+			out["previewable"], out["reason"] = false, "The file couldn't be read."
+			return out
+		}
+		out["previewable"], out["truncated"] = true, len(data) > maxText
+		if len(data) > maxText {
+			data = data[:maxText]
+		}
+		out["content"] = strings.ToValidUTF8(string(data), "")
+	case "document", "spreadsheet":
+		res := tools.NewDocParserTool(ws).Execute(context.Background(), map[string]interface{}{"file_path": it.Path})
+		var parsed struct {
+			Content string `json:"content"`
+		}
+		if res.IsError || json.Unmarshal([]byte(res.ForUser), &parsed) != nil || strings.TrimSpace(parsed.Content) == "" {
+			reason := "Kaya couldn't read text out of this file. Open it instead."
+			if res.IsError && strings.Contains(res.ForLLM, "scanned") {
+				reason = "This PDF is a scan with no text to show. Open it instead."
+			}
+			out["previewable"], out["reason"] = false, reason
+			return out
+		}
+		out["previewable"], out["extracted"] = true, true
+		out["truncated"] = len(parsed.Content) > maxText
+		if len(parsed.Content) > maxText {
+			parsed.Content = parsed.Content[:maxText]
+		}
+		out["content"] = strings.ToValidUTF8(parsed.Content, "")
+	default:
+		out["previewable"], out["reason"] = false, "There is no preview for this kind of file. Open it instead."
+	}
+	return out
+}
+
+// uploadRetention is how long an upload is kept unless the owner deletes it.
+func uploadRetention() time.Duration {
+	if d, err := strconv.Atoi(strings.TrimSpace(os.Getenv("KAYA_UPLOAD_RETENTION_DAYS"))); err == nil && d > 0 {
+		return time.Duration(d) * 24 * time.Hour
+	}
+	return uploads.DefaultRetention
+}
+
+// chatBodyLimit bounds one chat request: the largest upload as base64, plus
+// room for the message and a few attachments' metadata.
+const chatBodyLimit = int64(uploads.MaxBytes)*4/3*3 + 1<<20
+
+// storeUploadedBase64 decodes an attachment (optionally a data: URL) and
+// stores it as an upload in the workspace.
+func storeUploadedBase64(workspace, b64, name, mime, source string) (uploads.Item, error) {
+	if idx := strings.Index(b64, ","); idx != -1 && strings.HasPrefix(b64, "data:") {
+		if mime == "" {
+			mime = strings.TrimPrefix(strings.SplitN(b64[:idx], ";", 2)[0], "data:")
+		}
+		b64 = b64[idx+1:]
+	}
+	data, err := base64.StdEncoding.DecodeString(strings.TrimSpace(b64))
+	if err != nil {
+		return uploads.Item{}, errors.New("the file didn't arrive intact")
+	}
+	if source == "" {
+		source = "mobile"
+	}
+	return uploads.Save(workspace, data, name, mime, source)
+}
+
+// buildCapabilityResolver constructs the runtime-owned capability→
+// implementation resolver with credential/connection-aware availability.
+// Providers are selected here, never by the model. The connected-app
+// registry is the declarative model of which authenticated external systems
+// can fulfil which capabilities; the resolver consults it live.
+func buildCapabilityResolver(cfg *config.Config) *capability.Resolver {
+	apps := connectedapp.NewRegistry()
+	apps.Register(connectedapp.App{ID: "openweather", Provider: "openweather", DisplayName: "OpenWeather",
+		CredentialID: "openweather", Capabilities: []string{"weather.get"}, Status: connectedapp.StatusDisconnected})
+	apps.Register(connectedapp.App{ID: "aviationstack", Provider: "aviationstack", DisplayName: "AviationStack",
+		CredentialID: "aviationstack", Capabilities: []string{"flight.status"}, Status: connectedapp.StatusDisconnected})
+	apps.Register(connectedapp.App{ID: "aerodatabox", Provider: "aerodatabox", DisplayName: "AeroDataBox",
+		CredentialID: "aerodatabox", Capabilities: []string{"flight.status"}, Status: connectedapp.StatusDisconnected})
+	apps.Register(connectedapp.App{ID: "home-assistant", Provider: "home-assistant", DisplayName: "Home Assistant",
+		CredentialID: "home-assistant", Capabilities: []string{"device.read", "device.control"}, Status: connectedapp.StatusDisconnected})
+	apps.Register(connectedapp.App{ID: "google-calendar", Provider: "google-calendar", DisplayName: "Google Calendar",
+		CredentialID: "google-calendar", Capabilities: []string{"calendar.read", "calendar.modify"}, Status: connectedapp.StatusDisconnected})
+	apps.Register(connectedapp.App{ID: "gmail", Provider: "gmail", DisplayName: "Gmail",
+		CredentialID: "gmail", Capabilities: []string{"email.read", "email.send"}, Status: connectedapp.StatusDisconnected})
+	apps.Register(connectedapp.App{ID: "outlook", Provider: "outlook", DisplayName: "Outlook",
+		CredentialID: "outlook", Capabilities: []string{"email.read", "email.send", "calendar.read"}, Status: connectedapp.StatusDisconnected})
+	apps.Register(connectedapp.App{ID: "spotify", Provider: "spotify", DisplayName: "Spotify",
+		CredentialID: "spotify", Capabilities: []string{"media.playback"}, Status: connectedapp.StatusDisconnected})
+	apps.Register(connectedapp.App{ID: "github", Provider: "github", DisplayName: "GitHub",
+		CredentialID: "github", Capabilities: []string{"code.read", "repository.search"}, Status: connectedapp.StatusDisconnected})
+	apps.Register(connectedapp.App{ID: "notion", Provider: "notion", DisplayName: "Notion",
+		CredentialID: "notion", Capabilities: []string{"docs"}, Status: connectedapp.StatusDisconnected})
+
+	// connStatus reports the live connection state for one app.
+	connStatus := func(connected bool) connectedapp.Status {
+		if connected {
+			return connectedapp.StatusConnected
+		}
+		return connectedapp.StatusDisconnected
+	}
+	usable := func(id string, live func() bool) bool {
+		apps.SetStatus(id, connStatus(live()))
+		return apps.Usable(id)
+	}
+
+	r := capability.NewResolver()
+	capability.RegisterDefaults(r, capability.Availability{
+		OpenWeather:   func() bool { return usable("openweather", func() bool { return credentials.OpenWeatherKey() != "" }) },
+		AviationStack: func() bool { return usable("aviationstack", func() bool { return credentials.AviationKey(cfg) != "" }) },
+		AeroDataBox:   func() bool { return usable("aerodatabox", func() bool { return credentials.AeroDataBoxKey() != "" }) },
+		HomeAssistant: func() bool {
+			u, t := credentials.HassEndpoint()
+			return usable("home-assistant", func() bool { return u != "" && t != "" })
+		},
+		Calendar: func() bool {
+			return usable("google-calendar", func() bool {
+				return skills.CalendarWebStatus().Connected || skills.CalendarCheck().Connected
+			})
+		},
+		Gmail: func() bool {
+			return usable("gmail", func() bool {
+				return skills.GmailWebStatus().Connected
+			})
+		},
+		Outlook: func() bool {
+			return usable("outlook", func() bool {
+				return skills.OutlookWebStatus().Connected
+			})
+		},
+		Spotify: func() bool {
+			return usable("spotify", func() bool {
+				return skills.SpotifyWebStatus().Connected
+			})
+		},
+		Github: func() bool {
+			return usable("github", func() bool { return credentials.GithubConfigured() })
+		},
+		Notion: func() bool {
+			return usable("notion", func() bool { return credentials.NotionConfigured() })
+		},
+	})
+	return r
+}
+
+// publishGoalCard records a goal lifecycle event as a goal_update card
+// for fetch-on-open (GET /v1/cards). Store-only: the acting client
+// already sees its own result; other surfaces catch up on fetch.
+// Fanned out to mobile + web so both channels see it on fetch.
+func publishGoalCard(verb, id, text string) {
+	c, err := cards.New(cards.KindGoalUpdate, "Goal "+verb, text)
+	if err != nil {
+		return
+	}
+	c.Topic = "goal:" + id
+	c.Data = map[string]interface{}{"goal_id": id, "verb": verb}
+	cards.DefaultStore.Add("mobile", c)
+	cards.DefaultStore.Add("web", c)
+}
+
+// connectedAppsList builds the device-facing connected-apps model.
+//
+// Canonical contract: connected apps are external systems Kaya acts on
+// (Gmail, Calendar, Home Assistant, ...), served at GET /v1/connected-apps
+// under the key "connected_apps". Channel transports (Telegram, Slack,
+// ...) are never included — use GET /v1/channels/status for those. Model
+// providers (OpenAI, Anthropic) are never included — use /v1/providers.
+func connectedAppsList() []map[string]interface{} {
+	v := credentials.New(configDir())
+	out := make([]map[string]interface{}, 0, len(connectedapp.FirstParty()))
+	for _, c := range connectedapp.FirstParty() {
+		ref := v.Ref(c.Provider)
+		status := string(ref.Status)
+		// Home Assistant stores url+token as a pair; surface one status.
+		if c.ID == "home-assistant" {
+			if u, t := credentials.HassEndpoint(); u != "" && t != "" {
+				status = string(credentials.StatusConnected)
+			} else if status == string(credentials.StatusConnected) {
+				// keep vault verdict
+			} else {
+				status = string(credentials.StatusNotConfigured)
+			}
+		}
+		// Google Calendar OAuth lives outside the vault (token file).
+		if c.ID == "google-calendar" {
+			if web, legacy := skills.CalendarWebStatus(), skills.CalendarCheck(); web.Connected || legacy.Connected {
+				status = string(credentials.StatusConnected)
+			} else if web.Status == skills.CalendarNeedsReauth || legacy.Status == skills.CalendarNeedsReauth {
+				status = string(credentials.StatusExpired)
+			}
+		}
+		// Gmail OAuth lives outside the vault (token file).
+		if c.ID == "gmail" {
+			if gm := skills.GmailWebStatus(); gm.Connected {
+				status = string(credentials.StatusConnected)
+			} else if gm.Status == skills.CalendarNeedsReauth {
+				status = string(credentials.StatusExpired)
+			}
+		}
+		// Outlook OAuth lives outside the vault (token file).
+		if c.ID == "outlook" {
+			if om := skills.OutlookWebStatus(); om.Connected {
+				status = string(credentials.StatusConnected)
+			} else if om.Status == skills.CalendarNeedsReauth {
+				status = string(credentials.StatusExpired)
+			}
+		}
+		// Spotify OAuth lives outside the vault (token file).
+		if c.ID == "spotify" {
+			if sp := skills.SpotifyWebStatus(); sp.Connected {
+				status = string(credentials.StatusConnected)
+			} else if sp.Status == skills.CalendarNeedsReauth {
+				status = string(credentials.StatusExpired)
+			}
+		}
+		needsReauth := status == string(credentials.StatusExpired) ||
+			status == string(credentials.StatusInvalid) ||
+			status == string(credentials.StatusRevoked)
+		out = append(out, map[string]interface{}{
+			"id":           c.ID,
+			"provider":     c.Provider,
+			"display_name": c.DisplayName,
+			"category":     "integration",
+			"auth_kind":    string(c.AuthKind),
+			"setup":        string(c.Setup),
+			"capabilities": c.Capabilities,
+			"read_scopes":  c.ReadScopes,
+			"write_scopes": c.WriteScopes,
+			"status":       status,
+			"needs_reauth": needsReauth,
+			"help":         c.Help,
+			"summary":      c.Summary,
+			"advanced":     c.Advanced,
+		})
+	}
+	return out
+}
+
+// aboutOf names who a memory concerns when that is someone other than the owner.
+func aboutOf(e personalcontext.Entry) string {
+	if s := strings.TrimSpace(e.Subject); s != "" && !strings.EqualFold(s, "user") {
+		return s
+	}
+	return ""
+}

@@ -13,7 +13,7 @@ import (
 
 // Website logins.
 //
-// A website login is an owner-saved sign-in for a site Ghost's browser should
+// A website login is an owner-saved sign-in for a site Kaya's browser should
 // be able to reach: the login-page URL, the username and password, and
 // optional CSS selectors for the fields. It is stored as one sealed JSON blob
 // under "weblogin:<host>" in the same vault as every other credential, so the
@@ -87,11 +87,11 @@ func maskUsername(u string) string {
 }
 
 // configDirForWrites resolves the config directory whose .secrets.json is the
-// live vault: an explicit GHOST_CONFIG_DIR first, then the first directory
+// live vault: an explicit KAYA_CONFIG_DIR first, then the first directory
 // that already holds a secrets file, then the first standard candidate.
 func configDirForWrites() string {
 	dirs := secretDirs()
-	if d := strings.TrimSpace(os.Getenv("GHOST_CONFIG_DIR")); d != "" {
+	if d := strings.TrimSpace(os.Getenv("KAYA_CONFIG_DIR")); d != "" {
 		return d
 	}
 	for _, d := range dirs {

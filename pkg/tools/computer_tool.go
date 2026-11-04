@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/ianclemence/ghost/pkg/computer"
-	"github.com/ianclemence/ghost/pkg/permissions"
+	"github.com/ianclemence/kaya/pkg/computer"
+	"github.com/ianclemence/kaya/pkg/permissions"
 )
 
 // ComputerCall is the server-resolved binding for one computer operation.
@@ -59,7 +59,7 @@ func ComputerCallFromContext(ctx context.Context) (ComputerCall, bool) {
 type ComputerTool struct {
 	action string // screenshot | click | type | press_key
 	// Exec returns the executor or nil with an error when no computer is
-	// available on this Ghost.
+	// available on this Kaya.
 	Exec func() (computer.Computer, error)
 }
 
@@ -162,7 +162,7 @@ func (t *ComputerTool) Execute(ctx context.Context, args map[string]interface{})
 	}
 	exec, err := t.executor()
 	if err != nil || exec == nil {
-		return ErrorResult(policyDeny(permissions.CodeUnavailable, "Computer unavailable: no computer executor on this Ghost.", "The operator must attach a computer executor first."))
+		return ErrorResult(policyDeny(permissions.CodeUnavailable, "Computer unavailable: no computer executor on this Kaya.", "The operator must attach a computer executor first."))
 	}
 	op := computer.Op(t.action)
 	a := computer.Args{}

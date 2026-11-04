@@ -81,7 +81,7 @@ func (k Kind) Messaging() bool {
 }
 
 // Action reports whether the obligation names something the world outside
-// Ghost must do (as opposed to a purely personal task).
+// Kaya must do (as opposed to a purely personal task).
 func (k Kind) Action() string {
 	switch k {
 	case KindSend:
@@ -107,7 +107,7 @@ func (k Kind) Action() string {
 
 // Provenance ties a commitment back to the words that created it. Every field
 // is required for a commitment to exist: an obligation the owner cannot be
-// shown the origin of is not one Ghost may act on.
+// shown the origin of is not one Kaya may act on.
 type Provenance struct {
 	Session   string    `json:"session"`
 	MessageID string    `json:"message_id"`
@@ -298,7 +298,7 @@ func (s *Store) Attention(now time.Time, stallAfter time.Duration) ([]Commitment
 }
 
 // AttentionWith additionally re-opens a blocked commitment after blockedAfter,
-// so a promise Ghost could not move on its own is not silently abandoned —
+// so a promise Kaya could not move on its own is not silently abandoned —
 // the next offer can state what was missing.
 func (s *Store) AttentionWith(now time.Time, stallAfter, blockedAfter time.Duration) ([]Commitment, error) {
 	list, err := s.List()
@@ -361,7 +361,7 @@ func (s *Store) mutate(id string, fn func(*Commitment) error) (Commitment, error
 	return Commitment{}, fmt.Errorf("no commitment %q", id)
 }
 
-// Settle records the real outcome of work Ghost did on this commitment. It is
+// Settle records the real outcome of work Kaya did on this commitment. It is
 // the memory half of the loop: a failed action must NOT complete the
 // obligation, and a dismissal must not silently complete it either.
 func (s *Store) Settle(id string, status Status, outcome, note string) (Commitment, error) {
@@ -384,7 +384,7 @@ func (s *Store) Settle(id string, status Status, outcome, note string) (Commitme
 	})
 }
 
-// MarkAttempt records that Ghost worked on the obligation, so a repeated
+// MarkAttempt records that Kaya worked on the obligation, so a repeated
 // failure does not look like a first try.
 func (s *Store) MarkAttempt(id string) (Commitment, error) {
 	return s.mutate(id, func(c *Commitment) error {

@@ -8,7 +8,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/ianclemence/ghost/pkg/artifacts"
+	"github.com/ianclemence/kaya/pkg/artifacts"
 	_ "modernc.org/sqlite"
 )
 

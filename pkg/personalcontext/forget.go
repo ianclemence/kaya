@@ -1,7 +1,7 @@
 package personalcontext
 
 import (
-	"github.com/ianclemence/ghost/pkg/utils"
+	"github.com/ianclemence/kaya/pkg/utils"
 	"os"
 	"path/filepath"
 	"strings"
@@ -24,9 +24,9 @@ func (s *Store) Workspace() string {
 }
 
 // chainOf returns id and every version it replaced (entries whose
-// SupersededBy leads to it). "Forget my dentist" means every version Ghost
+// SupersededBy leads to it). "Forget my dentist" means every version Kaya
 // held, not only the last: an older version left in history comes back when
-// Ghost searches.
+// Kaya searches.
 func (s *Store) chainOf(id string) []Entry {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
@@ -99,7 +99,7 @@ func forgetNames(values []string) []string {
 }
 
 var forgetStopwords = map[string]bool{
-	"their": true, "they": true, "user": true, "owner": true, "ghost": true,
+	"their": true, "they": true, "user": true, "owner": true, "kaya": true,
 	"monday": true, "tuesday": true, "wednesday": true, "thursday": true, "friday": true,
 	"saturday": true, "sunday": true, "january": true, "february": true, "march": true,
 	"april": true, "june": true, "july": true, "august": true, "september": true,
@@ -191,10 +191,10 @@ func stringTokenSet(lower string) map[string]struct{} {
 	return out
 }
 
-// scrubNotes removes lines carrying a forgotten fact from Ghost's own
+// scrubNotes removes lines carrying a forgotten fact from Kaya's own
 // derived notes: the daily journal (memory/YYYY-MM-DD.md) and MEMORY.md. These
-// are Ghost's summaries of the conversation, not the conversation itself, and
-// they are what Ghost searched when it recited a "forgotten" dentist.
+// are Kaya's summaries of the conversation, not the conversation itself, and
+// they are what Kaya searched when it recited a "forgotten" dentist.
 // Returns how many lines went.
 func scrubNotes(workspace string, values, names, topics []string) int {
 	if len(values) == 0 && len(names) == 0 {
@@ -233,12 +233,12 @@ func scrubNotes(workspace string, values, names, topics []string) int {
 }
 
 // OwnerForgetReason marks a retraction the owner asked for. Only these are
-// kept out of Ghost's notes from then on; an engineering clean-up (a false
+// kept out of Kaya's notes from then on; an engineering clean-up (a false
 // positive, test data) is not a wish to never hear of it again.
-const OwnerForgetReason = "the owner asked Ghost to forget it"
+const OwnerForgetReason = "the owner asked Kaya to forget it"
 
 // DropForgotten removes from text every line that carries a fact the owner
-// asked Ghost to forget. Every writer of Ghost's notes runs its text through
+// asked Kaya to forget. Every writer of Kaya's notes runs its text through
 // it: forgetting scrubbed the notes once, and the turn's own journal summary
 // then wrote "the user said their barber is Somsak… then asked to forget it"
 // straight back in.
@@ -262,8 +262,8 @@ func DropForgotten(workspace, text string) string {
 }
 
 // ForgottenMatcher returns a test for "does this text carry something the
-// owner asked Ghost to forget", or nil when nothing is forgotten. Searches
-// over old conversations use it to keep a forgotten fact out of what Ghost
+// owner asked Kaya to forget", or nil when nothing is forgotten. Searches
+// over old conversations use it to keep a forgotten fact out of what Kaya
 // reads back, while the conversation itself stays as it was.
 func ForgottenMatcher(workspace string) func(string) bool {
 	s, err := Open(workspace)
@@ -297,7 +297,7 @@ func ForgottenMatcher(workspace string) func(string) bool {
 	}
 }
 
-// ScrubForgottenNotes runs DropForgotten over every note Ghost has already
+// ScrubForgottenNotes runs DropForgotten over every note Kaya has already
 // written, so lines saved before a forget (or before this existed) go too.
 // Returns how many lines it removed.
 func ScrubForgottenNotes(workspace string) int {
@@ -327,7 +327,7 @@ func ScrubForgottenNotes(workspace string) int {
 
 // resetUserDoc puts a USER.md identity line back to its placeholder when the
 // belief it was filled from is forgotten. USER.md is read on every turn, so a
-// forgotten name or city kept there was still in front of Ghost.
+// forgotten name or city kept there was still in front of Kaya.
 func resetUserDoc(workspace string, chain []Entry) {
 	field := ""
 	for _, e := range chain {
@@ -374,7 +374,7 @@ func (s *Store) hasCurrentSubject(subject string) bool {
 	return false
 }
 
-// noteFiles are the text stores Ghost writes about the owner, besides the
+// noteFiles are the text stores Kaya writes about the owner, besides the
 // belief log: daily notes, reflections, captures and the journal. Forgetting
 // has to reach every one of them.
 func noteFiles(workspace string) []string {
@@ -386,7 +386,7 @@ func noteFiles(workspace string) []string {
 	return files
 }
 
-// ForgottenValues are the values of every belief the owner asked Ghost to
+// ForgottenValues are the values of every belief the owner asked Kaya to
 // forget and has not told it again since.
 func ForgottenValues(workspace string) []string {
 	s, err := Open(workspace)
@@ -432,7 +432,7 @@ func ForgetStatement(store *Store, workspace, text string) int {
 	return n
 }
 
-// HousekeepingReasonPrefix marks a retraction Ghost's maintenance made on its
+// HousekeepingReasonPrefix marks a retraction Kaya's maintenance made on its
 // own account, such as clearing facts a test client filed. It is recorded as
 // that, never as the owner asking, so it does not keep a subject out of the
 // owner's notes from then on.

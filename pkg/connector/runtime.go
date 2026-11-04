@@ -13,7 +13,7 @@ const InstalledDir = "connectors"
 
 // LoadInstalled loads every valid connector under <workspace>/connectors.
 // A missing directory is not an error. Invalid manifests are skipped here —
-// `ghost connector review` is the surface that reports them — so one bad
+// `kaya connector review` is the surface that reports them — so one bad
 // install can never break the runtime.
 func LoadInstalled(workspace string) ([]*Manifest, error) {
 	if strings.TrimSpace(workspace) == "" {

@@ -7,12 +7,12 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/ianclemence/ghost/pkg/config"
+	"github.com/ianclemence/kaya/pkg/config"
 )
 
 // Sign-in to Google, Microsoft and Spotify needs an app registered with them.
-// Ghost does not ship one, so the owner registers their own (a few minutes,
-// free) and gives Ghost its ID and secret. They are kept sealed, outside the
+// Kaya does not ship one, so the owner registers their own (a few minutes,
+// free) and gives Kaya its ID and secret. They are kept sealed, outside the
 // backups, like the tokens they produce, and are readable by both the console
 // and the daemon so a token can be refreshed long after sign-in.
 //
@@ -50,9 +50,9 @@ func DefaultRedirect(provider string) string {
 func oauthClientsPath() string { return filepath.Join(CalendarTokenDir(), "oauth-clients.json") }
 
 var envKeys = map[string][3]string{
-	ProviderGoogle:    {"GHOST_GOOGLE_CLIENT_ID", "GHOST_GOOGLE_CLIENT_SECRET", ""},
-	ProviderMicrosoft: {"GHOST_OUTLOOK_CLIENT_ID", "GHOST_OUTLOOK_CLIENT_SECRET", "GHOST_OUTLOOK_TENANT"},
-	ProviderSpotify:   {"GHOST_SPOTIFY_CLIENT_ID", "GHOST_SPOTIFY_CLIENT_SECRET", ""},
+	ProviderGoogle:    {"KAYA_GOOGLE_CLIENT_ID", "KAYA_GOOGLE_CLIENT_SECRET", ""},
+	ProviderMicrosoft: {"KAYA_OUTLOOK_CLIENT_ID", "KAYA_OUTLOOK_CLIENT_SECRET", "KAYA_OUTLOOK_TENANT"},
+	ProviderSpotify:   {"KAYA_SPOTIFY_CLIENT_ID", "KAYA_SPOTIFY_CLIENT_SECRET", ""},
 }
 
 func loadOAuthClients() map[string]OAuthClient {
@@ -162,6 +162,6 @@ func redirectOr(env, provider string) string {
 // ClientConfigs for each service, from the owner's app.
 func CalendarClientConfig() (CalendarOAuthConfig, bool) {
 	c := LoadOAuthClient(ProviderGoogle)
-	cfg := CalendarOAuthConfig{ClientID: c.ClientID, ClientSecret: c.ClientSecret, RedirectURL: redirectOr("GHOST_CALENDAR_REDIRECT_URL", ProviderGoogle)}
+	cfg := CalendarOAuthConfig{ClientID: c.ClientID, ClientSecret: c.ClientSecret, RedirectURL: redirectOr("KAYA_CALENDAR_REDIRECT_URL", ProviderGoogle)}
 	return cfg, cfg.ClientID != "" && cfg.ClientSecret != ""
 }

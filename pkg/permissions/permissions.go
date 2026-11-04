@@ -1,8 +1,8 @@
-// Package permissions is Ghost's central permission broker.
+// Package permissions is Kaya's central permission broker.
 //
 // Borrowed pattern (OpenMausBot): a broker turns every risky action into
 // an inline decision — allow / deny in chat — with per-bot approval modes
-// (ask/auto/full/custom) and persistent scoped grants. Ghost adapts it to
+// (ask/auto/full/custom) and persistent scoped grants. Kaya adapts it to
 // the personal AI: capabilities declare risk, the broker sits between
 // capability resolution and consequential execution, and NOTHING
 // consequential runs on LLM authority alone.
@@ -28,7 +28,7 @@ import (
 	"time"
 	"unicode"
 
-	"github.com/ianclemence/ghost/pkg/skills"
+	"github.com/ianclemence/kaya/pkg/skills"
 )
 
 // RiskOf returns the declared risk for a capability ID (e.g.
@@ -40,7 +40,7 @@ func RiskOf(capabilityID string) Risk {
 		"find-nearby", "travel", "scraper", "calendar", "shopping",
 		"reminders", "daily-briefing", "hardware", "homeassistant",
 		"unit-converter", "world-clock", "calculator", "dictionary",
-		"translate", "timer", "hand-drawn-animation", "ghost-architecture",
+		"translate", "timer", "hand-drawn-animation", "kaya-architecture",
 	} {
 		if cap := skills.GetCapability(skill); cap.ID == capabilityID && cap.Risk != "" {
 			return Risk(cap.Risk)
@@ -180,8 +180,8 @@ type Grant struct {
 const DefaultGrantTTL = 90 * 24 * time.Hour
 
 // A task grant follows the work, not the clock. The runtime has no task id
-// to bind to, so a task is "Ghost keeps using this": every use extends the
-// grant by TaskIdleWindow, and the grant ends when Ghost goes quiet for that
+// to bind to, so a task is "Kaya keeps using this": every use extends the
+// grant by TaskIdleWindow, and the grant ends when Kaya goes quiet for that
 // long, or at TaskGrantTTL after it was given, whichever comes first.
 const (
 	TaskIdleWindow = 10 * time.Minute
@@ -1023,7 +1023,7 @@ func cardTitle(capability, action string) string {
 	switch {
 	// Running things is the highest-stakes grant: name it exactly.
 	case has("exec", "shell", "sandbox"):
-		return "Run commands on this Ghost?"
+		return "Run commands on this Kaya?"
 	case has("computer"):
 		if has("inspect", "screenshot") {
 			return "See this computer's screen?"
@@ -1081,7 +1081,7 @@ func prettifyAction(act string) string {
 // machineReason matches the broker's own "capability via action" label.
 var machineReason = regexp.MustCompile(`^[a-z0-9_.:-]+ via [a-z0-9_.:-]+$`)
 
-// plainReason says, in a sentence, what approving this would let Ghost do.
+// plainReason says, in a sentence, what approving this would let Kaya do.
 func plainReason(capability, action, title string) string {
 	lc := strings.ToLower(capability + " " + action)
 	has := func(words ...string) bool {
@@ -1094,28 +1094,28 @@ func plainReason(capability, action, title string) string {
 	}
 	switch {
 	case has("exec", "shell", "sandbox"):
-		return "Ghost wants to run a command on your Pod."
+		return "Kaya wants to run a command on your Pod."
 	case has("mail"):
 		if title == "Read your email?" {
-			return "Ghost wants to look through your inbox."
+			return "Kaya wants to look through your inbox."
 		}
-		return "Ghost wants to send an email from your account."
+		return "Kaya wants to send an email from your account."
 	case has("schedule", "reminder", "cron", "routine") && has("cancel"):
-		return "Ghost wants to cancel something it scheduled for you, as you asked."
+		return "Kaya wants to cancel something it scheduled for you, as you asked."
 	case has("schedule", "reminder", "cron", "routine") && has("modify"):
-		return "Ghost wants to change something it scheduled for you, as you asked."
+		return "Kaya wants to change something it scheduled for you, as you asked."
 	case has("schedule", "reminder", "cron", "routine"):
-		return "Ghost wants to set this up to run later, as you asked."
+		return "Kaya wants to set this up to run later, as you asked."
 	case has("calendar"):
-		return "Ghost wants to use your calendar."
+		return "Kaya wants to use your calendar."
 	case has("browser") && has("login", "sign_in", "signin"):
-		return "Ghost wants to sign in to a website using a login you saved."
+		return "Kaya wants to sign in to a website using a login you saved."
 	case has("browser"):
-		return "Ghost wants to use the web browser."
+		return "Kaya wants to use the web browser."
 	case has("delete_file", "file.delete"):
-		return "Ghost wants to delete a file from its workspace. This can't be undone."
+		return "Kaya wants to delete a file from its workspace. This can't be undone."
 	case has("file"):
-		return "Ghost wants to work with your files."
+		return "Kaya wants to work with your files."
 	}
-	return "Ghost needs your approval to continue."
+	return "Kaya needs your approval to continue."
 }

@@ -4,7 +4,7 @@ import "strings"
 
 // Release guard: production must run a release, not a working tree.
 //
-// `ghost update` builds and deploys whatever is in the checkout. If the
+// `kaya update` builds and deploys whatever is in the checkout. If the
 // checkout has uncommitted changes, that would push prototype work straight
 // into the running install. This guard blocks it unless --force is given.
 

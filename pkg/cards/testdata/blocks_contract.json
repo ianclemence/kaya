@@ -1,5 +1,5 @@
 {
-  "_note": "The contract between the Pod (pkg/cards) and the phone (ghost-app lib/cards-contract.json). Both sides test every case here. A card the Pod accepts must show the same number of blocks on the phone; a card the Pod rejects must never reach one. Keep the two copies identical.",
+  "_note": "The contract between the Pod (pkg/cards) and the phone (kaya-app lib/cards-contract.json). Both sides test every case here. A card the Pod accepts must show the same number of blocks on the phone; a card the Pod rejects must never reach one. Keep the two copies identical.",
   "valid": [
     {
       "name": "weather glance",
@@ -112,7 +112,7 @@
           {
             "type": "code",
             "language": "bash",
-            "code": "ghost routines add \"check flights\""
+            "code": "kaya routines add \"check flights\""
           },
           {
             "type": "text",

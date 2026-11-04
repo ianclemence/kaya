@@ -43,7 +43,7 @@ func NewFindToolsTool(all *ToolRegistry) *FindToolsTool { return &FindToolsTool{
 func (t *FindToolsTool) Name() string { return "find_tools" }
 
 func (t *FindToolsTool) Description() string {
-	return "Look for a tool you were not given for this request. Use it only when the owner asks for something Ghost may be able to do and none of your tools fits " +
+	return "Look for a tool you were not given for this request. Use it only when the owner asks for something Kaya may be able to do and none of your tools fits " +
 		"(\"turn off the lights\", \"what's playing\", \"check my flight\"). Say in a few words what you need done. The best matches become available to you straight away."
 }
 

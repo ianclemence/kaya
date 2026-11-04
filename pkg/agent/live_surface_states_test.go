@@ -4,17 +4,17 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ianclemence/ghost/pkg/bus"
-	"github.com/ianclemence/ghost/pkg/live"
+	"github.com/ianclemence/kaya/pkg/bus"
+	"github.com/ianclemence/kaya/pkg/live"
 )
 
 // The gates must keep the Live Surface plane truthful: waiting while an
-// approval pends, active while Ghost works, failed when execution errors,
+// approval pends, active while Kaya works, failed when execution errors,
 // with a session-linked announcement on each transition.
 func TestGateSurfaceStatesAndAnnouncements(t *testing.T) {
 	h := newGateHarness(t)
 	al := h.loop
-	al.SetLivePlane(live.NewRegistry(h.ghostID))
+	al.SetLivePlane(live.NewRegistry(h.kayaID))
 	b := bus.NewMessageBus()
 	al.bus = b
 	ch, unsub := b.SubscribeOutbound("test-states", false, 32)
@@ -75,7 +75,7 @@ func TestGateSurfaceStatesAndAnnouncements(t *testing.T) {
 	}
 
 	// 3. One step erroring is not the task failing: the surface stays active
-	// (Ghost usually tries another way) and is still announced. Only the
+	// (Kaya usually tries another way) and is still announced. Only the
 	// turn's outcome settles it, and a failed turn fails it.
 	h.stubs["browser_snapshot"].failWith = true
 	res, _, _ = al.maybeRunBrowserTool(h.toolCtx(), al.tools, tc2, h.opts("sess-fail"), nil)

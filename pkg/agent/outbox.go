@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ianclemence/ghost/pkg/proactive"
+	"github.com/ianclemence/kaya/pkg/proactive"
 )
 
 // Deferred delivery: notices that cannot be delivered now (no live session,

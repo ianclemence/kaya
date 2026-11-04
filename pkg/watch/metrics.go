@@ -8,7 +8,7 @@ import (
 // Metrics is the in-process counter set for watch activity. It answers the
 // observability questions that a single watch record cannot: how much
 // background work is happening, how often the world actually moved, and how
-// often Ghost stayed quiet (and why). Counters are process-local — durable
+// often Kaya stayed quiet (and why). Counters are process-local — durable
 // truth lives in the store; this is the rate, not the record.
 type Metrics struct {
 	mu sync.Mutex

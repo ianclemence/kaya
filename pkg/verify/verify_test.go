@@ -25,7 +25,7 @@ func TestVerifySuitePasses(t *testing.T) {
 func TestRenderHuman(t *testing.T) {
 	rep := Run(Options{Timeout: 120000000000})
 	out := Render(rep)
-	if !strings.Contains(out, "GHOST VERIFICATION") || !strings.Contains(out, "OVERALL:") {
+	if !strings.Contains(out, "KAYA VERIFICATION") || !strings.Contains(out, "OVERALL:") {
 		t.Fatal("report must be human-readable with overall verdict")
 	}
 	raw, err := json.Marshal(rep)

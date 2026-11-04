@@ -116,9 +116,9 @@ func (si *SkillInstaller) Uninstall(skillName string) error {
 func (si *SkillInstaller) ListAvailableSkills(ctx context.Context) ([]AvailableSkill, error) {
 	// There is no default registry: a Pod must never fetch skills from a
 	// location nobody on this project controls. The owner names one.
-	url := strings.TrimSpace(os.Getenv("GHOST_SKILLS_REGISTRY"))
+	url := strings.TrimSpace(os.Getenv("KAYA_SKILLS_REGISTRY"))
 	if url == "" {
-		return nil, fmt.Errorf("no skill registry is configured (set GHOST_SKILLS_REGISTRY to a skills.json address)")
+		return nil, fmt.Errorf("no skill registry is configured (set KAYA_SKILLS_REGISTRY to a skills.json address)")
 	}
 
 	client := &http.Client{Timeout: 15 * time.Second}
@@ -151,7 +151,7 @@ func (si *SkillInstaller) ListAvailableSkills(ctx context.Context) ([]AvailableS
 }
 
 func (si *SkillInstaller) ListBuiltinSkills() []BuiltinSkill {
-	builtinSkillsDir := filepath.Join(filepath.Dir(si.workspace), "GHOST", "skills")
+	builtinSkillsDir := filepath.Join(filepath.Dir(si.workspace), "KAYA", "skills")
 
 	entries, err := os.ReadDir(builtinSkillsDir)
 	if err != nil {

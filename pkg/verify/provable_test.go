@@ -12,7 +12,7 @@ import (
 
 func provableEnv(t *testing.T) *Env {
 	t.Helper()
-	ws, err := os.MkdirTemp("", "ghost-verify-test-")
+	ws, err := os.MkdirTemp("", "kaya-verify-test-")
 	if err != nil {
 		t.Fatal(err)
 	}

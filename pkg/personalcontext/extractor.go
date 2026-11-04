@@ -112,9 +112,9 @@ type declarationRule struct {
 var communicationStyleRegex = regexp.MustCompile(`(?i)\bi prefer\s+(concise|brief|short|detailed|thorough|elaborate|direct|casual|formal|verbose)\s+answers?\b`)
 
 // communicationFormatRegex captures communication-format cues (lists, bullets,
-// no emojis, tables, options, summaries, ask-before-destructive) that Ghost
+// no emojis, tables, options, summaries, ask-before-destructive) that Kaya
 // should follow. The first capture group is the cue value. With
-// communicationStyleRegex this is Ghost's "behavioral profile", surfaced to the
+// communicationStyleRegex this is Kaya's "behavioral profile", surfaced to the
 // model each turn.
 var communicationFormatRegex = regexp.MustCompile(`(?i)\bi\s+(?:prefer|like|really like|want)\s+(no\s+emojis?|(?:a|some)?\s*lists?|bullet\s+points?|bullets?|(?:a|some)?\s*options?|(?:a|some)?\s*tables?|(?:a|some)?\s*summar(?:y|ies)|(?:a|some)?\s*examples?|to\s+be\s+(?:asked|confirmed)\s+before\s+(?:deleting|destructive|any))`)
 

@@ -42,21 +42,21 @@ func TestOpsTargetDefaults(t *testing.T) {
 
 // Explicit env always wins, per variable.
 func TestOpsTargetEnvWins(t *testing.T) {
-	configDir, workspace, ok := ResolveOpsTarget(envOf("GHOST_CONFIG_DIR", "/custom/cfg"), 0, true)
+	configDir, workspace, ok := ResolveOpsTarget(envOf("KAYA_CONFIG_DIR", "/custom/cfg"), 0, true)
 	if !ok || configDir != "" || workspace != DefaultWorkspaceDir {
 		t.Fatalf("config override must win independently: %q %q %v", configDir, workspace, ok)
 	}
-	configDir, workspace, ok = ResolveOpsTarget(envOf("GHOST_WORKSPACE_DIR", "/w"), 0, true)
+	configDir, workspace, ok = ResolveOpsTarget(envOf("KAYA_WORKSPACE_DIR", "/w"), 0, true)
 	if !ok || configDir != DefaultConfigDir || workspace != "" {
 		t.Fatalf("workspace override must win independently: %q %q %v", configDir, workspace, ok)
 	}
-	// Legacy GHOST_WORKSPACE also suppresses the workspace default.
-	_, workspace, ok = ResolveOpsTarget(envOf("GHOST_WORKSPACE", "/legacy"), 0, true)
+	// Legacy KAYA_WORKSPACE also suppresses the workspace default.
+	_, workspace, ok = ResolveOpsTarget(envOf("KAYA_WORKSPACE", "/legacy"), 0, true)
 	if !ok || workspace != "" {
 		t.Fatalf("legacy workspace var must suppress default: %q %v", workspace, ok)
 	}
 	// Fully overridden: no opinion.
-	if _, _, ok := ResolveOpsTarget(envOf("GHOST_CONFIG_DIR", "/c", "GHOST_WORKSPACE_DIR", "/w"), 0, true); ok {
+	if _, _, ok := ResolveOpsTarget(envOf("KAYA_CONFIG_DIR", "/c", "KAYA_WORKSPACE_DIR", "/w"), 0, true); ok {
 		t.Fatal("fully overridden env must keep CLI resolution")
 	}
 }
@@ -66,25 +66,25 @@ func TestResolveInstalledConfig(t *testing.T) {
 	readable := func(string) bool { return true }
 	unreadable := func(string) bool { return false }
 
-	// Env wins: no override when GHOST_CONFIG_DIR is set.
+	// Env wins: no override when KAYA_CONFIG_DIR is set.
 	env := func(k string) string {
-		if k == "GHOST_CONFIG_DIR" {
+		if k == "KAYA_CONFIG_DIR" {
 			return "/custom"
 		}
 		return ""
 	}
 	if _, ok := ResolveInstalledConfig(env, true, readable); ok {
-		t.Fatal("explicit GHOST_CONFIG_DIR must not be overridden")
+		t.Fatal("explicit KAYA_CONFIG_DIR must not be overridden")
 	}
-	// No installed Ghost: no opinion.
+	// No installed Kaya: no opinion.
 	if _, ok := ResolveInstalledConfig(noenv, false, readable); ok {
-		t.Fatal("no installed Ghost means no override")
+		t.Fatal("no installed Kaya means no override")
 	}
 	// Installed + readable: use it.
 	if dir, ok := ResolveInstalledConfig(noenv, true, readable); !ok || dir != DefaultConfigDir {
 		t.Fatalf("installed+readable should resolve to %s, got %q ok=%v", DefaultConfigDir, dir, ok)
 	}
-	// Installed but unreadable (non-root /var/ghost): no override.
+	// Installed but unreadable (non-root /var/kaya): no override.
 	if _, ok := ResolveInstalledConfig(noenv, true, unreadable); ok {
 		t.Fatal("unreadable installed config must not be used")
 	}

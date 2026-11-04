@@ -1,4 +1,4 @@
-// Package product defines Ghost's product-level semantics: completion
+// Package product defines Kaya's product-level semantics: completion
 // states, error classes, message visibility, and user-facing language rules.
 //
 // The core rule: user-facing concepts must be product concepts. Internal
@@ -114,7 +114,7 @@ var userMessages = map[ErrorClass]string{
 	ErrValidation:     "I got an unexpected response and didn't want to guess. Please try again.",
 	ErrExecution:      "That didn't complete. Nothing was changed.",
 	ErrInternal:       "Something went wrong on my side. Please try again.",
-	ErrOffline:        "Ghost is offline, so I can't reach that right now.",
+	ErrOffline:        "Kaya is offline, so I can't reach that right now.",
 	ErrExpired:        "That connection expired and needs to be renewed.",
 	ErrRevoked:        "That connection was revoked and needs to be set up again.",
 }
@@ -126,7 +126,7 @@ var capabilityHints = map[string]map[ErrorClass]string{
 		ErrAuthRequired:   "Your calendar connection needs to be renewed.",
 		ErrExpired:        "Your calendar connection expired. Reconnect it to continue.",
 		ErrRevoked:        "Your calendar access was revoked. Reconnect it to continue.",
-		ErrOffline:        "Ghost is offline, so I can't reach your calendar right now.",
+		ErrOffline:        "Kaya is offline, so I can't reach your calendar right now.",
 	},
 	"flight": {
 		ErrConfigRequired: "Flight tracking isn't connected yet.",
@@ -138,19 +138,19 @@ var capabilityHints = map[string]map[ErrorClass]string{
 		ErrAuthRequired:   "Your Gmail connection needs to be renewed.",
 		ErrExpired:        "Your Gmail connection expired. Reconnect it to continue.",
 		ErrRevoked:        "Your Gmail access was revoked. Reconnect it to continue.",
-		ErrOffline:        "Ghost is offline, so I can't reach your email right now.",
+		ErrOffline:        "Kaya is offline, so I can't reach your email right now.",
 	},
 	"media": {
-		ErrConfigRequired: "Spotify isn't connected yet. Connect Spotify in Ghost settings under Connected Apps to continue.",
+		ErrConfigRequired: "Spotify isn't connected yet. Connect Spotify in Kaya settings under Connected Apps to continue.",
 		ErrAuthRequired:   "Your Spotify connection needs to be renewed.",
-		ErrOffline:        "Ghost is offline, so I can't reach Spotify right now.",
+		ErrOffline:        "Kaya is offline, so I can't reach Spotify right now.",
 	},
 	"code": {
-		ErrConfigRequired: "GitHub isn't connected yet. Add a read-only access token in Ghost settings under Connected Apps to continue.",
+		ErrConfigRequired: "GitHub isn't connected yet. Add a read-only access token in Kaya settings under Connected Apps to continue.",
 		ErrAuthRequired:   "Your GitHub connection needs to be renewed.",
 	},
 	"docs": {
-		ErrConfigRequired: "Notion isn't connected yet. Add an integration token in Ghost settings under Connected Apps to continue.",
+		ErrConfigRequired: "Notion isn't connected yet. Add an integration token in Kaya settings under Connected Apps to continue.",
 		ErrAuthRequired:   "Your Notion connection needs to be renewed.",
 	},
 	"weather": {
@@ -160,11 +160,11 @@ var capabilityHints = map[string]map[ErrorClass]string{
 		// execution_error line is transactional and reads as if something
 		// broke. Reads get read language.
 		ErrExecution: "The weather service didn't come back with a reading. Please try again in a moment.",
-		ErrOffline:   "Ghost is offline, so I can't fetch fresh weather right now.",
+		ErrOffline:   "Kaya is offline, so I can't fetch fresh weather right now.",
 	},
 	"aqi": {
 		ErrExecution: "The air quality service didn't come back with a reading. Please try again in a moment.",
-		ErrOffline:   "Ghost is offline, so I can't fetch fresh air quality right now.",
+		ErrOffline:   "Kaya is offline, so I can't fetch fresh air quality right now.",
 	},
 	"reminder": {
 		ErrClarification: "What time should I remind you?",

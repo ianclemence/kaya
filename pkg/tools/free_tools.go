@@ -3,7 +3,7 @@ package tools
 import (
 	"strings"
 
-	"github.com/ianclemence/ghost/pkg/capability"
+	"github.com/ianclemence/kaya/pkg/capability"
 )
 
 // Free consequential tools are model-invokable without a committed
@@ -68,7 +68,7 @@ var FreeConsequentialTools = []FreeTool{
 	// Browser submit declares purchase-class intent: quote-bound approval
 	// plus receipt evidence. Always broker-gated, never auto-authorized.
 	{Name: "browser_submit", Capability: "browser.transact", Risk: RiskHighImpact},
-	// Artifact publishing writes only Ghost's own validated handoff store
+	// Artifact publishing writes only Kaya's own validated handoff store
 	// (existence, bounds, and estate membership are enforced by the
 	// artifacts package, not the model). Same class as scheduling.
 	{Name: "publish_artifact", Capability: "artifact.publish", Risk: RiskLow},

@@ -13,7 +13,7 @@ import (
 	"time"
 )
 
-const DefaultProfilesDir = ".ghost/profiles"
+const DefaultProfilesDir = ".kaya/profiles"
 
 type Manager struct {
 	profilesDir string
@@ -49,7 +49,7 @@ func (m *Manager) List() ([]*Profile, error) {
 		}
 		p := &Profile{
 			Name:      entry.Name(),
-			GhostHome: filepath.Join(m.profilesDir, entry.Name()),
+			KayaHome: filepath.Join(m.profilesDir, entry.Name()),
 		}
 		if err := p.Load(); err != nil {
 			continue
@@ -77,7 +77,7 @@ func (m *Manager) Get(name string) (*Profile, error) {
 
 	p := &Profile{
 		Name:      name,
-		GhostHome: path,
+		KayaHome: path,
 	}
 	if err := p.Load(); err != nil {
 		return nil, fmt.Errorf("failed to load profile %q: %w", name, err)
@@ -98,7 +98,7 @@ func (m *Manager) Create(name, description string, env map[string]string) (*Prof
 		Name:        name,
 		Title:       name,
 		Description: description,
-		GhostHome:   path,
+		KayaHome:   path,
 		Workspace:   filepath.Join(path, "workspace"),
 		Skills:      []string{},
 		Env:         env,
@@ -148,7 +148,7 @@ func (m *Manager) Duplicate(sourceName, newName string) (*Profile, error) {
 
 	p := &Profile{
 		Name:      newName,
-		GhostHome: dstPath,
+		KayaHome: dstPath,
 	}
 	if err := p.Load(); err != nil {
 		os.RemoveAll(dstPath)
@@ -177,7 +177,7 @@ func (m *Manager) UniqueName(base string) string {
 }
 
 func (m *Manager) ActiveProfile() string {
-	val := os.Getenv("GHOST_PROFILE")
+	val := os.Getenv("KAYA_PROFILE")
 	if val != "" {
 		return val
 	}
@@ -185,7 +185,7 @@ func (m *Manager) ActiveProfile() string {
 }
 
 func (m *Manager) SetActive(name string) error {
-	return os.Setenv("GHOST_PROFILE", name)
+	return os.Setenv("KAYA_PROFILE", name)
 }
 
 func (m *Manager) ExportEnv(name string) (map[string]string, error) {
@@ -194,8 +194,8 @@ func (m *Manager) ExportEnv(name string) (map[string]string, error) {
 		return nil, err
 	}
 	env := map[string]string{
-		"GHOST_HOME":    p.GhostHome,
-		"GHOST_PROFILE": p.Name,
+		"KAYA_HOME":    p.KayaHome,
+		"KAYA_PROFILE": p.Name,
 	}
 	for k, v := range p.Env {
 		env[k] = v
@@ -493,7 +493,7 @@ func (m *Manager) listUnlocked() ([]*Profile, error) {
 		}
 		p := &Profile{
 			Name:      entry.Name(),
-			GhostHome: filepath.Join(m.profilesDir, entry.Name()),
+			KayaHome: filepath.Join(m.profilesDir, entry.Name()),
 		}
 		if err := p.Load(); err != nil {
 			continue

@@ -9,8 +9,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ianclemence/ghost/pkg/personalcontext"
-	"github.com/ianclemence/ghost/pkg/session"
+	"github.com/ianclemence/kaya/pkg/personalcontext"
+	"github.com/ianclemence/kaya/pkg/session"
 )
 
 // forgetHandler implements /forget: the user-facing way to retire Personal
@@ -331,7 +331,7 @@ func forgetPurgeMemory(ctx context.Context, rt *Runtime, values []string) string
 		ws = rt.Workspace
 	}
 	if ws == "" {
-		if v := strings.TrimSpace(os.Getenv("GHOST_WORKSPACE_DIR")); v != "" {
+		if v := strings.TrimSpace(os.Getenv("KAYA_WORKSPACE_DIR")); v != "" {
 			ws = v
 		}
 	}

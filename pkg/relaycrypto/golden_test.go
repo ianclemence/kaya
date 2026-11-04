@@ -7,14 +7,14 @@ import (
 	"testing"
 )
 
-// A fixed exchange, byte for byte. The phone app (ghost-app, lib/sealedFetch.test.ts)
+// A fixed exchange, byte for byte. The phone app (kaya-app, lib/sealedFetch.test.ts)
 // pins the very same hex, so the two implementations cannot drift apart unnoticed.
 const (
 	goldenPodSeed  = "0101010101010101010101010101010101010101010101010101010101010101"
 	goldenEphSeed  = "0202020202020202020202020202020202020202020202020202020202020202"
-	goldenPlain    = "hello ghost"
-	goldenEnvelope = "01ce8d3ad1ccb633ec7b70c17814a5c76ecd029685050d344745ba05870e587d590000000000000001b0fb8fe7adf9266b3d780e9ec9f2f1c8cceffdf65c280bf38baad1"
-	goldenReply    = "00000000000000018613e306209f58e4f8c4fce91eac47740ef7441563"
+	goldenPlain    = "hello kaya"
+	goldenEnvelope = "01ce8d3ad1ccb633ec7b70c17814a5c76ecd029685050d344745ba05870e587d590000000000000001ee1760809d142eadfece0273e280ac3cd7229d6f2903a2a8368b"
+	goldenReply    = "000000000000000176801e4a3e3cfaeae5fab7b1b8a896b02e5af21920"
 )
 
 func TestGoldenExchange(t *testing.T) {

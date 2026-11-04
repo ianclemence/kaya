@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"github.com/ianclemence/ghost/pkg/credentials"
+	"github.com/ianclemence/kaya/pkg/credentials"
 	"os"
 	"os/exec"
 	"regexp"
@@ -72,10 +72,10 @@ func (t *ExecTool) Name() string {
 }
 
 func (t *ExecTool) Description() string {
-	return "Run a shell command and return its output. Use when: a skill or task requires an exact command (e.g. a CLI tool), or you need real local/OS data. Do NOT use when: a Ghost skill already does the job, or to double-check a web fact you could look up. Reading a web page is web_fetch's job, not curl's — never reach for this to read a page. " +
+	return "Run a shell command and return its output. Use when: a skill or task requires an exact command (e.g. a CLI tool), or you need real local/OS data. Do NOT use when: a Kaya skill already does the job, or to double-check a web fact you could look up. Reading a web page is web_fetch's job, not curl's — never reach for this to read a page. " +
 		"A command gets 60 seconds unless you pass timeout_seconds (up to 1800); for a build, an install or a test run, pass it up front. Everything the command started stops when it returns, so never background work with & or nohup: run it in the foreground with enough time. " +
 		"Commands run under sh, not bash: no [[ ]], arrays or ${PIPESTATUS}; use bash -c '...' if you need them. " +
-		"Git works here and your commits are made as Ghost; there are no credentials, so pushing and private repositories need the owner. " +
+		"Git works here and your commits are made as Kaya; there are no credentials, so pushing and private repositories need the owner. " +
 		"Returns combined stdout/stderr and the exit code."
 }
 
@@ -154,7 +154,7 @@ func (t *ExecTool) Execute(ctx context.Context, args map[string]interface{}) *To
 	if cwd != "" {
 		cmd.Dir = cwd
 	}
-	// Never let a model-initiated command inherit Ghost's credentials:
+	// Never let a model-initiated command inherit Kaya's credentials:
 	// start from a minimal allowlist and confine HOME to the workspace.
 	ensureGitIdentity(t.workingDir)
 	HardenCommand(cmd, t.workingDir, gitSandboxEnv())
@@ -224,7 +224,7 @@ func (t *ExecTool) guardCommand(command, cwd string) string {
 	}
 	// Primary-file protection is the same second layer for integrity:
 	// no command may name the database/config at all or take a
-	// destructive shape anywhere near Ghost's primary estate.
+	// destructive shape anywhere near Kaya's primary estate.
 	if msg, denied := execDeniedPrimaryFiles(command, cwd, t.workingDir); denied {
 		return msg
 	}
@@ -238,11 +238,11 @@ func (t *ExecTool) guardCommand(command, cwd string) string {
 			return err.Error()
 		}
 	}
-	// Ghost's runtime home beside the workspace (backups, install
+	// Kaya's runtime home beside the workspace (backups, install
 	// snapshots) is never a working area: the sandbox does not mount it,
 	// and naming it as a working directory is refused outright.
-	if ghostRuntimeHomePath(t.workingDir, cwd) {
-		return "that working directory belongs to Ghost's own runtime; choose a project directory instead"
+	if kayaRuntimeHomePath(t.workingDir, cwd) {
+		return "that working directory belongs to Kaya's own runtime; choose a project directory instead"
 	}
 	return ""
 }

@@ -4,7 +4,7 @@ import (
 	"context"
 	"strings"
 
-	"github.com/ianclemence/ghost/pkg/bus"
+	"github.com/ianclemence/kaya/pkg/bus"
 )
 
 type Channel interface {
@@ -43,11 +43,11 @@ func (c *BaseChannel) IsRunning() bool {
 }
 
 // OnUnknownSender is told when someone who is not on a channel's allowlist
-// writes to Ghost, so the owner can hear that a stranger knocked (and, if it
+// writes to Kaya, so the owner can hear that a stranger knocked (and, if it
 // was a friend, allow them). It is set by the daemon; nil in tests.
 var OnUnknownSender func(channel, senderID string)
 
-// IsAllowed reports whether a sender may talk to Ghost through this channel.
+// IsAllowed reports whether a sender may talk to Kaya through this channel.
 // An empty allowlist allows nobody: a messaging channel reaches the owner's own
 // conversation, memory and tools, so it must be opened to named people on
 // purpose.
@@ -105,7 +105,7 @@ func (c *BaseChannel) HandleMessage(senderID, chatID, content string, media []st
 		return
 	}
 
-	// One conversation, many surfaces. An allowlisted sender — Ghost's
+	// One conversation, many surfaces. An allowlisted sender — Kaya's
 	// owner — talks into the shared conversation no matter which channel
 	// they used. The channel, chat and sender ride along on the message so
 	// the reply still goes back to the right place and the turn keeps its

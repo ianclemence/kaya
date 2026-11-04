@@ -2,7 +2,7 @@ package personalcontext
 
 import "sort"
 
-// PendingChange is something Ghost heard that disagrees with something the
+// PendingChange is something Kaya heard that disagrees with something the
 // owner told it. The old belief stays current; the new one waits, unconfirmed,
 // until the owner says which is right.
 type PendingChange struct {

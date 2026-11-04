@@ -1,7 +1,7 @@
 // package scheduled — policy additions: missed-run behavior, timezone
 // resolution, and deterministic idempotency keys.
 //
-// Missed runs (Ghost was offline during a scheduled run) need an explicit
+// Missed runs (Kaya was offline during a scheduled run) need an explicit
 // per-item decision: run once immediately, skip, run at the next scheduled
 // occurrence, or notify the user. Reminders default to notify (a commitment
 // whose moment has passed); recurring automations catch up once when they are
@@ -10,7 +10,7 @@
 // inside a grace window, else skip with notice. Execution keys make catch-up
 // safe: the same occurrence can never be delivered twice.
 //
-// Timezone is first-class: explicit request > user configuration > Ghost
+// Timezone is first-class: explicit request > user configuration > Kaya
 // configuration > UTC fallback. Never silently assume UTC when the user's
 // configured timezone is known; never infer a timezone from a casually
 // mentioned city.
@@ -22,7 +22,7 @@ import (
 	"time"
 )
 
-// MissedPolicy decides what happens when Ghost was offline for a run.
+// MissedPolicy decides what happens when Kaya was offline for a run.
 type MissedPolicy string
 
 const (
@@ -105,11 +105,11 @@ func ClassifyMissed(t ItemType, policy MissedPolicy, scheduledAt, now time.Time)
 }
 
 // ResolveTimezone implements the precedence: explicit request > user
-// configuration > Ghost configuration > UTC fallback. Empty inputs yield
+// configuration > Kaya configuration > UTC fallback. Empty inputs yield
 // "UTC" rather than a guess. A casually mentioned city must never be
 // passed here as an implicit zone — only configured values.
-func ResolveTimezone(explicit, user, ghost string) string {
-	for _, z := range []string{explicit, user, ghost} {
+func ResolveTimezone(explicit, user, kaya string) string {
+	for _, z := range []string{explicit, user, kaya} {
 		if z == "" {
 			continue
 		}

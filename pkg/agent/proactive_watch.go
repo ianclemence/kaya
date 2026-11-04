@@ -3,8 +3,8 @@ package agent
 import (
 	"time"
 
-	"github.com/ianclemence/ghost/pkg/cevents"
-	"github.com/ianclemence/ghost/pkg/logger"
+	"github.com/ianclemence/kaya/pkg/cevents"
+	"github.com/ianclemence/kaya/pkg/logger"
 )
 
 // Event-driven awareness.
@@ -31,7 +31,7 @@ import (
 // regardless.
 const proactiveEvalFloor = 3 * time.Second
 
-// awarenessEvent reports whether an event can change what Ghost should notice.
+// awarenessEvent reports whether an event can change what Kaya should notice.
 // Everything else is ignored before any work happens.
 func awarenessEvent(t cevents.Type) bool {
 	switch t {

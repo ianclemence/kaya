@@ -2,10 +2,10 @@
 name: network
 description: Scan the local network to discover connected devices, find IP addresses, check availability, and measure internet speed. Invoke when user asks "who is on the WiFi", "scan the network", "find devices on my LAN", "is X connected", "show me active IPs", "network scan", "check my internet speed", "run a speed test", or "bandwidth test". Requires nmap; speed test requires speedtest-cli.
 version: 1.2.0
-author: Ghost
+author: Kaya
 license: MIT
 metadata:
-  ghost:
+  kaya:
     tags: [network, scan, nmap, LAN, WiFi, discovery, speedtest, bandwidth]
 prerequisites:
   commands: [nmap]

@@ -7,12 +7,12 @@ import (
 	"testing"
 )
 
-// Real LocalComputer executor E2E. Opt-in via GHOST_E2E_COMPUTER=1 and a
+// Real LocalComputer executor E2E. Opt-in via KAYA_E2E_COMPUTER=1 and a
 // running X display with xdotool+scrot/import (e.g. Xvfb :99). Skipped
 // otherwise — a real executor run is never replaced by a fake success.
 func TestLocalComputerRealExecutorE2E(t *testing.T) {
-	if os.Getenv("GHOST_E2E_COMPUTER") == "" {
-		t.Skip("set GHOST_E2E_COMPUTER=1 on an X display with xdotool+scrot to run the real executor E2E")
+	if os.Getenv("KAYA_E2E_COMPUTER") == "" {
+		t.Skip("set KAYA_E2E_COMPUTER=1 on an X display with xdotool+scrot to run the real executor E2E")
 	}
 	c := NewLocalComputer("local")
 	state, _ := c.Authority()

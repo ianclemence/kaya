@@ -1,7 +1,7 @@
 package agent
 
-// Governance hooks: the agent loop's connection to the Ghost substrate —
-// canonical Ghost identity, permission broker, and canonical event
+// Governance hooks: the agent loop's connection to the Kaya substrate —
+// canonical Kaya identity, permission broker, and canonical event
 // stream. All hooks are nil-safe: an unwired loop behaves exactly as
 // before (fail-open only in the sense that nothing changes; the broker
 // itself fails closed when consulted).
@@ -18,12 +18,12 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/ianclemence/ghost/pkg/capability"
-	"github.com/ianclemence/ghost/pkg/cevents"
-	"github.com/ianclemence/ghost/pkg/contexts"
-	"github.com/ianclemence/ghost/pkg/permissions"
-	"github.com/ianclemence/ghost/pkg/product"
-	"github.com/ianclemence/ghost/pkg/tools"
+	"github.com/ianclemence/kaya/pkg/capability"
+	"github.com/ianclemence/kaya/pkg/cevents"
+	"github.com/ianclemence/kaya/pkg/contexts"
+	"github.com/ianclemence/kaya/pkg/permissions"
+	"github.com/ianclemence/kaya/pkg/product"
+	"github.com/ianclemence/kaya/pkg/tools"
 )
 
 // Governance carries the substrate handles for one AgentLoop.
@@ -35,7 +35,7 @@ type Governance struct {
 	// Resolver maps capabilities to their runtime-selected implementation
 	// (provider/tool). Nil disables provider annotation on events.
 	Resolver *capability.Resolver
-	GhostID  string
+	KayaID  string
 	AgentID  string
 
 	capMu    sync.Mutex
@@ -65,7 +65,7 @@ type Governance struct {
 // Guard is a deny-only authorization check evaluated after broker policy.
 // Returning a non-empty reason denies the call; returning "" abstains.
 // Guards have no allow result, so no composition or ordering of guards can
-// overturn a stronger denial. This is the Ghost form of the monotonic guard
+// overturn a stronger denial. This is the Kaya form of the monotonic guard
 // invariant: the Permission Broker remains authoritative, and a guard can
 // only make the outcome more restrictive.
 type Guard func(requestID, sessionKey, capabilityID, tool string, args map[string]interface{}) string
@@ -110,7 +110,7 @@ func (g *Governance) TurnStarted(requestID, sessionKey, channel, trajectoryID st
 	}
 	g.Events.Publish(&cevents.Event{
 		Type: cevents.AgentStarted, RequestID: requestID, SessionID: sessionKey,
-		GhostID: g.GhostID, AgentID: g.AgentID, TrajectoryID: trajectoryID,
+		KayaID: g.KayaID, AgentID: g.AgentID, TrajectoryID: trajectoryID,
 		Payload: map[string]interface{}{"channel": channel},
 	})
 }
@@ -140,7 +140,7 @@ func (g *Governance) TurnEnded(requestID, sessionKey, trajectoryID string, err e
 	}
 	g.Events.Publish(&cevents.Event{
 		Type: typ, RequestID: requestID, SessionID: sessionKey,
-		GhostID: g.GhostID, AgentID: g.AgentID, TrajectoryID: trajectoryID, Status: status,
+		KayaID: g.KayaID, AgentID: g.AgentID, TrajectoryID: trajectoryID, Status: status,
 	})
 	g.trajMu.Lock()
 	delete(g.trajectories, requestID)
@@ -229,7 +229,7 @@ func (g *Governance) CapabilityCommitted(requestID, sessionKey, capabilityID, tr
 	}
 	g.Events.Publish(&cevents.Event{
 		Type: cevents.CapabilityStarted, RequestID: requestID, SessionID: sessionKey,
-		GhostID: g.GhostID, AgentID: g.AgentID, TrajectoryID: trajectoryID,
+		KayaID: g.KayaID, AgentID: g.AgentID, TrajectoryID: trajectoryID,
 		Payload: map[string]interface{}{"capability": capabilityID},
 	})
 }
@@ -289,7 +289,7 @@ func (g *Governance) ToolRan(requestID, sessionKey, tool, trajectoryID string, f
 	// and failed are durable outcomes. A completed tool is internal by
 	// default, which hid every search and page read from Activity: only
 	// failures showed, so a turn that worked read as one that broke. The
-	// things Ghost does out in the world are shown ("Searched the web").
+	// things Kaya does out in the world are shown ("Searched the web").
 	vis := product.Visibility("")
 	if !failed {
 		if c, _ := payload["capability"].(string); activityWorthy(c) {
@@ -298,7 +298,7 @@ func (g *Governance) ToolRan(requestID, sessionKey, tool, trajectoryID string, f
 	}
 	g.Events.Publish(&cevents.Event{
 		Type: typ, RequestID: requestID, SessionID: sessionKey,
-		GhostID: g.GhostID, AgentID: g.AgentID, TrajectoryID: trajectoryID, Status: status,
+		KayaID: g.KayaID, AgentID: g.AgentID, TrajectoryID: trajectoryID, Status: status,
 		Visibility: vis,
 		Payload:    payload,
 	})
@@ -307,7 +307,7 @@ func (g *Governance) ToolRan(requestID, sessionKey, tool, trajectoryID string, f
 // activityWorthy reports whether a successful capability is something the
 // owner would want to see in Activity: looking things up on the web, reaching
 // outside services, devices and media. Memory, file and shell bookkeeping
-// stays out: it is Ghost thinking, not Ghost acting.
+// stays out: it is Kaya thinking, not Kaya acting.
 func activityWorthy(capabilityID string) bool {
 	for _, m := range []string{"web.", "weather", "aqi", "places", "currency", "crypto",
 		"email", "message", "device", "media", "mcp", "artifact"} {
@@ -331,7 +331,7 @@ func (g *Governance) CapabilityDone(requestID, sessionKey, capabilityID, traject
 	}
 	g.Events.Publish(&cevents.Event{
 		Type: typ, RequestID: requestID, SessionID: sessionKey,
-		GhostID: g.GhostID, AgentID: g.AgentID, TrajectoryID: trajectoryID, Status: status,
+		KayaID: g.KayaID, AgentID: g.AgentID, TrajectoryID: trajectoryID, Status: status,
 		Payload: map[string]interface{}{"capability": capabilityID},
 	})
 }
@@ -357,7 +357,7 @@ func (g *Governance) VerificationRan(sessionKey, tool, trajectoryID string, late
 	}
 	g.Events.Publish(&cevents.Event{
 		Type: typ, SessionID: sessionKey,
-		GhostID: g.GhostID, AgentID: g.AgentID, TrajectoryID: trajectoryID, Status: status,
+		KayaID: g.KayaID, AgentID: g.AgentID, TrajectoryID: trajectoryID, Status: status,
 		Payload: payload,
 	})
 }
@@ -375,7 +375,7 @@ func (g *Governance) FallbackRan(requestID, sessionKey, trajectoryID, from, to s
 	}
 	g.Events.Publish(&cevents.Event{
 		Type: typ, RequestID: requestID, SessionID: sessionKey,
-		GhostID: g.GhostID, AgentID: g.AgentID, TrajectoryID: trajectoryID, Status: "success",
+		KayaID: g.KayaID, AgentID: g.AgentID, TrajectoryID: trajectoryID, Status: "success",
 		Payload: map[string]interface{}{"from": from, "to": to, "escalated": escalated},
 	})
 }
@@ -388,7 +388,7 @@ func (g *Governance) EffortSelected(requestID, sessionKey, trajectoryID string, 
 	}
 	g.Events.Publish(&cevents.Event{
 		Type: cevents.EffortSelected, RequestID: requestID, SessionID: sessionKey,
-		GhostID: g.GhostID, AgentID: g.AgentID, TrajectoryID: trajectoryID, Status: "success",
+		KayaID: g.KayaID, AgentID: g.AgentID, TrajectoryID: trajectoryID, Status: "success",
 		Payload: payload,
 	})
 }
@@ -779,8 +779,8 @@ func resumeFrom(r *permissions.Request, grant permissions.GrantType) ResumeOutco
 // NewGovernance builds the substrate handle and wires broker lifecycle
 // events into the canonical stream (permission.requested/approved/
 // denied/expired become first-class events automatically).
-func NewGovernance(events *cevents.Stream, broker *permissions.Broker, ghostID, agentID string) *Governance {
-	g := &Governance{Events: events, Broker: broker, GhostID: ghostID, AgentID: agentID,
+func NewGovernance(events *cevents.Stream, broker *permissions.Broker, kayaID, agentID string) *Governance {
+	g := &Governance{Events: events, Broker: broker, KayaID: kayaID, AgentID: agentID,
 		seenCaps: map[string]bool{}, trajectories: map[string]string{}}
 	if broker != nil && events != nil {
 		broker.SetEmitter(func(t string, r *permissions.Request) {
@@ -794,13 +794,13 @@ func NewGovernance(events *cevents.Stream, broker *permissions.Broker, ghostID, 
 				typ = cevents.PermissionExpired
 			}
 			events.Publish(&cevents.Event{
-				Type: typ, RequestID: r.RequestID, GhostID: ghostID, AgentID: agentID,
+				Type: typ, RequestID: r.RequestID, KayaID: kayaID, AgentID: agentID,
 				TrajectoryID: r.TrajectoryID,
 				Payload: map[string]interface{}{
 					"capability": r.Capability, "action": r.Action,
 					"target": r.Target, "summary": r.Reason,
 					// Risk travels with the event so the owner-facing activity
-					// projection can explain WHY Ghost asked ("sending is
+					// projection can explain WHY Kaya asked ("sending is
 					// consequential") instead of just that it did.
 					"risk": string(r.Risk),
 				},

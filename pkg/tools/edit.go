@@ -79,7 +79,7 @@ func (t *EditFileTool) Execute(ctx context.Context, args map[string]interface{})
 	if err := guardPrimaryFileIn(t.allowedDir, resolvedPath); err != nil {
 		return ErrorResult(err.Error())
 	}
-	if err := guardGhostEstateWrite(t.allowedDir, resolvedPath); err != nil {
+	if err := guardKayaEstateWrite(t.allowedDir, resolvedPath); err != nil {
 		return ErrorResult(err.Error())
 	}
 	// Editing reads the current content first: gate as a read.
@@ -265,7 +265,7 @@ func (t *AppendFileTool) Execute(ctx context.Context, args map[string]interface{
 	if err := guardPrimaryFileIn(t.workspace, resolvedPath); err != nil {
 		return ErrorResult(err.Error())
 	}
-	if err := guardGhostEstateWrite(t.workspace, resolvedPath); err != nil {
+	if err := guardKayaEstateWrite(t.workspace, resolvedPath); err != nil {
 		return ErrorResult(err.Error())
 	}
 	if err := t.guard.Check(SessionKeyFromContext(ctx), OpWrite, resolvedPath); err != nil {

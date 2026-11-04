@@ -2,10 +2,10 @@
 name: powerpoint
 description: Create, read, edit, and parse PowerPoint (.pptx) presentations. Invoke when user mentions "slides", "presentation", "deck", ".pptx file", "PowerPoint", or any task involving slide decks — whether creating, editing, reading, or converting them.
 version: 1.0.0
-author: Ghost
+author: Kaya
 license: Proprietary
 metadata:
-  ghost:
+  kaya:
     tags: [PowerPoint, slides, presentation, pptx, office]
     related_skills: [ocr-and-documents]
 prerequisites:

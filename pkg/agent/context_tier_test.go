@@ -8,15 +8,15 @@ import (
 
 // Context tiering is the single largest prompt reduction in this pass, and its
 // one non-negotiable property is that nothing governing behaviour or authority
-// is dropped. That property is checked here against the shipped GHOST.md
+// is dropped. That property is checked here against the shipped KAYA.md
 // directly, rather than inferred from a prompt score.
 func TestPromptCoreRetainsBehaviourAndAuthority(t *testing.T) {
-	raw, err := os.ReadFile("../../workspace/GHOST.md")
+	raw, err := os.ReadFile("../../workspace/KAYA.md")
 	if err != nil {
-		t.Skipf("workspace GHOST.md unavailable: %v", err)
+		t.Skipf("workspace KAYA.md unavailable: %v", err)
 	}
 	full := string(raw)
-	core := tieredGhostDoc(full, promptTierCore)
+	core := tieredKayaDoc(full, promptTierCore)
 
 	mustKeep := []string{
 		"# Foundational Invariants",
@@ -58,7 +58,7 @@ func TestPromptCoreRetainsBehaviourAndAuthority(t *testing.T) {
 		// It must still exist on demand — dropping it from the prompt is not
 		// deleting it from the workspace.
 		if !strings.Contains(full, heading) {
-			t.Errorf("reference %q must remain readable in GHOST.md", heading)
+			t.Errorf("reference %q must remain readable in KAYA.md", heading)
 		}
 	}
 
@@ -72,18 +72,18 @@ func TestPromptCoreRetainsBehaviourAndAuthority(t *testing.T) {
 	if saved := 100 * (len(full) - len(core)) / len(full); saved < 25 {
 		t.Errorf("expected a material reduction, got %d%%", saved)
 	}
-	t.Logf("GHOST.md %d -> %d bytes (%.0f%% smaller)", len(full), len(core), 100*float64(len(full)-len(core))/float64(len(full)))
+	t.Logf("KAYA.md %d -> %d bytes (%.0f%% smaller)", len(full), len(core), 100*float64(len(full)-len(core))/float64(len(full)))
 }
 
 // The full tier still carries everything, so nothing is unreadable to a caller
 // that asks for it.
 func TestPromptFullTierKeepsEverything(t *testing.T) {
-	raw, err := os.ReadFile("../../workspace/GHOST.md")
+	raw, err := os.ReadFile("../../workspace/KAYA.md")
 	if err != nil {
-		t.Skipf("workspace GHOST.md unavailable: %v", err)
+		t.Skipf("workspace KAYA.md unavailable: %v", err)
 	}
 	full := string(raw)
-	if got := tieredGhostDoc(full, promptTierFull); got != full {
+	if got := tieredKayaDoc(full, promptTierFull); got != full {
 		t.Fatal("the full tier must return the document unchanged")
 	}
 }

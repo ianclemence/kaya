@@ -10,7 +10,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ianclemence/ghost/pkg/credentials"
+	"github.com/ianclemence/kaya/pkg/credentials"
 )
 
 // Connected-app OAuth deployment checks (Gmail, Outlook, Spotify).
@@ -86,7 +86,7 @@ func oauthDeploymentCheck(d *Doctor, name, label, skill, clientID, secret, redir
 		return CheckResult{
 			Name: name, Label: label,
 			Status:  "warning",
-			Message: "The redirect URL should end with " + suffix + " to match Ghost's handler.",
+			Message: "The redirect URL should end with " + suffix + " to match Kaya's handler.",
 			Latency: time.Since(start).Milliseconds(),
 		}
 	}
@@ -145,7 +145,7 @@ func (d *Doctor) checkConnectedServices(ctx context.Context) CheckResult {
 		return done("ok", fmt.Sprintf("%d connected: %s", len(ready), strings.Join(ready, ", ")))
 	}
 	if len(ready) == 0 {
-		return done("warning", fmt.Sprintf("None connected yet. Connect %s under Apps when you want Ghost to use them.",
+		return done("warning", fmt.Sprintf("None connected yet. Connect %s under Apps when you want Kaya to use them.",
 			strings.Join(missing, ", ")))
 	}
 	return done("warning", fmt.Sprintf("%d of %d connected — %s ready; %s need setup (see Apps)",
@@ -157,24 +157,24 @@ func (d *Doctor) checkConnectedServices(ctx context.Context) CheckResult {
 func (d *Doctor) checkGmailOAuth(ctx context.Context) CheckResult {
 	_ = ctx
 	return oauthDeploymentCheck(d, "gmail_oauth", "Gmail sign-in", "email",
-		os.Getenv("GHOST_GOOGLE_CLIENT_ID"), os.Getenv("GHOST_GOOGLE_CLIENT_SECRET"),
-		os.Getenv("GHOST_GMAIL_REDIRECT_URL"), "/oauth/gmail/callback")
+		os.Getenv("KAYA_GOOGLE_CLIENT_ID"), os.Getenv("KAYA_GOOGLE_CLIENT_SECRET"),
+		os.Getenv("KAYA_GMAIL_REDIRECT_URL"), "/oauth/gmail/callback")
 }
 
 // checkOutlookOAuth validates the Microsoft app registration.
 func (d *Doctor) checkOutlookOAuth(ctx context.Context) CheckResult {
 	_ = ctx
 	return oauthDeploymentCheck(d, "outlook_oauth", "Outlook sign-in", "email",
-		os.Getenv("GHOST_OUTLOOK_CLIENT_ID"), os.Getenv("GHOST_OUTLOOK_CLIENT_SECRET"),
-		os.Getenv("GHOST_OUTLOOK_REDIRECT_URL"), "/oauth/outlook/callback")
+		os.Getenv("KAYA_OUTLOOK_CLIENT_ID"), os.Getenv("KAYA_OUTLOOK_CLIENT_SECRET"),
+		os.Getenv("KAYA_OUTLOOK_REDIRECT_URL"), "/oauth/outlook/callback")
 }
 
 // checkSpotifyOAuth validates the Spotify app registration.
 func (d *Doctor) checkSpotifyOAuth(ctx context.Context) CheckResult {
 	_ = ctx
 	return oauthDeploymentCheck(d, "spotify_oauth", "Spotify sign-in", "spotify",
-		os.Getenv("GHOST_SPOTIFY_CLIENT_ID"), os.Getenv("GHOST_SPOTIFY_CLIENT_SECRET"),
-		os.Getenv("GHOST_SPOTIFY_REDIRECT_URL"), "/oauth/spotify/callback")
+		os.Getenv("KAYA_SPOTIFY_CLIENT_ID"), os.Getenv("KAYA_SPOTIFY_CLIENT_SECRET"),
+		os.Getenv("KAYA_SPOTIFY_REDIRECT_URL"), "/oauth/spotify/callback")
 }
 
 // checkGithubToken validates the GitHub PAT presence (paste-key flow).

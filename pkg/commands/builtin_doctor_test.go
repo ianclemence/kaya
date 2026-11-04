@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/ianclemence/ghost/pkg/doctor"
+	"github.com/ianclemence/kaya/pkg/doctor"
 )
 
 func TestDoctorHandler(t *testing.T) {
@@ -28,7 +28,7 @@ func TestDoctorHandler(t *testing.T) {
 	if err := doctorHandler(context.Background(), req, rt); err != nil {
 		t.Fatalf("doctorHandler returned error: %v", err)
 	}
-	if !strings.Contains(out, "Ghost Doctor") {
+	if !strings.Contains(out, "Kaya Doctor") {
 		t.Fatalf("expected doctor output header, got: %s", out)
 	}
 	if !strings.Contains(out, "Memory") {

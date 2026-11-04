@@ -2,11 +2,11 @@
 """Terminal regression checks that need a real terminal (Go unit tests can't
 see renderer artifacts). Fails if the dock is duplicated after popups close.
 
-    scripts/tui-regress.py /path/to/ghost
+    scripts/tui-regress.py /path/to/kaya
 """
 import json, os, subprocess, sys, tempfile
 
-binary = sys.argv[1] if len(sys.argv) > 1 else "ghost"
+binary = sys.argv[1] if len(sys.argv) > 1 else "kaya"
 here = os.path.dirname(os.path.abspath(__file__))
 
 def screen(steps):

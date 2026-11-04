@@ -1,10 +1,10 @@
-// Package watch is Ghost's durable observation of external mutable state.
+// Package watch is Kaya's durable observation of external mutable state.
 //
 // A watch is not a reminder, not a routine, and not memory. A reminder fires
 // once at a stated time; a routine re-runs a command on a schedule; memory
 // holds facts about the owner. A watch is the third thing: the runtime
-// noticed that some thing in the world outside Ghost (a flight, an
-// appointment, a delivery) will change on its own, and Ghost committed to
+// noticed that some thing in the world outside Kaya (a flight, an
+// appointment, a delivery) will change on its own, and Kaya committed to
 // checking it and telling the owner when the world actually moved.
 //
 // Every rule here is deterministic:
@@ -37,7 +37,7 @@ import (
 )
 
 // Kind is the closed vocabulary of watchable things. Each kind names an
-// external object whose state changes without Ghost's involvement.
+// external object whose state changes without Kaya's involvement.
 type Kind string
 
 const (
@@ -67,7 +67,7 @@ const (
 	// keeps polling (a gate change does not end a flight watch).
 	StatusTriggered Status = "triggered"
 	// StatusSnoozed is held back until a stated instant (quiet hours, or
-	// the owner asking Ghost to stop nagging).
+	// the owner asking Kaya to stop nagging).
 	StatusSnoozed Status = "snoozed"
 	// StatusExpired passed its horizon without the owner closing it.
 	StatusExpired Status = "expired"
@@ -95,7 +95,7 @@ func (s Status) Settled() bool {
 }
 
 // Provenance ties a watch back to the words that created it. The Quote is
-// required: a watch Ghost cannot show the origin of is one it may not run.
+// required: a watch Kaya cannot show the origin of is one it may not run.
 type Provenance struct {
 	Session   string    `json:"session"`
 	MessageID string    `json:"message_id"`
@@ -498,7 +498,7 @@ func (w Watch) AlreadyNotified(fingerprint string) bool {
 }
 
 // RecordSuppressed counts a notice that was held back, per reason, so the
-// owner (and diagnostics) can see that Ghost noticed but stayed quiet — and
+// owner (and diagnostics) can see that Kaya noticed but stayed quiet — and
 // why.
 func (s *Store) RecordSuppressed(id, reason string) (Watch, error) {
 	return s.mutate(id, func(w *Watch) error {

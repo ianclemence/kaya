@@ -138,7 +138,7 @@ func TestRetiringWithoutARetractionKeepsTheRecord(t *testing.T) {
 	}
 }
 
-// Ghost's service runs as root. An atomic rewrite through a new file must not
+// Kaya's service runs as root. An atomic rewrite through a new file must not
 // hand the owner's memory file to root. Skipped unless run as root.
 func TestRewriteKeepsTheFileOwner(t *testing.T) {
 	if os.Geteuid() != 0 {
@@ -222,8 +222,8 @@ func TestForeignCurrentKeepsWhatTheOwnerAlsoSaid(t *testing.T) {
 			t.Fatal(err)
 		}
 	}
-	mk("ec_owner_dup", "Is designing a Ghost Pod", "main:req-1", StatusRejected)
-	mk("ec_probe_copy", "Is  designing a GHOST Pod", "weatherfix-repro-1", StatusCurrent)
+	mk("ec_owner_dup", "Is designing a Kaya Pod", "main:req-1", StatusRejected)
+	mk("ec_probe_copy", "Is  designing a KAYA Pod", "weatherfix-repro-1", StatusCurrent)
 	mk("ec_probe_only", "Is building a reaction-time game", "research-live-100c", StatusCurrent)
 
 	got := s.ForeignCurrent(func(session string) bool { return session == "main" })

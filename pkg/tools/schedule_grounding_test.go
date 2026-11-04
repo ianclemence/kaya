@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ianclemence/ghost/pkg/scheduled"
+	"github.com/ianclemence/kaya/pkg/scheduled"
 )
 
 // liveContext is the real request shape: the owner's own words plus the
@@ -107,7 +107,7 @@ func TestSchedulePrefersTheOwnersWords(t *testing.T) {
 	}
 }
 
-// A bare yes to a time Ghost already proposed is agreement, not invention.
+// A bare yes to a time Kaya already proposed is agreement, not invention.
 func TestScheduleAcceptsAShortConfirmation(t *testing.T) {
 	svc := newFakeScheduleService()
 	tool := NewScheduleTool(svc, "Asia/Bangkok")

@@ -28,7 +28,7 @@ func TestExclusions(t *testing.T) {
 		"config/config.json",
 		"workspace/memory/MEMORY.md",
 		"workspace/skills/weather/SKILL.md",
-		"data/ghost.db",
+		"data/kaya.db",
 		"pending/requests.json",
 	}
 	for _, p := range kept {
@@ -49,7 +49,7 @@ func TestSkipDirs(t *testing.T) {
 	}
 }
 
-// TestSyntheticTree builds a fake Ghost root with credential files in
+// TestSyntheticTree builds a fake Kaya root with credential files in
 // every known location and asserts a walker using ShouldExclude archives
 // zero secrets.
 func TestSyntheticTree(t *testing.T) {

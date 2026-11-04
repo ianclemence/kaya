@@ -20,14 +20,14 @@ import (
 //
 // It is NOT a model mock and it does not bypass the runtime: it is the
 // executor behind the exact same computer.Computer interface a physical
-// placement implements. Ghost's "no evidence = no success" rule still
+// placement implements. Kaya's "no evidence = no success" rule still
 // holds — clicks/typing/keys are reported as dispatched, never as
 // independently screen-verified; only a subsequent inspect observation can
 // confirm a resulting state.
 //
 // State machine:
 //
-//	Desktop ("Ghost Desktop")
+//	Desktop ("Kaya Desktop")
 //	  - visible text reports the current display name
 //	  - a "Settings" app icon opens the Settings dialog when clicked
 //	Settings dialog ("Settings")
@@ -58,7 +58,7 @@ func NewVirtualUI(id string) *VirtualUI {
 
 func (v *VirtualUI) ID() string           { return v.id }
 func (v *VirtualUI) Placement() Placement { return PlacementLocal }
-func (v *VirtualUI) DisplayName() string  { return "Ghost settings fixture" }
+func (v *VirtualUI) DisplayName() string  { return "Kaya settings fixture" }
 
 // SupportedOps lists the deterministic operations the fixture performs.
 func (v *VirtualUI) SupportedOps() []Op {
@@ -184,7 +184,7 @@ func (v *VirtualUI) screenshot(ctx context.Context, args Args) (Result, error) {
 
 func (v *VirtualUI) snapshot() UISnapshot {
 	if !v.dialogOpen {
-		title := "Ghost Desktop"
+		title := "Kaya Desktop"
 		text := fmt.Sprintf("Current display name: %s.", v.displayName)
 		if v.statusNote != "" {
 			text += " " + v.statusNote + "."
@@ -202,7 +202,7 @@ func (v *VirtualUI) snapshot() UISnapshot {
 			},
 		}
 	}
-	text := "Change your Ghost display name."
+	text := "Change your Kaya display name."
 	if v.statusNote != "" {
 		text += " " + v.statusNote + "."
 	}

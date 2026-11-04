@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/ianclemence/ghost/pkg/connector"
+	"github.com/ianclemence/kaya/pkg/connector"
 )
 
 // RegisterConnectorTools loads installed connectors and registers their
@@ -56,7 +56,7 @@ func RegisterConnectorTools(reg *ToolRegistry, workspace string, headers func(*c
 	return registered, nil
 }
 
-// connectorTool adapts one connector capability to Ghost's tool interface, so
+// connectorTool adapts one connector capability to Kaya's tool interface, so
 // an installed connector participates in the same governed execution path as
 // every built-in tool (broker gating, evidence, honest errors).
 type connectorTool struct {

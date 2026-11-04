@@ -4,10 +4,10 @@ import (
 	"os"
 	"testing"
 
-	"github.com/ianclemence/ghost/pkg/bus"
-	"github.com/ianclemence/ghost/pkg/config"
-	"github.com/ianclemence/ghost/pkg/modes"
-	"github.com/ianclemence/ghost/pkg/providers"
+	"github.com/ianclemence/kaya/pkg/bus"
+	"github.com/ianclemence/kaya/pkg/config"
+	"github.com/ianclemence/kaya/pkg/modes"
+	"github.com/ianclemence/kaya/pkg/providers"
 )
 
 func pinTestLoop(t *testing.T, mutate func(*config.Config)) *AgentLoop {

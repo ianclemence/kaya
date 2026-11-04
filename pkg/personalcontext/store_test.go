@@ -286,7 +286,7 @@ func TestCurrentInScope(t *testing.T) {
 		}
 	}
 	mk("likes", "tea", nil)
-	mk("project", "Ghost", []string{"context:work"})
+	mk("project", "Kaya", []string{"context:work"})
 	mk("hobby", "sailing", []string{"context:home"})
 	global := s.CurrentInScope(nil)
 	if len(global) != 1 {

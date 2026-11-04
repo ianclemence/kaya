@@ -94,8 +94,8 @@ func TestResolveFindsTheFilm(t *testing.T) {
 
 func e2e(t *testing.T) {
 	t.Helper()
-	if os.Getenv("GHOST_FILM_E2E") != "1" {
-		t.Skip("set GHOST_FILM_E2E=1 to render real films in the Pod's browser")
+	if os.Getenv("KAYA_FILM_E2E") != "1" {
+		t.Skip("set KAYA_FILM_E2E=1 to render real films in the Pod's browser")
 	}
 	for _, bin := range []string{"ffmpeg", "chromium"} {
 		if _, err := exec.LookPath(bin); err != nil {

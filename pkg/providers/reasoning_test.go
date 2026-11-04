@@ -1,7 +1,7 @@
-// Ghost - Ultra-lightweight personal AI agent
+// Kaya - Ultra-lightweight personal AI agent
 // License: MIT
 //
-// Copyright (c) 2026 Ghost contributors
+// Copyright (c) 2026 Kaya contributors
 
 package providers
 

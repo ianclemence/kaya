@@ -13,22 +13,22 @@ import (
 	"unicode"
 )
 
-// The Vault: what the owner keeps for Ghost to use on their behalf, sealed in
+// The Vault: what the owner keeps for Kaya to use on their behalf, sealed in
 // the same encrypted store as every other credential. Four kinds.
 //
-//	login    a site, a username and a password. Ghost sees the site and the
+//	login    a site, a username and a password. Kaya sees the site and the
 //	         username. The password goes from here to the browser and nowhere else.
-//	card     a payment card. Ghost sees its nickname, brand, last four digits
+//	card     a payment card. Kaya sees its nickname, brand, last four digits
 //	         and expiry. The number and the security code are never shown to it.
-//	contact  a person or the owner's own details. Ghost sees all of it, so it can
+//	contact  a person or the owner's own details. Kaya sees all of it, so it can
 //	         type a name or an address into a form.
-//	key      an API key or token. Ghost sees its name. The value reaches a command
+//	key      an API key or token. Kaya sees its name. The value reaches a command
 //	         only when the owner has allowed that key to and the command names it.
 //
 // There are three views of an item and they never mix. Item is the whole thing
 // and exists only inside this package and the boundaries that fill a browser or
 // a command. View is what the owner's phone is shown: no secret, ever, after the
-// moment it is saved. ModelView is what Ghost may read.
+// moment it is saved. ModelView is what Kaya may read.
 
 // ItemKind is the kind of a Vault item.
 type ItemKind string
@@ -151,7 +151,7 @@ type View struct {
 	UpdatedAt time.Time `json:"updated_at"`
 }
 
-// ModelView is an item as Ghost may read it. It is deliberately smaller than
+// ModelView is an item as Kaya may read it. It is deliberately smaller than
 // View: a card has no holder and no expiry month it could be tricked into
 // repeating, a key has no hint.
 type ModelView struct {
@@ -666,7 +666,7 @@ func brandName(b string) string {
 	return "Card"
 }
 
-// ModelItems is what Ghost may read about the Vault: one line per item, and for
+// ModelItems is what Kaya may read about the Vault: one line per item, and for
 // a login only the site and the username.
 func ModelItems(kind ItemKind) []ModelView {
 	var out []ModelView

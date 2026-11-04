@@ -1,7 +1,7 @@
 // Package suggest predicts what the owner is most likely to type next, so the
 // empty message box can offer it instead of a fixed line.
 //
-// Two sources, in order. Rules read how Ghost's last message ended (an offer,
+// Two sources, in order. Rules read how Kaya's last message ended (an offer,
 // a list, a report) and answer it directly: instant, free, and always the same
 // for the same message. When no rule applies, a small model call is asked for
 // one short line, and whatever it returns is checked hard (Clean) before it is
@@ -27,7 +27,7 @@ type Turn struct {
 }
 
 var (
-	// "Want me to …?", "Shall I …?" and the like: Ghost offering to do something.
+	// "Want me to …?", "Shall I …?" and the like: Kaya offering to do something.
 	offerRE = regexp.MustCompile(`(?i)\b(?:do you want me to|would you like me to|want me to|shall i|should i)\s+([^?.\n]{2,160})\?`)
 	// A question that begins with a wh-word asks for information ("Which city
 	// should I check?"), not for a yes.
@@ -43,14 +43,14 @@ var (
 	grantRE     = regexp.MustCompile(`(?i)\b(?:approve|approved|allow|always allow|deny|denied)\b`)
 )
 
-// FromRules returns the suggestion that follows directly from how Ghost's last
+// FromRules returns the suggestion that follows directly from how Kaya's last
 // message ended, or false when nothing does.
 func FromRules(last string) (string, bool) {
 	text := strings.TrimSpace(markdownRE.ReplaceAllString(last, ""))
 	if text == "" {
 		return "", false
 	}
-	// The offer wins: it is the thing Ghost is waiting on.
+	// The offer wins: it is the thing Kaya is waiting on.
 	if ms := offerRE.FindAllStringSubmatchIndex(text, -1); len(ms) > 0 {
 		m := ms[len(ms)-1]
 		before := text[:m[0]]
@@ -80,7 +80,7 @@ func lastSentenceStart(s string) int {
 	return locs[len(locs)-1][1]
 }
 
-// yesTo turns the first thing Ghost offered into the owner's answer: "move it,
+// yesTo turns the first thing Kaya offered into the owner's answer: "move it,
 // or add a nudge" becomes "Yes, move it", and "tell you if it changes" becomes
 // "Yes, tell me if it changes". An offer too long to repeat becomes a plain yes.
 func yesTo(offer string) string {
@@ -106,7 +106,7 @@ func yesTo(offer string) string {
 
 // Clean checks a model's suggestion and returns it ready to show, or false.
 // The model is asked for one short line; anything else (a refusal, an essay, a
-// repeat of Ghost's own words, markup) is dropped rather than shown.
+// repeat of Kaya's own words, markup) is dropped rather than shown.
 func Clean(s, lastAssistant string) (string, bool) {
 	s = strings.TrimSpace(s)
 	if i := strings.IndexAny(s, "\r\n"); i >= 0 {

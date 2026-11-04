@@ -2,7 +2,7 @@ package credentials
 
 import "strings"
 
-// A saved sign-in belongs to a site, and Ghost types it only there. "Only
+// A saved sign-in belongs to a site, and Kaya types it only there. "Only
 // filled on ads.google.com" has to hold when a prompt-injected model asks the
 // browser to sign in on some other address, so the browser checks every
 // address it is given against the site the login was saved for.

@@ -245,8 +245,8 @@ func TestApprovalCardShape(t *testing.T) {
 func TestApprovalCardExecutionTitles(t *testing.T) {
 	b := openTestBroker(t, ModeAsk)
 	cases := map[string]string{
-		"exec.shell":       "Run commands on this Ghost?",
-		"sandbox.exec":     "Run commands on this Ghost?",
+		"exec.shell":       "Run commands on this Kaya?",
+		"sandbox.exec":     "Run commands on this Kaya?",
 		"computer.click":   "Control this computer?",
 		"computer.inspect": "See this computer's screen?",
 		"browser.transact": "Control the browser?",
@@ -520,7 +520,7 @@ func TestApprovalCardsSayWhatApprovingDoes(t *testing.T) {
 		{"email.read", "email_search", "Read your email?", "inbox"},
 		{"email.send", "email_send", "Send this email?", "send an email"},
 		{"schedule.create", "schedule", "Schedule this?", "run later"},
-		{"exec.shell", "exec", "Run commands on this Ghost?", "run a command"},
+		{"exec.shell", "exec", "Run commands on this Kaya?", "run a command"},
 		{"file.read", "read_file", "Read your files?", "files"},
 		{"file.delete", "delete_file", "Delete a file?", "delete a file"},
 	}
@@ -549,7 +549,7 @@ func TestSigningInHasItsOwnApprovalWording(t *testing.T) {
 	}
 }
 
-// A browser approval says what Ghost would do and where.
+// A browser approval says what Kaya would do and where.
 func TestBrowserStepTitleNamesActionAndSite(t *testing.T) {
 	cases := map[string][2]string{
 		"Type on en.wikipedia.org?":  {"browser:browser_type", "www.en.wikipedia.org"},

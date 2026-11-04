@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/ianclemence/ghost/pkg/db"
+	"github.com/ianclemence/kaya/pkg/db"
 )
 
 func TestSessionSearchToolReturnsRankedResults(t *testing.T) {

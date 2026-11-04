@@ -1,6 +1,6 @@
 {"conversations": [
 {"id": "A-ordinary", "category": "ordinary", "turns": [
-"Hey Ghost.",
+"Hey Kaya.",
 "How's it going?",
 "I'm tired today.",
 "Today actually went pretty well.",
@@ -37,7 +37,7 @@
 "whatever"]},
 {"id": "D-mixed-5", "category": "trajectory-mixed", "turns": [
 "I'm pretty tired today.",
-"I still need to finish the Ghost hardware stuff.",
+"I still need to finish the Kaya hardware stuff.",
 "I'll probably forget about it if I don't do it tonight.",
 "Actually, remind me at 8.",
 "Did you set that?"]},

@@ -4,9 +4,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ianclemence/ghost/pkg/modelhealth"
-	"github.com/ianclemence/ghost/pkg/provider"
-	"github.com/ianclemence/ghost/pkg/providers"
+	"github.com/ianclemence/kaya/pkg/modelhealth"
+	"github.com/ianclemence/kaya/pkg/provider"
+	"github.com/ianclemence/kaya/pkg/providers"
 )
 
 func (al *AgentLoop) recordModelCall(model string, started time.Time, resp *providers.LLMResponse, err error, fallback bool) {

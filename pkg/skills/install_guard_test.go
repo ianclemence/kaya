@@ -51,7 +51,7 @@ func TestProvenanceRoundTrip(t *testing.T) {
 	if p, err := ReadProvenance(dir); err != nil || p != nil {
 		t.Fatalf("expected nil provenance, got %+v err=%v", p, err)
 	}
-	want := Provenance{Type: "github", Owner: "ianclemence", Repo: "ghost-skills",
+	want := Provenance{Type: "github", Owner: "ianclemence", Repo: "kaya-skills",
 		Branch: "main", Path: "skills/research", CommitSHA: "abc123",
 		InstalledAt: time.Now().UTC()}
 	if err := WriteProvenance(dir, want); err != nil {
@@ -70,8 +70,8 @@ func TestProvenanceRoundTrip(t *testing.T) {
 }
 
 func TestSplitGitHubRepo(t *testing.T) {
-	o, r := splitGitHubRepo("ianclemence/ghost-skills")
-	if o != "ianclemence" || r != "ghost-skills" {
+	o, r := splitGitHubRepo("ianclemence/kaya-skills")
+	if o != "ianclemence" || r != "kaya-skills" {
 		t.Fatalf("split: %q %q", o, r)
 	}
 	o2, r2 := splitGitHubRepo("single")

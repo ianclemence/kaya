@@ -1,6 +1,6 @@
 # Cron setup — agent instructions
 
-Use this guide to install the self-improving compound maintenance pipeline in Ghost.
+Use this guide to install the self-improving compound maintenance pipeline in Kaya.
 
 ## What gets installed
 
@@ -18,7 +18,7 @@ The last two jobs are intentionally separated: the digest writes the daily factu
 ## Prerequisites
 
 - This skill is installed and the agent can read `scripts/setup-cron.json`.
-- The agent has access to the Ghost `cron` tool.
+- The agent has access to the Kaya `cron` tool.
 - The user explicitly confirms creation or update of persistent cron jobs.
 - Bash is available for the bundled `.sh` helpers. POSIX `sh`-only hosts should run the Python CLI commands directly instead of these helpers.
 
@@ -26,10 +26,10 @@ The last two jobs are intentionally separated: the digest writes the daily factu
 
 1. **Read `scripts/setup-cron.json`.**
    If installed via the skill registry, the path is usually:
-   `${GHOST_WORKSPACE_DIR:-$HOME/.ghost/workspace}/skills/self-improving-compound/scripts/setup-cron.json`
+   `${KAYA_WORKSPACE_DIR:-$HOME/.kaya/workspace}/skills/self-improving-compound/scripts/setup-cron.json`
 
 2. **Resolve runtime paths without hard-coding local machine paths:**
-   - `GHOST_WORKSPACE` should point to the workspace root.
+   - `KAYA_WORKSPACE` should point to the workspace root.
    - `SELF_IMPROVING_LEARNING_ROOT` may point to a shared learning store used by multiple workspaces.
    - `SELF_IMPROVING_SKILL_DIR` may point to the installed skill directory.
    - `SELF_IMPROVING_LEARNINGS_CLI` may point to an explicit `learnings.py`.

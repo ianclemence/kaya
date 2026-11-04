@@ -42,7 +42,7 @@ func TestURLSafetyAllowPrivate(t *testing.T) {
 
 func TestURLSafetyFixtureAllowlist(t *testing.T) {
 	safety := NewURLSafety(URLSafetyConfig{AllowPrivateURLs: false})
-	t.Setenv("GHOST_FIXTURE_ALLOW", "127.0.0.1:8931")
+	t.Setenv("KAYA_FIXTURE_ALLOW", "127.0.0.1:8931")
 
 	if ok, _ := safety.IsSafe("http://127.0.0.1:8931/"); !ok {
 		t.Error("exact fixture host:port must be allowed")
@@ -60,7 +60,7 @@ func TestURLSafetyFixtureAllowlist(t *testing.T) {
 
 func TestURLSafetyFixtureUnsetDenies(t *testing.T) {
 	safety := NewURLSafety(URLSafetyConfig{AllowPrivateURLs: false})
-	t.Setenv("GHOST_FIXTURE_ALLOW", "")
+	t.Setenv("KAYA_FIXTURE_ALLOW", "")
 	if ok, _ := safety.IsSafe("http://127.0.0.1:8931/"); ok {
 		t.Error("fixture URL must be blocked without the allowlist env")
 	}

@@ -6,10 +6,10 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/ianclemence/ghost/pkg/cards"
+	"github.com/ianclemence/kaya/pkg/cards"
 )
 
-// PresentCardTool lets Ghost show an answer as a card instead of writing it:
+// PresentCardTool lets Kaya show an answer as a card instead of writing it:
 // a weather glance, a flight in progress, a plan, a comparison. The model
 // fills blocks from a fixed catalog; the card catalog validates every field
 // and refuses anything else, so a card can show things but never run, open or

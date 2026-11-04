@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/ianclemence/ghost/pkg/rag"
+	"github.com/ianclemence/kaya/pkg/rag"
 )
 
 type RememberTool struct {
@@ -35,7 +35,7 @@ func (t *RememberTool) Name() string {
 }
 
 func (t *RememberTool) Description() string {
-	return "Store a durable fact about the user for long-term recall (name, preference, life goal, etc.) in Ghost\u2019s memory. Use when the user states a lasting fact or a request that starts with \"remember that I...\". Do NOT use for: transient task context. Returns confirmation."
+	return "Store a durable fact about the user for long-term recall (name, preference, life goal, etc.) in Kaya\u2019s memory. Use when the user states a lasting fact or a request that starts with \"remember that I...\". Do NOT use for: transient task context. Returns confirmation."
 }
 
 func (t *RememberTool) Parameters() map[string]interface{} {

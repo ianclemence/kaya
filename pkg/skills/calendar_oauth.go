@@ -17,21 +17,21 @@ import (
 // Why both: gcalcli stores pickle-format tokens bound to its own OAuth
 // client, which no other client can redeem — there is no sound token
 // bridge, so device-flow-connected users can only execute through gcalcli
-// until they reconnect under Ghost's OAuth client. Web OAuth (relay/LAN
+// until they reconnect under Kaya's OAuth client. Web OAuth (relay/LAN
 // callback, sealed tokens) is the path for configured deployments; the
 // device flow is the path where no Google Cloud project exists. Full
-// removal of gcalcli waits on a Ghost-managed OAuth client (org decision +
+// removal of gcalcli waits on a Kaya-managed OAuth client (org decision +
 // Google verification, notably restricted-scope review for gmail.send),
 // at which point device flow, pickle tokens, and the execution fallback
 // go together.
 //
-// Security: token lives in CalendarConfigDir (/var/lib/ghost/.calendar,
+// Security: token lives in CalendarConfigDir (/var/lib/kaya/.calendar,
 // 0600, outside workspace/config backup roots, never in chat/SSE/logs/
 // backups). This file never returns token contents — only status and setup
 // URLs.
 //
-// NOTE: the ghost services run with ProtectHome=true, so ~/.config and
-// ~/.gcalcli_oauth are invisible/volatile to them. All Ghost-initiated
+// NOTE: the kaya services run with ProtectHome=true, so ~/.config and
+// ~/.gcalcli_oauth are invisible/volatile to them. All Kaya-initiated
 // gcalcli calls must pass --config-folder CalendarConfigDir; the calendar
 // SKILL.md documents the same flag so model-driven agenda calls find it.
 
@@ -57,10 +57,10 @@ type CalendarState struct {
 // CalendarConfigDir is the persistent, service-writable home for gcalcli
 // oauth/config. Deliberately outside the backup-walked roots (config, data,
 // workspace) so tokens are never archived.
-const CalendarConfigDir = "/var/lib/ghost/.calendar"
+const CalendarConfigDir = "/var/lib/kaya/.calendar"
 
 // CalendarTokenPaths returns candidate oauth token locations, newest first.
-// Ghost-owned dir wins; legacy user-home paths are checked for users who
+// Kaya-owned dir wins; legacy user-home paths are checked for users who
 // connected before the service-owned dir existed (then migrate on next auth).
 func CalendarTokenPaths() []string {
 	paths := []string{CalendarConfigDir}
@@ -82,7 +82,7 @@ func CalendarTokenPaths() []string {
 }
 
 // CalendarConfigArgs returns the --config-folder flag slice for every
-// Ghost-initiated gcalcli invocation.
+// Kaya-initiated gcalcli invocation.
 func CalendarConfigArgs() []string {
 	return []string{"--config-folder", CalendarConfigDir}
 }
@@ -115,7 +115,7 @@ func CalendarCheck() CalendarState {
 	}
 	return CalendarState{
 		Status: CalendarNeedsSetup, NeedsSetup: true,
-		Message: "Calendar access isn't connected yet. Connect your calendar in Ghost settings to view your schedule.",
+		Message: "Calendar access isn't connected yet. Connect your calendar in Kaya settings to view your schedule.",
 	}
 }
 
@@ -126,7 +126,7 @@ func CalendarAuthOutput(output string) CalendarState {
 		if strings.Contains(lower, marker) {
 			return CalendarState{
 				Status: CalendarNeedsReauth, NeedsSetup: true,
-				Message: "Calendar access expired or was revoked. Reconnect your calendar in Ghost settings to continue.",
+				Message: "Calendar access expired or was revoked. Reconnect your calendar in Kaya settings to continue.",
 			}
 		}
 	}
@@ -160,7 +160,7 @@ func CalendarDisconnect() error {
 }
 
 // ErrCalendarToolMissing reports gcalcli is not on the service PATH.
-// The ghost-web service runs as root with a minimal PATH; a user-local
+// The kaya-web service runs as root with a minimal PATH; a user-local
 // pip install (e.g. ~/.local/bin) is invisible to it. Callers must surface
 // install guidance, not a generic 500.
 var ErrCalendarToolMissing = fmt.Errorf("gcalcli not found on service PATH")

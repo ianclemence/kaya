@@ -1,7 +1,7 @@
 package agent
 
 import (
-	"github.com/ianclemence/ghost/pkg/providers"
+	"github.com/ianclemence/kaya/pkg/providers"
 )
 
 // ContextBudget is a model-aware input budget for one turn: the selected

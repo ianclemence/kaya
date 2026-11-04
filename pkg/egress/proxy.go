@@ -14,7 +14,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/ianclemence/ghost/pkg/logger"
+	"github.com/ianclemence/kaya/pkg/logger"
 )
 
 // Proxy is the sandbox's only way out. It speaks plain HTTP proxying and
@@ -73,7 +73,7 @@ func (p *Proxy) handle(c net.Conn) {
 
 func (p *Proxy) deny(c net.Conn, host, reason string) {
 	logger.WarnCF("egress", "blocked", map[string]interface{}{"host": host, "reason": reason, "mode": string(p.policy.Mode)})
-	body := "Ghost blocked this request: " + reason + ".\n"
+	body := "Kaya blocked this request: " + reason + ".\n"
 	fmt.Fprintf(c, "HTTP/1.1 403 Forbidden\r\nContent-Type: text/plain\r\nContent-Length: %d\r\nConnection: close\r\n\r\n%s", len(body), body)
 }
 
@@ -153,7 +153,7 @@ var (
 // socket the sandbox is given. The directory is private to this user.
 func SocketPath(p Policy) (string, error) {
 	startOnce.Do(func() {
-		dir := filepath.Join(os.TempDir(), fmt.Sprintf("ghost-egress-%d", os.Getuid()))
+		dir := filepath.Join(os.TempDir(), fmt.Sprintf("kaya-egress-%d", os.Getuid()))
 		if err := os.MkdirAll(dir, 0o700); err != nil {
 			startErr = err
 			return

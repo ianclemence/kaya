@@ -74,13 +74,13 @@ func (u *URLSafety) IsSafe(rawURL string) (bool, string) {
 }
 
 // fixtureAllowed reports whether an exact host:port is allowlisted via
-// GHOST_FIXTURE_ALLOW ("host:port,host:port"). Set ONLY by the golden
+// KAYA_FIXTURE_ALLOW ("host:port,host:port"). Set ONLY by the golden
 // harness when it spawns a local fixture server, so model-driven browser
 // cases can drive a deterministic local page through the REAL guard.
 // Production never sets it: default deny is unchanged, and cloud metadata
 // endpoints stay blocked regardless (checked before this path).
 func fixtureAllowed(host, port string) bool {
-	allow := strings.TrimSpace(os.Getenv("GHOST_FIXTURE_ALLOW"))
+	allow := strings.TrimSpace(os.Getenv("KAYA_FIXTURE_ALLOW"))
 	if allow == "" || port == "" {
 		return false
 	}

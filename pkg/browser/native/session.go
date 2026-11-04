@@ -463,7 +463,7 @@ func (s *Session) Screenshot(ctx context.Context, path string) (string, error) {
 		return "", err
 	}
 	if path == "" {
-		f, err := os.CreateTemp("", "ghost-shot-*.png")
+		f, err := os.CreateTemp("", "kaya-shot-*.png")
 		if err != nil {
 			return "", err
 		}

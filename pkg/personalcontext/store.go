@@ -113,7 +113,7 @@ func (s *Store) Path() string {
 
 // ValidateEntries checks that data is a well-formed Personal Context entries
 // log: every non-empty line must parse as an Entry, exactly as the store's
-// load step requires. It is the integrity gate Ghost State import uses so a
+// load step requires. It is the integrity gate Kaya State import uses so a
 // malformed portable log fails loudly instead of being silently accepted as
 // an empty context. An empty log is valid (it is an empty store), and no
 // record is ever dropped.
@@ -683,7 +683,7 @@ func (s *Store) History(id string) []Entry {
 // Reset clears both the in-memory state and the on-disk log, returning the
 // store to a fresh-install state. Truncating the file alone is NOT enough:
 // the running process serves Current() from memory, so a file-only wipe
-// leaves stale beliefs visible until restart (ghost knew deleted facts).
+// leaves stale beliefs visible until restart (kaya knew deleted facts).
 func (s *Store) Reset() error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -773,7 +773,7 @@ func compactJSON(raw json.RawMessage) (json.RawMessage, error) {
 
 // HasCurrent reports whether entries already contains a CURRENT entry
 // with the same kind, subject, predicate, and value as want — i.e. the
-// candidate is a restatement of a memory Ghost already holds. Used as a
+// candidate is a restatement of a memory Kaya already holds. Used as a
 // deterministic dedup guard on semantic extraction writes.
 func HasCurrent(entries []Entry, want Entry) bool {
 	for _, e := range entries {
@@ -787,7 +787,7 @@ func HasCurrent(entries []Entry, want Entry) bool {
 	return false
 }
 
-// isCorrection reports whether the entry records the owner correcting Ghost.
+// isCorrection reports whether the entry records the owner correcting Kaya.
 // Only a correction may replace a value under a catch-all predicate.
 func isCorrection(e Entry) bool {
 	for _, src := range e.Sources {

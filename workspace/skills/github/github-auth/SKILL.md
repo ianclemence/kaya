@@ -2,10 +2,10 @@
 name: github-auth
 description: Set up GitHub authentication for the agent using git (universally available) or the gh CLI. Covers HTTPS tokens, SSH keys, credential helpers, and gh auth — with a detection flow to pick the right method automatically.
 version: 1.1.0
-author: Ghost
+author: Kaya
 license: MIT
 metadata:
-  ghost:
+  kaya:
     tags: [GitHub, Authentication, Git, gh-cli, SSH, Setup]
     related_skills:
       [
@@ -55,13 +55,13 @@ This is the most portable method — works everywhere, no SSH config needed.
 
 **Step 1: Create a personal access token**
 
-New GitHub connections should go through Ghost settings (Integrations),
+New GitHub connections should go through Kaya settings (Integrations),
 which stores the credential in the runtime vault — never in chat, files,
 or shell history. If guiding a manual setup, tell the user to go to:
 **https://github.com/settings/tokens**
 
 - Click "Generate new token (classic)"
-- Give it a name like "ghost-agent"
+- Give it a name like "kaya-agent"
 - Select scopes:
   - `repo` (full repository access — read, write, push, PRs)
   - `workflow` (trigger and manage GitHub Actions)
@@ -71,7 +71,7 @@ or shell history. If guiding a manual setup, tell the user to go to:
 
 **Step 2: Configure git to store the token**
 
-Prefer the authenticated `gh` flow (Method 2 below) or Ghost settings
+Prefer the authenticated `gh` flow (Method 2 below) or Kaya settings
 (Integrations), which keep the credential in the vault. As a local-only
 fallback on machines without `gh`, use git's in-memory cache so the token
 never touches disk:
@@ -135,7 +135,7 @@ Tell the user to add the public key at: **https://github.com/settings/keys**
 
 - Click "New SSH key"
 - Paste the public key content
-- Give it a title like "ghost-agent-<machine-name>"
+- Give it a title like "kaya-agent-<machine-name>"
 
 **Step 3: Test the connection**
 
@@ -177,7 +177,7 @@ gh auth login
 
 On a headless machine, run `gh auth login` and choose the device-code flow
 — the user approves in a browser and no token is ever typed, pasted, or
-stored by Ghost:
+stored by Kaya:
 
 ```bash
 gh auth login
@@ -213,7 +213,7 @@ GITHUB_TOKEN="<token>" curl -s -H "Authorization: token $GITHUB_TOKEN" \
 Never read tokens out of `~/.git-credentials` or any other credential
 store: scraping stored secrets bypasses the user's credential boundary.
 If no token is available in the environment, stop and point at setup
-(Ghost settings → Integrations, or `gh auth login`) instead of hunting
+(Kaya settings → Integrations, or `gh auth login`) instead of hunting
 for one on disk.
 
 ### Helper: Detect Auth Method
@@ -228,7 +228,7 @@ elif [ -n "$GITHUB_TOKEN" ]; then
   echo "AUTH_METHOD=curl"
 else
   echo "AUTH_METHOD=none"
-  echo "Need authentication first (gh auth login or Ghost settings -> Integrations)"
+  echo "Need authentication first (gh auth login or Kaya settings -> Integrations)"
   exit 1
 fi
 ```

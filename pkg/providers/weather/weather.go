@@ -1,5 +1,5 @@
 // Package weather is the provider-resilience reference implementation
-// for Ghost capabilities.
+// for Kaya capabilities.
 //
 // Capability: Weather. Providers: wttr.in (keyless primary), Open-Meteo
 // (keyless fallback), and OpenWeather (keyed fallback). Neither vendor is hard-coded into the
@@ -27,7 +27,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ianclemence/ghost/pkg/provider"
+	"github.com/ianclemence/kaya/pkg/provider"
 )
 
 // Current is the validated capability result (vendor-neutral).

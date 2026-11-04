@@ -103,7 +103,7 @@ func SaveHistory(workspace string, s Summary, keep int) ([]HistoryEntry, error) 
 // RenderSummary prints the human-readable golden report.
 func RenderSummary(s Summary) string {
 	var b strings.Builder
-	b.WriteString("\nGHOST GOLDEN CONVERSATION SUITE\n")
+	b.WriteString("\nKAYA GOLDEN CONVERSATION SUITE\n")
 	b.WriteString("suite v" + itoa(s.SuiteVersion) + " · model " + s.Model + " (" + s.Provider + ") · " + s.At + "\n\n")
 	b.WriteString("OVERALL: " + verdictWord(s) + "\n")
 	b.WriteString("Cases: " + itoa(s.Total) + "  pass " + itoa(s.Passed) + "  fail " + itoa(s.Failed) +

@@ -6,20 +6,20 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/ianclemence/ghost/pkg/artifacts"
-	"github.com/ianclemence/ghost/pkg/bus"
-	"github.com/ianclemence/ghost/pkg/live"
+	"github.com/ianclemence/kaya/pkg/artifacts"
+	"github.com/ianclemence/kaya/pkg/bus"
+	"github.com/ianclemence/kaya/pkg/live"
 
 	_ "modernc.org/sqlite"
 )
 
-// Full conceptual lifecycle without providers: Ghost opens the browser,
-// the surface goes active with an observation, Ghost acts, hands back a
+// Full conceptual lifecycle without providers: Kaya opens the browser,
+// the surface goes active with an observation, Kaya acts, hands back a
 // validated artifact, the conversation succeeds, and the surface
 // terminates instead of lingering.
 func TestBrowserSurfaceArtifactLifecycle(t *testing.T) {
 	h := newGateHarness(t)
-	h.loop.SetLivePlane(live.NewRegistry(h.ghostID))
+	h.loop.SetLivePlane(live.NewRegistry(h.kayaID))
 	h.loop.bus = bus.NewMessageBus()
 
 	ws := t.TempDir()
@@ -36,7 +36,7 @@ func TestBrowserSurfaceArtifactLifecycle(t *testing.T) {
 		t.Fatalf("write: %v", err)
 	}
 
-	// Ghost opens the browser: surface active.
+	// Kaya opens the browser: surface active.
 	tc := fakeToolCall("browser_navigate", map[string]interface{}{"url": "https://example.com"})
 	if res, _, _ := h.loop.maybeRunBrowserTool(h.toolCtx(), h.loop.tools, tc, h.opts("sess-life"), nil); res.IsError {
 		t.Fatalf("navigate failed: %s", res.ForLLM)
@@ -51,7 +51,7 @@ func TestBrowserSurfaceArtifactLifecycle(t *testing.T) {
 		t.Fatalf("no active browser surface after navigation")
 	}
 
-	// Ghost acts and hands back a validated artifact.
+	// Kaya acts and hands back a validated artifact.
 	tc2 := fakeToolCall("browser_snapshot", map[string]interface{}{})
 	if res, _, _ := h.loop.maybeRunBrowserTool(h.toolCtx(), h.loop.tools, tc2, h.opts("sess-life"), nil); res.IsError {
 		t.Fatalf("snapshot failed: %s", res.ForLLM)

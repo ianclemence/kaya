@@ -7,11 +7,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ianclemence/ghost/pkg/channels"
-	"github.com/ianclemence/ghost/pkg/logger"
-	"github.com/ianclemence/ghost/pkg/providers"
-	"github.com/ianclemence/ghost/pkg/session"
-	"github.com/ianclemence/ghost/pkg/turnlog"
+	"github.com/ianclemence/kaya/pkg/channels"
+	"github.com/ianclemence/kaya/pkg/logger"
+	"github.com/ianclemence/kaya/pkg/providers"
+	"github.com/ianclemence/kaya/pkg/session"
+	"github.com/ianclemence/kaya/pkg/turnlog"
 )
 
 // Restart continuity.
@@ -19,7 +19,7 @@ import (
 // The reply to a message used to exist in exactly one place: the memory of a
 // process that could die. The owner's question was already a row in the
 // transcript, so after a crash the conversation ended with something asked
-// and nothing said — the thread frayed, and Ghost came back to rebuilding
+// and nothing said — the thread frayed, and Kaya came back to rebuilding
 // context instead of continuing it.
 //
 // Two things close that. A partial reply is checkpointed while it streams,
@@ -48,7 +48,7 @@ type ResumeRequest struct {
 // threadResumePrompt frames a cut-off reply for the one model turn that
 // owes the owner a finished answer. The partial rides the current-message
 // slot only — it is evidence for the model, never speech by the owner and
-// never Ghost's reply — and the instruction is to produce ONE whole answer,
+// never Kaya's reply — and the instruction is to produce ONE whole answer,
 // because handing the owner a sentence that continues mid-air is the exact
 // fracture this exists to repair.
 func threadResumePrompt(userText, partial string) string {
