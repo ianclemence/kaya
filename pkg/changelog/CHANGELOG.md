@@ -3,6 +3,15 @@
 Newest first. Kaya shows new entries on first launch after an update;
 `kaya update --notes` reprints them.
 
+## [0.25.1] - 2026-11-04
+
+- **Kaya now lives under the kayahq organization.** The code, releases and
+  update checks moved to `github.com/kayahq/kaya`, and the Go module path,
+  docs and links follow. Updates keep working without a manual step because
+  GitHub redirects the old addresses to the new ones.
+- **Nothing about your Pod changes.** Same services, same data, same signed
+  releases; this update only changes where Kaya looks for them.
+
 ## [0.25.0] - 2026-11-04
 
 - **Ghost is now Kaya.** The name is changed everywhere: the app, the web
