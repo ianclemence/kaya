@@ -3,6 +3,21 @@
 Newest first. Kaya shows new entries on first launch after an update;
 `kaya update --notes` reprints them.
 
+## [0.25.0] - 2026-11-04
+
+- **Ghost is now Kaya.** The name is changed everywhere: the app, the web
+  console, the command you type (`kaya`), the services that run it, the paths
+  it keeps and the module it is built from. Your memory, files, logins and
+  settings are untouched — only the names around them changed.
+- **Upgrading from Ghost takes one manual step.** The old `ghost` command
+  cannot install this release by itself, because the binary, asset and path
+  names all changed. Install the `kaya` binary from this release once — run
+  `make install` from the repository, or use the prebuilt `kaya_linux_*`
+  asset — then run `kaya update`. Every update after that is `kaya update`.
+- **The phone app is Kaya too.** The app is named Kaya and its URL scheme is
+  `kaya://`. Install the new build before pairing a phone again; an older
+  build will not open Kaya links.
+
 ## [0.24.211] - 2026-10-26
 
 - **Connecting an app now names the one step only you can do.** Kaya no longer
